@@ -1,0 +1,71 @@
+/**
+ * Created by ModelParser
+ */
+import {User} from '../User';
+import {BaseModel} from '../BaseModel';
+
+export class SystemDefinition extends BaseModel {
+    default_email_service_id?: number;
+    default_database_service_id?: number;
+    default_domain_id?: number;
+    id?: number;
+    created?: string;
+    updated?: string;
+    created_by_id?: number;
+    created_by?: User;
+    updated_by_id?: number;
+    updated_by?: User;
+
+    constructor(data?: any) {
+        super();
+        this.populate(data);
+    }
+
+    public populate(data?: any, patch = false) {
+        if (!patch) {
+            delete this.default_email_service_id;
+            delete this.default_database_service_id;
+            delete this.default_domain_id;
+            delete this.id;
+            delete this.created;
+            delete this.updated;
+            delete this.created_by_id;
+            delete this.created_by;
+            delete this.updated_by_id;
+            delete this.updated_by;
+        }
+
+        if (!data) return;
+        if (data.default_email_service_id != null) {
+            this.default_email_service_id = data.default_email_service_id;
+        }
+        if (data.default_database_service_id != null) {
+            this.default_database_service_id = data.default_database_service_id;
+        }
+        if (data.default_domain_id != null) {
+            this.default_domain_id = data.default_domain_id;
+        }
+        if (data.id != null) {
+            this.id = data.id;
+        }
+        if (data.created != null) {
+            this.created = data.created;
+        }
+        if (data.updated != null) {
+            this.updated = data.updated;
+        }
+        if (data.created_by_id != null) {
+            this.created_by_id = data.created_by_id;
+        }
+        if (data.created_by != null) {
+            this.created_by = new User(data.created_by);
+        }
+        if (data.updated_by_id != null) {
+            this.updated_by_id = data.updated_by_id;
+        }
+        if (data.updated_by != null) {
+            this.updated_by = new User(data.updated_by);
+        }
+    }
+
+}

@@ -1,0 +1,36 @@
+# Project Settings
+PROJECT_NAME=
+PROJECT_CONTACT_URL=
+PROJECT_CONTACT_EMAIL=
+
+# Kubernetes authentification
+## Options:
+## * kube-config (provide KUBERNETES_KUBECONFIG, if using GKE you can set GCLOUD options to enable gke-auth plugin)
+## * in-cluster (provide REMOTE_CLUSTER_URL)
+KUBERNETES_AUTH=in-cluster
+## Base64-encoded (base64 ~/.kube/config | tr -d "\n")
+KUBERNETES_KUBECONFIG=
+KUBERNETES_REMOTE_CLUSTER_URL=
+
+# Google Cloud Settings
+GCLOUD_PROJECT_ID=
+GCLOUD_LOCATION=
+GCLOUD_CLUSTER=
+## Base64-encoded (base64 gcloud-service-account.json | tr -d "\n")
+GCLOUD_SERVICE_KEY_FILE=
+
+# Podio
+PODIO_AUTH_CLIENT_ID=
+PODIO_AUTH_CLIENT_SECRET=
+PODIO_APP_ID=
+PODIO_APP_TOKEN=
+PODIO_APP_PHASE_FIELD_ID=
+PODIO_APP_PHASE_NEW_VALUE=
+PODIO_APP_PHASE_CONDITION_VALUE=
+PODIO_APP_PROGRESS_FIELD_ID=
+PODIO_APP_PROGRESS_CONDITION_VALUE=
+PODIO_APP_PROGRESS_NEW_VALUE=
+
+# GitHub
+GITHUB_AUTH_TOKEN=
+GITHUB_AUTH_USER=

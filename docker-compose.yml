@@ -1,0 +1,68 @@
+version: "3.7"
+
+services:
+
+  deploy:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      args:
+        GKE_AUTH_ENABLED: "${DEPLOY_GKE_AUTH_ENABLED}"
+        NEW_RELIC_ENABLED: "${DEPLOY_NEW_RELIC_ENABLED}"
+        NEW_RELIC_LICENSE_KEY: "${DEPLOY_NEW_RELIC_LICENSE_KEY}"
+        NEW_RELIC_APP_NAME: "${DEPLOY_NEW_RELIC_APP_NAME}"
+
+    container_name: 4s-deploy-service-app
+    restart: unless-stopped
+    tty: true
+
+    working_dir: /var/www/html
+
+    ports:
+      - "${DEPLOY_CI4_PORT}:80"
+      - "${DEPLOY_VUE_PORT}:8901"
+
+    environment:
+      - DEPLOYMENT_NAME=deploy
+      - DEPLOYMENT_NAMESPACE=minor
+      - ENVIRONMENT=development
+      - BASE_URL=http://localhost:${DEPLOY_CI4_PORT}
+      - DB_HOST=${DEPLOY_DB_HOST}
+      - DB_NAME=${DEPLOY_DB_NAME}
+      - DB_USER=${DEPLOY_DB_USER}
+      - DB_PASS=${DEPLOY_DB_PASS}
+      - KEEL_TRIGGER=poll
+
+    volumes:
+      - ./:/var/www/html:delegated
+
+    networks:
+      - deploy-service-network
+
+  db:
+    image: mysql:5.7.25
+    container_name: 4s-deploy-service-db
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "${DATABASE_PORT}:3306"
+
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+
+    volumes:
+      - dbdata:/var/lib/mysql
+      - ./docker/mysql/my.cnf:/etc/mysql/my.cnf:delegated
+      - ./docker/mysql/entrypoint-initdb.d:/docker-entrypoint-initdb.d/:delegated
+
+    networks:
+      - deploy-service-network
+
+# Docker Networks
+networks:
+  deploy-service-network:
+    driver: bridge
+
+# Volumes
+volumes:
+  dbdata:

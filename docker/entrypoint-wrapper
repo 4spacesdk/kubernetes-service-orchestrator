@@ -1,0 +1,3 @@
+#!/bin/sh
+(runuser -u www-data -- php /var/www/html/zmq/app/start.php 2>&1 | tee /tmp/zmq.log) &
+exec /usr/sbin/httpd -DFOREGROUND
