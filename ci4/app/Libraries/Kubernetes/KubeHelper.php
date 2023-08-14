@@ -30,4 +30,18 @@ class KubeHelper {
         return json_encode($content);
     }
 
+    public static function GetMyNamespace(): string {
+        if (file_exists('/var/run/secrets/kubernetes.io/serviceaccount/namespace')) {
+            return file_get_contents('/var/run/secrets/kubernetes.io/serviceaccount/namespace');
+        } else {
+            return 'default';
+        }
+    }
+
+    public static function GetMyHostname(): string {
+        $hostname = gethostname();
+        $hostname = explode('-', $hostname);
+        return $hostname[0];
+    }
+
 }

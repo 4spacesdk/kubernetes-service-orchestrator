@@ -8,6 +8,7 @@ use App\Entities\MigrationJob;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
 use App\Libraries\Kubernetes\KubeAuth;
+use App\Libraries\Kubernetes\KubeHelper;
 use App\Models\EnvironmentVariableModel;
 use DebugTool\Data;
 use RenokiCo\PhpK8s\Exceptions\KubernetesAPIException;
@@ -242,17 +243,15 @@ class MigrationJobStep extends BaseDeploymentStep {
             ->setAttribute('args', [
                 '-c',
 
-                // Tell DeployService about miration job started
+                // Tell DeployService about migration job started
                 'curl -i -v -X PUT ' . $this->getMigrationStartedUrl()
 
                 // Perform migration
                 . ' && ' . $spec->database_migration_command
 
-                // Tell DeployService about miration job ended
+                // Tell DeployService about migration job ended
                 . ' | curl --connect-timeout 5 --max-time 10 --retry 10 --retry-delay 5 --retry-max-time 300 -i -v -X PUT --data-binary @- ' . $this->getMigrationEndedUrl(),
             ])
-            ->addEnv('DEPLOYMENT_NAMESPACE', $deployment->namespace)
-            ->addEnv('DEPLOYMENT_NAME', $deployment->name)
             ->addEnv('ENVIRONMENT', \Environments::Development)
             ->addEnv('BASE_URL', $deployment->getUrl(true));
 
@@ -310,12 +309,12 @@ class MigrationJobStep extends BaseDeploymentStep {
     }
 
     private function getMigrationStartedUrl(): string {
-        $domain = getenv('DEPLOYMENT_NAME') . '.' . getenv('DEPLOYMENT_NAMESPACE');
+        $domain = KubeHelper::GetMyHostname() . '.' . KubeHelper::GetMyNamespace();
         return "$domain/api/migration-jobs/$(MIGRATION_JOB_ID)/started";
     }
 
     private function getMigrationEndedUrl(): string {
-        $domain = getenv('DEPLOYMENT_NAME') . '.' . getenv('DEPLOYMENT_NAMESPACE');
+        $domain = KubeHelper::GetMyHostname() . '.' . KubeHelper::GetMyNamespace();
         return "$domain/api/migration-jobs/$(MIGRATION_JOB_ID)/ended";
     }
 

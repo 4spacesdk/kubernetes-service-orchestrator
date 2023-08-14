@@ -5,8 +5,7 @@ namespace Config;
 use CodeIgniter\Config\BaseConfig;
 use CodeIgniter\Session\Handlers\FileHandler;
 
-class App extends BaseConfig
-{
+class App extends BaseConfig {
     /**
      * --------------------------------------------------------------------------
      * Base Site URL
@@ -338,7 +337,7 @@ class App extends BaseConfig
      * You can use both an array or a comma-separated list of proxy addresses,
      * as well as specifying whole subnets. Here are a few examples:
      *
-     * Comma-separated:	'10.0.1.200,192.168.5.0/24'
+     * Comma-separated:    '10.0.1.200,192.168.5.0/24'
      * Array: ['10.0.1.200', '192.168.5.0/24']
      *
      * @var string|string[]
@@ -467,6 +466,13 @@ class App extends BaseConfig
     public function __construct() {
         parent::__construct();
 
-        $this->baseURL = getenv('BASE_URL') . '/api';
+//        $this->baseURL = getenv('BASE_URL') . '/api';
+
+        if (isset($_SERVER['HTTPS'])) {
+            $protocol = ($_SERVER['HTTPS'] && $_SERVER['HTTPS'] != "off") ? "https" : "http";
+        } else {
+            $protocol = 'http';
+        }
+        $this->baseURL = $protocol . "://" . $_SERVER['HTTP_HOST'] . '/api';
     }
 }

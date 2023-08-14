@@ -23,6 +23,11 @@ interface Row {
     defaultReplicas?: number;
 }
 
+interface CreateItem {
+    inUse: boolean;
+    deploymentSpecification: DeploymentSpecification;
+}
+
 const props = defineProps<{ input: DeploymentPackageUpdateDeploymentSpecificationsDialog_Input, events: DialogEventsInterface }>();
 
 const used = ref(false);
@@ -38,8 +43,8 @@ const headers = ref([
 const isSaving = ref(false);
 
 const showCreateMenu = ref(false);
-const isLoadingDeploymentSpecificationItems = ref(false);
-const deploymentSpecificationItems = ref<DeploymentSpecification[]>([]);
+const isLoadingCreateItems = ref(false);
+const createItems = ref<CreateItem[]>([]);
 
 // <editor-fold desc="Functions">
 
@@ -80,13 +85,21 @@ function render() {
                 }) ?? [];
             itemCount.value = rows.value.length;
             isLoading.value = false;
-        });
 
-    isLoadingDeploymentSpecificationItems.value = true;
-    Api.deploymentSpecifications().get()
-        .find(items => {
-            deploymentSpecificationItems.value = items;
-            isLoadingDeploymentSpecificationItems.value = false;
+            isLoadingCreateItems.value = true;
+            const usedDeploymentSpecificationIds = rows.value
+                    ?.map(row => row.deploymentSpecification.id!)
+                ?? []
+            Api.deploymentSpecifications().get()
+                .find(items => {
+                    createItems.value = items.map(item => {
+                        return {
+                            inUse: usedDeploymentSpecificationIds.includes(item.id!),
+                            deploymentSpecification: item,
+                        };
+                    });
+                    isLoadingCreateItems.value = false;
+                });
         });
 }
 
@@ -99,13 +112,16 @@ function close() {
 
 // <editor-fold desc="View Binding Functions">
 
-function onCreateBtnClicked(deploymentSpecification: DeploymentSpecification) {
+function onCreateItemBtnClicked(createItem: CreateItem) {
     const newItem = {
-        deploymentSpecification: deploymentSpecification,
+        deploymentSpecification: createItem.deploymentSpecification,
     };
     bus.emit('deploymentPackageUpdateDeploymentSpecification', {
         settings: newItem,
-        onSaveCallback: () => rows.value.push(newItem),
+        onSaveCallback: () => {
+            createItem.inUse = true;
+            rows.value.push(newItem);
+        }
     });
 }
 
@@ -120,6 +136,11 @@ function onEditRowClicked(row: Row) {
 
 function onDeleteRowClicked(row: Row) {
     rows.value.splice(rows.value.indexOf(row), 1);
+    const createItem = createItems.value
+        .find(createItem => createItem.deploymentSpecification.id == row.deploymentSpecification.id);
+    if (createItem) {
+        createItem.inUse = false;
+    }
 }
 
 function onSaveBtnClicked() {
@@ -185,15 +206,25 @@ function onCloseBtnClicked() {
 
                         <v-list
                             class="list-items">
-                            <v-list-item
-                                v-for="(deploymentSpecification, i) in deploymentSpecificationItems" :key="i"
-                                dense
-                                @click="onCreateBtnClicked(deploymentSpecification)">
-                                <v-list-item-title>
-                                    <v-icon size="small" class="my-auto">fa fa-window-maximize fa</v-icon>
-                                    <span class="ml-2">{{ deploymentSpecification.name }}</span>
-                                </v-list-item-title>
-                            </v-list-item>
+                            <div
+                                v-for="(createItem, i) in createItems" :key="i"
+                            >
+                                <v-list-item
+                                    dense
+                                    :disabled="createItem.inUse"
+                                    @click="onCreateItemBtnClicked(createItem)"
+                                >
+                                    <v-list-item-title>
+                                        <v-icon size="small" class="my-auto">fa fa-window-maximize fa</v-icon>
+                                        <span class="ml-2">{{ createItem.deploymentSpecification.name }}</span>
+                                    </v-list-item-title>
+                                </v-list-item>
+                                <v-tooltip
+                                    v-if="createItem.inUse"
+                                    activator="parent" location="bottom">
+                                    Already in use
+                                </v-tooltip>
+                            </div>
                         </v-list>
                     </v-menu>
                 </div>
