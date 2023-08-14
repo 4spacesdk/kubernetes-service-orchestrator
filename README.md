@@ -10,6 +10,7 @@ This service enables interaction with the Kubernetes API and facilitates the eff
 
 ## How to Use
 * This repository works as a base project for creating your own KSO. 
+  * Check this guide for private fork https://gist.github.com/0xjac/85097472043b697ab57ba1b1c7530274
 * Feel free to fork this repository, set it up locally and start playing around.
 
 ## First time setup
