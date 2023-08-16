@@ -70,8 +70,12 @@ const variables = ref<Variable[]>([
         code: "${emailService.sender}"
     },
     {
-        name: "Workspace Configuration",
-        code: "${workspace.configuration}"
+        name: "Workspace Id",
+        code: "${workspace.id}"
+    },
+    {
+        name: "Workspace Name",
+        code: "${workspace.name}"
     },
 ]);
 

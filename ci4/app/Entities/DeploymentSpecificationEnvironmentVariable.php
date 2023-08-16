@@ -41,6 +41,9 @@ class DeploymentSpecificationEnvironmentVariable extends Entity {
             fn(string $value) => str_replace('${emailService.user}', $workspace->email_service->user, $value),
             fn(string $value) => str_replace('${emailService.pass}', $workspace->email_service->pass, $value),
             fn(string $value) => str_replace('${emailService.sender}', $workspace->email_service->from, $value),
+
+            fn(string $value) => str_replace('${workspace.id}', $workspace->id, $value),
+            fn(string $value) => str_replace('${workspace.name}', $workspace->namespace, $value),
         ];
 
         $value = $this->value;

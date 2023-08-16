@@ -197,16 +197,16 @@ class Deployment extends Entity {
         }
     }
 
+    public function getInternalUrl(string $append = null): string {
+        return "{$this->name}.{$this->namespace}{$append}";
+    }
+
     public function getUrl(bool $includeTls = false, string $append = null): string {
         if (!$this->domain->exists()) {
             $this->domain->find();
         }
 
         return $this->findDeploymentSpecification()->getUrl($this->subdomain, $this->domain, $includeTls) . $append;
-    }
-
-    public function getInternalUrl(string $append = null): string {
-        return "{$this->name}.{$this->namespace}{$append}";
     }
 
     public function checkStatus(): void {
@@ -229,7 +229,7 @@ class Deployment extends Entity {
 
         $hasFailedStep = false;
         foreach ($steps as $step) {
-            if ($step->getStatus($this) != $step->getSuccesStatus()) {
+            if ($step->getStatus($this) != $step->getSuccessStatus()) {
                 $hasFailedStep = true;
                 break;
             }
@@ -274,6 +274,17 @@ class Deployment extends Entity {
             $this->deployment_specification->find();
         }
         return $this->deployment_specification;
+    }
+
+    public function toArray(bool $onlyChanged = false, bool $cast = true, bool $recursive = false, array $fieldsFilter = null): array {
+        $item = parent::toArray($onlyChanged, $cast, $recursive, $fieldsFilter);
+
+        if (isset($this->domain) && isset($this->deployment_specification)) {
+            $item['url_external'] = $this->getUrl(true);
+            $item['url_internal'] = $this->getInternalUrl();
+        }
+
+        return $item;
     }
 
     /**

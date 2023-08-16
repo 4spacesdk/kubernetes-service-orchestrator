@@ -57,6 +57,10 @@ use RestExtension\Core\Entity;
  */
 class DeploymentSpecification extends Entity {
 
+    /**
+     * @param Deployment|null $deployment
+     * @return BaseDeploymentStep[]
+     */
     public function getDeploymentSteps(?Deployment $deployment = null): array {
         $order = [
             DatabaseStep::class,
