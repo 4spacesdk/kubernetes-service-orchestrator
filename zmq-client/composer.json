@@ -1,0 +1,12 @@
+{
+  "name": "4spacesdk/kubernetes-service-orchestrator-zmq-client",
+  "description": "Kubernetes Service Orchestrator ZMQ Client",
+  "require": {
+    "vinelab/minion": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "App\\": "app"
+    }
+  }
+}

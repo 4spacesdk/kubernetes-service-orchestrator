@@ -20,14 +20,8 @@ class ZMQProxy {
     private $socket;
 
     private function connect() {
-        if (!$zmqHost = getenv('ZMQ_HOST')) {
-//            throw new \Exception("ZMQProxy, Environment variable is missing \"ZMQHost\"");
-            return;
-        }
-        if (!$zmqPort = getenv('ZMQ_INTERNAL_PORT')) {
-//            throw new \Exception("ZMQProxy, Environment variable is missing \"ZMQPort\"");
-            return;
-        }
+        $zmqHost = 'localhost';
+        $zmqPort = 9101;
 
         $this->context = new \ZMQContext();
         try {

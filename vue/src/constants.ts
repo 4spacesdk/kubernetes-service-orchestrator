@@ -68,8 +68,8 @@ import type {MigrationJobLogsDialog_Input} from "@/components/Dialogs/MigrationJ
 import type {WorkspaceLogsDialog_Input} from "@/components/Dialogs/Workspaces/WorkspaceLogsDialog.vue";
 import type {PodTerminalDialog_Input} from "@/components/Dialogs/Setup/Deployments/Pods/PodTerminalDialog.vue";
 import type {
-    ContainerImageCreateDialog_Input
-} from "@/components/Dialogs/Setup/ContainerImages/ContainerImageCreateDialog.vue";
+    ContainerImageEditDialog_Input
+} from "@/components/Dialogs/Setup/ContainerImages/ContainerImageEditDialog.vue";
 import type {
     DeploymentSpecificationEditDialog_Input
 } from "@/components/Dialogs/Setup/DeploymentSpecifications/DeploymentSpecificationEditDialog.vue";
@@ -169,7 +169,7 @@ export type Events = {
     podTerminal: PodTerminalDialog_Input;
 
     containerImageSaved: ContainerImage | undefined;
-    containerImageCreate: ContainerImageCreateDialog_Input;
+    containerImageEdit: ContainerImageEditDialog_Input;
     containerImageEditDialog_closed: ContainerImage | undefined;
 
     deploymentSpecificationSaved: DeploymentSpecification | undefined;

@@ -49,7 +49,7 @@ onMounted(() => {
                             inUse: usedDeploymentSpecificationIds.includes(item.id!),
                             deploymentSpecification: item,
                         };
-                    });
+                    }).sort((a, b) => a.deploymentSpecification.name?.localeCompare(b.deploymentSpecification.name ?? '') ?? 0);
                     isLoadingCreateItems.value = false;
                 });
         });

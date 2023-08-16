@@ -15,7 +15,7 @@ class Settings extends \App\Core\BaseController {
     public function index() {
         $data = [
             'system' => System::Get()->toArray(),
-            'pushServiceUrl' => getenv('PUSH_SERVICE_URL'),
+            'pushServiceUrl' => getenv('ZMQ_EXTERNAL_URL'),
         ];
 
         if (RestRequest::getInstance()->userId) {

@@ -1,3 +1,10 @@
 #!/bin/sh
-(runuser -u www-data -- php /var/www/html/zmq/app/start.php 2>&1 | tee /tmp/zmq.log) &
+
+# Run ZMQ Client as www-data
+(runuser -u www-data -- php /var/www/html/zmq-client/app/start.php 2>&1 | tee /tmp/zmq-client.log) &
+
+# Run ZMW Server
+(php /var/www/html/zmq-server/ServeRouter.php | tee /tmp/zmq-server.log) &
+
+# Start apache
 exec /usr/sbin/httpd -DFOREGROUND

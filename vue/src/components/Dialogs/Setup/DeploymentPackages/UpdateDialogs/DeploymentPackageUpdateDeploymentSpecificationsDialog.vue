@@ -82,7 +82,9 @@ function render() {
                         defaultMemoryLimit: deploymentSpecificationSettings.default_memory_limit,
                         defaultReplicas: deploymentSpecificationSettings.default_replicas,
                     }
-                }) ?? [];
+                })
+                ?.sort((a, b) => a.deploymentSpecification.name?.localeCompare(b.deploymentSpecification.name ?? '') ?? 0)
+                ?? [];
             itemCount.value = rows.value.length;
             isLoading.value = false;
 

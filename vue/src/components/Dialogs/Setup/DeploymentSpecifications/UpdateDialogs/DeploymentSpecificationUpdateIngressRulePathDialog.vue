@@ -5,7 +5,7 @@ import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInter
 export interface DeploymentSpecificationUpdateIngressRulePathDialog_Input {
     ingressRulePath: {
         path: string;
-        pathType: string;
+        pathType?: string;
         backendServicePortName: string;
     };
 

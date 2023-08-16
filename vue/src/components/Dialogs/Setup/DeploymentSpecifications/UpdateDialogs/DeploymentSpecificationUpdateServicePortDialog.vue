@@ -4,8 +4,8 @@ import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInter
 
 export interface DeploymentSpecificationUpdateServicePortDialog_Input {
     servicePort: {
-        protocol: string;
-        name: string;
+        protocol?: string;
+        name?: string;
         port?: number;
         targetPort?: number;
     };

@@ -9,7 +9,7 @@ class Subscriber {
     private Client $internalClient;
 
     public function __construct() {
-        $internalHost = getenv('ZMQ_HOST');
+        $internalHost = 'localhost';
 
         $loop = Factory::create();
 
@@ -42,12 +42,12 @@ class Subscriber {
             $this->internalClient = $client;
         });
 
-        log_("Connecting to $host port ".getenv('ZMQ_EXTERNAL_PORT'));
+        log_("Connecting to $host port 9100");
         $m->run(
             [
                 'realm' => 'realm1',
                 'host' => $host,
-                'port' => getenv('ZMQ_EXTERNAL_PORT'),
+                'port' => 9100,
                 'auth' => [
                     'authid' => 'wampcra',
                     'secret' => '3,fqm34f34kf340f3k4qf9'

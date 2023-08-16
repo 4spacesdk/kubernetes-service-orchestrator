@@ -66,7 +66,18 @@ RUN docker-php-ext-configure gd \
       --with-jpeg=/usr/include/
 RUN rm -rf /tmp/* /var/cache/apk/*
 
-# ZMQ
+# ZMQ Server
+RUN wget https://archive.org/download/zeromq_4.1.4/zeromq-4.1.4.tar.gz \
+     && tar -xvzf zeromq-4.1.4.tar.gz \
+     && cd zeromq-4.1.4 \
+     && ./configure \
+     && make \
+     && make install \
+     && ldconfig / \
+     && cd .. \
+     && rm -fr zeromq-4.1.4.tar.gz zeromq-4.1.4/
+
+# ZMQ PHP Extension
 RUN git clone https://github.com/zeromq/php-zmq.git \
  && cd php-zmq \
  && phpize && ./configure \
@@ -136,10 +147,11 @@ COPY docker/apache/httpd.conf /etc/apache2/httpd.conf
 RUN ln -sf /dev/stdout /var/log/apache2/access.log \
     && ln -sf /dev/stderr /var/log/apache2/error.log
 
-# Copy CI4 & Vue files
+# Copy application files
 ENV APP_HOME /var/www/html
 COPY --chown=www-data ci4 $APP_HOME/ci4
-COPY --chown=www-data zmq $APP_HOME/zmq
+COPY --chown=www-data zmq-client $APP_HOME/zmq-client
+COPY --chown=www-data zmq-server $APP_HOME/zmq-server
 COPY --chown=www-data --from=build-stage /vue/dist $APP_HOME/vue
 COPY docker/apache/index.php $APP_HOME
 
@@ -148,7 +160,8 @@ RUN chown -R www-data:www-data /var/www
 
 # Install componser dependencies
 RUN cd $APP_HOME/ci4 && composer install
-RUN cd $APP_HOME/zmq && composer install
+RUN cd $APP_HOME/zmq-client && composer install
+RUN cd $APP_HOME/zmq-server && composer install
 
 # Set TAG_NAME as Environment Variable
 ARG TAG_NAME=latest

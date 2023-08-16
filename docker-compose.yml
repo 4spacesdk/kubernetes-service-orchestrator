@@ -21,10 +21,9 @@ services:
     ports:
       - "${DEPLOY_CI4_PORT}:80"
       - "${DEPLOY_VUE_PORT}:8901"
+      - "${DEPLOY_ZMQ_PORT}:9100"
 
     environment:
-      - DEPLOYMENT_NAME=deploy
-      - DEPLOYMENT_NAMESPACE=minor
       - ENVIRONMENT=development
       - BASE_URL=http://localhost:${DEPLOY_CI4_PORT}
       - DB_HOST=${DEPLOY_DB_HOST}
@@ -32,6 +31,7 @@ services:
       - DB_USER=${DEPLOY_DB_USER}
       - DB_PASS=${DEPLOY_DB_PASS}
       - KEEL_TRIGGER=poll
+      - ZMQ_EXTERNAL_URL=ws://localhost:${DEPLOY_ZMQ_PORT}
 
     volumes:
       - ./:/var/www/html:delegated
