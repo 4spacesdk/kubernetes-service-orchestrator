@@ -41,7 +41,7 @@ class ServiceStep extends BaseDeploymentStep {
         return false;
     }
 
-    public function getSuccesStatus(): string {
+    public function getSuccessStatus(): string {
         return DeploymentStepHelper::Service_Found;
     }
 

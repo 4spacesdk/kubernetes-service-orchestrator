@@ -43,7 +43,7 @@ class ClusterRoleBindingStep extends BaseDeploymentStep {
         return false;
     }
 
-    public function getSuccesStatus(): string {
+    public function getSuccessStatus(): string {
         return DeploymentStepHelper::ClusterRoleBinding_Found;
     }
 

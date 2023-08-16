@@ -49,7 +49,7 @@ class DeploymentStep extends BaseDeploymentStep {
         return true;
     }
 
-    public function getSuccesStatus(): string {
+    public function getSuccessStatus(): string {
         return DeploymentStepHelper::Deployment_Found;
     }
 
@@ -163,13 +163,6 @@ class DeploymentStep extends BaseDeploymentStep {
             $serviceAccount = new ServiceAccountStep();
             if ($serviceAccount->getStatus($deployment) != DeploymentStepHelper::ServiceAccount_Found) {
                 return 'Missing Service Account';
-            }
-        }
-
-        if ($spec->hasDeploymentStep($deployment, OauthStep::class)) {
-            $oauthStep = new OauthStep();
-            if ($oauthStep->getStatus($deployment) != DeploymentStepHelper::Oauthtatus_Success) {
-                return 'Missing OAuth Credentials';
             }
         }
 

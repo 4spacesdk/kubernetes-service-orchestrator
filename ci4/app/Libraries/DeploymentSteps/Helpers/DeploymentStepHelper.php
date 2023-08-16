@@ -11,7 +11,6 @@ use App\Libraries\DeploymentSteps\DeploymentStep;
 use App\Libraries\DeploymentSteps\IngressStep;
 use App\Libraries\DeploymentSteps\MigrationJobStep;
 use App\Libraries\DeploymentSteps\NamespaceStep;
-use App\Libraries\DeploymentSteps\OauthStep;
 use App\Libraries\DeploymentSteps\RedirectsStep;
 use App\Libraries\DeploymentSteps\ServiceAccountStep;
 use App\Libraries\DeploymentSteps\ServiceStep;
@@ -73,7 +72,6 @@ class DeploymentStepHelper {
     public static function GetStep(string $identifier): ?BaseDeploymentStep {
         return match ($identifier) {
             DeploymentSteps::Database => new DatabaseStep(),
-            DeploymentSteps::Oauth => new OauthStep(),
             DeploymentSteps::Namespace => new NamespaceStep(),
             DeploymentSteps::ClusterRole => new ClusterRoleStep(),
             DeploymentSteps::ServiceAccount => new ServiceAccountStep(),

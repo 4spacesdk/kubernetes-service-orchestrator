@@ -55,7 +55,7 @@ class ClusterRoleStep extends BaseDeploymentStep {
         return false;
     }
 
-    public function getSuccesStatus(): string {
+    public function getSuccessStatus(): string {
         return DeploymentStepHelper::ClusterRole_Found;
     }
 

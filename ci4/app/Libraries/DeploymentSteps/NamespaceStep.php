@@ -43,7 +43,7 @@ class NamespaceStep extends BaseDeploymentStep {
         return true;
     }
 
-    public function getSuccesStatus(): string {
+    public function getSuccessStatus(): string {
         return DeploymentStepHelper::Namespace_Found;
     }
 

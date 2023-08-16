@@ -1,6 +1,5 @@
 <?php namespace App\Entities;
 
-use App\Libraries\DeploymentSpecs\PushServiceSpec;
 use App\Libraries\DeploymentSteps\BaseDeploymentStep;
 use App\Libraries\DeploymentSteps\ClusterRoleBindingStep;
 use App\Libraries\DeploymentSteps\ClusterRoleStep;
@@ -10,13 +9,11 @@ use App\Libraries\DeploymentSteps\DeploymentStep;
 use App\Libraries\DeploymentSteps\IngressStep;
 use App\Libraries\DeploymentSteps\MigrationJobStep;
 use App\Libraries\DeploymentSteps\NamespaceStep;
-use App\Libraries\DeploymentSteps\OauthStep;
 use App\Libraries\DeploymentSteps\RedirectsStep;
 use App\Libraries\DeploymentSteps\ServiceAccountStep;
 use App\Libraries\DeploymentSteps\ServiceStep;
 use App\Models\DeploymentSpecificationEnvironmentVariableModel;
 use App\Models\DeploymentSpecificationIngressRulePathModel;
-use App\Models\DeploymentSpecificationResourceManagementProfileModel;
 use App\Models\DeploymentSpecificationServicePortModel;
 use RestExtension\Core\Entity;
 
@@ -62,7 +59,6 @@ class DeploymentSpecification extends Entity {
 
     public function getDeploymentSteps(?Deployment $deployment = null): array {
         $order = [
-            OauthStep::class,
             DatabaseStep::class,
             NamespaceStep::class,
             ClusterRoleStep::class,
@@ -80,7 +76,6 @@ class DeploymentSpecification extends Entity {
             new NamespaceStep(),
             new DeploymentStep(),
             new ServiceStep(),
-            new OauthStep(),
         ];
 
         if ($this->enable_database) {

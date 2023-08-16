@@ -4,7 +4,6 @@ class DeploymentSteps {
 
     const
         Database = 'database',
-        Oauth = 'oauth',
         Namespace = 'namespace',
         ClusterRole = 'cluster-role',
         ServiceAccount = 'service-account',
