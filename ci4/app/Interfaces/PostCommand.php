@@ -2,6 +2,7 @@
 /**
  * @property string $name
  * @property string $command
+ * @property bool $allPods
  */
 interface PostCommand {
 

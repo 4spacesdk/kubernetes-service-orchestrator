@@ -146,8 +146,8 @@ bus.on('podTerminal', async input => {
 });
 
 
-bus.on('containerImageCreate', async input => {
-    addComponent((await import('@/components/Dialogs/Setup/ContainerImages/ContainerImageCreateDialog.vue')).default, input);
+bus.on('containerImageEdit', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/ContainerImages/ContainerImageEditDialog.vue')).default, input);
 });
 
 

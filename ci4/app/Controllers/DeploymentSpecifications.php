@@ -64,7 +64,11 @@ class DeploymentSpecifications extends ResourceController {
             $body = $this->request->getJSON();
             $values = new DeploymentSpecificationPostCommand();
             $values->all = array_map(
-                fn($data) => DeploymentSpecificationPostCommand::Create($data->name, $data->command),
+                fn($data) => DeploymentSpecificationPostCommand::Create(
+                    $data->name,
+                    $data->command,
+                    $data->allPods
+                ),
                 $body->values
             );
             $item->updatePostCommands($values);

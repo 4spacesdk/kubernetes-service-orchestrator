@@ -466,13 +466,15 @@ class App extends BaseConfig {
     public function __construct() {
         parent::__construct();
 
-//        $this->baseURL = getenv('BASE_URL') . '/api';
-
-        if (isset($_SERVER['HTTPS'])) {
-            $protocol = ($_SERVER['HTTPS'] && $_SERVER['HTTPS'] != "off") ? "https" : "http";
+        if (isset($_SERVER['HTTP_HOST'])) {
+            if (isset($_SERVER['HTTPS'])) {
+                $protocol = ($_SERVER['HTTPS'] && $_SERVER['HTTPS'] != "off") ? "https" : "http";
+            } else {
+                $protocol = 'http';
+            }
+            $this->baseURL = $protocol . "://" . $_SERVER['HTTP_HOST'] . '/api';
         } else {
-            $protocol = 'http';
+            $this->baseURL = getenv('BASE_URL') . '/api';
         }
-        $this->baseURL = $protocol . "://" . $_SERVER['HTTP_HOST'] . '/api';
     }
 }

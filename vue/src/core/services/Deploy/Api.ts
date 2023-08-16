@@ -144,6 +144,7 @@ export interface KubernetesRbacShowResponse {
 export interface PostCommand {
     name?: string;
     command?: string;
+    allPods?: boolean;
 }
 
 export interface PostCommandList {

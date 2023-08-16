@@ -4,6 +4,7 @@ use App\Libraries\DeploymentSteps\MigrationJobStep;
 use App\Libraries\ZMQ\ChangeEvent;
 use App\Libraries\ZMQ\Events;
 use App\Libraries\ZMQ\ZMQProxy;
+use DebugTool\Data;
 use RestExtension\Core\Entity;
 use \App\Libraries\DeploymentSteps\DeploymentStep;
 
@@ -75,16 +76,19 @@ class MigrationJob extends Entity {
 
                     try {
                         $deploymentStep = new DeploymentStep();
+                        Data::debug('found', $spec->deployment_specification_post_commands->count(), 'commands to execute');
                         foreach ($spec->deployment_specification_post_commands as $postCommand) {
-                            $deploymentStep->executeCommand(
+                            Data::debug($postCommand->command);
+                            $commandOutputLines = $deploymentStep->executeCommand(
                                 $deployment,
                                 [
                                     '/bin/sh',
                                     '-c',
                                     $postCommand->command
                                 ],
-                                true
+                                $postCommand->all_pods
                             );
+                            Data::debug($commandOutputLines);
                         }
                         $this->updateStatus(\MigrationJobStatusTypes::Completed);
                     } catch (\Exception $e) {

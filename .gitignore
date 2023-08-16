@@ -29,3 +29,5 @@ ci4/writable/**/*.db
 ci4/writable/**/*.sqlite
 
 php_errors.log
+telepresence.log
+ci4/public/debug.log

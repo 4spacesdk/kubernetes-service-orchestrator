@@ -6,6 +6,7 @@ export interface DeploymentSpecificationUpdatePostCommandDialog_Input {
     postCommand: {
         name: string;
         command: string;
+        allPods: boolean;
     };
 
     onSaveCallback: () => void;
@@ -17,6 +18,7 @@ const used = ref(false);
 const showDialog = ref(false);
 const name = ref('');
 const command = ref('');
+const allPods = ref(false);
 
 // <editor-fold desc="Functions">
 
@@ -34,6 +36,7 @@ onUnmounted(() => {
 function render() {
     name.value = props.input.postCommand.name ?? '';
     command.value = props.input.postCommand.command ?? '';
+    allPods.value = props.input.postCommand.allPods ?? false;
     showDialog.value = true;
 }
 
@@ -49,6 +52,7 @@ function close() {
 function onSaveBtnClicked() {
     props.input.postCommand.name = name.value;
     props.input.postCommand.command = command.value;
+    props.input.postCommand.allPods = allPods.value;
     props.input.onSaveCallback();
     close();
 }
@@ -85,6 +89,14 @@ function onCloseBtnClicked() {
                             v-model="command"
                             variant="outlined"
                             label="Command"
+                            hide-details
+                        />
+                    </v-col>
+                    <v-col cols="12">
+                        <v-checkbox
+                            v-model="allPods"
+                            variant="outlined"
+                            label="Run on all pods"
                             hide-details
                         />
                     </v-col>

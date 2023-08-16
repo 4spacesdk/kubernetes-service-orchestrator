@@ -12,7 +12,7 @@ class KubeAuth {
      * @throws \Exception
      */
     public function authenticate(): KubernetesCluster {
-        switch (getenv('KUBERNETES_AUTH')) {
+        switch (env('KUBERNETES_AUTH')) {
             case 'kube-config':
                 return $this->authenticateWithKubeConfig();
             case 'in-cluster':

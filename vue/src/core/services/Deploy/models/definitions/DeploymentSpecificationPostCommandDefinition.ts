@@ -6,10 +6,11 @@ import {User} from '../User';
 import {BaseModel} from '../BaseModel';
 
 export class DeploymentSpecificationPostCommandDefinition extends BaseModel {
-    deploymennt_specification_id?: number;
+    deployment_specification_id?: number;
     deployment_specification?: DeploymentSpecification;
     name?: string;
     command?: string;
+    all_pods?: boolean;
     id?: number;
     created?: string;
     updated?: string;
@@ -25,10 +26,11 @@ export class DeploymentSpecificationPostCommandDefinition extends BaseModel {
 
     public populate(data?: any, patch = false) {
         if (!patch) {
-            delete this.deploymennt_specification_id;
+            delete this.deployment_specification_id;
             delete this.deployment_specification;
             delete this.name;
             delete this.command;
+            delete this.all_pods;
             delete this.id;
             delete this.created;
             delete this.updated;
@@ -39,8 +41,8 @@ export class DeploymentSpecificationPostCommandDefinition extends BaseModel {
         }
 
         if (!data) return;
-        if (data.deploymennt_specification_id != null) {
-            this.deploymennt_specification_id = data.deploymennt_specification_id;
+        if (data.deployment_specification_id != null) {
+            this.deployment_specification_id = data.deployment_specification_id;
         }
         if (data.deployment_specification != null) {
             this.deployment_specification = new DeploymentSpecification(data.deployment_specification);
@@ -50,6 +52,9 @@ export class DeploymentSpecificationPostCommandDefinition extends BaseModel {
         }
         if (data.command != null) {
             this.command = data.command;
+        }
+        if (data.all_pods != null) {
+            this.all_pods = data.all_pods;
         }
         if (data.id != null) {
             this.id = data.id;

@@ -12,6 +12,7 @@ export interface DeploymentSpecificationUpdatePostCommandsDialog_Input {
 interface Row {
     name: string;
     command: string;
+    allPods: boolean;
 }
 
 const props = defineProps<{ input: DeploymentSpecificationUpdatePostCommandsDialog_Input, events: DialogEventsInterface }>();
@@ -25,6 +26,7 @@ const rows = ref<Row[]>([]);
 const headers = ref([
     {title: 'Name', key: 'name', sortable: false},
     {title: 'Command', key: 'command', sortable: false},
+    {title: 'All pods', key: 'allPods', sortable: false},
     {title: '', key: 'actions', sortable: false},
 ]);
 const isSaving = ref(false);
@@ -55,6 +57,7 @@ function render() {
                     return {
                         name: postCommand.name ?? '',
                         command: postCommand.command ?? '',
+                        allPods: postCommand.all_pods ?? false,
                     }
                 }) ?? [];
             itemCount.value = rows.value.length;
@@ -75,6 +78,7 @@ function onCreateBtnClicked() {
     const newItem = {
         name: '',
         command: '',
+        allPods: false,
     };
     bus.emit('deploymentSpecificationUpdatePostCommand', {
         postCommand: newItem,
@@ -160,6 +164,9 @@ function onCloseBtnClicked() {
                     :items-per-page="-1"
                     class="table"
                     density="compact">
+                    <template v-slot:item.allPods="{ item }">
+                        <v-icon v-if="item.raw.allPods">fa fa-check</v-icon>
+                    </template>
                     <template v-slot:item.actions="{ item }">
                         <div class="d-flex justify-end gap-1">
                             <v-btn

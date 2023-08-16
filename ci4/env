@@ -11,6 +11,7 @@ KUBERNETES_AUTH=in-cluster
 ## Base64-encoded (base64 ~/.kube/config | tr -d "\n")
 KUBERNETES_KUBECONFIG=
 KUBERNETES_REMOTE_CLUSTER_URL=
+KUBERNETES_MY_NAMESPACE=
 
 # Google Cloud Settings
 GCLOUD_PROJECT_ID=

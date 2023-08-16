@@ -33,6 +33,8 @@ class KubeHelper {
     public static function GetMyNamespace(): string {
         if (file_exists('/var/run/secrets/kubernetes.io/serviceaccount/namespace')) {
             return file_get_contents('/var/run/secrets/kubernetes.io/serviceaccount/namespace');
+        } else if (getenv('KUBERNETES_MY_NAMESPACE')) {
+            return getenv('KUBERNETES_MY_NAMESPACE');
         } else {
             return 'default';
         }

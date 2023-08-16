@@ -5,14 +5,15 @@ import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
 
-export interface ContainerImageCreateDialog_Input {
-
+export interface ContainerImageEditDialog_Input {
+    containerImage: ContainerImage;
 }
 
-const props = defineProps<{ input: ContainerImageCreateDialog_Input, events: DialogEventsInterface }>();
+const props = defineProps<{ input: ContainerImageEditDialog_Input, events: DialogEventsInterface }>();
 
 const used = ref(false);
 const showDialog = ref(false);
+const isLoading = ref(false);
 
 const item = ref<ContainerImage>(new ContainerImage());
 
@@ -30,7 +31,18 @@ onUnmounted(() => {
 });
 
 function render() {
-    showDialog.value = true;
+    if (props.input.containerImage.exists()) {
+        isLoading.value = true;
+        showDialog.value = true;
+        Api.containerImages().getById(props.input.containerImage.id!)
+            .find(items => {
+                item.value = items[0];
+                isLoading.value = false;
+            });
+    } else {
+        item.value = props.input.containerImage;
+        showDialog.value = true;
+    }
 }
 
 function close() {
@@ -44,7 +56,11 @@ function close() {
 // <editor-fold desc="View Binding Functions">
 
 function onSaveBtnClicked() {
-    Api.containerImages().post().save(item.value!, newItem => {
+    const api = item.value!.exists()
+        ? Api.containerImages().patchById(item.value!.id!)
+        : Api.containerImages().post();
+
+    api.save(item.value!, newItem => {
         bus.emit('containerImageSaved', newItem);
         close();
     });
@@ -67,7 +83,10 @@ function onCloseBtnClicked() {
         width="60vw"
         v-model="showDialog">
         <v-card
-            class="w-100 h-100">
+            class="w-100 h-100"
+            :loading="isLoading"
+            :disabled="isLoading"
+        >
             <v-card-title>Container Image</v-card-title>
             <v-divider/>
             <v-card-text>
