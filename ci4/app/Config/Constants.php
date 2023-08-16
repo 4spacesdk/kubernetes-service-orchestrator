@@ -62,26 +62,17 @@ class MigrationJobStatusTypes {
         Failed_PostCommands = 'failed-post-commands';
 }
 
-class ConfigurationTypes {
+class WebHookTypes {
     const
-        Checkbox = 'checkbox',
-        Dropdown_Single = 'dropdown-single',
-        TextFieldList_SingleLine = 'text-field-list';
-}
+        Workspace_Created = 'workspace-created',
+        Workspace_Deleted = 'workspace-deleted';
 
-class ConfigurationIdentifiers {
-    // Features
-    const
-        Feature_Azure = 'feature-azure',
-        Feature_AzureAuth = 'feature-azure-auth',
-        Feature_IpRestriction = 'feature-ip-restriction';
-
-    // Defaults
-    const
-        Default_IsWaitingTeamSelection = 'default-is-waiting-team-selection',
-        Default_Language = 'default-language';
-
-    const IpRestrictionList = 'ip-restriction-list';
+    public static function All(): array  {
+        return [
+            self::Workspace_Created,
+            self::Workspace_Deleted,
+        ];
+    }
 }
 
 

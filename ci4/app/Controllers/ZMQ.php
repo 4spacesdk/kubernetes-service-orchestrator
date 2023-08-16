@@ -2,6 +2,7 @@
 
 use App\Entities\Deployment;
 use App\Entities\ZMQEvent;
+use App\Libraries\WebHooks\WebhookHelper;
 use App\Libraries\ZMQ\ChangeEvent;
 use App\Models\ZMQEventModel;
 use CodeIgniter\Config\Services;
@@ -48,7 +49,7 @@ class ZMQ extends Controller {
         }
     }
 
-    public function migrationJobChangedStatus() {
+    public function migrationJobChangedStatus(): void {
         $changeEvent = ChangeEvent::Parse(json_decode($this->event->data, true));
 
         switch ($changeEvent->next['status']) {
@@ -62,6 +63,24 @@ class ZMQ extends Controller {
                 break;
         }
 
+        Data::debug('OK');
+    }
+
+    public function workspaceCreated(): void {
+        $changeEvent = ChangeEvent::Parse(json_decode($this->event->data, true));
+        WebhookHelper::Deliver(
+            \WebHookTypes::Workspace_Created,
+            json_encode($changeEvent->next)
+        );
+        Data::debug('OK');
+    }
+
+    public function workspaceDeleted(): void {
+        $changeEvent = ChangeEvent::Parse(json_decode($this->event->data, true));
+        WebhookHelper::Deliver(
+            \WebHookTypes::Workspace_Deleted,
+            json_encode($changeEvent->next)
+        );
         Data::debug('OK');
     }
 

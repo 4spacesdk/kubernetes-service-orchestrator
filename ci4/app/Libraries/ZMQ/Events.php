@@ -41,4 +41,12 @@ class Events {
         return Events::Generate("kubernetes.pod.{$pod}.logs.watch");
     }
 
+    public static function Workspace_Created(): string {
+        return Events::Generate("workspace.created");
+    }
+
+    public static function Workspace_Deleted(): string {
+        return Events::Generate("workspace.deleted");
+    }
+
 }

@@ -8,7 +8,10 @@ import {MigrationJob} from "./models";
 import {Domain} from "./models";
 import {EmailService} from "./models";
 import {KeelHookQueueItem} from "./models";
+import {OAuthClient} from "./models";
 import {User} from "./models";
+import {Webhook} from "./models";
+import {WebhookDelivery} from "./models";
 import {Workspace} from "./models";
 
 export interface ClusterRoleRule {
@@ -181,6 +184,10 @@ export interface StringArrayInterface {
 
 export interface StringInterface {
     value?: string;
+}
+
+export interface WebhookTypesGetResponse {
+    name?: string;
 }
 
 
@@ -3300,6 +3307,380 @@ class MigrationJobs {
 }
 
 
+export class OAuthClientsGet extends BaseApi<OAuthClient> {
+
+    public topic = 'Resources.OAuthClients';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/o_auth_clients`;
+    }
+
+    protected convertToResource(data: any): OAuthClient {
+        return new OAuthClient(data);
+    }
+
+    public where(name: string, value: any): OAuthClientsGet {
+        this.filter().where(name, value);
+        return this;
+    }
+
+    public whereEquals(name: string, value: any): OAuthClientsGet {
+        this.filter().whereEquals(name, value);
+        return this;
+    }
+
+    public whereIn(name: string, value: any[]): OAuthClientsGet {
+        this.filter().whereIn(name, value);
+        return this;
+    }
+
+    public whereInArray(name: string, value: any[]): OAuthClientsGet {
+        this.filter().whereInArray(name, value);
+        return this;
+    }
+
+    public whereNot(name: string, value: any): OAuthClientsGet {
+        this.filter().whereNot(name, value);
+        return this;
+    }
+
+    public whereNotIn(name: string, value: any[]): OAuthClientsGet {
+        this.filter().whereNotIn(name, value);
+        return this;
+    }
+
+    public whereGreaterThan(name: string, value: any): OAuthClientsGet {
+        this.filter().whereGreaterThan(name, value);
+        return this;
+    }
+
+    public whereGreaterThanOrEqual(name: string, value: any): OAuthClientsGet {
+        this.filter().whereGreaterThanOrEqual(name, value);
+        return this;
+    }
+
+    public whereLessThan(name: string, value: any): OAuthClientsGet {
+        this.filter().whereLessThan(name, value);
+        return this;
+    }
+
+    public whereLessThanOrEqual(name: string, value: any): OAuthClientsGet {
+        this.filter().whereLessThanOrEqual(name, value);
+        return this;
+    }
+
+    public search(name: string, value: any): OAuthClientsGet {
+        this.filter().search(name, value);
+        return this;
+    }
+
+    public include(name: string): OAuthClientsGet {
+        this.getInclude().include(name);
+        return this;
+    }
+
+    public orderBy(name: string, direction: string): OAuthClientsGet {
+        this.ordering().orderBy(name, direction);
+        return this;
+    }
+
+    public orderAsc(name: string): OAuthClientsGet {
+        this.ordering().orderAsc(name);
+        return this;
+    }
+
+    public orderDesc(name: string): OAuthClientsGet {
+        this.ordering().orderDesc(name);
+        return this;
+    }
+
+    public limit(value: number): OAuthClientsGet {
+        this.limitValue = value;
+        return this;
+    }
+
+    public offset(value: number): OAuthClientsGet {
+        this.offsetValue = value;
+        return this;
+    }
+
+    public count(next?: (value: number) => void) {
+        return this.executeCount(next);
+    }
+
+    public find(next?: (value: OAuthClient[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class OAuthClientsGetById extends BaseApi<OAuthClient> {
+
+    public topic = 'Resources.OAuthClients';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/o_auth_clients/${id}`;
+    }
+
+    protected convertToResource(data: any): OAuthClient {
+        return new OAuthClient(data);
+    }
+
+    public include(name: string): OAuthClientsGetById {
+        this.getInclude().include(name);
+        return this;
+    }
+
+    public find(next?: (value: OAuthClient[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class OAuthClientsPost extends BaseApi<OAuthClient> {
+
+    public topic = 'Resources.OAuthClients';
+    protected method = 'post';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/o_auth_clients`;
+    }
+
+    protected convertToResource(data: any): OAuthClient {
+        return new OAuthClient(data);
+    }
+
+    public save(data: OAuthClient, next?: (value: OAuthClient) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class OAuthClientsPutById extends BaseApi<OAuthClient> {
+
+    public topic = 'Resources.OAuthClients';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/o_auth_clients/${id}`;
+    }
+
+    protected convertToResource(data: any): OAuthClient {
+        return new OAuthClient(data);
+    }
+
+    public save(data: OAuthClient, next?: (value: OAuthClient) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class OAuthClientsPut extends BaseApi<OAuthClient> {
+
+    public topic = 'Resources.OAuthClients';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/o_auth_clients`;
+    }
+
+    protected convertToResource(data: any): OAuthClient {
+        return new OAuthClient(data);
+    }
+
+    public save(data: OAuthClient, next?: (value: OAuthClient) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class OAuthClientsPatchById extends BaseApi<OAuthClient> {
+
+    public topic = 'Resources.OAuthClients';
+    protected method = 'patch';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/o_auth_clients/${id}`;
+    }
+
+    protected convertToResource(data: any): OAuthClient {
+        return new OAuthClient(data);
+    }
+
+    public save(data: OAuthClient, next?: (value: OAuthClient) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class OAuthClientsPatch extends BaseApi<OAuthClient> {
+
+    public topic = 'Resources.OAuthClients';
+    protected method = 'patch';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/o_auth_clients`;
+    }
+
+    protected convertToResource(data: any): OAuthClient {
+        return new OAuthClient(data);
+    }
+
+    public save(data: OAuthClient, next?: (value: OAuthClient) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class OAuthClientsDeleteById extends BaseApi<OAuthClient> {
+
+    public topic = 'Resources.OAuthClients';
+    protected method = 'delete';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/o_auth_clients/${id}`;
+    }
+
+    protected convertToResource(data: any): OAuthClient {
+        return new OAuthClient(data);
+    }
+
+    public delete(next?: (value: OAuthClient) => void) {
+        return super.executeDelete(next);
+    }
+}
+
+export class OAuthClientsGetGetById extends BaseApi<OAuthClient> {
+
+    public topic = 'Resources.OAuthClients';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: string) {
+        super();
+        this.uri = `/o_auth_clients/${id}`;
+    }
+
+    protected convertToResource(data: any): OAuthClient {
+        return new OAuthClient(data);
+    }
+
+    public find(next?: (value: OAuthClient[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class OAuthClientsPatchPatchById extends BaseApi<OAuthClient> {
+
+    public topic = 'Resources.OAuthClients';
+    protected method = 'patch';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: string) {
+        super();
+        this.uri = `/o_auth_clients/${id}`;
+    }
+
+    protected convertToResource(data: any): OAuthClient {
+        return new OAuthClient(data);
+    }
+
+    public save(data: any, next?: (value: OAuthClient) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class OAuthClientsDeleteDeleteById extends BaseApi<OAuthClient> {
+
+    public topic = 'Resources.OAuthClients';
+    protected method = 'delete';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: string) {
+        super();
+        this.uri = `/o_auth_clients/${id}`;
+    }
+
+    protected convertToResource(data: any): OAuthClient {
+        return new OAuthClient(data);
+    }
+
+    public delete(next?: (value: OAuthClient) => void) {
+        return super.executeDelete(next);
+    }
+}
+
+class OAuthClients {
+
+    public get(): OAuthClientsGet {
+        return new OAuthClientsGet();
+    }
+
+    public getById(id: number): OAuthClientsGetById {
+        return new OAuthClientsGetById(id);
+    }
+
+    public post(): OAuthClientsPost {
+        return new OAuthClientsPost();
+    }
+
+    public putById(id: number): OAuthClientsPutById {
+        return new OAuthClientsPutById(id);
+    }
+
+    public put(): OAuthClientsPut {
+        return new OAuthClientsPut();
+    }
+
+    public patchById(id: number): OAuthClientsPatchById {
+        return new OAuthClientsPatchById(id);
+    }
+
+    public patch(): OAuthClientsPatch {
+        return new OAuthClientsPatch();
+    }
+
+    public deleteById(id: number): OAuthClientsDeleteById {
+        return new OAuthClientsDeleteById(id);
+    }
+
+    public getGetById(id: string): OAuthClientsGetGetById {
+        return new OAuthClientsGetGetById(id);
+    }
+
+    public patchPatchById(id: string): OAuthClientsPatchPatchById {
+        return new OAuthClientsPatchPatchById(id);
+    }
+
+    public deleteDeleteById(id: string): OAuthClientsDeleteDeleteById {
+        return new OAuthClientsDeleteDeleteById(id);
+    }
+
+}
+
+
 export class UsersGet extends BaseApi<User> {
 
     public topic = 'Resources.Users';
@@ -3624,6 +4005,330 @@ class Users {
 }
 
 
+export class WebhooksGet extends BaseApi<Webhook> {
+
+    public topic = 'Resources.Webhooks';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/webhooks`;
+    }
+
+    protected convertToResource(data: any): Webhook {
+        return new Webhook(data);
+    }
+
+    public where(name: string, value: any): WebhooksGet {
+        this.filter().where(name, value);
+        return this;
+    }
+
+    public whereEquals(name: string, value: any): WebhooksGet {
+        this.filter().whereEquals(name, value);
+        return this;
+    }
+
+    public whereIn(name: string, value: any[]): WebhooksGet {
+        this.filter().whereIn(name, value);
+        return this;
+    }
+
+    public whereInArray(name: string, value: any[]): WebhooksGet {
+        this.filter().whereInArray(name, value);
+        return this;
+    }
+
+    public whereNot(name: string, value: any): WebhooksGet {
+        this.filter().whereNot(name, value);
+        return this;
+    }
+
+    public whereNotIn(name: string, value: any[]): WebhooksGet {
+        this.filter().whereNotIn(name, value);
+        return this;
+    }
+
+    public whereGreaterThan(name: string, value: any): WebhooksGet {
+        this.filter().whereGreaterThan(name, value);
+        return this;
+    }
+
+    public whereGreaterThanOrEqual(name: string, value: any): WebhooksGet {
+        this.filter().whereGreaterThanOrEqual(name, value);
+        return this;
+    }
+
+    public whereLessThan(name: string, value: any): WebhooksGet {
+        this.filter().whereLessThan(name, value);
+        return this;
+    }
+
+    public whereLessThanOrEqual(name: string, value: any): WebhooksGet {
+        this.filter().whereLessThanOrEqual(name, value);
+        return this;
+    }
+
+    public search(name: string, value: any): WebhooksGet {
+        this.filter().search(name, value);
+        return this;
+    }
+
+    public include(name: string): WebhooksGet {
+        this.getInclude().include(name);
+        return this;
+    }
+
+    public orderBy(name: string, direction: string): WebhooksGet {
+        this.ordering().orderBy(name, direction);
+        return this;
+    }
+
+    public orderAsc(name: string): WebhooksGet {
+        this.ordering().orderAsc(name);
+        return this;
+    }
+
+    public orderDesc(name: string): WebhooksGet {
+        this.ordering().orderDesc(name);
+        return this;
+    }
+
+    public limit(value: number): WebhooksGet {
+        this.limitValue = value;
+        return this;
+    }
+
+    public offset(value: number): WebhooksGet {
+        this.offsetValue = value;
+        return this;
+    }
+
+    public count(next?: (value: number) => void) {
+        return this.executeCount(next);
+    }
+
+    public find(next?: (value: Webhook[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class WebhooksGetById extends BaseApi<Webhook> {
+
+    public topic = 'Resources.Webhooks';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/webhooks/${id}`;
+    }
+
+    protected convertToResource(data: any): Webhook {
+        return new Webhook(data);
+    }
+
+    public include(name: string): WebhooksGetById {
+        this.getInclude().include(name);
+        return this;
+    }
+
+    public find(next?: (value: Webhook[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class WebhooksPost extends BaseApi<Webhook> {
+
+    public topic = 'Resources.Webhooks';
+    protected method = 'post';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/webhooks`;
+    }
+
+    protected convertToResource(data: any): Webhook {
+        return new Webhook(data);
+    }
+
+    public save(data: Webhook, next?: (value: Webhook) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class WebhooksPatchById extends BaseApi<Webhook> {
+
+    public topic = 'Resources.Webhooks';
+    protected method = 'patch';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/webhooks/${id}`;
+    }
+
+    protected convertToResource(data: any): Webhook {
+        return new Webhook(data);
+    }
+
+    public save(data: Webhook, next?: (value: Webhook) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class WebhooksPatch extends BaseApi<Webhook> {
+
+    public topic = 'Resources.Webhooks';
+    protected method = 'patch';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/webhooks`;
+    }
+
+    protected convertToResource(data: any): Webhook {
+        return new Webhook(data);
+    }
+
+    public save(data: Webhook, next?: (value: Webhook) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class WebhooksDeleteById extends BaseApi<Webhook> {
+
+    public topic = 'Resources.Webhooks';
+    protected method = 'delete';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/webhooks/${id}`;
+    }
+
+    protected convertToResource(data: any): Webhook {
+        return new Webhook(data);
+    }
+
+    public delete(next?: (value: Webhook) => void) {
+        return super.executeDelete(next);
+    }
+}
+
+export class WebhooksTypesGetGet extends BaseApi<WebhookTypesGetResponse> {
+
+    public topic = 'Resources.WebhookTypesGetResponses';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/webhooks/types`;
+    }
+
+    protected convertToResource(data: any): WebhookTypesGetResponse {
+        return data;
+    }
+
+    public find(next?: (value: WebhookTypesGetResponse[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class WebhooksDeliveriesGetGetByWebhookId extends BaseApi<WebhookDelivery> {
+
+    public topic = 'Resources.WebhookDeliveries';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(webhookId: number) {
+        super();
+        this.uri = `/webhooks/${webhookId}/deliveries`;
+    }
+
+    protected convertToResource(data: any): WebhookDelivery {
+        return new WebhookDelivery(data);
+    }
+
+    public find(next?: (value: WebhookDelivery[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class WebhooksDeliveriesRetryPutByWebhookIdByWebhookDeliveryId extends BaseApi<WebhookDelivery> {
+
+    public topic = 'Resources.WebhookDeliveries';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(webhookId: number, webhookDeliveryId: number) {
+        super();
+        this.uri = `/webhooks/${webhookId}/deliveries/${webhookDeliveryId}/retry`;
+    }
+
+    protected convertToResource(data: any): WebhookDelivery {
+        return new WebhookDelivery(data);
+    }
+
+    public save(data: any, next?: (value: WebhookDelivery) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+class Webhooks {
+
+    public get(): WebhooksGet {
+        return new WebhooksGet();
+    }
+
+    public getById(id: number): WebhooksGetById {
+        return new WebhooksGetById(id);
+    }
+
+    public post(): WebhooksPost {
+        return new WebhooksPost();
+    }
+
+    public patchById(id: number): WebhooksPatchById {
+        return new WebhooksPatchById(id);
+    }
+
+    public patch(): WebhooksPatch {
+        return new WebhooksPatch();
+    }
+
+    public deleteById(id: number): WebhooksDeleteById {
+        return new WebhooksDeleteById(id);
+    }
+
+    public typesGetGet(): WebhooksTypesGetGet {
+        return new WebhooksTypesGetGet();
+    }
+
+    public deliveriesGetGetByWebhookId(webhookId: number): WebhooksDeliveriesGetGetByWebhookId {
+        return new WebhooksDeliveriesGetGetByWebhookId(webhookId);
+    }
+
+    public deliveriesRetryPutByWebhookIdByWebhookDeliveryId(webhookId: number, webhookDeliveryId: number): WebhooksDeliveriesRetryPutByWebhookIdByWebhookDeliveryId {
+        return new WebhooksDeliveriesRetryPutByWebhookIdByWebhookDeliveryId(webhookId, webhookDeliveryId);
+    }
+
+}
+
+
 export class WorkspacesGet extends BaseApi<Workspace> {
 
     public topic = 'Resources.Workspaces';
@@ -3864,7 +4569,7 @@ export class WorkspacesCreatePost extends BaseApi<Workspace> {
     }
 }
 
-export class WorkspacesCreateDeplymentPostById extends BaseApi<Deployment> {
+export class WorkspacesCreateDeploymentPostById extends BaseApi<Deployment> {
 
     public topic = 'Resources.Deployments';
     protected method = 'post';
@@ -3880,17 +4585,17 @@ export class WorkspacesCreateDeplymentPostById extends BaseApi<Deployment> {
         return new Deployment(data);
     }
 
-    public deploymentSpecificationId(value: number): WorkspacesCreateDeplymentPostById {
+    public deploymentSpecificationId(value: number): WorkspacesCreateDeploymentPostById {
         this.addQueryParameter('deploymentSpecificationId', value);
         return this;
     }
 
-    public name(value: string): WorkspacesCreateDeplymentPostById {
+    public name(value: string): WorkspacesCreateDeploymentPostById {
         this.addQueryParameter('name', value);
         return this;
     }
 
-    public namespace(value: string): WorkspacesCreateDeplymentPostById {
+    public namespace(value: string): WorkspacesCreateDeploymentPostById {
         this.addQueryParameter('namespace', value);
         return this;
     }
@@ -4160,8 +4865,8 @@ class Workspaces {
         return new WorkspacesCreatePost();
     }
 
-    public createDeplymentPostById(id: number): WorkspacesCreateDeplymentPostById {
-        return new WorkspacesCreateDeplymentPostById(id);
+    public createDeploymentPostById(id: number): WorkspacesCreateDeploymentPostById {
+        return new WorkspacesCreateDeploymentPostById(id);
     }
 
     public updateNamePutById(id: number): WorkspacesUpdateNamePutById {
@@ -4256,8 +4961,16 @@ export class Api {
         return new MigrationJobs();
     }
 
+    public static oAuthClients(): OAuthClients {
+        return new OAuthClients();
+    }
+
     public static users(): Users {
         return new Users();
+    }
+
+    public static webhooks(): Webhooks {
+        return new Webhooks();
     }
 
     public static workspaces(): Workspaces {

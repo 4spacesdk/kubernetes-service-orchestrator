@@ -196,6 +196,17 @@ bus.on('deploymentPackageUpdateDeploymentSpecifications', async input => {
     addComponent((await import('@/components/Dialogs/Setup/DeploymentPackages/UpdateDialogs/DeploymentPackageUpdateDeploymentSpecificationsDialog.vue')).default, input);
 });
 
+bus.on('oauthClientEdit', async input => {
+    addComponent((await import('@/components/Dialogs/Integrations/OAuthClients/OAuthClientEditDialog.vue')).default, input);
+});
+
+bus.on('webhookEdit', async input => {
+    addComponent((await import('@/components/Dialogs/Integrations/Webhooks/WebhookEditDialog.vue')).default, input);
+});
+bus.on('webhookDeliveryList', async input => {
+    addComponent((await import('@/components/Dialogs/Integrations/Webhooks/Deliveries/WebhookDeliveryListDialog.vue')).default, input);
+});
+
 
 
 

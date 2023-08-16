@@ -12,8 +12,8 @@ import {
     DatabaseService,
     Deployment, DeploymentPackage, DeploymentSpecification,
     Domain,
-    EmailService,
-    User,
+    EmailService, OAuthClient,
+    User, Webhook,
     Workspace
 } from "@/core/services/Deploy/models";
 import type {ToastDialog_Input} from "@/components/Dialogs/Common/Toast.vue";
@@ -112,6 +112,11 @@ import type {
 import type {
     DeploymentPackageUpdateDeploymentSpecificationsDialog_Input
 } from "@/components/Dialogs/Setup/DeploymentPackages/UpdateDialogs/DeploymentPackageUpdateDeploymentSpecificationsDialog.vue";
+import type {OAuthClientEditDialog_Input} from "@/components/Dialogs/Integrations/OAuthClients/OAuthClientEditDialog.vue";
+import type {WebhookEditDialog_Input} from "@/components/Dialogs/Integrations/Webhooks/WebhookEditDialog.vue";
+import type {
+    WebhookDeliveryListDialog_Input
+} from "@/components/Dialogs/Integrations/Webhooks/Deliveries/WebhookDeliveryListDialog.vue";
 
 export type Events = {
     confirm: ConfirmationDialog_Input;
@@ -192,6 +197,14 @@ export type Events = {
     deploymentPackageUpdateDeploymentSpecification: DeploymentPackageUpdateDeploymentSpecificationDialog_Input;
     deploymentPackageUpdateDeploymentSpecifications: DeploymentPackageUpdateDeploymentSpecificationsDialog_Input;
 
+    oauthClientSaved: OAuthClient | undefined;
+    oauthClientEdit: OAuthClientEditDialog_Input;
+    oauthClientEditDialog_closed: OAuthClient | undefined;
+
+    webhookSaved: Webhook | undefined;
+    webhookEdit: WebhookEditDialog_Input;
+    webhookEditDialog_closed: Webhook | undefined;
+    webhookDeliveryList: WebhookDeliveryListDialog_Input;
 }
 
 export const DeploymentStatusTypes = {
@@ -207,12 +220,6 @@ export const MigrationJobStatusTypes = {
     Completed: 'completed',
     FailedLogVerification: 'failed-log-verification',
     Failed_PostCommands: 'failed-post-commands',
-};
-
-export const ConfigurationTypes = {
-    Checkbox: 'checkbox',
-    Dropdown_Single: 'dropdown-single',
-    TextFieldList_SingleLine: 'text-field-list',
 };
 
 export const KeelHookStatusTypes = {

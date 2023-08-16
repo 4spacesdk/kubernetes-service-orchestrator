@@ -10,7 +10,13 @@ class UserModel extends \RestExtension\Models\UserModel implements ResourceModel
     ];
 
     public $hasMany = [
-
+        OAuthClientModel::class => [
+            'class' => OAuthClientModel::class,
+            'otherField' => UserModel::class,
+            'joinTable' => 'oauth_clients',
+            'joinOtherAs' => 'id',
+            'joinSelfAs' => 'user_id',
+        ],
     ];
 
     public function preRestGet($queryParser, $id) {

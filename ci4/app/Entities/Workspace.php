@@ -4,6 +4,9 @@ use App\Exceptions\ValidationException;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
 use App\Libraries\GoogleCloud\GoogleCloudArtifactRegistry;
+use App\Libraries\ZMQ\ChangeEvent;
+use App\Libraries\ZMQ\Events;
+use App\Libraries\ZMQ\ZMQProxy;
 use App\Models\ConfigurationSpecificationModel;
 use App\Models\DeploymentModel;
 use App\Models\DeploymentPackageDeploymentSpecificationModel;
@@ -102,6 +105,11 @@ class Workspace extends Entity {
             $deployment = $item->createDeploymentFromPackage($deploymentPackageDeploymentSpecification);
             $item->deployments->add($deployment);
         }
+
+        ZMQProxy::getInstance()->send(
+            Events::Workspace_Created(),
+            (new ChangeEvent(null, $item->toArray()))->toArray()
+        );
 
         return $item;
     }
@@ -274,6 +282,17 @@ class Workspace extends Entity {
         }
         $this->deployments = $deployments;
         return count($allErrors) ? implode("\n", $allErrors) : null;
+    }
+
+    public function delete($related = null) {
+        parent::delete($related);
+
+        if ($related === null) {
+            ZMQProxy::getInstance()->send(
+                Events::Workspace_Deleted(),
+                (new ChangeEvent(null, $this->toArray()))->toArray()
+            );
+        }
     }
 
     /**

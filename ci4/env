@@ -3,7 +3,7 @@ PROJECT_NAME=
 PROJECT_CONTACT_URL=
 PROJECT_CONTACT_EMAIL=
 
-# Kubernetes authentification
+# Kubernetes authentication
 ## Options:
 ## * kube-config (provide KUBERNETES_KUBECONFIG, if using GKE you can set GCLOUD options to enable gke-auth plugin)
 ## * in-cluster (provide REMOTE_CLUSTER_URL)

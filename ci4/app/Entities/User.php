@@ -15,13 +15,15 @@ use App\Models\UserModel;
 class User extends \RestExtension\Entities\User {
 
     public static function post($data) {
-        // Ensure unique Portal users
-        /** @var User $item */
-        $item = (new UserModel())
-            ->where('username', $data['username'])
-            ->find();
-        if ($item->exists()) {
-            return $item;
+        if (isset($data['username'])) {
+            // Ensure unique username
+            /** @var User $item */
+            $item = (new UserModel())
+                ->where('username', $data['username'])
+                ->find();
+            if ($item->exists()) {
+                return $item;
+            }
         }
 
         /** @var User $item */

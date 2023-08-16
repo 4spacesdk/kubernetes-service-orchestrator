@@ -37,4 +37,12 @@ class Events {
         return Events::Generate("keel-hook-queue-item.$keelHookQueueItemId.changed.status");
     }
 
+    public static function Workspace_Created(): string {
+        return Events::Generate("workspace.created");
+    }
+
+    public static function Workspace_Deleted(): string {
+        return Events::Generate("workspace.deleted");
+    }
+
 }

@@ -51,7 +51,7 @@ function onSaveBtnClicked() {
     isSaving.value = true;
 
     const api = props.input.workspace !== undefined
-        ? Api.workspaces().createDeplymentPostById(props.input.workspace.id!)
+        ? Api.workspaces().createDeploymentPostById(props.input.workspace.id!)
         : Api.deployments().createPost();
 
     api

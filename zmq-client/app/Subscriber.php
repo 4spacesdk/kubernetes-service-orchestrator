@@ -27,9 +27,23 @@ class Subscriber {
             $result = php("ZMQ migrationJobChangedStatus --identifier $identifier --event $event --data $data");
             log_($result);
         });
+
+        $client->subscribe(Events::Workspace_Created(), function ($payload) {
+            log_('Workspace_Created');
+            [$identifier, $event, $data] = self::ParsePayload($payload);
+            $result = php("ZMQ workspaceCreated --identifier $identifier --event $event --data $data");
+            log_($result);
+        });
+
+        $client->subscribe(Events::Workspace_Deleted(), function ($payload) {
+            log_('Workspace_Deleted');
+            [$identifier, $event, $data] = self::ParsePayload($payload);
+            $result = php("ZMQ workspaceDeleted --identifier $identifier --event $event --data $data");
+            log_($result);
+        });
     }
 
-    private function setupInternalClient(string $host, LoopInterface $loop) {
+    private function setupInternalClient(string $host, LoopInterface $loop): void {
         $m = new AuthMinion();
         $m->register(function (Client $client) {
             log_('Connected to internal host!');
@@ -65,7 +79,7 @@ class Subscriber {
         ];
     }
 
-    private function heartbeat() {
+    private function heartbeat(): void {
         log_('heartbeat');
         if (isset($this->internalClient)) {
             if ($this->internalClient->getSession() !== null) {

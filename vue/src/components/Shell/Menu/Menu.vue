@@ -66,7 +66,7 @@ const categories = ref<MenuCategory[]>([
     {
         identifier: 'setup',
         name: 'Setup',
-        icon: 'fa fa-rocket-launch',
+        icon: 'fa fa-gear',
         items: [
             {
                 title: 'Deployments',
@@ -98,6 +98,22 @@ const categories = ref<MenuCategory[]>([
             },
         ],
     },
+    {
+        identifier: 'integrations',
+        name: 'Integrations',
+        icon: 'fa fa-rocket',
+        items: [
+            {
+                title: 'OAuth Clients',
+                url: '/integrations/oauth-clients',
+            },
+            {
+                title: 'Webhooks',
+                url: '/integrations/webhooks',
+            },
+        ],
+    }
+
 ]);
 
 function onLogoClicked(event: Event) {

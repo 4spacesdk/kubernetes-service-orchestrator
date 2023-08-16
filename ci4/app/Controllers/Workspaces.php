@@ -52,7 +52,7 @@ class Workspaces extends ResourceController {
      * @return void
      * @responseSchema Deployment
      */
-    public function createDeplyment(int $id = 0): void {
+    public function createDeployment(int $id = 0): void {
         $item = new Workspace();
         $item->find($id);
         if (!$item->exists()) {
