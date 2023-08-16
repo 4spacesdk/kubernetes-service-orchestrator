@@ -22,6 +22,9 @@ const showDialog = ref(false);
 const formIsValid = ref(false);
 
 const path = ref('');
+const pathTypeItems = ref([
+    'Prefix', 'ImplementationSpecific', 'Exact',
+]);
 const pathType = ref('');
 const backendServicePortName = ref('');
 
@@ -51,7 +54,7 @@ onUnmounted(() => {
 
 function render() {
     path.value = props.input.ingressRulePath.path ?? '';
-    pathType.value = props.input.ingressRulePath.pathType ?? '';
+    pathType.value = props.input.ingressRulePath.pathType ?? pathTypeItems.value[0];
     backendServicePortName.value = props.input.ingressRulePath.backendServicePortName ?? '';
     showDialog.value = true;
 }
@@ -105,14 +108,12 @@ function onCloseBtnClicked() {
                             />
                         </v-col>
                         <v-col cols="6">
-                            <v-text-field
+                            <v-select
                                 v-model="pathType"
                                 variant="outlined"
                                 label="Path Type"
-                                clearable
                                 :rules="rules.required"
-                                hint="ImplementationSpecific, Exact, Prefix"
-                                persistent-hint
+                                :items="pathTypeItems"
                             />
                         </v-col>
                         <v-col cols="6">
@@ -138,7 +139,6 @@ function onCloseBtnClicked() {
                     </v-btn>
 
                     <v-btn
-                        :disabled="!formIsValid"
                         flat
                         variant="tonal"
                         prepend-icon="fa fa-check"

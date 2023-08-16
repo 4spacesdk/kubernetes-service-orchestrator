@@ -10,8 +10,8 @@ export interface DeploymentSpecificationUpdateServicePortsDialog_Input {
 }
 
 interface Row {
-    protocol: string;
-    name: string;
+    protocol?: string;
+    name?: string;
     port?: number;
     targetPort?: number;
 }
@@ -79,8 +79,6 @@ function close() {
 
 function onCreateBtnClicked() {
     const newItem = {
-        protocol: '',
-        name: '',
     };
     bus.emit('deploymentSpecificationUpdateServicePort', {
         servicePort: newItem,

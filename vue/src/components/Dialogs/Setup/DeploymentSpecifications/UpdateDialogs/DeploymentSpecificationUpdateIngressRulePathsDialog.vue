@@ -11,7 +11,7 @@ export interface DeploymentSpecificationUpdateIngressRulePathsDialog_Input {
 
 interface Row {
     path: string;
-    pathType: string;
+    pathType?: string;
     backendServicePortName: string;
 }
 
@@ -77,7 +77,6 @@ function close() {
 function onCreateBtnClicked() {
     const newItem = {
         path: '',
-        pathType: '',
         backendServicePortName: '',
     };
     bus.emit('deploymentSpecificationUpdateIngressRulePath', {

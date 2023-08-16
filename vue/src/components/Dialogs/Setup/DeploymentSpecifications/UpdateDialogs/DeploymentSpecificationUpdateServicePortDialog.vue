@@ -22,6 +22,9 @@ const used = ref(false);
 const showDialog = ref(false);
 const formIsValid = ref(false);
 
+const protocolItems = ref([
+    'TCP', 'UDP', 'SCTP',
+]);
 const protocol = ref('');
 const name = ref('');
 const port = ref<number>();
@@ -52,7 +55,7 @@ onUnmounted(() => {
 });
 
 function render() {
-    protocol.value = props.input.servicePort.protocol ?? '';
+    protocol.value = props.input.servicePort.protocol ?? protocolItems.value[0];
     name.value = props.input.servicePort.name ?? '';
     port.value = props.input.servicePort.port;
     targetPort.value = props.input.servicePort.targetPort;
@@ -100,13 +103,11 @@ function onCloseBtnClicked() {
                 <v-card-text>
                     <v-row>
                         <v-col cols="6">
-                            <v-text-field
+                            <v-select
                                 v-model="protocol"
                                 variant="outlined"
                                 label="Protocol"
-                                clearable
-                                persistent-hint
-                                hint="TCP, UDP, SCTP"
+                                :items="protocolItems"
                                 :rules="rules.required"
                             />
                         </v-col>
@@ -150,7 +151,6 @@ function onCloseBtnClicked() {
                     </v-btn>
 
                     <v-btn
-                        :disabled="!formIsValid"
                         flat
                         variant="tonal"
                         prepend-icon="fa fa-check"
