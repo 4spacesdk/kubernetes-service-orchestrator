@@ -47,10 +47,6 @@ use RestExtension\Core\Entity;
  * @property int $memory_request
  * @property int $replicas
  *
- * # OAuth
- * @property string $oauth_client_id
- * @property string $oauth_client_secret
- *
  * # Migration Job
  * @property int $last_migration_job_id
  * @property MigrationJob $last_migration_job

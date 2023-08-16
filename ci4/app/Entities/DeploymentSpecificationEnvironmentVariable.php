@@ -5,7 +5,7 @@ use RestExtension\Core\Entity;
 /**
  * Class DeploymentSpecificationEnvironmentVariable
  * @package App\Entities
- * @property int $deploymennt_specification_id
+ * @property int $deployment_specification_id
  * @property DeploymentSpecification $deployment_specification
  * @property string $name
  * @property string $value
@@ -35,9 +35,6 @@ class DeploymentSpecificationEnvironmentVariable extends Entity {
             fn(string $value) => str_replace('${database.name}', $deployment->database_name, $value),
             fn(string $value) => str_replace('${database.user}', $deployment->database_service->getDatabaseUser($deployment->database_user), $value),
             fn(string $value) => str_replace('${database.pass}', $deployment->database_pass, $value),
-
-            fn(string $value) => str_replace('${oauth.clientId}', $deployment->oauth_client_id, $value),
-            fn(string $value) => str_replace('${oauth.clientSecret}', $deployment->oauth_client_secret, $value),
 
             fn(string $value) => str_replace('${emailService.host}', $workspace->email_service->host, $value),
             fn(string $value) => str_replace('${emailService.port}', $workspace->email_service->port, $value),

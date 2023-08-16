@@ -50,14 +50,6 @@ const variables = ref<Variable[]>([
         code: "${database.pass}"
     },
     {
-        name: "OAuth Client ID",
-        code: "${oauth.clientId}"
-    },
-    {
-        name: "OAuth Client Secret",
-        code: "${oauth.clientSecret}"
-    },
-    {
         name: "Email Service Host",
         code: "${emailService.host}"
     },

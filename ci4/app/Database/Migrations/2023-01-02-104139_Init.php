@@ -133,9 +133,6 @@ class Init extends Migration {
             ->column('memory_request', ColumnTypes::INT)
             ->column('replicas', ColumnTypes::INT)
 
-            ->column('oauth_client_id', ColumnTypes::VARCHAR_127)
-            ->column('oauth_client_secret', ColumnTypes::VARCHAR_127)
-
             ->column('last_migration_job_id', ColumnTypes::INT)->addIndex('last_migration_job_id')
 
             ->timestamps()
