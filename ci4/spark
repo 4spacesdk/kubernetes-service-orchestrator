@@ -76,6 +76,8 @@ require rtrim($paths->systemDirectory, '\\/ ') . DIRECTORY_SEPARATOR . 'bootstra
 
 // Load environment settings from .env files into $_SERVER and $_ENV
 require_once SYSTEMPATH . 'Config/DotEnv.php';
+
+$_ENV = []; // We need to clear $_ENV for DotEnv to overwrite. $_ENV is empty when accessed from web
 (new CodeIgniter\Config\DotEnv(ROOTPATH))->load();
 
 // Grab our CodeIgniter

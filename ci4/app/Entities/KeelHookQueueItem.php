@@ -49,7 +49,7 @@ class KeelHookQueueItem extends Entity {
                 $deployment->updateVersion($tag, false);
 
                 if ($deployment->findDeploymentSpecification()->hasDeploymentStep($deployment, MigrationJobStep::class)) {
-                    $this->appendLog('Migration job started');
+                    $this->appendLog('Migration job to be started');
                     $migrationStep = new MigrationJobStep();
                     $errors = $migrationStep->tryExecuteDeployCommand($deployment);
                     if ($errors) {

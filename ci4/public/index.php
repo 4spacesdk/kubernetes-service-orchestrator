@@ -72,6 +72,7 @@ $paths = new Config\Paths();
 require rtrim($paths->systemDirectory, '\\/ ') . DIRECTORY_SEPARATOR . 'bootstrap.php';
 
 // Load environment settings from .env files into $_SERVER and $_ENV
+$_ENV = []; // Clear to let .env overwrite. Else ENV is set when running from php command.
 require_once SYSTEMPATH . 'Config/DotEnv.php';
 (new CodeIgniter\Config\DotEnv(ROOTPATH))->load();
 
