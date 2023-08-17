@@ -189,7 +189,7 @@ class CronjobStep extends BaseDeploymentStep {
                             ->setAttribute('args', [
                                 '/bin/sh',
                                 '-ec',
-                                "curl {$deployment->name}.{$deployment->namespace}" . $spec->cronjob_url
+                                "curl {$deployment->getInternalUrl()}{$spec->cronjob_url}"
                             ])
                             ->setAttribute('imagePullPolicy', 'Always')
                     ])
