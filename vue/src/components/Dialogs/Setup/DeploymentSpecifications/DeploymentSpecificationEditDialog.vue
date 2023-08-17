@@ -50,6 +50,7 @@ function render() {
 
     isLoadingContainerImageitems.value = true;
     Api.containerImages().get()
+        .orderAsc('name')
         .find(items => {
             containerImageItems.value = items;
             isLoadingContainerImageitems.value = false;
