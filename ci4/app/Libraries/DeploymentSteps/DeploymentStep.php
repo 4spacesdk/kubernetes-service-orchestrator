@@ -293,7 +293,7 @@ class DeploymentStep extends BaseDeploymentStep {
             ->setAttribute('imagePullPolicy', 'Always')
             ->addPort(80)
             ->addEnv('ENVIRONMENT', $deployment->environment)
-            ->addEnv('BASE_URL', $deployment->getUrl(true));
+            ->addEnv('BASE_URL', $deployment->getUrl(true, true));
 
         $extraEnvVars = [];
         $specEnvVars = $spec->getEnvironmentVariables($deployment);

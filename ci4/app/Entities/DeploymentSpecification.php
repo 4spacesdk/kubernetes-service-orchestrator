@@ -114,13 +114,14 @@ class DeploymentSpecification extends Entity {
         return in_array($class, $allowedSteps);
     }
 
-    public function getUrl(string $subdomain, Domain $domain, bool $includeTls = false): string {
+    public function getUrl(string $subdomain, Domain $domain, bool $includeTls = false, bool $includeSuffix = false): string {
         $tls = $includeTls ? "{$this->domain_tls}://" : '';
         $domain = $domain->name;
         if (strlen($subdomain)) {
             $domain = $subdomain . '.' . $domain;
         }
-        return "{$tls}{$this->domain_prefix}{$domain}{$this->domain_suffix}";
+        $suffix = $includeSuffix ? $this->domain_suffix : '';
+        return "{$tls}{$this->domain_prefix}{$domain}{$suffix}";
     }
 
     public function getIngressRules(Deployment $deployment): array {

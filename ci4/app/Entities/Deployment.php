@@ -197,21 +197,21 @@ class Deployment extends Entity {
         }
     }
 
-    public function getInternalUrl(string $append = null): string {
+    public function getInternalUrl(): string {
         if (!$this->domain->exists()) {
             $this->domain->find();
         }
 
         $spec = $this->findDeploymentSpecification();
-        return "{$this->name}.{$this->namespace}.svc.cluster.local{$spec->domain_suffix}" . $append;
+        return "{$this->name}.{$this->namespace}.svc.cluster.local{$spec->domain_suffix}";
     }
 
-    public function getUrl(bool $includeTls = false, string $append = null): string {
+    public function getUrl(bool $includeTls = false, bool $includeSuffix = false): string {
         if (!$this->domain->exists()) {
             $this->domain->find();
         }
 
-        return $this->findDeploymentSpecification()->getUrl($this->subdomain, $this->domain, $includeTls) . $append;
+        return $this->findDeploymentSpecification()->getUrl($this->subdomain, $this->domain, $includeTls, $includeSuffix);
     }
 
     public function checkStatus(): void {
@@ -285,7 +285,7 @@ class Deployment extends Entity {
         $item = parent::toArray($onlyChanged, $cast, $recursive, $fieldsFilter);
 
         if (isset($this->domain) && isset($this->deployment_specification)) {
-            $item['url_external'] = $this->getUrl(true);
+            $item['url_external'] = $this->getUrl(true, true);
             $item['url_internal'] = $this->getInternalUrl();
         }
 

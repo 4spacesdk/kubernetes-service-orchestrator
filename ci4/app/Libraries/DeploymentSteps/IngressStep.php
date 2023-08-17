@@ -175,7 +175,7 @@ class IngressStep extends BaseDeploymentStep {
             ->setTls([
                 [
                     'hosts' => [
-                        $deployment->getUrl()
+                        $deployment->getUrl(),
                     ],
                     'secretName' => $deployment->domain->certificate_name,
                 ]

@@ -254,7 +254,7 @@ class MigrationJobStep extends BaseDeploymentStep {
                 . ' | curl --connect-timeout 5 --max-time 60 --retry 10 --retry-delay 5 --retry-max-time 300 -i -v -X PUT --data-binary @- ' . $this->getMigrationEndedUrl(),
             ])
             ->addEnv('ENVIRONMENT', \Environments::Development)
-            ->addEnv('BASE_URL', $deployment->getUrl(true));
+            ->addEnv('BASE_URL', $deployment->getUrl(true, true));
 
         $extraEnvVars = [];
         $specEnvVars = $spec->getEnvironmentVariables($deployment);

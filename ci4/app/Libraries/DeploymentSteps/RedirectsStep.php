@@ -170,7 +170,7 @@ class RedirectsStep extends BaseDeploymentStep {
             ->setNamespace($deployment->namespace)
             ->setAnnotations([
                 'kubernetes.io/ingress.class' => 'nginx',
-                'nginx.ingress.kubernetes.io/rewrite-target' => $deployment->getUrl(true),
+                'nginx.ingress.kubernetes.io/rewrite-target' => $deployment->getUrl(true, true),
             ]);
 
         $tlsHosts = [];
@@ -187,7 +187,7 @@ class RedirectsStep extends BaseDeploymentStep {
                     'http' => [
                         'paths' => [
                             [
-                                'path' => '/',
+                                'path' => strlen($spec->domain_suffix) ? $spec->domain_suffix : '/',
                                 'pathType' => 'Prefix',
                                 'backend' => [
                                     'service' => [
