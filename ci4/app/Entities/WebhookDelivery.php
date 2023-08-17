@@ -47,7 +47,6 @@ class WebhookDelivery extends Entity {
 
         $time = microtime(true);
         $response = curl_exec($ch);
-        Data::debug($time, microtime(true), (microtime(true) - $time));
         $this->response_time = (microtime(true) - $time) * 1000;
         $this->response_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);

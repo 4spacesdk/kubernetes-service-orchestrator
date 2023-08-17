@@ -198,7 +198,12 @@ class Deployment extends Entity {
     }
 
     public function getInternalUrl(string $append = null): string {
-        return "{$this->name}.{$this->namespace}{$append}";
+        if (!$this->domain->exists()) {
+            $this->domain->find();
+        }
+
+        $spec = $this->findDeploymentSpecification();
+        return "{$this->name}.{$this->namespace}.svc.cluster.local{$spec->domain_suffix}" . $append;
     }
 
     public function getUrl(bool $includeTls = false, string $append = null): string {

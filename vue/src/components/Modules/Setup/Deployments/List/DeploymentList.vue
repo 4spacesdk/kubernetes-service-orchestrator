@@ -44,6 +44,7 @@ onMounted(() => {
     if (deploymentSpecs.value.length == 0) {
         Api.deploymentSpecifications().get()
             .include('container_image')
+            .orderAsc('name')
             .find(items => {
                 deploymentSpecs.value = items;
             });

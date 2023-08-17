@@ -106,21 +106,21 @@ function onRetryItemBtnClicked(item: Row) {
 function onRequestPayloadBtnClicked(item: Row) {
     bus.emit('info', {
         title: 'Request payload',
-        body: item.item.payload
+        body: item.item.payload ?? ''
     });
 }
 
 function onResponseHeadersBtnClicked(item: Row) {
     bus.emit('info', {
         title: 'Response headers',
-        body: item.item.response_headers
+        body: item.item.response_headers ?? ''
     });
 }
 
 function onResponseBodyBtnClicked(item: Row) {
     bus.emit('info', {
         title: 'Response body',
-        body: item.item.response_body
+        body: item.item.response_body ?? ''
     });
 }
 
