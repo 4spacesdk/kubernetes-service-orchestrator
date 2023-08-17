@@ -93,6 +93,7 @@ function render() {
                     ?.map(row => row.deploymentSpecification.id!)
                 ?? []
             Api.deploymentSpecifications().get()
+                .orderAsc('name')
                 .find(items => {
                     createItems.value = items.map(item => {
                         return {
