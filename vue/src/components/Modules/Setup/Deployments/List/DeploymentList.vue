@@ -18,6 +18,11 @@ const props = defineProps<{
     showCreateBtn?: boolean;
 }>();
 
+const emit = defineEmits<{
+    (e: 'onItemDeleted', item: Deployment): void;
+    (e: 'onItemSaved', item: Deployment): void;
+}>();
+
 const itemCount = ref(0);
 const rows = ref<Deployment[]>([]);
 const headers = ref([
@@ -131,6 +136,7 @@ function onCreateItemBtnClicked(deploymentSpec: DeploymentSpecification) {
     showCreateMenu.value = false;
     bus.emit('deploymentCreate', {
         spec: deploymentSpec,
+        onSavedCallback: (deployment: Deployment) => emit('onItemSaved', deployment),
     });
 }
 
@@ -143,6 +149,7 @@ function onDeleteItemBtnClicked(item: Deployment) {
         responseCallback: (confirmed: boolean) => {
             if (confirmed) {
                 Api.deployments().deleteById(item.id!).delete(() => bus.emit('deploymentSaved'));
+                emit('onItemDeleted', item);
             }
         }
     });

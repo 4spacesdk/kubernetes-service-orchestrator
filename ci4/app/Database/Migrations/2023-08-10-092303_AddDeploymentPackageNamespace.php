@@ -12,7 +12,7 @@ class AddDeploymentPackageNamespace extends Migration {
         Table::init('deployment_packages')
             ->column('namespace', ColumnTypes::VARCHAR_255);
 
-        ApiRoute::quick('/workspaces/([0-9]+)/deployments', Workspaces::class, 'createDeplyment/$1', 'post');
+        ApiRoute::quick('/workspaces/([0-9]+)/deployments', Workspaces::class, 'createDeployment/$1', 'post');
     }
 
     public function down() {

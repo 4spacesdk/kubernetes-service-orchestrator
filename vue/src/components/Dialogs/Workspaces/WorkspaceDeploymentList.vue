@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
-import {DeploymentSpecification, Workspace} from "@/core/services/Deploy/models";
+import {Deployment, DeploymentSpecification, Workspace} from "@/core/services/Deploy/models";
 import DeploymentList from "@/components/Modules/Setup/Deployments/List/DeploymentList.vue";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
@@ -84,7 +84,22 @@ function onCreateItemBtnClicked(createItem: CreateItem) {
     bus.emit('deploymentCreate', {
         spec: createItem.deploymentSpecification,
         workspace: props.input.workspace,
+        onSavedCallback: (deployment: Deployment) => onItemCreatedEvent(deployment),
     });
+}
+
+function onItemCreatedEvent(deployment: Deployment) {
+    const createItem = createItems.value.find(createItem => createItem.deploymentSpecification.id == deployment.deployment_specification_id);
+    if (createItem) {
+        createItem.inUse = true;
+    }
+}
+
+function onItemDeletedEvent(deployment: Deployment) {
+    const createItem = createItems.value.find(createItem => createItem.deploymentSpecification.id == deployment.deployment_specification_id);
+    if (createItem) {
+        createItem.inUse = false;
+    }
 }
 
 // </editor-fold>
@@ -156,7 +171,10 @@ function onCreateItemBtnClicked(createItem: CreateItem) {
             <v-card-text>
                 <DeploymentList
                     :show-header="false"
-                    :filter-by-workspace-id="props.input.workspace.id"/>
+                    :filter-by-workspace-id="props.input.workspace.id"
+                    @on-item-deleted="onItemDeletedEvent"
+                    @on-item-saved="onItemCreatedEvent"
+                />
             </v-card-text>
             <v-divider/>
             <v-card-actions>

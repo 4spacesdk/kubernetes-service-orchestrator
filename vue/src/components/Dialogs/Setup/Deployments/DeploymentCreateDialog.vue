@@ -7,7 +7,9 @@ import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInter
 
 export interface DeploymentCreateDialog_Input {
     spec: DeploymentSpecification;
-    workspace?: Workspace
+    workspace?: Workspace;
+
+    onSavedCallback?: (deployment: Deployment) => void;
 }
 
 const props = defineProps<{ input: DeploymentCreateDialog_Input, events: DialogEventsInterface }>();
@@ -72,6 +74,9 @@ function onSaveBtnClicked() {
         if (newItem) {
             isSaving.value = false;
             bus.emit('deploymentSaved', newItem);
+            if (props.input.onSavedCallback) {
+                props.input.onSavedCallback(newItem);
+            }
             close();
         }
     });

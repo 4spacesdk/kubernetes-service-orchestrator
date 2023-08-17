@@ -3,12 +3,15 @@
 use App\Core\ResourceController;
 use App\Entities\Deployment;
 use App\Entities\DeploymentPackage;
+use App\Entities\DeploymentPackageDeploymentSpecification;
 use App\Entities\DeploymentSpecification;
 use App\Entities\Workspace;
 use App\Exceptions\ValidationException;
 use App\Models\DeploymentModel;
+use App\Models\DeploymentPackageDeploymentSpecificationModel;
 use App\Models\DomainModel;
 use App\Models\MigrationJobModel;
+use Google\ApiCore\ApiException;
 
 class Workspaces extends ResourceController {
 
@@ -68,13 +71,29 @@ class Workspaces extends ResourceController {
             return;
         }
 
-        try {
-            $deployment = $item->prepareDeploymentFromSpecification($deploymentSpecification);
-            $deployment->save();
-            $this->_setResource($deployment);
-        } catch (ValidationException $e) {
-            $this->fail($e->getMessage());
-            return;
+        // Check if this spec is part of the workspace deployment package
+        /** @var DeploymentPackageDeploymentSpecification $deploymentPackageDeploymentSpecification */
+        $deploymentPackageDeploymentSpecification = (new DeploymentPackageDeploymentSpecificationModel())
+            ->where('deployment_package_id', $item->deployment_package_id)
+            ->where('deployment_specification_id', $deploymentSpecification->id)
+            ->find();
+        if ($deploymentPackageDeploymentSpecification->exists()) {
+            try {
+                $deployment = $item->createDeploymentFromPackage($deploymentPackageDeploymentSpecification);
+                $this->_setResource($deployment);
+            } catch (ValidationException|ApiException|\Google\ApiCore\ValidationException $e) {
+                $this->fail($e->getMessage());
+                return;
+            }
+        } else {
+            try {
+                $deployment = $item->prepareDeploymentFromSpecification($deploymentSpecification);
+                $deployment->save();
+                $this->_setResource($deployment);
+            } catch (ValidationException $e) {
+                $this->fail($e->getMessage());
+                return;
+            }
         }
 
         $this->success();
