@@ -2,7 +2,6 @@
 
 use App\Entities\Deployment;
 use App\Libraries\DeploymentSteps\DeploymentStep;
-use App\Models\DeploymentModel;
 use DebugTool\Data;
 use Podio;
 use PodioComment;
@@ -10,8 +9,10 @@ use PodioItem;
 
 class PodioLib {
 
+    private \PodioClient $client;
+
     public function __construct() {
-        Podio::setup(getenv('PODIO_AUTH_CLIENT_ID'), getenv('PODIO_AUTH_CLIENT_SECRET'));
+        $this->client = new \PodioClient(getenv('PODIO_AUTH_CLIENT_ID'), getenv('PODIO_AUTH_CLIENT_SECRET'));
     }
 
     /**
@@ -109,8 +110,8 @@ class PodioLib {
     public function getItemFromUrl(string $url): ?PodioItem {
         [$_, $storyId] = explode('items/', $url);
         try {
-            Podio::authenticate_with_app(getenv('PODIO_APP_ID'), getenv('PODIO_APP_TOKEN'));
-            return PodioItem::get_by_app_item_id(getenv('PODIO_APP_ID'), $storyId);
+            $this->client->authenticate_with_app(getenv('PODIO_APP_ID'), getenv('PODIO_APP_TOKEN'));
+            return PodioItem::get_by_app_item_id($this->client, getenv('PODIO_APP_ID'), $storyId);
         } catch (\Exception $e) {
             Data::debug(get_class($this), $e);
         }
@@ -136,14 +137,14 @@ class PodioLib {
     }
 
     public function moveStoryToTest(PodioItem $item): void {
-        PodioItem::update_values($item->item_id, [
+        PodioItem::update_values($this->client, $item->item_id, [
             getenv('PODIO_APP_PHASE_FIELD_ID') => getenv('PODIO_APP_PHASE_NEW_VALUE'),
             getenv('PODIO_APP_PROGRESS_CONDITION_VALUE') => getenv('PODIO_APP_PROGRESS_NEW_VALUE'),
         ]);
     }
 
     public function addCommitComment(PodioItem $item, string $comment): void {
-        PodioComment::create('item', $item->item_id, ['value' => $comment, 'created_by' => 'Robot']);
+        PodioComment::create($this->client, 'item', $item->item_id, ['value' => $comment, 'created_by' => 'Robot']);
     }
 
     public static function grabUrlFromText(string $text): ?string {
