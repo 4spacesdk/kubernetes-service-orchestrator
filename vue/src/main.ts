@@ -1,10 +1,11 @@
 import {createApp} from 'vue'
 import type {DirectiveBinding} from 'vue'
 import type {VNode} from 'vue'
-import App from './App.vue'
+import type {App} from 'vue'
 import router from './router'
 import moment from 'moment';
-import Sortable from 'sortablejs';
+import Sortable, {SortableEvent} from 'sortablejs';
+import AppComponent from './App.vue'
 
 // Vuetify
 import 'vuetify/styles'
@@ -25,7 +26,7 @@ import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { faUserSecret } from '@fortawesome/free-solid-svg-icons'
 library.add(faUserSecret);
 
-const setupVue = (app: App) => {
+const setupVue = (app: App<Element>) => {
 
     app.use(router);
     app.use(vuetify);
@@ -34,10 +35,10 @@ const setupVue = (app: App) => {
     app.component('font-awesome-icon', FontAwesomeIcon);
 
     app.directive('sortableDataTable', {
-        created(el: HTMLElement, binding: DirectiveBinding, vnode: VNode, prevVnode: VNode) {
+        created(el: HTMLElement, binding: DirectiveBinding, vnode: VNode) {
             const options = {
                 animation: 150,
-                onEnd: (event: CustomEvent) => {
+                onEnd: (event: SortableEvent) => {
                     el.dispatchEvent(new CustomEvent('sorted', {
                         'detail': event
                     }));
@@ -60,7 +61,7 @@ registerSW({
 });
 
 if (location.origin.includes('localhost')) {
-    ApiService.initApi('http://localhost:8950/api');
+    ApiService.initApi('http://localhost:8403/api');
 } else {
     ApiService.initApi(`${location.origin}/api`);
 }
@@ -69,7 +70,7 @@ ApiService.getSettings(() => {
 
     AuthService.refreshMe((response) => {
 
-        const app = createApp(App);
+        const app = createApp(AppComponent);
 
         setupVue(app);
 
