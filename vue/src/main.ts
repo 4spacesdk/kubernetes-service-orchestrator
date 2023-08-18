@@ -4,7 +4,8 @@ import type {VNode} from 'vue'
 import type {App} from 'vue'
 import router from './router'
 import moment from 'moment';
-import Sortable, {SortableEvent} from 'sortablejs';
+import Sortable from 'sortablejs';
+import type {SortableEvent} from 'sortablejs';
 import AppComponent from './App.vue'
 
 // Vuetify
@@ -61,7 +62,7 @@ registerSW({
 });
 
 if (location.origin.includes('localhost')) {
-    ApiService.initApi('http://localhost:8403/api');
+    ApiService.initApi('http://localhost:8950/api');
 } else {
     ApiService.initApi(`${location.origin}/api`);
 }

@@ -27,6 +27,7 @@ const itemCount = ref(0);
 const rows = ref<Deployment[]>([]);
 const headers = ref([
     {title: 'Name', key: 'name', sortable: true},
+    {title: 'Namespace', key: 'namespace', sortable: true},
     {title: 'Status', key: 'status', sortable: false},
     {title: 'Last Migration', key: 'last-migration', sortable: false},
     {title: 'Version', key: 'version', sortable: false},
@@ -63,13 +64,6 @@ onUnmounted(() => {
 watch(searchValue, debounce(() => {
     getItems(true, true);
 }, 500));
-
-function getNameColor(name: string): string {
-    switch (name) {
-        default:
-            return 'grey';
-    }
-}
 
 function onItemSaved() {
     getItems(true, true);
@@ -241,12 +235,6 @@ function onShowLogsBtnClicked(item: Deployment) {
             density="compact"
             @update:options="options = $event; getItems()">
 
-            <template v-slot:item.name="{ item }">
-                <v-chip :color="getNameColor(item.raw.name)">
-                    {{ item.raw.name }}.{{ item.raw.namespace }}
-                </v-chip>
-            </template>
-
             <template v-slot:item.status="{ item }">
                 <deployment-status
                     :deployment="item.raw"/>
@@ -266,7 +254,7 @@ function onShowLogsBtnClicked(item: Deployment) {
 
             <template v-slot:item.actions="{ item }">
 
-                <div class="d-flex justify-end gap-1">
+                <div class="d-flex justify-end">
 
                     <v-menu
                         min-width="250">
