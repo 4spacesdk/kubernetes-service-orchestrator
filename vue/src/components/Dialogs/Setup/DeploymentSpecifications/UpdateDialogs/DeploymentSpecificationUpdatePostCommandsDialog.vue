@@ -13,6 +13,7 @@ interface Row {
     name: string;
     command: string;
     allPods: boolean;
+    position: number;
 }
 
 const props = defineProps<{ input: DeploymentSpecificationUpdatePostCommandsDialog_Input, events: DialogEventsInterface }>();
@@ -24,6 +25,7 @@ const isLoading = ref(false);
 const itemCount = ref(0);
 const rows = ref<Row[]>([]);
 const headers = ref([
+    {title: '', key: 'handle', sortable: false, width: 30},
     {title: 'Name', key: 'name', sortable: false},
     {title: 'Command', key: 'command', sortable: false},
     {title: 'All pods', key: 'allPods', sortable: false},
@@ -52,12 +54,14 @@ function render() {
         .where('id', props.input.deploymentSpecification.id!)
         .include('deployment_specification_post_command')
         .find(value => {
+            let pos = 0;
             rows.value = value[0].deployment_specification_post_commands
                 ?.map(postCommand => {
                     return {
                         name: postCommand.name ?? '',
                         command: postCommand.command ?? '',
                         allPods: postCommand.all_pods ?? false,
+                        position: pos++,
                     }
                 }) ?? [];
             itemCount.value = rows.value.length;
@@ -79,6 +83,7 @@ function onCreateBtnClicked() {
         name: '',
         command: '',
         allPods: false,
+        position: rows.value.length - 1,
     };
     bus.emit('deploymentSpecificationUpdatePostCommand', {
         postCommand: newItem,
@@ -112,12 +117,24 @@ function onSaveBtnClicked() {
         return false;
     });
     api.save({
-        values: rows.value
+        values: [...rows.value].sort((a, b) => a.position - b.position)
     }, newItem => {
         bus.emit('deploymentSpecificationSaved', newItem);
         isSaving.value = false;
         close();
     });
+}
+
+function onSortChanged(event: CustomEvent) {
+    const oldIndex = event.detail.oldIndex;
+    const newIndex = event.detail.newIndex;
+
+    const copy = [...rows.value].sort((a, b) => a.position - b.position);
+    const movedItem = copy.splice(oldIndex, 1)[0];
+    copy.splice(newIndex, 0, movedItem);
+
+    let pos = 0;
+    copy.forEach(item => item.position = pos++);
 }
 
 function onCloseBtnClicked() {
@@ -162,8 +179,13 @@ function onCloseBtnClicked() {
                     :items-length="itemCount"
                     :items="rows"
                     :items-per-page="-1"
+                    v-sortableDataTable
+                    @sorted="onSortChanged"
                     class="table"
                     density="compact">
+                    <template v-slot:item.handle="{ item }">
+                        <v-icon class="grabbable">fa fa-grip-vertical</v-icon>
+                    </template>
                     <template v-slot:item.allPods="{ item }">
                         <v-icon v-if="item.raw.allPods">fa fa-check</v-icon>
                     </template>
@@ -215,4 +237,10 @@ function onCloseBtnClicked() {
 :deep(.v-data-table-footer) {
     display: none;
 }
+.grabbable {
+     cursor: move; /* fallback if grab cursor is unsupported */
+     cursor: grab;
+     cursor: -moz-grab;
+     cursor: -webkit-grab;
+ }
 </style>

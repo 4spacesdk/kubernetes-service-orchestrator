@@ -1,7 +1,10 @@
-import { createApp } from 'vue'
+import {createApp} from 'vue'
+import type {DirectiveBinding} from 'vue'
+import type {VNode} from 'vue'
 import App from './App.vue'
 import router from './router'
 import moment from 'moment';
+import Sortable from 'sortablejs';
 
 // Vuetify
 import 'vuetify/styles'
@@ -21,6 +24,31 @@ import { library } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { faUserSecret } from '@fortawesome/free-solid-svg-icons'
 library.add(faUserSecret);
+
+const setupVue = (app: App) => {
+
+    app.use(router);
+    app.use(vuetify);
+    app.use(VueDiff);
+    moment.locale('da');
+    app.component('font-awesome-icon', FontAwesomeIcon);
+
+    app.directive('sortableDataTable', {
+        created(el: HTMLElement, binding: DirectiveBinding, vnode: VNode, prevVnode: VNode) {
+            const options = {
+                animation: 150,
+                onEnd: (event: CustomEvent) => {
+                    el.dispatchEvent(new CustomEvent('sorted', {
+                        'detail': event
+                    }));
+                },
+            }
+            Sortable.create(el.getElementsByTagName('tbody')[0], options);
+        }
+    });
+
+};
+
 
 registerSW({
     onRegistered(r) {
@@ -43,13 +71,7 @@ ApiService.getSettings(() => {
 
         const app = createApp(App);
 
-        app.use(router);
-        app.use(vuetify);
-        app.use(VueDiff);
-
-        moment.locale('da');
-
-        app.component('font-awesome-icon', FontAwesomeIcon);
+        setupVue(app);
 
         app.mount('#app');
 
