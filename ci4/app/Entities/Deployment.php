@@ -180,6 +180,8 @@ class Deployment extends Entity {
         $this->deployment_volumes = $values;
 
         DeploymentStepHelper::ExecuteDeployCommand($this, [
+            DeploymentSteps::PersistentVolume,
+            DeploymentSteps::PersistentVolumeClaim,
             DeploymentSteps::Deployment,
         ]);
     }

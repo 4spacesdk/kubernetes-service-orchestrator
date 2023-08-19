@@ -67,7 +67,7 @@ function render() {
     showUpdateEnvironmentVariables.value = true;
     isUpdateEnvironmentVariablesEnabled.value = true;
 
-    showUpdateVolumes.value = true;
+    showUpdateVolumes.value = spec.value?.enable_volumes ?? false;
     isUpdateVolumesEnabled.value = true;
 
     isLoading.value = false;
