@@ -53,6 +53,7 @@ use RestExtension\Core\Entity;
  *
  * Many
  * @property EnvironmentVariable $environment_variables
+ * @property DeploymentVolume $deployment_volumes
  * @property MigrationJob $last_migration_jobs
  */
 class Deployment extends Entity {
@@ -167,6 +168,16 @@ class Deployment extends Entity {
         $this->environment_variables->find()->deleteAll();
         $this->save($values);
         $this->environment_variables = $values;
+
+        DeploymentStepHelper::ExecuteDeployCommand($this, [
+            DeploymentSteps::Deployment,
+        ]);
+    }
+
+    public function updateDeploymentVolumes(DeploymentVolume $values): void {
+        $this->deployment_volumes->find()->deleteAll();
+        $this->save($values);
+        $this->deployment_volumes = $values;
 
         DeploymentStepHelper::ExecuteDeployCommand($this, [
             DeploymentSteps::Deployment,

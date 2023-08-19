@@ -2,6 +2,7 @@
 
 use App\Entities\DatabaseService;
 use App\Entities\Deployment;
+use App\Entities\DeploymentVolume;
 use App\Entities\Domain;
 use App\Entities\EnvironmentVariable;
 use App\Entities\MigrationJob;
@@ -9,10 +10,12 @@ use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
 use App\Libraries\Kubernetes\KubeAuth;
 use App\Libraries\Kubernetes\KubeHelper;
+use App\Models\DeploymentVolumeModel;
 use App\Models\EnvironmentVariableModel;
 use DebugTool\Data;
 use RenokiCo\PhpK8s\Exceptions\KubernetesAPIException;
 use RenokiCo\PhpK8s\Instances\Container;
+use RenokiCo\PhpK8s\Instances\Volume;
 use RenokiCo\PhpK8s\Kinds\K8sEvent;
 use RenokiCo\PhpK8s\Kinds\K8sJob;
 use RenokiCo\PhpK8s\Kinds\K8sPod;
@@ -272,6 +275,22 @@ class MigrationJobStep extends BaseDeploymentStep {
 
         $container->addEnvs($extraEnvVars);
 
+        $volumes = [];
+        /** @var DeploymentVolume $deploymentVolumes */
+        $deploymentVolumes = (new DeploymentVolumeModel())
+            ->where('deployment_id', $deployment->id)
+            ->find();
+        foreach ($deploymentVolumes as $deploymentVolume) {
+            $volume = new Volume();
+            $volume
+                ->setAttribute('name', $deployment->name)
+                ->setAttribute('persistentVolumeClaim', [
+                    'claimName' => $deployment->name,
+                ]);
+
+            $container->addMountedVolume($volume->mountTo($deploymentVolume->mount_path, $deploymentVolume->sub_path));
+        }
+
         $template = new K8sPod();
         $template
             ->setAttribute('metadata', [
@@ -288,6 +307,7 @@ class MigrationJobStep extends BaseDeploymentStep {
             ->setContainers([
                 $container
             ])
+            ->setVolumes($volumes)
             ->neverRestart();
 
         if ($spec->hasDeploymentStep($deployment, ServiceAccountStep::class)) {

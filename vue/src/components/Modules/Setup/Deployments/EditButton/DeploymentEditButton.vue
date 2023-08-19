@@ -30,8 +30,11 @@ const isUpdateResourceManagementEnabled = ref(false);
 const showUpdateUpdateManagement = ref(false);
 const isUpdateUpdateManagementEnabled = ref(false);
 
-const showUpdateEnvirontmentVariables = ref(false);
-const isUpdateEnvirontmentVariablesEnabled = ref(false);
+const showUpdateEnvironmentVariables = ref(false);
+const isUpdateEnvironmentVariablesEnabled = ref(false);
+
+const showUpdateVolumes = ref(false);
+const isUpdateVolumesEnabled = ref(false);
 
 onMounted(() => {
     isLoading.value = true;
@@ -61,8 +64,11 @@ function render() {
     showUpdateUpdateManagement.value = true;
     isUpdateUpdateManagementEnabled.value = true;
 
-    showUpdateEnvirontmentVariables.value = true;
-    isUpdateEnvirontmentVariablesEnabled.value = true;
+    showUpdateEnvironmentVariables.value = true;
+    isUpdateEnvironmentVariablesEnabled.value = true;
+
+    showUpdateVolumes.value = true;
+    isUpdateVolumesEnabled.value = true;
 
     isLoading.value = false;
 }
@@ -103,8 +109,14 @@ function onUpdateUpdateManagementClicked() {
     });
 }
 
-function onUpdateEnvirontmentVariablesClicked() {
-    bus.emit('deploymentUpdateEnvirontmentVariables', {
+function onUpdateEnvironmentVariablesClicked() {
+    bus.emit('deploymentUpdateEnvironmentVariables', {
+        deployment: props.deployment
+    });
+}
+
+function onUpdateVolumesClicked() {
+    bus.emit('deploymentUpdateVolumes', {
         deployment: props.deployment
     });
 }
@@ -194,13 +206,23 @@ function onUpdateEnvirontmentVariablesClicked() {
                     </v-list-item-title>
                 </v-list-item>
                 <v-list-item
-                    v-if="showUpdateEnvirontmentVariables"
-                    :disabled="!isUpdateEnvirontmentVariablesEnabled"
+                    v-if="showUpdateEnvironmentVariables"
+                    :disabled="!isUpdateEnvironmentVariablesEnabled"
                     dense
-                    @click="onUpdateEnvirontmentVariablesClicked">
+                    @click="onUpdateEnvironmentVariablesClicked">
                     <v-list-item-title>
                         <v-icon size="small" class="my-auto ml-2">fa fa-key</v-icon>
                         <span class="ml-2">Environment Variables</span>
+                    </v-list-item-title>
+                </v-list-item>
+                <v-list-item
+                    v-if="showUpdateVolumes"
+                    :disabled="!isUpdateVolumesEnabled"
+                    dense
+                    @click="onUpdateVolumesClicked">
+                    <v-list-item-title>
+                        <v-icon size="small" class="my-auto ml-2">fa fa-hard-drive</v-icon>
+                        <span class="ml-2">Volumes</span>
                     </v-list-item-title>
                 </v-list-item>
             </v-list>

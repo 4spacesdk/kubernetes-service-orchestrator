@@ -68,6 +68,20 @@ export interface DeploymentStep {
     hasKubernetesStatus?: boolean;
 }
 
+export interface DeploymentVolume {
+    mountPath?: string;
+    subPath?: string;
+    capacity?: number;
+    volumeMode?: string;
+    reclaimPolicy?: string;
+    nfsServer?: string;
+    nfsPath?: string;
+}
+
+export interface DeploymentVolumeList {
+    values?: DeploymentVolume[];
+}
+
 export interface DomainsGetCertificateEventsResponse {
     type?: string;
     reason?: string;
@@ -1999,6 +2013,27 @@ export class DeploymentsUpdateEnvironmentVariablesPutById extends BaseApi<Deploy
     }
 }
 
+export class DeploymentsUpdateDeploymentVolumesPutById extends BaseApi<Deployment> {
+
+    public topic = 'Resources.Deployments';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/deployments/${id}/volumes`;
+    }
+
+    protected convertToResource(data: any): Deployment {
+        return new Deployment(data);
+    }
+
+    public save(data: DeploymentVolumeList, next?: (value: Deployment) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
 export class DeploymentsGetStatusGetById extends BaseApi<Deployment> {
 
     public topic = 'Resources.Deployments';
@@ -2114,6 +2149,10 @@ class Deployments {
 
     public updateEnvironmentVariablesPutById(id: number): DeploymentsUpdateEnvironmentVariablesPutById {
         return new DeploymentsUpdateEnvironmentVariablesPutById(id);
+    }
+
+    public updateDeploymentVolumesPutById(id: number): DeploymentsUpdateDeploymentVolumesPutById {
+        return new DeploymentsUpdateDeploymentVolumesPutById(id);
     }
 
     public getStatusGetById(id: number): DeploymentsGetStatusGetById {

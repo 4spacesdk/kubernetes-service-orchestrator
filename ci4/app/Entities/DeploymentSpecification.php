@@ -9,12 +9,15 @@ use App\Libraries\DeploymentSteps\DeploymentStep;
 use App\Libraries\DeploymentSteps\IngressStep;
 use App\Libraries\DeploymentSteps\MigrationJobStep;
 use App\Libraries\DeploymentSteps\NamespaceStep;
+use App\Libraries\DeploymentSteps\PersistentVolumeClaimStep;
+use App\Libraries\DeploymentSteps\PersistentVolumeStep;
 use App\Libraries\DeploymentSteps\RedirectsStep;
 use App\Libraries\DeploymentSteps\ServiceAccountStep;
 use App\Libraries\DeploymentSteps\ServiceStep;
 use App\Models\DeploymentSpecificationEnvironmentVariableModel;
 use App\Models\DeploymentSpecificationIngressRulePathModel;
 use App\Models\DeploymentSpecificationServicePortModel;
+use App\Models\DeploymentVolumeModel;
 use RestExtension\Core\Entity;
 
 /**
@@ -32,6 +35,7 @@ use RestExtension\Core\Entity;
  * @property bool $enable_cronjob
  * @property bool $enable_ingress
  * @property bool $enable_rbac
+ * @property bool $enable_volumes
  *
  * # Domain settings
  * @property string $domain_tls
@@ -68,6 +72,8 @@ class DeploymentSpecification extends Entity {
             ClusterRoleStep::class,
             ServiceAccountStep::class,
             ClusterRoleBindingStep::class,
+            PersistentVolumeStep::class,
+            PersistentVolumeClaimStep::class,
             DeploymentStep::class,
             ServiceStep::class,
             IngressStep::class,
@@ -99,6 +105,16 @@ class DeploymentSpecification extends Entity {
         }
         if ($this->enable_cronjob) {
             $steps[] = new CronjobStep();
+        }
+        if ($this->enable_volumes && $deployment) {
+            /** @var DeploymentVolume $deploymentVolumes */
+            $deploymentVolumes = (new DeploymentVolumeModel())
+                ->where('deployment_id', $deployment->id)
+                ->find();
+            if ($deploymentVolumes->exists()) {
+                $steps[] = new PersistentVolumeStep();
+                $steps[] = new PersistentVolumeClaimStep();
+            }
         }
 
         usort($steps, fn($a, $b) => array_search(get_class($a), $order) - array_search(get_class($b), $order));

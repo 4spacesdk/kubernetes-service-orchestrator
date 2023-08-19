@@ -6,7 +6,7 @@ import {User} from '../User';
 import {BaseModel} from '../BaseModel';
 
 export class DeploymentSpecificationEnvironmentVariableDefinition extends BaseModel {
-    deploymennt_specification_id?: number;
+    deployment_specification_id?: number;
     deployment_specification?: DeploymentSpecification;
     name?: string;
     value?: string;
@@ -25,7 +25,7 @@ export class DeploymentSpecificationEnvironmentVariableDefinition extends BaseMo
 
     public populate(data?: any, patch = false) {
         if (!patch) {
-            delete this.deploymennt_specification_id;
+            delete this.deployment_specification_id;
             delete this.deployment_specification;
             delete this.name;
             delete this.value;
@@ -39,8 +39,8 @@ export class DeploymentSpecificationEnvironmentVariableDefinition extends BaseMo
         }
 
         if (!data) return;
-        if (data.deploymennt_specification_id != null) {
-            this.deploymennt_specification_id = data.deploymennt_specification_id;
+        if (data.deployment_specification_id != null) {
+            this.deployment_specification_id = data.deployment_specification_id;
         }
         if (data.deployment_specification != null) {
             this.deployment_specification = new DeploymentSpecification(data.deployment_specification);

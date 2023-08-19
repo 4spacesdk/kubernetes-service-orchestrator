@@ -19,6 +19,7 @@ class DeploymentModel extends \RestExtension\Models\UserModel implements Resourc
     public $hasMany = [
         EnvironmentVariableModel::class,
         MigrationJobModel::class,
+        DeploymentVolumeModel::class,
     ];
 
     public function preRestGet($queryParser, $id) {

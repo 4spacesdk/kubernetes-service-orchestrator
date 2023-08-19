@@ -9,9 +9,6 @@ use RestExtension\Core\Entity;
  * @property Deployment $deployment
  * @property string $name
  * @property string $value
- *
- * Many
- * @property Deployment $deployments
  */
 class EnvironmentVariable extends Entity {
 

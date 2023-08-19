@@ -3,8 +3,10 @@
 use App\Core\ResourceController;
 use App\Entities\Deployment;
 use App\Entities\DeploymentSpecification;
+use App\Entities\DeploymentVolume;
 use App\Entities\EnvironmentVariable;
 use App\Exceptions\ValidationException;
+use App\Interfaces\DeploymentVolumeList;
 use App\Interfaces\EnvironmentVariableList;
 use App\Libraries\DeploymentSteps\BaseDeploymentStep;
 use App\Models\MigrationJobModel;
@@ -204,6 +206,39 @@ class Deployments extends ResourceController {
                 $body->values
             );
             $item->updateEnvironmentVariables($values);
+        }
+        $this->_setResource($item);
+        $this->success();
+    }
+
+    /**
+     * @route /deployments/{id}/volumes
+     * @method put
+     * @custom true
+     * @param int $id
+     * @requestSchema DeploymentVolumeList
+     * @return void
+     */
+    public function updateDeploymentVolumes(int $id): void {
+        $item = new Deployment();
+        $item->find($id);
+        if ($item->exists()) {
+            /** @var DeploymentVolumeList $body */
+            $body = $this->request->getJSON();
+            $values = new DeploymentVolume();
+            $values->all = array_map(
+                fn($data) => DeploymentVolume::Create(
+                    $data->mount_path,
+                    $data->sub_path,
+                    $data->capacity,
+                    $data->volume_mode,
+                    $data->reclaim_policy,
+                    $data->nfs_server,
+                    $data->nfs_path,
+                ),
+                $body->values
+            );
+            $item->updateDeploymentVolumes($values);
         }
         $this->_setResource($item);
         $this->success();

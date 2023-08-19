@@ -40,6 +40,7 @@ function setup() {
         Events.MigrationJob_Changed_Status(props.migrationJob.id!),
         data => {
             const changeEvent = new ChangeEvent<MigrationJob>(data.previous, new MigrationJob(data.next));
+            props.migrationJob.log = changeEvent.next.log;
             render(changeEvent.next.status!);
         }
     );

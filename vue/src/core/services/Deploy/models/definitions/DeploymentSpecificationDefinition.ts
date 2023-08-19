@@ -21,6 +21,7 @@ export class DeploymentSpecificationDefinition extends BaseModel {
     enable_cronjob?: boolean;
     enable_ingress?: boolean;
     enable_rbac?: boolean;
+    enable_volumes?: boolean;
     domain_tls?: string;
     domain_prefix?: string;
     domain_suffix?: string;
@@ -57,6 +58,7 @@ export class DeploymentSpecificationDefinition extends BaseModel {
             delete this.enable_cronjob;
             delete this.enable_ingress;
             delete this.enable_rbac;
+            delete this.enable_volumes;
             delete this.domain_tls;
             delete this.domain_prefix;
             delete this.domain_suffix;
@@ -103,6 +105,9 @@ export class DeploymentSpecificationDefinition extends BaseModel {
         }
         if (data.enable_rbac != null) {
             this.enable_rbac = data.enable_rbac;
+        }
+        if (data.enable_volumes != null) {
+            this.enable_volumes = data.enable_volumes;
         }
         if (data.domain_tls != null) {
             this.domain_tls = data.domain_tls;

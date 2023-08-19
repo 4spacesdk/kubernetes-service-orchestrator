@@ -2,15 +2,18 @@
 
 use App\Entities\DatabaseService;
 use App\Entities\Deployment;
+use App\Entities\DeploymentVolume;
 use App\Entities\Domain;
 use App\Entities\EnvironmentVariable;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
 use App\Libraries\Kubernetes\KubeAuth;
+use App\Models\DeploymentVolumeModel;
 use App\Models\EnvironmentVariableModel;
 use DebugTool\Data;
 use RenokiCo\PhpK8s\Exceptions\KubernetesAPIException;
 use RenokiCo\PhpK8s\Instances\Container;
+use RenokiCo\PhpK8s\Instances\Volume;
 use RenokiCo\PhpK8s\Kinds\K8sDeployment;
 use RenokiCo\PhpK8s\Kinds\K8sEvent;
 use RenokiCo\PhpK8s\Kinds\K8sPod;
@@ -82,7 +85,6 @@ class DeploymentStep extends BaseDeploymentStep {
             unset($remote['spec']['template']['spec']['schedulerName']);
             unset($remote['spec']['strategy']);
             unset($remote['spec']['revisionHistoryLimit']);
-            unset($remote['spec']['progressDeadlineSeconds']);
             unset($remote['spec']['progressDeadlineSeconds']);
             unset($remote['status']);
             $remote = json_encode($remote);
@@ -324,6 +326,22 @@ class DeploymentStep extends BaseDeploymentStep {
             $container->maxMemory($deployment->memory_limit, 'Mi');
         }
 
+        $volumes = [];
+        /** @var DeploymentVolume $deploymentVolumes */
+        $deploymentVolumes = (new DeploymentVolumeModel())
+            ->where('deployment_id', $deployment->id)
+            ->find();
+        foreach ($deploymentVolumes as $deploymentVolume) {
+            $volume = new Volume();
+            $volume
+                ->setAttribute('name', $deployment->name)
+                ->setAttribute('persistentVolumeClaim', [
+                    'claimName' => $deployment->name,
+                ]);
+
+            $container->addMountedVolume($volume->mountTo($deploymentVolume->mount_path, $deploymentVolume->sub_path));
+        }
+
         $template = new K8sPod();
         $template
             ->setAttribute('metadata', [
@@ -339,7 +357,8 @@ class DeploymentStep extends BaseDeploymentStep {
             ])
             ->setContainers([
                 $container
-            ]);
+            ])
+            ->setVolumes($volumes);
 
         if ($spec->hasDeploymentStep($deployment, ServiceAccountStep::class)) {
             $template->setSpec('serviceAccountName', $deployment->name);
@@ -354,6 +373,7 @@ class DeploymentStep extends BaseDeploymentStep {
                 $annotations['keel.sh/trigger'] = 'poll';
                 $annotations['keel.sh/pollSchedule'] = '@every 2m';
                 break;
+            default:
             case 'push':
                 // Use keel defaults
                 break;

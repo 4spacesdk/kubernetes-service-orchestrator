@@ -117,6 +117,12 @@ import type {WebhookEditDialog_Input} from "@/components/Dialogs/Integrations/We
 import type {
     WebhookDeliveryListDialog_Input
 } from "@/components/Dialogs/Integrations/Webhooks/Deliveries/WebhookDeliveryListDialog.vue";
+import type {
+    DeploymentUpdateVolumesDialog_Input
+} from "@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateVolumesDialog.vue";
+import type {
+    DeploymentUpdateVolumeDialog_Input
+} from "@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateVolumeDialog.vue";
 
 export type Events = {
     confirm: ConfirmationDialog_Input;
@@ -137,8 +143,10 @@ export type Events = {
     deploymentUpdateIngress: DeploymentUpdateIngressDialog_Input;
     deploymentUpdateResourceManagement: DeploymentUpdateResourceManagementDialog_Input;
     deploymentUpdateUpdateManagement: DeploymentUpdateUpdateManagementDialog_Input;
-    deploymentUpdateEnvirontmentVariables: DeploymentUpdateEnvirontmentVariablesDialog_Input;
-    deploymentUpdateEnvirontmentVariable: DeploymentUpdateEnvirontmentVariableDialog_Input;
+    deploymentUpdateEnvironmentVariables: DeploymentUpdateEnvirontmentVariablesDialog_Input;
+    deploymentUpdateEnvironmentVariable: DeploymentUpdateEnvirontmentVariableDialog_Input;
+    deploymentUpdateVolumes: DeploymentUpdateVolumesDialog_Input;
+    deploymentUpdateVolume: DeploymentUpdateVolumeDialog_Input;
     deploymentResourceList: DeploymentResourceListDialog_Input;
     deploymentResourcePreview: DeploymentResourcePreviewDialog_Input;
     deployment_DeploymentStep_Status_Change: {

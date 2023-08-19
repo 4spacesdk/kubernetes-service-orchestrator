@@ -8,6 +8,8 @@ class DeploymentSteps {
         ClusterRole = 'cluster-role',
         ServiceAccount = 'service-account',
         ClusterRoleBinding = 'cluster-role-binding',
+        PersistentVolume = 'persistent-volume',
+        PersistentVolumeClaim = 'persistent-volume-claim',
         Cronjob = 'cronjob',
         Deployment = 'deployment',
         Service = 'service',

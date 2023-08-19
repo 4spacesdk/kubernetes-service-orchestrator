@@ -23,6 +23,7 @@ class DeletionModel extends Model {
         EmailServiceModel::class,
         EnvironmentVariableModel::class,
         WorkspaceModel::class,
+        DeploymentVolumeModel::class,
     ];
 
 }

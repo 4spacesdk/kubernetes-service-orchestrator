@@ -1,26 +1,25 @@
 <script setup lang="ts">
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
-import {Deployment, EnvironmentVariable} from "@/core/services/Deploy/models";
+import {Deployment, DeploymentVolume} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
-import {en} from "vuetify/locale";
 
-export interface DeploymentUpdateEnvirontmentVariablesDialog_Input {
+export interface DeploymentUpdateVolumesDialog_Input {
     deployment: Deployment;
 }
 
-const props = defineProps<{ input: DeploymentUpdateEnvirontmentVariablesDialog_Input, events: DialogEventsInterface }>();
+const props = defineProps<{ input: DeploymentUpdateVolumesDialog_Input, events: DialogEventsInterface }>();
 
 const used = ref(false);
 const showDialog = ref(false);
 
 const isLoading = ref(false);
 const itemCount = ref(0);
-const rows = ref<EnvironmentVariable[]>([]);
+const rows = ref<DeploymentVolume[]>([]);
 const headers = ref([
-    {title: 'Name', key: 'name', sortable: false},
-    {title: 'Value', key: 'value', sortable: false},
+    {title: 'Capacity', key: 'capacity', sortable: false},
+    {title: 'Mount Path', key: 'mount_path', sortable: false},
     {title: '', key: 'actions', sortable: false},
 ]);
 const isSaving = ref(false);
@@ -44,9 +43,9 @@ function render() {
     isLoading.value = true;
     Api.deployments().get()
         .where('id', props.input.deployment.id!)
-        .include('environment_variable')
+        .include('deployment_volume')
         .find(value => {
-            rows.value = value[0].environment_variables ?? [];
+            rows.value = value[0].deployment_volumes ?? [];
             itemCount.value = rows.value.length;
             isLoading.value = false;
         });
@@ -62,29 +61,29 @@ function close() {
 // <editor-fold desc="View Binding Functions">
 
 function onCreateBtnClicked() {
-    const newItem = new EnvironmentVariable();
-    bus.emit('deploymentUpdateEnvironmentVariable', {
-        environmentVariable: newItem,
+    const newItem = new DeploymentVolume();
+    bus.emit('deploymentUpdateVolume', {
+        volume: newItem,
         onSaveCallback: () => rows.value.push(newItem),
     });
 }
 
-function onEditRowClicked(row: EnvironmentVariable) {
-    bus.emit('deploymentUpdateEnvironmentVariable', {
-        environmentVariable: row,
+function onEditRowClicked(row: DeploymentVolume) {
+    bus.emit('deploymentUpdateVolume', {
+        volume: row,
         onSaveCallback: () => {
 
         }
     });
 }
 
-function onDeleteRowClicked(row: EnvironmentVariable) {
+function onDeleteRowClicked(row: DeploymentVolume) {
     rows.value.splice(rows.value.indexOf(row), 1);
 }
 
 function onSaveBtnClicked() {
     isSaving.value = true;
-    const api = Api.deployments().updateEnvironmentVariablesPutById(props.input.deployment.id!);
+    const api = Api.deployments().updateDeploymentVolumesPutById(props.input.deployment.id!);
     api.setErrorHandler(response => {
         if (response.error) {
             bus.emit('toast', {
@@ -122,7 +121,7 @@ function onCloseBtnClicked() {
             class="w-100 h-100">
             <v-card-title>
                 <div class="d-flex w-100">
-                    <span class="my-auto">Environment Variables</span>
+                    <span class="my-auto">Volumes</span>
                     <v-chip class="my-auto mx-auto">{{ props.input.deployment.name }}.{{ props.input.deployment.namespace }}</v-chip>
 
                     <div class="my-auto ml-auto d-flex justify-end gap-1">

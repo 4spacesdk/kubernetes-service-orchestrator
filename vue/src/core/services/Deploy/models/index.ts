@@ -12,6 +12,7 @@ export {DeploymentSpecificationIngressRulePath as DeploymentSpecificationIngress
 export {DeploymentSpecificationPostCommand as DeploymentSpecificationPostCommand} from "./DeploymentSpecificationPostCommand";
 export {DeploymentSpecificationServicePort as DeploymentSpecificationServicePort} from "./DeploymentSpecificationServicePort";
 export {DeploymentStep as DeploymentStep} from "./DeploymentStep";
+export {DeploymentVolume as DeploymentVolume} from "./DeploymentVolume";
 export {Domain as Domain} from "./Domain";
 export {EmailService as EmailService} from "./EmailService";
 export {EnvironmentVariable as EnvironmentVariable} from "./EnvironmentVariable";

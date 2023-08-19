@@ -5,11 +5,16 @@ import {Deployment} from '../Deployment';
 import {User} from '../User';
 import {BaseModel} from '../BaseModel';
 
-export class EnvironmentVariableDefinition extends BaseModel {
+export class DeploymentVolumeDefinition extends BaseModel {
     deployment_id?: number;
     deployment?: Deployment;
-    name?: string;
-    value?: string;
+    mount_path?: string;
+    sub_path?: string;
+    capacity?: number;
+    volume_mode?: string;
+    reclaim_policy?: string;
+    nfs_server?: string;
+    nfs_path?: string;
     id?: number;
     created?: string;
     updated?: string;
@@ -27,8 +32,13 @@ export class EnvironmentVariableDefinition extends BaseModel {
         if (!patch) {
             delete this.deployment_id;
             delete this.deployment;
-            delete this.name;
-            delete this.value;
+            delete this.mount_path;
+            delete this.sub_path;
+            delete this.capacity;
+            delete this.volume_mode;
+            delete this.reclaim_policy;
+            delete this.nfs_server;
+            delete this.nfs_path;
             delete this.id;
             delete this.created;
             delete this.updated;
@@ -45,11 +55,26 @@ export class EnvironmentVariableDefinition extends BaseModel {
         if (data.deployment != null) {
             this.deployment = new Deployment(data.deployment);
         }
-        if (data.name != null) {
-            this.name = data.name;
+        if (data.mount_path != null) {
+            this.mount_path = data.mount_path;
         }
-        if (data.value != null) {
-            this.value = data.value;
+        if (data.sub_path != null) {
+            this.sub_path = data.sub_path;
+        }
+        if (data.capacity != null) {
+            this.capacity = data.capacity;
+        }
+        if (data.volume_mode != null) {
+            this.volume_mode = data.volume_mode;
+        }
+        if (data.reclaim_policy != null) {
+            this.reclaim_policy = data.reclaim_policy;
+        }
+        if (data.nfs_server != null) {
+            this.nfs_server = data.nfs_server;
+        }
+        if (data.nfs_path != null) {
+            this.nfs_path = data.nfs_path;
         }
         if (data.id != null) {
             this.id = data.id;

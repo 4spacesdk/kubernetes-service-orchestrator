@@ -260,6 +260,29 @@ function onCloseBtnClicked() {
                             </div>
                         </v-card>
                     </v-col>
+
+                    <v-col
+                        cols="12"
+                        class="mt-4"
+                    >
+                        <v-card>
+                            <v-checkbox
+                                v-model="item.enable_volumes"
+                                label="Volumes"
+                                hide-details
+                            />
+                            <div
+                                v-if="item.enable_volumes"
+                                class="px-2"
+                            >
+                                <v-row>
+                                    <v-col cols="12">
+                                        <span>Volumes can be added to deployments</span>
+                                    </v-col>
+                                </v-row>
+                            </div>
+                        </v-card>
+                    </v-col>
                 </v-row>
 
             </v-card-text>

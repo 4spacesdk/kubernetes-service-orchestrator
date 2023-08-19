@@ -11,6 +11,8 @@ use App\Libraries\DeploymentSteps\DeploymentStep;
 use App\Libraries\DeploymentSteps\IngressStep;
 use App\Libraries\DeploymentSteps\MigrationJobStep;
 use App\Libraries\DeploymentSteps\NamespaceStep;
+use App\Libraries\DeploymentSteps\PersistentVolumeClaimStep;
+use App\Libraries\DeploymentSteps\PersistentVolumeStep;
 use App\Libraries\DeploymentSteps\RedirectsStep;
 use App\Libraries\DeploymentSteps\ServiceAccountStep;
 use App\Libraries\DeploymentSteps\ServiceStep;
@@ -22,11 +24,6 @@ class DeploymentStepHelper {
         DatabaseStatus_NotPerformed = 'not-performed',
         DatabaseStatus_Failed = 'failed',
         DatabaseStatus_Success = 'success';
-
-    const
-        OauthStatus_NotPerformed = 'not-performed',
-        OauthStatus_Failed = 'failed',
-        Oauthtatus_Success = 'success';
 
     const
         Namespace_NotFound = 'not-found',
@@ -69,6 +66,16 @@ class DeploymentStepHelper {
         MigrationJob_Completed = 'completed',
         MigrationJob_Running = 'running';
 
+    const
+        PersistentVolume_NotFound = 'not-found',
+        PersistentVolume_Found = 'found';
+
+    const
+        PersistentVolumeClaim_NotFound = 'not-found',
+        PersistentVolumeClaim_Found = 'found';
+
+
+
     public static function GetStep(string $identifier): ?BaseDeploymentStep {
         return match ($identifier) {
             DeploymentSteps::Database => new DatabaseStep(),
@@ -76,6 +83,8 @@ class DeploymentStepHelper {
             DeploymentSteps::ClusterRole => new ClusterRoleStep(),
             DeploymentSteps::ServiceAccount => new ServiceAccountStep(),
             DeploymentSteps::ClusterRoleBinding => new ClusterRoleBindingStep(),
+            DeploymentSteps::PersistentVolume => new PersistentVolumeStep(),
+            DeploymentSteps::PersistentVolumeClaim => new PersistentVolumeClaimStep(),
             DeploymentSteps::Cronjob => new CronjobStep(),
             DeploymentSteps::Deployment => new DeploymentStep(),
             DeploymentSteps::Service => new ServiceStep(),

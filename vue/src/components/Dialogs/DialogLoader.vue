@@ -60,39 +60,36 @@ bus.on('deploymentUpdateVersion', async input => {
 bus.on('deploymentUpdateEnvironment', async input => {
     addComponent((await import('@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateEnvironmentDialog.vue')).default, input);
 });
-
 bus.on('deploymentUpdateDatabaseService', async input => {
     addComponent((await import('@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateDatabaseServiceDialog.vue')).default, input);
 });
-
 bus.on('deploymentUpdateIngress', async input => {
     addComponent((await import('@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateIngressDialog.vue')).default, input);
 });
-
 bus.on('deploymentUpdateResourceManagement', async input => {
     addComponent((await import('@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateResourceManagementDialog.vue')).default, input);
 });
-
 bus.on('deploymentUpdateUpdateManagement', async input => {
     addComponent((await import('@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateUpdateManagementDialog.vue')).default, input);
 });
-
-bus.on('deploymentUpdateEnvirontmentVariables', async input => {
+bus.on('deploymentUpdateEnvironmentVariables', async input => {
     addComponent((await import('@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateEnvironmentVariablesDialog.vue')).default, input);
 });
-
-bus.on('deploymentUpdateEnvirontmentVariable', async input => {
+bus.on('deploymentUpdateEnvironmentVariable', async input => {
     addComponent((await import('@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateEnvironmentVariableDialog.vue')).default, input);
 });
-
+bus.on('deploymentUpdateVolumes', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateVolumesDialog.vue')).default, input);
+});
+bus.on('deploymentUpdateVolume', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateVolumeDialog.vue')).default, input);
+});
 bus.on('deploymentResourceList', async input => {
     addComponent((await import('@/components/Dialogs/Setup/Deployments/DeploymentResourceListDialog.vue')).default, input);
 });
-
 bus.on('deploymentResourcePreview', async input => {
     addComponent((await import('@/components/Dialogs/Setup/Deployments/DeploymentResourcePreviewDialog.vue')).default, input);
 });
-
 bus.on('deploymentLogs', async input => {
     addComponent((await import('@/components/Dialogs/Setup/Deployments/DeploymentLogsDialog.vue')).default, input);
 });

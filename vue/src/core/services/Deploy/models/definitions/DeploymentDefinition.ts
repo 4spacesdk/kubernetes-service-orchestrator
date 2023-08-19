@@ -7,6 +7,7 @@ import {DatabaseService} from '../DatabaseService';
 import {Domain} from '../Domain';
 import {MigrationJob} from '../MigrationJob';
 import {EnvironmentVariable} from '../EnvironmentVariable';
+import {DeploymentVolume} from '../DeploymentVolume';
 import {User} from '../User';
 import {BaseModel} from '../BaseModel';
 
@@ -39,11 +40,10 @@ export class DeploymentDefinition extends BaseModel {
     memory_limit?: number;
     memory_request?: number;
     replicas?: number;
-    oauth_client_id?: string;
-    oauth_client_secret?: string;
     last_migration_job_id?: number;
     last_migration_job?: MigrationJob;
     environment_variables?: EnvironmentVariable[];
+    deployment_volumes?: DeploymentVolume[];
     last_migration_jobs?: MigrationJob[];
     id?: number;
     created?: string;
@@ -88,11 +88,10 @@ export class DeploymentDefinition extends BaseModel {
             delete this.memory_limit;
             delete this.memory_request;
             delete this.replicas;
-            delete this.oauth_client_id;
-            delete this.oauth_client_secret;
             delete this.last_migration_job_id;
             delete this.last_migration_job;
             delete this.environment_variables;
+            delete this.deployment_volumes;
             delete this.last_migration_jobs;
             delete this.id;
             delete this.created;
@@ -188,12 +187,6 @@ export class DeploymentDefinition extends BaseModel {
         if (data.replicas != null) {
             this.replicas = data.replicas;
         }
-        if (data.oauth_client_id != null) {
-            this.oauth_client_id = data.oauth_client_id;
-        }
-        if (data.oauth_client_secret != null) {
-            this.oauth_client_secret = data.oauth_client_secret;
-        }
         if (data.last_migration_job_id != null) {
             this.last_migration_job_id = data.last_migration_job_id;
         }
@@ -202,6 +195,9 @@ export class DeploymentDefinition extends BaseModel {
         }
         if (data.environment_variables != null) {
             this.environment_variables = data.environment_variables.map((i: any) => new EnvironmentVariable(i));
+        }
+        if (data.deployment_volumes != null) {
+            this.deployment_volumes = data.deployment_volumes.map((i: any) => new DeploymentVolume(i));
         }
         if (data.last_migration_jobs != null) {
             this.last_migration_jobs = data.last_migration_jobs.map((i: any) => new MigrationJob(i));
