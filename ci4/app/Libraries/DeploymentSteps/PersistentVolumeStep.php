@@ -156,13 +156,13 @@ class PersistentVolumeStep extends BaseDeploymentStep {
             $resource
                 ->setName("{$deployment->namespace}-{$deployment->name}")
                 ->setCapacity($deploymentVolume->capacity)
-                ->setAttribute('volumeMode', $deploymentVolume->volume_mode)
+                ->setSpec('volumeMode', $deploymentVolume->volume_mode)
                 ->setAccessModes(['ReadWriteMany'])
-                ->setAttribute('nfs', [
+                ->setSpec('nfs', [
                     'server' => $deploymentVolume->nfs_server,
                     'path' => $deploymentVolume->nfs_path,
                 ])
-                ->setAttribute('persistentVolumeReclaimPolicy', $deploymentVolume->reclaim_policy);
+                ->setSpec('persistentVolumeReclaimPolicy', $deploymentVolume->reclaim_policy);
 
             $resources[] = $resource;
         }

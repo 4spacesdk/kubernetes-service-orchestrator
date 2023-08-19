@@ -340,6 +340,8 @@ class DeploymentStep extends BaseDeploymentStep {
                 ]);
 
             $container->addMountedVolume($volume->mountTo($deploymentVolume->mount_path, $deploymentVolume->sub_path));
+
+            $volumes[] = $volume;
         }
 
         $template = new K8sPod();

@@ -6,6 +6,7 @@ use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
 use App\Libraries\Kubernetes\KubeAuth;
 use App\Models\DeploymentVolumeModel;
+use DebugTool\Data;
 use RenokiCo\PhpK8s\Exceptions\KubernetesAPIException;
 use RenokiCo\PhpK8s\Kinds\K8sPersistentVolumeClaim;
 
@@ -158,12 +159,7 @@ class PersistentVolumeClaimStep extends BaseDeploymentStep {
                 ->setNamespace($deployment->namespace)
                 ->setCapacity($deploymentVolume->capacity)
                 ->setAccessModes(['ReadWriteMany'])
-                ->setStorageClass('')
-                ->setAttribute('resources', [
-                    'requests' => [
-                        'storage' => $deploymentVolume->capacity,
-                    ],
-                ]);
+                ->setStorageClass('');
 
             $resources[] = $resource;
         }
