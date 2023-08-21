@@ -95,7 +95,7 @@ class DatabaseStep extends BaseDeploymentStep {
             $dbName = substr($dbName, 0, 64);
         }
 
-        $dbUser = substr($dbName, 0, 16);
+        $dbUser = substr($dbName, 0, 32);
 
         $chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         $count = mb_strlen($chars);
