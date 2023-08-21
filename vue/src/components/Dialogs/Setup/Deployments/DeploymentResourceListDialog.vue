@@ -434,7 +434,7 @@ function onCloseBtnClicked() {
                                     size="small"
                                     @click="onTerminateBtnClicked(item.raw)">
                                     <v-icon>fa fa-skull</v-icon>
-                                    <v-tooltip activator="parent" location="bottom">Termiinate</v-tooltip>
+                                    <v-tooltip activator="parent" location="bottom">Terminate</v-tooltip>
                                 </v-btn>
                                 <v-tooltip
                                     :disabled="item.raw.item.hasTerminateCommand"
