@@ -309,8 +309,14 @@ class MigrationJobStep extends BaseDeploymentStep {
             ->setContainers([
                 $container
             ])
-            ->setVolumes($volumes)
+            ->setContainers([
+                $container
+            ])
             ->neverRestart();
+
+        if (count($volumes) > 0) {
+            $template->setVolumes($volumes);
+        }
 
         if ($spec->hasDeploymentStep($deployment, ServiceAccountStep::class)) {
             $template->setSpec('serviceAccountName', $deployment->name);
