@@ -15,6 +15,7 @@ use App\Libraries\DeploymentSteps\RedirectsStep;
 use App\Libraries\DeploymentSteps\ServiceAccountStep;
 use App\Libraries\DeploymentSteps\ServiceStep;
 use App\Models\DeploymentSpecificationEnvironmentVariableModel;
+use App\Models\DeploymentSpecificationIngressModel;
 use App\Models\DeploymentSpecificationIngressRulePathModel;
 use App\Models\DeploymentSpecificationServicePortModel;
 use App\Models\DeploymentVolumeModel;
@@ -54,7 +55,7 @@ use RestExtension\Core\Entity;
  * @property DeploymentSpecificationPostCommand $deployment_specification_post_commands
  * @property DeploymentSpecificationEnvironmentVariable $deployment_specification_environment_variables
  * @property DeploymentSpecificationServicePort $deployment_specification_service_ports
- * @property DeploymentSpecificationIngressRulePath $deployment_specification_ingress_rule_paths
+ * @property DeploymentSpecificationIngress $deployment_specification_ingresses
  * @property DeploymentSpecificationClusterRoleRule $deployment_specification_cluster_role_rules
  *
  * @property DeploymentStep $deploymentSteps
@@ -140,41 +141,6 @@ class DeploymentSpecification extends Entity {
         return "{$tls}{$this->domain_prefix}{$domain}{$suffix}";
     }
 
-    public function getIngressRules(Deployment $deployment): array {
-        if (!$deployment->domain->exists()) {
-            $deployment->domain->find();
-        }
-
-        $paths = [];
-        /** @var DeploymentSpecificationIngressRulePath $ingressRulePaths */
-        $ingressRulePaths = (new DeploymentSpecificationIngressRulePathModel())
-            ->where('deployment_specification_id', $this->id)
-            ->find();
-        foreach ($ingressRulePaths as $ingressRulePath) {
-            $paths[] = [
-                'path' => $ingressRulePath->path,
-                'pathType' => $ingressRulePath->path_type,
-                'backend' => [
-                    'service' => [
-                        'name' => $deployment->name,
-                        'port' => [
-                            'name' => $ingressRulePath->backend_service_port_name,
-                        ],
-                    ],
-                ],
-            ];
-        }
-
-        return [
-            [
-                'host' => $deployment->getUrl(),
-                'http' => [
-                    'paths' => $paths,
-                ],
-            ]
-        ];
-    }
-
     public function getServicePorts(): array {
         $ports = [];
         /** @var DeploymentSpecificationServicePort $servicePorts */
@@ -235,10 +201,10 @@ class DeploymentSpecification extends Entity {
         $this->deployment_specification_service_ports = $values;
     }
 
-    public function updateIngressRulePaths(DeploymentSpecificationIngressRulePath $values): void {
-        $this->deployment_specification_ingress_rule_paths->find()->deleteAll();
+    public function updateIngresses(DeploymentSpecificationIngress $values): void {
+        $this->deployment_specification_ingresses->find()->deleteAll();
         $this->save($values);
-        $this->deployment_specification_ingress_rule_paths = $values;
+        $this->deployment_specification_ingresses = $values;
     }
 
     public function updateClusterRoleRules(DeploymentSpecificationClusterRoleRule $values): void {

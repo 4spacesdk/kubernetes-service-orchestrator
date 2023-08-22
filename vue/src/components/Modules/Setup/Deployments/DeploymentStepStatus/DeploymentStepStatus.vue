@@ -35,38 +35,44 @@ function onStatusChangeEvent(input: { deployment: Deployment, step: DeploymentSt
 
 function reload() {
     isLoading.value = true;
-    Api.deploymentSteps().getStatusGetByIdentifier(props.step.identifier!)
-        .deploymentId(props.deployment.id!)
-        .find(value => {
-            text.value = value[0].value ?? '';
-            switch (value[0].value) {
+    const api = Api.deploymentSteps().getStatusGetByIdentifier(props.step.identifier!)
+        .deploymentId(props.deployment.id!);
+    api.setErrorHandler((response: any) => {
+        text.value = response.error ?? 'failed to load';
+        icon.value = 'fa-circle';
+        color.value = 'grey';
+        isLoading.value = false;
+        return false;
+    });
+    api.find(value => {
+        text.value = value[0].value ?? '';
+        switch (value[0].value) {
+            case 'not-found':
+            case 'not-performed':
+            case 'running':
+                icon.value = 'fa-circle-exclamation';
+                color.value = 'warning';
+                break;
 
-                case 'not-found':
-                case 'not-performed':
-                case 'running':
-                    icon.value = 'fa-circle-exclamation';
-                    color.value = 'warning';
-                    break;
+            case 'failed':
+                icon.value = 'fa-circle-xmark';
+                color.value = 'red';
+                break;
 
-                case 'failed':
-                    icon.value = 'fa-circle-xmark';
-                    color.value = 'red';
-                    break;
+            case 'found':
+            case 'success':
+            case 'completed':
+                icon.value = 'fa-circle-check';
+                color.value = 'green';
+                break;
 
-                case 'found':
-                case 'success':
-                case 'completed':
-                    icon.value = 'fa-circle-check';
-                    color.value = 'green';
-                    break;
-
-                default:
-                    icon.value = 'fa-circle';
-                    color.value = 'grey';
-                    break;
-            }
-            isLoading.value = false;
-        });
+            default:
+                icon.value = 'fa-circle';
+                color.value = 'grey';
+                break;
+        }
+        isLoading.value = false;
+    });
 }
 
 // <editor-fold desc="View function bindings">
@@ -86,10 +92,10 @@ function onRefreshBtnClicked() {
     >
 
         <v-btn
-             @click="onRefreshBtnClicked"
-               v-if="!isHovering"
-                :loading="isLoading"
-               variant="plain" color="grey" size="small" icon
+            @click="onRefreshBtnClicked"
+            v-if="!isHovering"
+            :loading="isLoading"
+            variant="plain" color="grey" size="small" icon
         >
             <v-icon :color="color" class="me-1">fa {{ icon }}</v-icon>
             <v-tooltip activator="parent" location="bottom" v-if="text">{{ text }}</v-tooltip>
@@ -105,7 +111,7 @@ function onRefreshBtnClicked() {
             <v-tooltip activator="parent" location="bottom">Refresh</v-tooltip>
         </v-btn>
 
-        <span>{{text}}</span>
+        <span>{{ text }}</span>
 
     </div>
 </template>

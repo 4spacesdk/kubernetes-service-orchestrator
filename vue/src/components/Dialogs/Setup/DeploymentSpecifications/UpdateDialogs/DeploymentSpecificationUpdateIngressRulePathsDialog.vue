@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
-import {DeploymentSpecification} from "@/core/services/Deploy/models";
+import {DeploymentSpecification, DeploymentSpecificationIngressRulePath} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
 
 export interface DeploymentSpecificationUpdateIngressRulePathsDialog_Input {
     deploymentSpecification: DeploymentSpecification;
+    items: DeploymentSpecificationIngressRulePath[];
+
+    onSaveCallback: (items: DeploymentSpecificationIngressRulePath[]) => void;
 }
 
 interface Row {
@@ -48,21 +51,16 @@ function render() {
     showDialog.value = true;
 
     isLoading.value = true;
-    Api.deploymentSpecifications().get()
-        .where('id', props.input.deploymentSpecification.id!)
-        .include('deployment_specification_ingress_rule_path')
-        .find(value => {
-            rows.value = value[0].deployment_specification_ingress_rule_paths
-                ?.map(ingressRulePath => {
-                    return {
-                        path: ingressRulePath.path ?? '',
-                        pathType: ingressRulePath.path_type ?? '',
-                        backendServicePortName: ingressRulePath.backend_service_port_name ?? '',
-                    }
-                }) ?? [];
-            itemCount.value = rows.value.length;
-            isLoading.value = false;
-        });
+
+    rows.value = props.input.items?.map(item => {
+        return {
+            path: item.path ?? '',
+            pathType: item.path_type ?? '',
+            backendServicePortName: item.backend_service_port_name ?? '',
+        }
+    }) ?? [];
+    itemCount.value = rows.value.length;
+    isLoading.value = false;
 }
 
 function close() {
@@ -100,23 +98,15 @@ function onDeleteRowClicked(row: Row) {
 
 function onSaveBtnClicked() {
     isSaving.value = true;
-    const api = Api.deploymentSpecifications().updateIngressRulePathsPutById(props.input.deploymentSpecification.id!);
-    api.setErrorHandler(response => {
-        if (response.error) {
-            bus.emit('toast', {
-                text: response.error
-            });
-        }
-        isSaving.value = false;
-        return false;
-    });
-    api.save({
-        values: rows.value
-    }, newItem => {
-        bus.emit('deploymentSpecificationSaved', newItem);
-        isSaving.value = false;
-        close();
-    });
+    props.input.onSaveCallback(rows.value.map(row => {
+        const rulePath = new DeploymentSpecificationIngressRulePath();
+        rulePath.path = row.path;
+        rulePath.path_type = row.pathType;
+        rulePath.backend_service_port_name = row.backendServicePortName;
+        return rulePath;
+    }));
+    isSaving.value = false;
+    close();
 }
 
 function onCloseBtnClicked() {

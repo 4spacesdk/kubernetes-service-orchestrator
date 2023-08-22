@@ -5,8 +5,8 @@ use RestExtension\Core\Entity;
 /**
  * Class DeploymentSpecificationIngressRulePath
  * @package App\Entities
- * @property int $deploymennt_specification_id
- * @property DeploymentSpecification $deployment_specification
+ * @property int $deployment_specification_ingress_id
+ * @property DeploymentSpecificationIngress $deployment_specification_ingress
  * @property string $path
  * @property string $path_type
  * @property string $backend_service_port_name

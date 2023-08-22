@@ -123,6 +123,12 @@ import type {
 import type {
     DeploymentUpdateVolumeDialog_Input
 } from "@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateVolumeDialog.vue";
+import type {
+    DeploymentSpecificationUpdateIngressesDialog_Input
+} from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateIngressesDialog.vue";
+import type {
+    DeploymentSpecificationUpdateIngressDialog_Input
+} from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateIngressDialog.vue";
 
 export type Events = {
     confirm: ConfirmationDialog_Input;
@@ -194,6 +200,8 @@ export type Events = {
     deploymentSpecificationUpdatePostCommand: DeploymentSpecificationUpdatePostCommandDialog_Input;
     deploymentSpecificationUpdateServicePorts: DeploymentSpecificationUpdateServicePortsDialog_Input;
     deploymentSpecificationUpdateServicePort: DeploymentSpecificationUpdateServicePortDialog_Input;
+    deploymentSpecificationUpdateIngresses: DeploymentSpecificationUpdateIngressesDialog_Input;
+    deploymentSpecificationUpdateIngress: DeploymentSpecificationUpdateIngressDialog_Input;
     deploymentSpecificationUpdateIngressRulePaths: DeploymentSpecificationUpdateIngressRulePathsDialog_Input;
     deploymentSpecificationUpdateIngressRulePath: DeploymentSpecificationUpdateIngressRulePathDialog_Input;
     deploymentSpecificationUpdateClusterRoleRules: DeploymentSpecificationUpdateClusterRoleRulesDialog_Input;

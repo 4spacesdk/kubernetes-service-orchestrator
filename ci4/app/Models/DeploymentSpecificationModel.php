@@ -14,7 +14,7 @@ class DeploymentSpecificationModel extends Model implements ResourceModelInterfa
         DeploymentSpecificationPostCommandModel::class,
         DeploymentSpecificationEnvironmentVariableModel::class,
         DeploymentSpecificationServicePortModel::class,
-        DeploymentSpecificationIngressRulePathModel::class,
+        DeploymentSpecificationIngressModel::class,
         DeploymentSpecificationClusterRoleRuleModel::class,
         DeploymentPackageDeploymentSpecificationModel::class,
     ];

@@ -4,15 +4,13 @@ use App\Core\ResourceController;
 use App\Entities\DeploymentSpecification;
 use App\Entities\DeploymentSpecificationClusterRoleRule;
 use App\Entities\DeploymentSpecificationEnvironmentVariable;
-use App\Entities\DeploymentSpecificationIngressRulePath;
+use App\Entities\DeploymentSpecificationIngress;
 use App\Entities\DeploymentSpecificationPostCommand;
-use App\Entities\DeploymentSpecificationResourceManagementProfile;
 use App\Entities\DeploymentSpecificationServicePort;
 use App\Interfaces\ClusterRoleRuleList;
 use App\Interfaces\EnvironmentVariableList;
-use App\Interfaces\IngressRulePathList;
+use App\Interfaces\IngressList;
 use App\Interfaces\PostCommandList;
-use App\Interfaces\ResourceManagementProfileList;
 use App\Interfaces\ServicePortList;
 use App\Libraries\GoogleCloud\GoogleCloudArtifactRegistry;
 use DebugTool\Data;
@@ -133,29 +131,34 @@ class DeploymentSpecifications extends ResourceController {
     }
 
     /**
-     * @route /deployment-specifications/{id}/ingress-rule-paths
+     * @route /deployment-specifications/{id}/ingresses
      * @method put
      * @custom true
      * @param int $id
-     * @requestSchema IngressRulePathList
+     * @requestSchema IngressList
      * @return void
      */
-    public function updateIngressRulePaths(int $id): void {
+    public function updateIngresses(int $id): void {
         $item = new DeploymentSpecification();
         $item->find($id);
         if ($item->exists()) {
-            /** @var IngressRulePathList $body */
+            /** @var IngressList $body */
             $body = $this->request->getJSON();
-            $values = new DeploymentSpecificationIngressRulePath();
+            $values = new DeploymentSpecificationIngress();
             $values->all = array_map(
-                fn($data) => DeploymentSpecificationIngressRulePath::Create(
-                    $data->path,
-                    $data->pathType,
-                    $data->backendServicePortName
+                fn($data) => DeploymentSpecificationIngress::Create(
+                    $data->ingressClass,
+                    $data->proxyBodySize,
+                    $data->proxyConnectTimeout,
+                    $data->proxyReadTimeout,
+                    $data->proxySendTimeout,
+                    $data->sslRedirect,
+                    $data->enableTls,
+                    $data->paths
                 ),
                 $body->values
             );
-            $item->updateIngressRulePaths($values);
+            $item->updateIngresses($values);
         }
         $this->_setResource($item);
         $this->success();

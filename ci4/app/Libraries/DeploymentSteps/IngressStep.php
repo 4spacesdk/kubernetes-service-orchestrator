@@ -1,10 +1,12 @@
 <?php namespace App\Libraries\DeploymentSteps;
 
 use App\Entities\Deployment;
+use App\Entities\DeploymentSpecificationIngress;
 use App\Entities\Domain;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
 use App\Libraries\Kubernetes\KubeAuth;
+use App\Models\DeploymentSpecificationIngressModel;
 use DebugTool\Data;
 use RenokiCo\PhpK8s\Exceptions\KubernetesAPIException;
 use RenokiCo\PhpK8s\Kinds\K8sEvent;
@@ -52,25 +54,31 @@ class IngressStep extends BaseDeploymentStep {
      * @throws \Exception
      */
     public function getPreview(Deployment $deployment): string {
-        $resource = $this->getResource($deployment, true);
-        $local = $resource->toJson();
+        $resources = $this->getResources($deployment, true);
 
-        if ($resource->exists()) {
-            $exiting = $resource->get();
-            $remote = json_decode($exiting->toJson(), true);
-            unset($remote['metadata']['uid']);
-            unset($remote['metadata']['resourceVersion']);
-            unset($remote['metadata']['generation']);
-            unset($remote['metadata']['creationTimestamp']);
-            unset($remote['metadata']['annotations']['kubectl.kubernetes.io/last-applied-configuration']);
-            unset($remote['metadata']['managedFields']);
-            unset($remote['status']);
-            $remote = json_encode($remote);
+        $locals = [];
+        $remotes = [];
+
+        foreach ($resources as $resource) {
+            $locals[] = $resource->toJson();
+
+            if ($resource->exists()) {
+                $exiting = $resource->get();
+                $remote = json_decode($exiting->toJson(), true);
+                unset($remote['metadata']['uid']);
+                unset($remote['metadata']['resourceVersion']);
+                unset($remote['metadata']['generation']);
+                unset($remote['metadata']['creationTimestamp']);
+                unset($remote['metadata']['annotations']['kubectl.kubernetes.io/last-applied-configuration']);
+                unset($remote['metadata']['managedFields']);
+                unset($remote['status']);
+                $remotes[] = json_encode($remote);
+            }
         }
 
         return json_encode([
-            'local' => $local,
-            'remote' => $remote ?? null,
+            'local' => $locals,
+            'remote' => $remotes,
         ]);
     }
 
@@ -79,12 +87,17 @@ class IngressStep extends BaseDeploymentStep {
      * @throws \Exception
      */
     public function getStatus(Deployment $deployment): string {
-        $resource = $this->getResource($deployment, true);
-        if ($resource->exists()) {
-            return DeploymentStepHelper::Ingress_Found;
-        } else {
-            return DeploymentStepHelper::Ingress_NotFound;
+        $resources = $this->getResources($deployment, true);
+
+        $found = true;
+        foreach ($resources as $resource) {
+            if (!$resource->exists()) {
+                $found = false;
+                break;
+            }
         }
+
+        return $found ? DeploymentStepHelper::Ingress_Found : DeploymentStepHelper::Ingress_NotFound;
     }
 
     public function validateDeployCommand(Deployment $deployment): ?string {
@@ -117,78 +130,114 @@ class IngressStep extends BaseDeploymentStep {
     }
 
     public function startDeployCommand(Deployment $deployment): void {
-        $resource = $this->getResource($deployment, true);
-        $resource->createOrUpdate();
+        $resources = $this->getResources($deployment, true);
+        foreach ($resources as $resource) {
+            $resource->createOrUpdate();
+        }
     }
 
     public function startTerminateCommand(Deployment $deployment): void {
-        $resource = $this->getResource($deployment, true);
-        $resource->synced();
-        $resource->delete();
-    }
-
-    public function getKubernetesEvents(Deployment $deployment): array {
-        $resource = $this->getResource($deployment, true);
-        $events = [];
-        /** @var K8sEvent $event */
-        foreach ($resource->getEvents() as $event) {
-            $events[] = [
-                'count' => $event->getAttribute('count'),
-                'type' => $event->getAttribute('type'),
-                'reason' => $event->getAttribute('reason'),
-                'date' => date('Y-m-d H:i:s', strtotime_($event->getAttribute('lastTimestamp'))),
-                'from' => $event->getAttribute('source')['component'],
-                'message' => $event->getAttribute('message'),
-            ];
+        $resources = $this->getResources($deployment, true);
+        foreach ($resources as $resource) {
+            $resource->synced();
+            $resource->delete();
         }
-        return $events;
-    }
-
-    public function getKubernetesStatus(Deployment $deployment): array {
-        /** @var K8sIngress $resource */
-        $resource = $this->getResource($deployment, true)->get();
-        $status = $resource->getAttribute('status');
-        return $status;
     }
 
     /**
      * @throws \Exception
      */
-    private function getResource(Deployment $deployment, bool $auth = false): K8sIngress {
+    public function getKubernetesEvents(Deployment $deployment): array {
+        $resources = $this->getResources($deployment, true);
+        $events = [];
+
+        foreach ($resources as $resource) {
+            /** @var K8sEvent $event */
+            foreach ($resource->getEvents() as $event) {
+                $events[] = [
+                    'count' => $event->getAttribute('count'),
+                    'type' => $event->getAttribute('type'),
+                    'reason' => $event->getAttribute('reason'),
+                    'date' => date('Y-m-d H:i:s', strtotime_($event->getAttribute('lastTimestamp'))),
+                    'from' => $event->getAttribute('source')['component'],
+                    'message' => $event->getAttribute('message'),
+                ];
+            }
+        }
+
+        return $events;
+    }
+
+    /**
+     * @throws KubernetesAPIException
+     * @throws \Exception
+     */
+    public function getKubernetesStatus(Deployment $deployment): array {
+        $resources = $this->getResources($deployment, true);
+        $status = [];
+        foreach ($resources as $resource) {
+            $status[] = $resource->get()->getAttribute('status');
+        }
+        return $status;
+    }
+
+    /**
+     * @return K8sIngress[]
+     * @throws \Exception
+     */
+    private function getResources(Deployment $deployment, bool $auth = false): array {
         $spec = $deployment->findDeploymentSpecification();
 
         if (!$deployment->domain->exists()) {
             $deployment->domain->find();
         }
 
-        $resource = new K8sIngress();
-        $resource
-            ->setName($deployment->name)
-            ->setNamespace($deployment->namespace)
-            ->setAnnotations([
-                'kubernetes.io/ingress.class' => 'nginx',
-                'nginx.ingress.kubernetes.io/proxy-body-size' => '50m',
-                'nginx.ingress.kubernetes.io/proxy-connect-timeout' => '600',
-                'nginx.ingress.kubernetes.io/proxy-read-timeout' => '600',
-                'nginx.ingress.kubernetes.io/proxy-send-timeout' => '600',
-            ])
-            ->setTls([
-                [
-                    'hosts' => [
-                        $deployment->getUrl(),
-                    ],
-                    'secretName' => $deployment->domain->certificate_name,
-                ]
-            ])
-            ->setRules($spec->getIngressRules($deployment));
+        /** @var DeploymentSpecificationIngress $ingresses */
+        $ingresses = (new DeploymentSpecificationIngressModel())
+            ->where('deployment_specification_id', $spec->id)
+            ->find();
 
+        $resources = [];
+
+        foreach ($ingresses as $ingress) {
+
+            $resource = new K8sIngress();
+            $resource
+                ->setName($deployment->name)
+                ->setNamespace($deployment->namespace)
+                ->setAnnotations([
+                    'kubernetes.io/ingress.class' => $ingress->ingress_class,
+                    'nginx.ingress.kubernetes.io/proxy-body-size' => "{$ingress->proxy_body_size}m",
+                    'nginx.ingress.kubernetes.io/proxy-connect-timeout' => (string)$ingress->proxy_connect_timeout,
+                    'nginx.ingress.kubernetes.io/proxy-read-timeout' => (string)$ingress->proxy_read_timeout,
+                    'nginx.ingress.kubernetes.io/proxy-send-timeout' => (string)$ingress->proxy_send_timeout,
+                    'nginx.ingress.kubernetes.io/ssl-redirect' => $ingress->ssl_redirect ? 'true' : 'false',
+                ])
+                ->setRules($ingress->getIngressRules($deployment));
+
+            if ($ingress->enable_tls) {
+                $resource->setTls([
+                    [
+                        'hosts' => [
+                            $deployment->getUrl(),
+                        ],
+                        'secretName' => $deployment->domain->certificate_name,
+                    ]
+                ]);
+            }
+
+            $resources[] = $resource;
+        }
 
         if ($auth) {
             $auth = new KubeAuth();
-            $resource->onCluster($auth->authenticate());
+            $cluster = $auth->authenticate();
+            foreach ($resources as $resource) {
+                $resource->onCluster($cluster);
+            }
         }
 
-        return $resource;
+        return $resources;
     }
 
 }

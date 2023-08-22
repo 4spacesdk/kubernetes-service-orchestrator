@@ -8,9 +8,9 @@ const props = defineProps<{
 }>();
 
 const showUpdatePostCommands = ref(false);
-const showUpdateEnvirontmentVariables = ref(false);
+const showUpdateEnvironmentVariables = ref(false);
 const showUpdateServicePorts = ref(false);
-const showUpdateIngressRulePaths = ref(false);
+const showUpdateIngresses = ref(false);
 const showUpdateClusterRoleRules = ref(false);
 
 onMounted(() => {
@@ -21,9 +21,9 @@ onMounted(() => {
 
 function render() {
     showUpdatePostCommands.value = true;
-    showUpdateEnvirontmentVariables.value = true;
+    showUpdateEnvironmentVariables.value = true;
     showUpdateServicePorts.value = true;
-    showUpdateIngressRulePaths.value = props.deploymentSpecification.enable_ingress ?? false;
+    showUpdateIngresses.value = props.deploymentSpecification.enable_ingress ?? false;
     showUpdateClusterRoleRules.value = props.deploymentSpecification.enable_rbac ?? false;
 }
 
@@ -45,8 +45,8 @@ function onUpdateServicePortsClicked() {
     });
 }
 
-function onUpdateIngressRulePathsClicked() {
-    bus.emit('deploymentSpecificationUpdateIngressRulePaths', {
+function onUpdateIngressesClicked() {
+    bus.emit('deploymentSpecificationUpdateIngresses', {
         deploymentSpecification: props.deploymentSpecification
     });
 }
@@ -77,7 +77,7 @@ function onUpdateClusterRoleRulesClicked() {
                     </v-list-item-title>
                 </v-list-item>
                 <v-list-item
-                    v-if="showUpdateEnvirontmentVariables"
+                    v-if="showUpdateEnvironmentVariables"
                     dense
                     @click="onUpdateEnvironmentVariablesClicked">
                     <v-list-item-title>
@@ -95,12 +95,12 @@ function onUpdateClusterRoleRulesClicked() {
                     </v-list-item-title>
                 </v-list-item>
                 <v-list-item
-                    v-if="showUpdateIngressRulePaths"
+                    v-if="showUpdateIngresses"
                     dense
-                    @click="onUpdateIngressRulePathsClicked">
+                    @click="onUpdateIngressesClicked">
                     <v-list-item-title>
                         <v-icon size="small" class="my-auto ml-2">fa fa-link</v-icon>
-                        <span class="ml-2">Ingress Rule Paths</span>
+                        <span class="ml-2">Ingresses</span>
                     </v-list-item-title>
                 </v-list-item>
                 <v-list-item

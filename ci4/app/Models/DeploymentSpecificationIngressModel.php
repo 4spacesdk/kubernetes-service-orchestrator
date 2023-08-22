@@ -3,14 +3,14 @@
 use RestExtension\Core\Model;
 use RestExtension\ResourceModelInterface;
 
-class DeploymentSpecificationIngressRulePathModel extends Model implements ResourceModelInterface {
+class DeploymentSpecificationIngressModel extends Model implements ResourceModelInterface {
 
     public $hasOne = [
-        DeploymentSpecificationIngressModel::class,
+        DeploymentSpecificationModel::class,
     ];
 
     public $hasMany = [
-
+        DeploymentSpecificationIngressRulePathModel::class,
     ];
 
     public function preRestGet($queryParser, $id) {

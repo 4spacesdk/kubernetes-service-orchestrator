@@ -69,13 +69,13 @@ export interface DeploymentStep {
 }
 
 export interface DeploymentVolume {
-    mountPath?: string;
-    subPath?: string;
+    mount_path?: string;
+    sub_path?: string;
     capacity?: number;
-    volumeMode?: string;
-    reclaimPolicy?: string;
-    nfsServer?: string;
-    nfsPath?: string;
+    volume_mode?: string;
+    reclaim_policy?: string;
+    nfs_server?: string;
+    nfs_path?: string;
 }
 
 export interface DeploymentVolumeList {
@@ -118,14 +118,25 @@ export interface EnvironmentsGetResponse {
     name?: string;
 }
 
+export interface Ingress {
+    ingressClass?: string;
+    proxyBodySize?: number;
+    proxyConnectTimeout?: number;
+    proxyReadTimeout?: number;
+    proxySendTimeout?: number;
+    sslRedirect?: boolean;
+    enableTls?: boolean;
+    paths?: IngressRulePath[];
+}
+
+export interface IngressList {
+    values?: Ingress[];
+}
+
 export interface IngressRulePath {
     path?: string;
     pathType?: string;
     backendServicePortName?: string;
-}
-
-export interface IngressRulePathList {
-    values?: IngressRulePath[];
 }
 
 export interface KeelPoliciesGetResponse {
@@ -1281,7 +1292,7 @@ export class DeploymentSpecificationsUpdateServicePortsPutById extends BaseApi<D
     }
 }
 
-export class DeploymentSpecificationsUpdateIngressRulePathsPutById extends BaseApi<DeploymentSpecification> {
+export class DeploymentSpecificationsUpdateIngressesPutById extends BaseApi<DeploymentSpecification> {
 
     public topic = 'Resources.DeploymentSpecifications';
     protected method = 'put';
@@ -1290,14 +1301,14 @@ export class DeploymentSpecificationsUpdateIngressRulePathsPutById extends BaseA
 
     public constructor(id: number) {
         super();
-        this.uri = `/deployment-specifications/${id}/ingress-rule-paths`;
+        this.uri = `/deployment-specifications/${id}/ingresses`;
     }
 
     protected convertToResource(data: any): DeploymentSpecification {
         return new DeploymentSpecification(data);
     }
 
-    public save(data: IngressRulePathList, next?: (value: DeploymentSpecification) => void) {
+    public save(data: IngressList, next?: (value: DeploymentSpecification) => void) {
         return super.executeSave(data, next);
     }
 }
@@ -1365,8 +1376,8 @@ class DeploymentSpecifications {
         return new DeploymentSpecificationsUpdateServicePortsPutById(id);
     }
 
-    public updateIngressRulePathsPutById(id: number): DeploymentSpecificationsUpdateIngressRulePathsPutById {
-        return new DeploymentSpecificationsUpdateIngressRulePathsPutById(id);
+    public updateIngressesPutById(id: number): DeploymentSpecificationsUpdateIngressesPutById {
+        return new DeploymentSpecificationsUpdateIngressesPutById(id);
     }
 
     public updateClusterRoleRulesPutById(id: number): DeploymentSpecificationsUpdateClusterRoleRulesPutById {

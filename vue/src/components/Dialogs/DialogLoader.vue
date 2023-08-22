@@ -112,27 +112,21 @@ bus.on('userEdit', async input => {
 bus.on('workspaceCreate', async input => {
     addComponent((await import('@/components/Dialogs/Workspaces/WorkspaceCreateDialog.vue')).default, input);
 });
-
 bus.on('workspaceUpdateName', async input => {
     addComponent((await import('@/components/Dialogs/Workspaces/UpdateDialogs/WorkspaceUpdateNameDialog.vue')).default, input);
 });
-
 bus.on('workspaceUpdateEmailService', async input => {
     addComponent((await import('@/components/Dialogs/Workspaces/UpdateDialogs/WorkspaceUpdateEmailServiceDialog.vue')).default, input);
 });
-
 bus.on('workspaceUpdateDatabaseService', async input => {
     addComponent((await import('@/components/Dialogs/Workspaces/UpdateDialogs/WorkspaceUpdateDatabaseServiceDialog.vue')).default, input);
 });
-
 bus.on('workspaceUpdateIngress', async input => {
     addComponent((await import('@/components/Dialogs/Workspaces/UpdateDialogs/WorkspaceUpdateIngressDialog.vue')).default, input);
 });
-
 bus.on('workspaceDeploymentList', async input => {
     addComponent((await import('@/components/Dialogs/Workspaces/WorkspaceDeploymentList.vue')).default, input);
 });
-
 bus.on('workspaceLogs', async input => {
     addComponent((await import('@/components/Dialogs/Workspaces/WorkspaceLogsDialog.vue')).default, input);
 });
@@ -174,6 +168,12 @@ bus.on('deploymentSpecificationUpdateIngressRulePaths', async input => {
 });
 bus.on('deploymentSpecificationUpdateIngressRulePath', async input => {
     addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateIngressRulePathDialog.vue')).default, input);
+});
+bus.on('deploymentSpecificationUpdateIngresses', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateIngressesDialog.vue')).default, input);
+});
+bus.on('deploymentSpecificationUpdateIngress', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateIngressDialog.vue')).default, input);
 });
 bus.on('deploymentSpecificationUpdateClusterRoleRules', async input => {
     addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateClusterRoleRulesDialog.vue')).default, input);

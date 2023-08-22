@@ -6,7 +6,7 @@ import {Deployment} from '../Deployment';
 import {DeploymentSpecificationPostCommand} from '../DeploymentSpecificationPostCommand';
 import {DeploymentSpecificationEnvironmentVariable} from '../DeploymentSpecificationEnvironmentVariable';
 import {DeploymentSpecificationServicePort} from '../DeploymentSpecificationServicePort';
-import {DeploymentSpecificationIngressRulePath} from '../DeploymentSpecificationIngressRulePath';
+import {DeploymentSpecificationIngress} from '../DeploymentSpecificationIngress';
 import {DeploymentSpecificationClusterRoleRule} from '../DeploymentSpecificationClusterRoleRule';
 import {DeploymentStep} from '../DeploymentStep';
 import {User} from '../User';
@@ -32,7 +32,7 @@ export class DeploymentSpecificationDefinition extends BaseModel {
     deployment_specification_post_commands?: DeploymentSpecificationPostCommand[];
     deployment_specification_environment_variables?: DeploymentSpecificationEnvironmentVariable[];
     deployment_specification_service_ports?: DeploymentSpecificationServicePort[];
-    deployment_specification_ingress_rule_paths?: DeploymentSpecificationIngressRulePath[];
+    deployment_specification_ingresses?: DeploymentSpecificationIngress[];
     deployment_specification_cluster_role_rules?: DeploymentSpecificationClusterRoleRule[];
     deploymentSteps?: DeploymentStep[];
     id?: number;
@@ -69,7 +69,7 @@ export class DeploymentSpecificationDefinition extends BaseModel {
             delete this.deployment_specification_post_commands;
             delete this.deployment_specification_environment_variables;
             delete this.deployment_specification_service_ports;
-            delete this.deployment_specification_ingress_rule_paths;
+            delete this.deployment_specification_ingresses;
             delete this.deployment_specification_cluster_role_rules;
             delete this.deploymentSteps;
             delete this.id;
@@ -139,8 +139,8 @@ export class DeploymentSpecificationDefinition extends BaseModel {
         if (data.deployment_specification_service_ports != null) {
             this.deployment_specification_service_ports = data.deployment_specification_service_ports.map((i: any) => new DeploymentSpecificationServicePort(i));
         }
-        if (data.deployment_specification_ingress_rule_paths != null) {
-            this.deployment_specification_ingress_rule_paths = data.deployment_specification_ingress_rule_paths.map((i: any) => new DeploymentSpecificationIngressRulePath(i));
+        if (data.deployment_specification_ingresses != null) {
+            this.deployment_specification_ingresses = data.deployment_specification_ingresses.map((i: any) => new DeploymentSpecificationIngress(i));
         }
         if (data.deployment_specification_cluster_role_rules != null) {
             this.deployment_specification_cluster_role_rules = data.deployment_specification_cluster_role_rules.map((i: any) => new DeploymentSpecificationClusterRoleRule(i));
