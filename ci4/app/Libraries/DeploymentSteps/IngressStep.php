@@ -199,11 +199,11 @@ class IngressStep extends BaseDeploymentStep {
 
         $resources = [];
 
-        foreach ($ingresses as $ingress) {
+        foreach ($ingresses as $index => $ingress) {
 
             $resource = new K8sIngress();
             $resource
-                ->setName($deployment->name)
+                ->setName($deployment->name . ($index == 0 ? '' : '-'.$index))
                 ->setNamespace($deployment->namespace)
                 ->setAnnotations([
                     'kubernetes.io/ingress.class' => $ingress->ingress_class,

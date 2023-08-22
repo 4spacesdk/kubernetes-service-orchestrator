@@ -6,6 +6,7 @@ import type {DeploymentStep} from "@/core/services/Deploy/Api";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import JsonViewer from 'vue-json-viewer';
+import _ from "lodash";
 
 export interface DeploymentResourcePreviewDialog_Input {
     deployment: Deployment,
@@ -17,7 +18,7 @@ const props = defineProps<{ input: DeploymentResourcePreviewDialog_Input, events
 const used = ref(false);
 const showDialog = ref(false);
 const isLoading = ref(false);
-const tab = ref<'diff' | 'local' | 'remote'>('diff');
+const tab = ref<'diff' | 'local' | 'remote'>('local');
 const localJSON = ref('');
 const remoteJSON = ref('');
 const localString = ref('');
@@ -58,8 +59,14 @@ function reload() {
         if (response && response.length == 1) {
             const preview = JSON.parse(response[0].value!);
             if (preview) {
-                localJSON.value = JSON.parse(preview.local ?? '{}');
-                remoteJSON.value = JSON.parse(preview.remote ?? '{}');
+
+                if (_.isArray(preview.local)) {
+                    localJSON.value = preview.local.map((local: string) => JSON.parse(local));
+                    remoteJSON.value = preview.remote.map((local: string) => JSON.parse(local));
+                } else {
+                    localJSON.value = JSON.parse(preview.local ?? '{}');
+                    remoteJSON.value = JSON.parse(preview.remote ?? '{}');
+                }
 
                 localString.value = JSON.stringify(localJSON.value, null, 2);
                 remoteString.value = JSON.stringify(remoteJSON.value, null, 2);
