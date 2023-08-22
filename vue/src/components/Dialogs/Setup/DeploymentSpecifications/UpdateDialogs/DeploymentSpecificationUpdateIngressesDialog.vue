@@ -75,7 +75,7 @@ function render() {
                         proxyConnectTimeout: ingress.proxy_connect_timeout ?? 0,
                         proxyReadTimeout: ingress.proxy_read_timeout ?? 0,
                         proxySendTimeout: ingress.proxy_send_timeout ?? 0,
-                        sslRedirect: ingress.ssl_redirect ?? 0,
+                        sslRedirect: ingress.ssl_redirect ?? false,
                         enableTls: ingress.enable_tls ?? false,
                         paths: ingress.deployment_specification_ingress_rule_paths?.map((path: DeploymentSpecificationIngressRulePath) => {
                             return {
@@ -128,7 +128,7 @@ function onRulePathsBtnClicked(row: Row) {
             rulePath.path_type = path.pathType;
             rulePath.backend_service_port_name = path.backendServicePortName;
             return rulePath;
-        }),
+        }) ?? [],
         onSaveCallback: (items: DeploymentSpecificationIngressRulePath[]) => {
             row.paths = items?.map((path: DeploymentSpecificationIngressRulePath) => {
                 return {
