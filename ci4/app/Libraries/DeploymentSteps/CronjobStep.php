@@ -191,7 +191,7 @@ class CronjobStep extends BaseDeploymentStep {
                                 '-ec',
                                 "curl {$deployment->getInternalUrl()}{$spec->cronjob_url}"
                             ])
-                            ->setAttribute('imagePullPolicy', 'Always')
+                            ->setAttribute('imagePullPolicy', 'IfNotPresent')
                     ])
                     ->neverRestart()
                 )

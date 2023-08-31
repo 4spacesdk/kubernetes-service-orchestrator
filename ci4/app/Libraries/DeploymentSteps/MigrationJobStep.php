@@ -240,7 +240,7 @@ class MigrationJobStep extends BaseDeploymentStep {
         $container
             ->setAttribute('name', $deployment->name)
             ->setImage($spec->container_image->url, $deployment->version)
-            ->setAttribute('imagePullPolicy', 'Always')
+            ->setAttribute('imagePullPolicy', \KeelPolicies::GetImagePullPolicy($deployment->keel_policy))
             ->setAttribute('command', [
                 '/bin/sh'
             ])
