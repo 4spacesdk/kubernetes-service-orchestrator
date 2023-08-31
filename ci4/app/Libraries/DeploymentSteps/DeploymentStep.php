@@ -291,7 +291,7 @@ class DeploymentStep extends BaseDeploymentStep {
         $container = new Container();
         $container
             ->setAttribute('name', $deployment->name)
-            ->setImage($spec->container_image->url, $deployment->version)
+            ->setImage($spec->container_image->url, \KeelPolicies::GetImagePullPolicy($deployment->version))
             ->setAttribute('imagePullPolicy', 'Always')
             ->addPort(80)
             ->addEnv('ENVIRONMENT', $deployment->environment)

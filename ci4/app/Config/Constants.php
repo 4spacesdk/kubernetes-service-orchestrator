@@ -37,6 +37,19 @@ class KeelPolicies {
             KeelPolicies::Latest,
         ];
     }
+
+    public static function GetImagePullPolicy(string $keelPolicy): string {
+        switch ($keelPolicy) {
+            case self::Major:
+                return 'IfNotPresent';
+            case self::Minor:
+            case self::LatestPatch:
+            case self::LatestMinor:
+            case self::Latest:
+            default:
+                return 'Always';
+        }
+    }
 }
 
 class DeploymentStatusTypes {
