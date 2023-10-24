@@ -180,6 +180,7 @@ class CronjobStep extends BaseDeploymentStep {
             ->setName($deployment->name)
             ->setNamespace($deployment->namespace)
             ->setSchedule(new CronExpression('* * * * *'))
+            ->setSpec('concurrencyPolicy', 'Forbid')
             ->setJobTemplate((new K8sJob())
                 ->setTemplate((new K8sPod())
                     ->setContainers([
