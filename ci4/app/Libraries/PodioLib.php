@@ -139,7 +139,7 @@ class PodioLib {
     public function moveStoryToTest(PodioItem $item): void {
         PodioItem::update_values($this->client, $item->item_id, [
             getenv('PODIO_APP_PHASE_FIELD_ID') => getenv('PODIO_APP_PHASE_NEW_VALUE'),
-            getenv('PODIO_APP_PROGRESS_CONDITION_VALUE') => getenv('PODIO_APP_PROGRESS_NEW_VALUE'),
+            getenv('PODIO_APP_PROGRESS_FIELD_ID') => getenv('PODIO_APP_PROGRESS_NEW_VALUE'),
         ]);
     }
 
