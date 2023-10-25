@@ -2,6 +2,7 @@
 
 use DebugTool\Data;
 use GuzzleHttp\Exception\ServerException;
+use PodioBadRequestError;
 use RenokiCo\PhpK8s\Exceptions\KubernetesAPIException;
 
 class KubeHelper {
@@ -13,6 +14,8 @@ class KubeHelper {
                 return self::PrintServerException($e);
             case KubernetesAPIException::class:
                 return self::PrintKubernetesAPIException($e);
+            case PodioBadRequestError::class:
+                return $e->__toString();
             default:
                 return $e->getMessage();
         }
