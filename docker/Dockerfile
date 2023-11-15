@@ -164,12 +164,12 @@ RUN cd $APP_HOME/zmq-client && composer install
 RUN cd $APP_HOME/zmq-server && composer install
 
 # Set TAG_NAME as Environment Variable
-ARG TAG_NAME=latest
-ENV TAG_NAME ${TAG_NAME}
+ARG BUILD_TAG_NAME=latest
+ENV TAG_NAME ${BUILD_TAG_NAME}
 
 ## Git Commit
-ARG SHORT_SHA
-ENV SHORT_SHA ${SHORT_SHA}
+ARG BUILD_SHORT_SHA
+ENV SHORT_SHA ${BUILD_SHORT_SHA}
 
 # Launch the httpd in foreground
 CMD rm -rf /run/apache2/*
