@@ -1,0 +1,44 @@
+steps:
+  - id: Login
+    name: gcr.io/cloud-builders/docker
+    entrypoint: 'bash'
+    args: ['-c', 'docker login --username=$$USERNAME --password=$$PASSWORD']
+    secretEnv: ['USERNAME', 'PASSWORD']
+
+  - id: Build
+    name: gcr.io/cloud-builders/docker
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        timedatectl set-timezone Europe/Copenhagen
+        docker build \
+          -t $$USERNAME/$_DOCKER_HUB_REPOSITORY:$TAG_NAME \
+          --cache-from $_AR_HOSTNAME/$PROJECT_ID/$_AR_REPOSITORY/$REPO_NAME:latest \
+          --build-arg BUILD_TAG_NAME=$TAG_NAME \
+          --build-arg BUILD_SHORT_SHA=$SHORT_SHA \
+          --build-arg BUILD_DATE="$$(date '+%F %H:%M:%S')" \
+          -f docker/Dockerfile \
+          .
+    secretEnv: ['USERNAME']
+
+  - id: Push
+    name: gcr.io/cloud-builders/docker
+    entrypoint: 'bash'
+    args: ['-c', 'docker push $$USERNAME/$_DOCKER_HUB_REPOSITORY:$TAG_NAME']
+    secretEnv: ['USERNAME']
+
+availableSecrets:
+  secretManager:
+    - versionName: projects/four-spaces/secrets/docker-password/versions/1
+      env: 'PASSWORD'
+    - versionName: projects/four-spaces/secrets/docker-username/versions/1
+      env: 'USERNAME'
+
+options:
+  substitutionOption: ALLOW_LOOSE
+substitutions:
+  _AR_HOSTNAME: europe-docker.pkg.dev
+  _AR_REPOSITORY: eu.gcr.io
+  _DOCKER_HUB_REPOSITORY: kubernetes-service-orchestrator
+timeout: 1200s
