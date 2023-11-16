@@ -216,7 +216,7 @@ class Deployment extends Entity {
         }
 
         $spec = $this->findDeploymentSpecification();
-        return "{$this->name}.{$this->namespace}.svc.cluster.local{$spec->domain_suffix}";
+        return "{$this->name}.{$this->namespace}{$spec->domain_suffix}";
     }
 
     public function getUrl(bool $includeTls = false, bool $includeSuffix = false): string {
