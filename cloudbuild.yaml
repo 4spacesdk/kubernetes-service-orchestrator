@@ -6,8 +6,8 @@ steps:
       - |
         timedatectl set-timezone Europe/Copenhagen
         docker build \
-          -t $_AR_HOSTNAME/$PROJECT_ID/$REPO_NAME:latest \
-          --cache-from $_AR_HOSTNAME/$PROJECT_ID/$REPO_NAME:latest \
+          -t $_AR_HOSTNAME/$PROJECT_ID/$_AR_REPOSITORY/$REPO_NAME:latest \
+          --cache-from $_AR_HOSTNAME/$PROJECT_ID/$_AR_REPOSITORY/$REPO_NAME:latest \
           --build-arg BUILD_TAG_NAME=$TAG_NAME \
           --build-arg BUILD_SHORT_SHA=$SHORT_SHA \
           --build-arg BUILD_DATE="$$(date '+%F %H:%M:%S')" \
@@ -18,13 +18,14 @@ steps:
     args:
       - push
       - >-
-        $_AR_HOSTNAME/$PROJECT_ID/$REPO_NAME:latest
+        $_AR_HOSTNAME/$PROJECT_ID/$_AR_REPOSITORY/$REPO_NAME:latest
     id: Push
 images:
   - >-
-    $_AR_HOSTNAME/$PROJECT_ID/$REPO_NAME:latest
+    $_AR_HOSTNAME/$PROJECT_ID/$_AR_REPOSITORY/$REPO_NAME:latest
 options:
   substitutionOption: ALLOW_LOOSE
 substitutions:
   _AR_HOSTNAME: europe-west3-docker.pkg.dev
+  _AR_REPOSITORY: eu.gcr.io
 timeout: 1200s
