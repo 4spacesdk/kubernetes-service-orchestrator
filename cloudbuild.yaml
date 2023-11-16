@@ -26,6 +26,6 @@ images:
 options:
   substitutionOption: ALLOW_LOOSE
 substitutions:
-  _AR_HOSTNAME: europe-west3-docker.pkg.dev
+  _AR_HOSTNAME: europe-docker.pkg.dev
   _AR_REPOSITORY: eu.gcr.io
 timeout: 1200s
