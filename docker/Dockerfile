@@ -49,7 +49,7 @@ RUN apk add --update  \
     # gcloud installer
     python3 \
     # ZMQ
-    libzmq zeromq-dev zeromq php8-pecl-zmq@testing \
+    libzmq zeromq-dev zeromq \
     # runuser
     runuser \
     # gke-auth
