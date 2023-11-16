@@ -6,8 +6,8 @@ steps:
       - |
         timedatectl set-timezone Europe/Copenhagen
         docker build \
-          -t $_AR_HOSTNAME/$PROJECT_ID/$REPO_NAME/app:latest \
-          --cache-from $_AR_HOSTNAME/$PROJECT_ID/$REPO_NAME/app:latest \
+          -t $_AR_HOSTNAME/$PROJECT_ID/$REPO_NAME:latest \
+          --cache-from $_AR_HOSTNAME/$PROJECT_ID/$REPO_NAME:latest \
           --build-arg BUILD_TAG_NAME=$TAG_NAME \
           --build-arg BUILD_SHORT_SHA=$SHORT_SHA \
           --build-arg BUILD_DATE="$$(date '+%F %H:%M:%S')" \
@@ -18,14 +18,13 @@ steps:
     args:
       - push
       - >-
-        $_AR_HOSTNAME/$PROJECT_ID/$REPO_NAME/app:latest
+        $_AR_HOSTNAME/$PROJECT_ID/$REPO_NAME:latest
     id: Push
 images:
   - >-
-    $_AR_HOSTNAME/$PROJECT_ID/$REPO_NAME/app:latest
+    $_AR_HOSTNAME/$PROJECT_ID/$REPO_NAME:latest
 options:
   substitutionOption: ALLOW_LOOSE
 substitutions:
   _AR_HOSTNAME: europe-west3-docker.pkg.dev
-  _SERVICE_NAME: kubernetes-service-orchestrator
 timeout: 1200s
