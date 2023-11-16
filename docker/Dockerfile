@@ -87,6 +87,8 @@ RUN git clone https://github.com/zeromq/php-zmq.git \
  && rm -fr php-zmq
 RUN docker-php-ext-enable zmq
 RUN rm -rf /tmp/* /var/cache/apk/*
+RUN cp /usr/local/etc/php/conf.d/docker-php-ext-zmq.ini /etc/php8/conf.d/50_zmq.ini
+RUN cp /usr/local/lib/php/extensions/no-debug-non-zts-20200930/zmq.so /usr/lib/php8/modules/zmq.so
 
 # yaml_parse
 RUN pear config-set php_ini /etc/php7/php.ini
