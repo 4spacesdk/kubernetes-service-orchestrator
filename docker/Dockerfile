@@ -7,8 +7,8 @@ COPY vue /vue
 RUN node --version
 RUN npm --version
 
-ARG TAG_NAME=latest
-RUN sed -i -e "s/_VERSION_/$TAG_NAME/g" src/versions.ts
+ARG BUILD_TAG_NAME=latest
+RUN sed -i -e "s/_VERSION_/$BUILD_TAG_NAME/g" src/versions.ts
 ARG PROJECT_ID=project
 RUN sed -i -e "s/_PROJECT_ID_/$PROJECT_ID/g" src/versions.ts
 
