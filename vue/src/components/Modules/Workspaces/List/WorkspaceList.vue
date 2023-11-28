@@ -14,7 +14,6 @@ import {it} from "vuetify/locale";
 
 interface Row {
     workspace: Workspace;
-    isLoadingRequestSupportLogin: boolean;
     isLoadingDeleteBtn?: boolean;
 }
 
@@ -224,24 +223,6 @@ function onShowLogsBtnClicked(item: Workspace) {
     });
 }
 
-function onRequestSupportLoginBtnClicked(item: Row) {
-    item.isLoadingRequestSupportLogin = true;
-    const api = Api.workspaces().requestSupportLoginGetById(item.workspace.id!)
-    api.setErrorHandler(response => {
-        if (response.error) {
-            bus.emit('toast', {
-                text: response.error
-            });
-        }
-        item.isLoadingRequestSupportLogin = false;
-        return false;
-    });
-    api.find(response => {
-        item.isLoadingRequestSupportLogin = false;
-        window.open(response[0].value, '_blank')?.focus();
-    });
-}
-
 // </editor-fold>
 
 </script>
@@ -321,18 +302,6 @@ function onRequestSupportLoginBtnClicked(item: Row) {
 
             <template v-slot:item.actions="{ item }">
                 <div class="d-flex justify-end">
-
-                    <div>
-                        <v-btn
-                            disabled
-                            :loading="item.raw.isLoadingRequestSupportLogin"
-                            variant="plain" color="green" size="small" icon
-                            @click="onRequestSupportLoginBtnClicked(item.raw)">
-                            <v-icon>fa fa-headset</v-icon>
-                            <v-tooltip activator="parent" location="bottom">Request Support Login</v-tooltip>
-                        </v-btn>
-                        <v-tooltip activator="parent" location="bottom">Temporarily disabled</v-tooltip>
-                    </div>
 
                     <v-btn
                         variant="plain" color="primary" size="small" icon

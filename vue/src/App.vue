@@ -6,6 +6,7 @@ import AppUpdateReloadPrompt from '@/components/Shell/AppUpdateReloadPrompt.vue'
 import TopBar from '@/components/Shell/TopBar/TopBar.vue';
 import {onMounted, ref} from "vue";
 import AuthService from "@/services/AuthService";
+import StatusBar from "@/components/Shell/StatusBar/StatusBar.vue";
 
 const showTopBar = ref(false);
 const showMenu = ref(false);
@@ -30,6 +31,7 @@ onMounted(() => {
                 <router-view/>
             </div>
         </v-main>
+        <StatusBar/>
 
         <!-- Modals -->
         <AppUpdateReloadPrompt/>

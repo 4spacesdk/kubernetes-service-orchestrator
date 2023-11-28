@@ -4,7 +4,10 @@ use App\Libraries\Kubernetes\KubeAuth;
 use App\Libraries\Kubernetes\KubeHelper;
 use App\Libraries\Kubernetes\KubeLog;
 use DebugTool\Data;
+use PHPUnit\Exception;
+use RenokiCo\PhpK8s\Kinds\K8sNode;
 use RenokiCo\PhpK8s\Kinds\K8sPod;
+use RenokiCo\PhpK8s\ResourcesList;
 
 class Kubernetes extends \App\Core\BaseController {
 
@@ -165,6 +168,33 @@ class Kubernetes extends \App\Core\BaseController {
             'rules' => $rules,
         ]);
 
+        $this->success();
+    }
+
+    /**
+     * @route /kubernetes/node-info
+     * @method get
+     * @custom true
+     * @return void
+     * @responseSchema KubernetesNodeInfoResponse
+     */
+    public function nodeInfo(): void {
+        $kubeAuth = new KubeAuth();
+        try {
+            $cluster = $kubeAuth->authenticate();
+            $nodes = $cluster->node()->all();
+            Data::set('resource', [
+                'status' => 'success',
+                'message' => '',
+                'nodes' => array_map(fn(K8sNode $node) => $node->getInfo(), $nodes->all()),
+            ]);
+        } catch (\Exception $e) {
+            Data::set('resource', [
+                'status' => 'error',
+                'message' => $e->getMessage(),
+                'nodes' => [],
+            ]);
+        }
         $this->success();
     }
 

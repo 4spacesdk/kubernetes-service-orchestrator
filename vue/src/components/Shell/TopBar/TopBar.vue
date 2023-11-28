@@ -1,9 +1,5 @@
 <script setup lang="ts">
-import {computed, defineComponent, reactive, ref} from 'vue'
-import {versions} from "@/versions";
 import TopBarMenu from '@/components/Shell/TopBar/TopBar-Menu.vue';
-
-const version = ref(versions.version);
 
 </script>
 
@@ -14,7 +10,6 @@ const version = ref(versions.version);
 
         <div class="d-flex h-100 align-start flex-column">
             <div class="logo"></div>
-            <small>{{ version }}</small>
         </div>
 
         <v-spacer></v-spacer>

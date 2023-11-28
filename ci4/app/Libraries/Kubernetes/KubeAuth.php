@@ -47,13 +47,15 @@ class KubeAuth {
         }
 
         $cluster = KubernetesCluster::fromKubeConfigYaml($config);
-
         $userConfig = yaml_parse($config)['users'][0];
-        $cluster->withTokenFromCommandProvider(
-            $userConfig['user']['exec']['command'],
-            implode(' ', $userConfig['user']['exec']['args'] ?? []),
-            'status.token'
-        );
+
+        if (isset($userConfig['user']['exec'])) {
+            $cluster->withTokenFromCommandProvider(
+                $userConfig['user']['exec']['command'],
+                implode(' ', $userConfig['user']['exec']['args'] ?? []),
+                'status.token'
+            );
+        }
 
         return $cluster;
     }

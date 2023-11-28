@@ -8,7 +8,7 @@ PROJECT_CONTACT_EMAIL=
 ## * kube-config (provide KUBERNETES_KUBECONFIG, if using GKE you can set GCLOUD options to enable gke-auth plugin)
 ## * in-cluster (provide REMOTE_CLUSTER_URL)
 KUBERNETES_AUTH=in-cluster
-## Base64-encoded (base64 ~/.kube/config | tr -d "\n")
+## Base64-encoded (cat ~/.kube/config | base64)
 KUBERNETES_KUBECONFIG=
 KUBERNETES_REMOTE_CLUSTER_URL=
 KUBERNETES_MY_NAMESPACE=

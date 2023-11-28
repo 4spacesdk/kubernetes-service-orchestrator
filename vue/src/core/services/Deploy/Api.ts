@@ -152,6 +152,25 @@ export interface KubernetesLogEntry {
     line?: string;
 }
 
+export interface KubernetesNodeInfo {
+    machineID?: string;
+    systemUUID?: string;
+    bootID?: string;
+    kernelVersion?: string;
+    osImage?: string;
+    containerRuntimeVersion?: string;
+    kubeletVersion?: string;
+    kubeProxyVersion?: string;
+    operatingSystem?: string;
+    architecture?: string;
+}
+
+export interface KubernetesNodeInfoResponse {
+    status?: string;
+    message?: string;
+    nodes?: KubernetesNodeInfo[];
+}
+
 export interface KubernetesPod {
     namespace?: string;
     name?: string;
@@ -3108,6 +3127,27 @@ export class KubernetesRbacShowGet extends BaseApi<KubernetesRbacShowResponse> {
     }
 }
 
+export class KubernetesNodeInfoGet extends BaseApi<KubernetesNodeInfoResponse> {
+
+    public topic = 'Resources.KubernetesNodeInfoResponses';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/kubernetes/node-info`;
+    }
+
+    protected convertToResource(data: any): KubernetesNodeInfoResponse {
+        return data;
+    }
+
+    public find(next?: (value: KubernetesNodeInfoResponse[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
 class Kubernetes {
 
     public getPodsGetByNamespace(namespace: string): KubernetesGetPodsGetByNamespace {
@@ -3128,6 +3168,10 @@ class Kubernetes {
 
     public rbacShowGet(): KubernetesRbacShowGet {
         return new KubernetesRbacShowGet();
+    }
+
+    public nodeInfoGet(): KubernetesNodeInfoGet {
+        return new KubernetesNodeInfoGet();
     }
 
 }
