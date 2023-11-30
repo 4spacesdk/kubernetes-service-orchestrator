@@ -3,6 +3,7 @@ import {computed, defineComponent, onMounted, reactive, ref} from 'vue'
 import {versions} from "@/versions";
 import {Api} from "@/core/services/Deploy/Api";
 import type {KubernetesNodeInfo} from "@/core/services/Deploy/Api";
+import AuthService from "@/services/AuthService";
 
 const version = ref(versions.version);
 
@@ -18,11 +19,13 @@ onMounted(() => {
 });
 
 function getStatus() {
-    Api.kubernetes().nodeInfoGet().find(value => {
-        status.value = value[0].status ?? '';
-        message.value = value[0].message ?? '';
-        nodes.value = value[0].nodes ?? [];
-    });
+    if (AuthService.isLoggedIn()) {
+        Api.kubernetes().nodeInfoGet().find(value => {
+            status.value = value[0].status ?? '';
+            message.value = value[0].message ?? '';
+            nodes.value = value[0].nodes ?? [];
+        });
+    }
 }
 
 </script>
