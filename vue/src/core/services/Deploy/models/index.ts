@@ -11,6 +11,7 @@ export {DeploymentSpecificationEnvironmentVariable as DeploymentSpecificationEnv
 export {DeploymentSpecificationIngress as DeploymentSpecificationIngress} from "./DeploymentSpecificationIngress";
 export {DeploymentSpecificationIngressRulePath as DeploymentSpecificationIngressRulePath} from "./DeploymentSpecificationIngressRulePath";
 export {DeploymentSpecificationPostCommand as DeploymentSpecificationPostCommand} from "./DeploymentSpecificationPostCommand";
+export {DeploymentSpecificationServiceAnnotation as DeploymentSpecificationServiceAnnotation} from "./DeploymentSpecificationServiceAnnotation";
 export {DeploymentSpecificationServicePort as DeploymentSpecificationServicePort} from "./DeploymentSpecificationServicePort";
 export {DeploymentStep as DeploymentStep} from "./DeploymentStep";
 export {DeploymentVolume as DeploymentVolume} from "./DeploymentVolume";

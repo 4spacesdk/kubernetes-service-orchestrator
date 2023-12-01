@@ -1,13 +1,13 @@
 /**
  * Created by ModelParser
  */
-import {DeploymentSpecification} from '../DeploymentSpecification';
+import {DeploymentSpecificationIngress} from '../DeploymentSpecificationIngress';
 import {User} from '../User';
 import {BaseModel} from '../BaseModel';
 
 export class DeploymentSpecificationIngressRulePathDefinition extends BaseModel {
-    deploymennt_specification_id?: number;
-    deployment_specification?: DeploymentSpecification;
+    deployment_specification_ingress_id?: number;
+    deployment_specification_ingress?: DeploymentSpecificationIngress;
     path?: string;
     path_type?: string;
     backend_service_port_name?: string;
@@ -26,8 +26,8 @@ export class DeploymentSpecificationIngressRulePathDefinition extends BaseModel 
 
     public populate(data?: any, patch = false) {
         if (!patch) {
-            delete this.deploymennt_specification_id;
-            delete this.deployment_specification;
+            delete this.deployment_specification_ingress_id;
+            delete this.deployment_specification_ingress;
             delete this.path;
             delete this.path_type;
             delete this.backend_service_port_name;
@@ -41,11 +41,11 @@ export class DeploymentSpecificationIngressRulePathDefinition extends BaseModel 
         }
 
         if (!data) return;
-        if (data.deploymennt_specification_id != null) {
-            this.deploymennt_specification_id = data.deploymennt_specification_id;
+        if (data.deployment_specification_ingress_id != null) {
+            this.deployment_specification_ingress_id = data.deployment_specification_ingress_id;
         }
-        if (data.deployment_specification != null) {
-            this.deployment_specification = new DeploymentSpecification(data.deployment_specification);
+        if (data.deployment_specification_ingress != null) {
+            this.deployment_specification_ingress = new DeploymentSpecificationIngress(data.deployment_specification_ingress);
         }
         if (data.path != null) {
             this.path = data.path;

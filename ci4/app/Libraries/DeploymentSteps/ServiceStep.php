@@ -4,6 +4,7 @@ use App\Entities\Deployment;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
 use App\Libraries\Kubernetes\KubeAuth;
+use DebugTool\Data;
 use RenokiCo\PhpK8s\Exceptions\KubernetesAPIException;
 use RenokiCo\PhpK8s\Kinds\K8sService;
 
@@ -58,7 +59,6 @@ class ServiceStep extends BaseDeploymentStep {
             unset($remote['metadata']['uid']);
             unset($remote['metadata']['resourceVersion']);
             unset($remote['metadata']['creationTimestamp']);
-            unset($remote['metadata']['annotations']);
             unset($remote['metadata']['managedFields']);
             foreach ($remote['spec']['ports'] as &$port) {
                 unset($port['nodePort']);
@@ -146,6 +146,7 @@ class ServiceStep extends BaseDeploymentStep {
             ->setSelectors([
                 'app' => $deployment->name,
             ])
+            ->setAnnotations($spec->getServiceAnnotations())
             ->setPorts($spec->getServicePorts());
 
         if ($auth) {

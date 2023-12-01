@@ -5,12 +5,11 @@ import {DeploymentSpecification} from '../DeploymentSpecification';
 import {User} from '../User';
 import {BaseModel} from '../BaseModel';
 
-export class DeploymentSpecificationClusterRoleRuleDefinition extends BaseModel {
+export class DeploymentSpecificationServiceAnnotationDefinition extends BaseModel {
+    name?: string;
+    value?: string;
     deployment_specification_id?: number;
     deployment_specification?: DeploymentSpecification;
-    api_group?: string;
-    resource?: string;
-    verbs?: string;
     id?: number;
     created?: string;
     updated?: string;
@@ -26,11 +25,10 @@ export class DeploymentSpecificationClusterRoleRuleDefinition extends BaseModel 
 
     public populate(data?: any, patch = false) {
         if (!patch) {
+            delete this.name;
+            delete this.value;
             delete this.deployment_specification_id;
             delete this.deployment_specification;
-            delete this.api_group;
-            delete this.resource;
-            delete this.verbs;
             delete this.id;
             delete this.created;
             delete this.updated;
@@ -41,20 +39,17 @@ export class DeploymentSpecificationClusterRoleRuleDefinition extends BaseModel 
         }
 
         if (!data) return;
+        if (data.name != null) {
+            this.name = data.name;
+        }
+        if (data.value != null) {
+            this.value = data.value;
+        }
         if (data.deployment_specification_id != null) {
             this.deployment_specification_id = data.deployment_specification_id;
         }
         if (data.deployment_specification != null) {
             this.deployment_specification = new DeploymentSpecification(data.deployment_specification);
-        }
-        if (data.api_group != null) {
-            this.api_group = data.api_group;
-        }
-        if (data.resource != null) {
-            this.resource = data.resource;
-        }
-        if (data.verbs != null) {
-            this.verbs = data.verbs;
         }
         if (data.id != null) {
             this.id = data.id;

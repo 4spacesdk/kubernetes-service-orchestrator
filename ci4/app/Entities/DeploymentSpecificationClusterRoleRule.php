@@ -5,7 +5,7 @@ use RestExtension\Core\Entity;
 /**
  * Class DeploymentSpecificationClusterRoleRule
  * @package App\Entities
- * @property int $deploymennt_specification_id
+ * @property int $deployment_specification_id
  * @property DeploymentSpecification $deployment_specification
  * @property string $api_group
  * @property string $resource

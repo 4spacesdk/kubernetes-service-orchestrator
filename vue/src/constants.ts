@@ -129,6 +129,12 @@ import type {
 import type {
     DeploymentSpecificationUpdateIngressDialog_Input
 } from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateIngressDialog.vue";
+import type {
+    DeploymentSpecificationUpdateServiceAnnotationsDialog_Input
+} from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateServiceAnnotationsDialog.vue";
+import type {
+    DeploymentSpecificationUpdateServiceAnnotationDialog_Input
+} from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateServiceAnnotationDialog.vue";
 
 export type Events = {
     confirm: ConfirmationDialog_Input;
@@ -206,6 +212,8 @@ export type Events = {
     deploymentSpecificationUpdateIngressRulePath: DeploymentSpecificationUpdateIngressRulePathDialog_Input;
     deploymentSpecificationUpdateClusterRoleRules: DeploymentSpecificationUpdateClusterRoleRulesDialog_Input;
     deploymentSpecificationUpdateClusterRoleRule: DeploymentSpecificationUpdateClusterRoleRuleDialog_Input;
+    deploymentSpecificationUpdateServiceAnnotations: DeploymentSpecificationUpdateServiceAnnotationsDialog_Input;
+    deploymentSpecificationUpdateServiceAnnotation: DeploymentSpecificationUpdateServiceAnnotationDialog_Input;
 
     deploymentPackageSaved: DeploymentPackage | undefined;
     deploymentPackageEdit: DeploymentPackageCreateDialog_Input;

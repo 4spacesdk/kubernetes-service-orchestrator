@@ -141,7 +141,7 @@ function onCloseBtnClicked() {
                             :disabled="props.input.workspace !== undefined"
                             variant="outlined"
                             :rules="[
-                                v => /^[a-z0-9]{1,10}$/.test(v) || 'Invalid format'
+                                v => /^(?!^[0-9]*$)^([a-z0-9]([a-z0-9]|-(?!-)){0,14}(?<!-)$)/.test(v) || 'Invalid format'
                             ]"
                             label="Namespace"
                             clearable

@@ -34,7 +34,7 @@ function getStatus() {
     <v-footer
         border
         height="30px"
-        absolute
+        sticky
         app
     >
         <small>{{ version }}</small>

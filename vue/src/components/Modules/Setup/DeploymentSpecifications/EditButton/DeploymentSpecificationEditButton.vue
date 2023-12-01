@@ -12,6 +12,7 @@ const showUpdateEnvironmentVariables = ref(false);
 const showUpdateServicePorts = ref(false);
 const showUpdateIngresses = ref(false);
 const showUpdateClusterRoleRules = ref(false);
+const showUpdateServiceAnnotations = ref(false);
 
 onMounted(() => {
     render();
@@ -23,6 +24,7 @@ function render() {
     showUpdatePostCommands.value = true;
     showUpdateEnvironmentVariables.value = true;
     showUpdateServicePorts.value = true;
+    showUpdateServiceAnnotations.value = true;
     showUpdateIngresses.value = props.deploymentSpecification.enable_ingress ?? false;
     showUpdateClusterRoleRules.value = props.deploymentSpecification.enable_rbac ?? false;
 }
@@ -57,6 +59,12 @@ function onUpdateClusterRoleRulesClicked() {
     });
 }
 
+function onUpdateServiceAnnotationsClicked() {
+    bus.emit('deploymentSpecificationUpdateServiceAnnotations', {
+        deploymentSpecification: props.deploymentSpecification
+    });
+}
+
 </script>
 
 <template>
@@ -83,6 +91,15 @@ function onUpdateClusterRoleRulesClicked() {
                     <v-list-item-title>
                         <v-icon size="small" class="my-auto ml-2">fa fa-key</v-icon>
                         <span class="ml-2">Environment Variables</span>
+                    </v-list-item-title>
+                </v-list-item>
+                <v-list-item
+                    v-if="showUpdateServiceAnnotations"
+                    dense
+                    @click="onUpdateServiceAnnotationsClicked">
+                    <v-list-item-title>
+                        <v-icon size="small" class="my-auto ml-2">fa fa-hashtag</v-icon>
+                        <span class="ml-2">Service Annotations</span>
                     </v-list-item-title>
                 </v-list-item>
                 <v-list-item

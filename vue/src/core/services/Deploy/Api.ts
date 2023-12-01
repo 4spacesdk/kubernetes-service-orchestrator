@@ -211,6 +211,15 @@ export interface ResourceManagementProfileList {
     values?: ResourceManagementProfile[];
 }
 
+export interface ServiceAnnotation {
+    name?: string;
+    value?: string;
+}
+
+export interface ServiceAnnotationList {
+    values?: ServiceAnnotation[];
+}
+
 export interface ServicePort {
     protocol?: string;
     name?: string;
@@ -1353,6 +1362,27 @@ export class DeploymentSpecificationsUpdateClusterRoleRulesPutById extends BaseA
     }
 }
 
+export class DeploymentSpecificationsUpdateServiceAnnotationsPutById extends BaseApi<DeploymentSpecification> {
+
+    public topic = 'Resources.DeploymentSpecifications';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/deployment-specifications/${id}/service-annotations`;
+    }
+
+    protected convertToResource(data: any): DeploymentSpecification {
+        return new DeploymentSpecification(data);
+    }
+
+    public save(data: ServiceAnnotationList, next?: (value: DeploymentSpecification) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
 class DeploymentSpecifications {
 
     public get(): DeploymentSpecificationsGet {
@@ -1401,6 +1431,10 @@ class DeploymentSpecifications {
 
     public updateClusterRoleRulesPutById(id: number): DeploymentSpecificationsUpdateClusterRoleRulesPutById {
         return new DeploymentSpecificationsUpdateClusterRoleRulesPutById(id);
+    }
+
+    public updateServiceAnnotationsPutById(id: number): DeploymentSpecificationsUpdateServiceAnnotationsPutById {
+        return new DeploymentSpecificationsUpdateServiceAnnotationsPutById(id);
     }
 
 }

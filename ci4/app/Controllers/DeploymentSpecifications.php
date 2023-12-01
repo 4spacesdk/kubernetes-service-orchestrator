@@ -6,11 +6,13 @@ use App\Entities\DeploymentSpecificationClusterRoleRule;
 use App\Entities\DeploymentSpecificationEnvironmentVariable;
 use App\Entities\DeploymentSpecificationIngress;
 use App\Entities\DeploymentSpecificationPostCommand;
+use App\Entities\DeploymentSpecificationServiceAnnotation;
 use App\Entities\DeploymentSpecificationServicePort;
 use App\Interfaces\ClusterRoleRuleList;
 use App\Interfaces\EnvironmentVariableList;
 use App\Interfaces\IngressList;
 use App\Interfaces\PostCommandList;
+use App\Interfaces\ServiceAnnotationList;
 use App\Interfaces\ServicePortList;
 use App\Libraries\GoogleCloud\GoogleCloudArtifactRegistry;
 use DebugTool\Data;
@@ -188,6 +190,31 @@ class DeploymentSpecifications extends ResourceController {
                 $body->values
             );
             $item->updateClusterRoleRules($values);
+        }
+        $this->_setResource($item);
+        $this->success();
+    }
+
+    /**
+     * @route /deployment-specifications/{id}/service-annotations
+     * @method put
+     * @custom true
+     * @param int $id
+     * @requestSchema ServiceAnnotationList
+     * @return void
+     */
+    public function updateServiceAnnotations(int $id): void {
+        $item = new DeploymentSpecification();
+        $item->find($id);
+        if ($item->exists()) {
+            /** @var ServiceAnnotationList $body */
+            $body = $this->request->getJSON();
+            $values = new DeploymentSpecificationServiceAnnotation();
+            $values->all = array_map(
+                fn($data) => DeploymentSpecificationServiceAnnotation::Create($data->name, $data->value),
+                $body->values
+            );
+            $item->updateServiceAnnotations($values);
         }
         $this->_setResource($item);
         $this->success();

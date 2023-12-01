@@ -17,6 +17,7 @@ use App\Libraries\DeploymentSteps\ServiceStep;
 use App\Models\DeploymentSpecificationEnvironmentVariableModel;
 use App\Models\DeploymentSpecificationIngressModel;
 use App\Models\DeploymentSpecificationIngressRulePathModel;
+use App\Models\DeploymentSpecificationServiceAnnotationModel;
 use App\Models\DeploymentSpecificationServicePortModel;
 use App\Models\DeploymentVolumeModel;
 use RestExtension\Core\Entity;
@@ -57,6 +58,7 @@ use RestExtension\Core\Entity;
  * @property DeploymentSpecificationServicePort $deployment_specification_service_ports
  * @property DeploymentSpecificationIngress $deployment_specification_ingresses
  * @property DeploymentSpecificationClusterRoleRule $deployment_specification_cluster_role_rules
+ * @property DeploymentSpecificationServiceAnnotation $deployment_specification_service_annotations
  *
  * @property DeploymentStep $deploymentSteps
  */
@@ -180,6 +182,20 @@ class DeploymentSpecification extends Entity {
         return $variables;
     }
 
+    public function getServiceAnnotations(): array {
+        /** @var DeploymentSpecificationServiceAnnotation $serviceAnnotations */
+        $serviceAnnotations = (new DeploymentSpecificationServiceAnnotationModel())
+            ->where('deployment_specification_id', $this->id)
+            ->find();
+
+        $variables = [];
+        foreach ($serviceAnnotations as $serviceAnnotation) {
+            $variables[$serviceAnnotation->name] = $serviceAnnotation->value;
+        }
+
+        return $variables;
+    }
+
 
     // <editor-fold desc="Update methods">
 
@@ -211,6 +227,12 @@ class DeploymentSpecification extends Entity {
         $this->deployment_specification_cluster_role_rules->find()->deleteAll();
         $this->save($values);
         $this->deployment_specification_cluster_role_rules = $values;
+    }
+
+    public function updateServiceAnnotations(DeploymentSpecificationServiceAnnotation $values): void {
+        $this->deployment_specification_service_annotations->find()->deleteAll();
+        $this->save($values);
+        $this->deployment_specification_service_annotations = $values;
     }
 
     // </editor-fold>
