@@ -14,6 +14,7 @@ steps:
         timedatectl set-timezone Europe/Copenhagen
         docker build \
           -t $$USERNAME/$_DOCKER_HUB_REPOSITORY:$TAG_NAME \
+          -t $$USERNAME/$_DOCKER_HUB_REPOSITORY:latest \
           --cache-from $_AR_HOSTNAME/$PROJECT_ID/$_AR_REPOSITORY/$REPO_NAME:latest \
           --build-arg BUILD_TAG_NAME=$TAG_NAME \
           --build-arg BUILD_SHORT_SHA=$SHORT_SHA \
