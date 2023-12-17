@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
-import {DeploymentSpecification} from "@/core/services/Deploy/models";
+import {Workspace} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
 
-export interface DeploymentSpecificationUpdateEnvironmentVariablesDialog_Input {
-    deploymentSpecification: DeploymentSpecification;
+export interface WorkspaceUpdateLabelsDialog_Input {
+    workspace: Workspace;
 }
 
 interface Row {
@@ -14,7 +14,7 @@ interface Row {
     value: string;
 }
 
-const props = defineProps<{ input: DeploymentSpecificationUpdateEnvironmentVariablesDialog_Input, events: DialogEventsInterface }>();
+const props = defineProps<{ input: WorkspaceUpdateLabelsDialog_Input, events: DialogEventsInterface }>();
 
 const used = ref(false);
 const showDialog = ref(false);
@@ -46,15 +46,15 @@ function render() {
     showDialog.value = true;
 
     isLoading.value = true;
-    Api.deploymentSpecifications().get()
-        .where('id', props.input.deploymentSpecification.id!)
-        .include('deployment_specification_environment_variable')
+    Api.workspaces().get()
+        .where('id', props.input.workspace.id!)
+        .include('label')
         .find(value => {
-            rows.value = value[0].deployment_specification_environment_variables
-                ?.map(environmentVariable => {
+            rows.value = value[0].labels
+                ?.map(label => {
                     return {
-                        name: environmentVariable.name ?? '',
-                        value: environmentVariable.value ?? '',
+                        name: label.name ?? '',
+                        value: label.value ?? '',
                     }
                 }) ?? [];
             itemCount.value = rows.value.length;
@@ -76,15 +76,15 @@ function onCreateBtnClicked() {
         name: '',
         value: '',
     };
-    bus.emit('deploymentSpecificationUpdateEnvironmentVariable', {
-        environmentVariable: newItem,
+    bus.emit('workspaceUpdateLabel', {
+        label: newItem,
         onSaveCallback: () => rows.value.push(newItem),
     });
 }
 
 function onEditRowClicked(row: Row) {
-    bus.emit('deploymentSpecificationUpdateEnvironmentVariable', {
-        environmentVariable: row,
+    bus.emit('workspaceUpdateLabel', {
+        label: row,
         onSaveCallback: () => {
 
         }
@@ -97,7 +97,7 @@ function onDeleteRowClicked(row: Row) {
 
 function onSaveBtnClicked() {
     isSaving.value = true;
-    const api = Api.deploymentSpecifications().updateEnvironmentVariablesPutById(props.input.deploymentSpecification.id!);
+    const api = Api.workspaces().updateLabelsPutById(props.input.workspace.id!);
     api.setErrorHandler(response => {
         if (response.error) {
             bus.emit('toast', {
@@ -110,7 +110,7 @@ function onSaveBtnClicked() {
     api.save({
         values: rows.value
     }, newItem => {
-        bus.emit('deploymentSpecificationSaved', newItem);
+        bus.emit('workspaceSaved', newItem);
         isSaving.value = false;
         close();
     });
@@ -135,8 +135,8 @@ function onCloseBtnClicked() {
             class="w-100 h-100">
             <v-card-title>
                 <div class="d-flex w-100">
-                    <span class="my-auto">Environment Variables</span>
-                    <v-chip class="my-auto mx-auto">{{ props.input.deploymentSpecification.name }}</v-chip>
+                    <span class="my-auto">Labels</span>
+                    <v-chip class="my-auto mx-auto">{{ props.input.workspace.name }}</v-chip>
 
                     <div class="my-auto ml-auto d-flex justify-end gap-1">
                         <v-btn

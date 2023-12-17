@@ -130,6 +130,12 @@ bus.on('workspaceDeploymentList', async input => {
 bus.on('workspaceLogs', async input => {
     addComponent((await import('@/components/Dialogs/Workspaces/WorkspaceLogsDialog.vue')).default, input);
 });
+bus.on('workspaceUpdateLabels', async input => {
+    addComponent((await import('@/components/Dialogs/Workspaces/UpdateDialogs/WorkspaceUpdateLabelsDialog.vue')).default, input);
+});
+bus.on('workspaceUpdateLabel', async input => {
+    addComponent((await import('@/components/Dialogs/Workspaces/UpdateDialogs/WorkspaceUpdateLabelDialog.vue')).default, input);
+});
 
 
 bus.on('podTerminal', async input => {

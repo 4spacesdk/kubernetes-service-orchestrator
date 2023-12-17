@@ -19,6 +19,7 @@ export {Domain as Domain} from "./Domain";
 export {EmailService as EmailService} from "./EmailService";
 export {EnvironmentVariable as EnvironmentVariable} from "./EnvironmentVariable";
 export {KeelHookQueueItem as KeelHookQueueItem} from "./KeelHookQueueItem";
+export {Label as Label} from "./Label";
 export {MigrationJob as MigrationJob} from "./MigrationJob";
 export {OAuthClient as OAuthClient} from "./OAuthClient";
 export {System as System} from "./System";

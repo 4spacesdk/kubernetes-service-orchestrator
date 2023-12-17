@@ -23,6 +23,9 @@ const isUpdateDatabaseServiceEnabled = ref(false);
 const showUpdateIngress = ref(false);
 const isUpdateIngressEnabled = ref(false);
 
+const showUpdateLabels = ref(false);
+const isUpdateLabelsEnabled = ref(false);
+
 onMounted(() => {
     render();
 });
@@ -39,6 +42,9 @@ function render() {
 
     showUpdateIngress.value = true;
     isUpdateIngressEnabled.value = true;
+
+    showUpdateLabels.value = true;
+    isUpdateLabelsEnabled.value = true;
 }
 
 function onUpdateNameClicked() {
@@ -61,6 +67,12 @@ function onUpdateDatabaseServiceClicked() {
 
 function onUpdateIngressClicked() {
     bus.emit('workspaceUpdateIngress', {
+        workspace: props.workspace
+    });
+}
+
+function onUpdateLabelsClicked() {
+    bus.emit('workspaceUpdateLabels', {
         workspace: props.workspace
     });
 }
@@ -129,6 +141,17 @@ function onUpdateIngressClicked() {
                     <v-list-item-title>
                         <v-icon size="small" class="my-auto ml-2">fa fa-code-merge</v-icon>
                         <span class="ml-2">Ingress</span>
+                    </v-list-item-title>
+                </v-list-item>
+
+                <v-list-item
+                    v-if="showUpdateLabels"
+                    :disabled="!isUpdateLabelsEnabled"
+                    dense
+                    @click="onUpdateLabelsClicked">
+                    <v-list-item-title>
+                        <v-icon size="small" class="my-auto ml-2">fa fa-tags</v-icon>
+                        <span class="ml-2">Labels</span>
                     </v-list-item-title>
                 </v-list-item>
             </v-list>

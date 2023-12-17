@@ -74,10 +74,10 @@ import type {
     DeploymentSpecificationEditDialog_Input
 } from "@/components/Dialogs/Setup/DeploymentSpecifications/DeploymentSpecificationEditDialog.vue";
 import type {
-    DeploymentSpecificationUpdateEnvirontmentVariablesDialog_Input
+    DeploymentSpecificationUpdateEnvironmentVariablesDialog_Input
 } from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateEnvironmentVariablesDialog.vue";
 import type {
-    DeploymentSpecificationUpdateEnvirontmentVariableDialog_Input
+    DeploymentSpecificationUpdateEnvironmentVariableDialog_Input
 } from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateEnvironmentVariableDialog.vue";
 import type {
     DeploymentSpecificationUpdatePostCommandDialog_Input
@@ -135,6 +135,12 @@ import type {
 import type {
     DeploymentSpecificationUpdateServiceAnnotationDialog_Input
 } from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateServiceAnnotationDialog.vue";
+import type {
+    WorkspaceUpdateLabelDialog_Input
+} from "@/components/Dialogs/Workspaces/UpdateDialogs/WorkspaceUpdateLabelDialog.vue";
+import type {
+    WorkspaceUpdateLabelsDialog_Input
+} from "@/components/Dialogs/Workspaces/UpdateDialogs/WorkspaceUpdateLabelsDialog.vue";
 
 export type Events = {
     confirm: ConfirmationDialog_Input;
@@ -190,6 +196,8 @@ export type Events = {
     workspaceUpdateIngress: WorkspaceUpdateIngressDialog_Input;
     workspaceDeploymentList: WorkspaceDeploymentListDialog_Input;
     workspaceLogs: WorkspaceLogsDialog_Input;
+    workspaceUpdateLabels: WorkspaceUpdateLabelsDialog_Input;
+    workspaceUpdateLabel: WorkspaceUpdateLabelDialog_Input;
 
     podTerminal: PodTerminalDialog_Input;
 
@@ -200,8 +208,8 @@ export type Events = {
     deploymentSpecificationSaved: DeploymentSpecification | undefined;
     deploymentSpecificationEdit: DeploymentSpecificationEditDialog_Input;
     deploymentSpecificationEditDialog_closed: DeploymentSpecification | undefined;
-    deploymentSpecificationUpdateEnvironmentVariables: DeploymentSpecificationUpdateEnvirontmentVariablesDialog_Input;
-    deploymentSpecificationUpdateEnvironmentVariable: DeploymentSpecificationUpdateEnvirontmentVariableDialog_Input;
+    deploymentSpecificationUpdateEnvironmentVariables: DeploymentSpecificationUpdateEnvironmentVariablesDialog_Input;
+    deploymentSpecificationUpdateEnvironmentVariable: DeploymentSpecificationUpdateEnvironmentVariableDialog_Input;
     deploymentSpecificationUpdatePostCommands: DeploymentSpecificationUpdatePostCommandsDialog_Input;
     deploymentSpecificationUpdatePostCommand: DeploymentSpecificationUpdatePostCommandDialog_Input;
     deploymentSpecificationUpdateServicePorts: DeploymentSpecificationUpdateServicePortsDialog_Input;

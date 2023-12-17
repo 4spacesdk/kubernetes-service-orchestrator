@@ -37,7 +37,7 @@ class Database extends Config
         'username' => '',
         'password' => '',
         'database' => '',
-        'DBDriver' => 'MySQLi',
+        'DBDriver' => 'OrmExtension\Extensions\Database\MySQLi',
         'DBPrefix' => '',
         'pConnect' => false,
         'DBDebug'  => (ENVIRONMENT !== 'production'),

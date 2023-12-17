@@ -3,7 +3,7 @@ import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch}
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
 import {VTextField} from "vuetify/components/VTextField";
 
-export interface DeploymentSpecificationUpdateEnvirontmentVariableDialog_Input {
+export interface DeploymentSpecificationUpdateEnvironmentVariableDialog_Input {
     environmentVariable: {
         name: string;
         value: string;
@@ -18,7 +18,7 @@ interface Variable {
 }
 
 const props = defineProps<{
-    input: DeploymentSpecificationUpdateEnvirontmentVariableDialog_Input,
+    input: DeploymentSpecificationUpdateEnvironmentVariableDialog_Input,
     events: DialogEventsInterface
 }>();
 

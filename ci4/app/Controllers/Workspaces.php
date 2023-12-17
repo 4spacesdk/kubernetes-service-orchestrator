@@ -5,8 +5,10 @@ use App\Entities\Deployment;
 use App\Entities\DeploymentPackage;
 use App\Entities\DeploymentPackageDeploymentSpecification;
 use App\Entities\DeploymentSpecification;
+use App\Entities\Label;
 use App\Entities\Workspace;
 use App\Exceptions\ValidationException;
+use App\Interfaces\LabelList;
 use App\Models\DeploymentModel;
 use App\Models\DeploymentPackageDeploymentSpecificationModel;
 use App\Models\DomainModel;
@@ -265,57 +267,27 @@ class Workspaces extends ResourceController {
     }
 
     /**
-     * @route /workspaces/{id}/requestSupportLogin
-     * @method get
-     * @param int $id parameterType=path
-     * @parameter bool $redirect parameterType=query
+     * @route /workspaces/{id}/labels
+     * @method put
      * @custom true
-     * @responseSchema StringInterface
+     * @param int $id
+     * @requestSchema LabelList
+     * @return void
      */
-    public function requestSupportLogin(int $id): void {
+    public function updateLabels(int $id): void {
         $item = new Workspace();
         $item->find($id);
-        if (!$item->exists()) {
-            $this->fail('unknown workspace');
-            return;
+        if ($item->exists()) {
+            /** @var LabelList $body */
+            $body = $this->request->getJSON();
+            $values = new Label();
+            $values->all = array_map(
+                fn($data) => Label::Create($data->name, $data->value),
+                $body->values
+            );
+            $item->updateLabels($values);
         }
-
-//        // TODO Disabled for now
-//        /** @var Deployment $deployment */
-//        $deployment = (new DeploymentModel())
-//            ->includeRelated(DomainModel::class)
-//            ->where('workspace_id', $id)
-//            ->where('spec', DeploymentSpecHelper::Klartboard_Backend)
-//            ->find();
-//
-//        if (!$deployment->exists()) {
-//            $this->fail('Workspace deployment missing');
-//            return;
-//        }
-//
-//        if (!$deployment->domain->exists()) {
-//            $this->fail('Workspace deployment missing domain');
-//            return;
-//        }
-
-//        $api = new KlartboardBackendApi($deployment);
-//        $token = $api->requestSupportToken();
-//        if (!$token) {
-//            $this->fail('Failed to contact workspace. Try again later.');
-//            return;
-//        }
-//
-//        $url = $deployment->getUrl(true, "/auth/login/support_login?token={$token}&reason=SentFromDeployService");
-//
-//        if ($this->request->getGet('redirect')) {
-//            $this->response->redirect($url);
-//            return;
-//        }
-//
-//        Data::set('resource', [
-//            'value' => $url,
-//        ]);
-
+        $this->_setResource($item);
         $this->success();
     }
 

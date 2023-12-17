@@ -188,6 +188,15 @@ export interface KubernetesRbacShowResponse {
     rules?: KubernetesRbacRule[];
 }
 
+export interface Label {
+    name?: string;
+    value?: string;
+}
+
+export interface LabelList {
+    values?: Label[];
+}
+
 export interface PostCommand {
     name?: string;
     command?: string;
@@ -4941,29 +4950,24 @@ export class WorkspacesGetMigrationJobsGetById extends BaseApi<MigrationJob> {
     }
 }
 
-export class WorkspacesRequestSupportLoginGetById extends BaseApi<StringInterface> {
+export class WorkspacesUpdateLabelsPutById extends BaseApi<Workspace> {
 
-    public topic = 'Resources.StringInterfaces';
-    protected method = 'get';
+    public topic = 'Resources.Workspaces';
+    protected method = 'put';
     protected scope = '';
     protected summary = '';
 
     public constructor(id: number) {
         super();
-        this.uri = `/workspaces/${id}/requestSupportLogin`;
+        this.uri = `/workspaces/${id}/labels`;
     }
 
-    protected convertToResource(data: any): StringInterface {
-        return data;
+    protected convertToResource(data: any): Workspace {
+        return new Workspace(data);
     }
 
-    public redirect(value: boolean): WorkspacesRequestSupportLoginGetById {
-        this.addQueryParameter('redirect', value);
-        return this;
-    }
-
-    public find(next?: (value: StringInterface[]) => void) {
-        return super.executeFind(next);
+    public save(data: LabelList, next?: (value: Workspace) => void) {
+        return super.executeSave(data, next);
     }
 }
 
@@ -5029,8 +5033,8 @@ class Workspaces {
         return new WorkspacesGetMigrationJobsGetById(id);
     }
 
-    public requestSupportLoginGetById(id: number): WorkspacesRequestSupportLoginGetById {
-        return new WorkspacesRequestSupportLoginGetById(id);
+    public updateLabelsPutById(id: number): WorkspacesUpdateLabelsPutById {
+        return new WorkspacesUpdateLabelsPutById(id);
     }
 
 }

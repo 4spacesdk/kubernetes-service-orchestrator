@@ -6,6 +6,7 @@ import {EmailService} from '../EmailService';
 import {Domain} from '../Domain';
 import {DatabaseService} from '../DatabaseService';
 import {Deployment} from '../Deployment';
+import {Label} from '../Label';
 import {User} from '../User';
 import {BaseModel} from '../BaseModel';
 
@@ -25,6 +26,7 @@ export class WorkspaceDefinition extends BaseModel {
     database_service_id?: number;
     database_service?: DatabaseService;
     deployments?: Deployment[];
+    labels?: Label[];
     id?: number;
     created?: string;
     updated?: string;
@@ -55,6 +57,7 @@ export class WorkspaceDefinition extends BaseModel {
             delete this.database_service_id;
             delete this.database_service;
             delete this.deployments;
+            delete this.labels;
             delete this.id;
             delete this.created;
             delete this.updated;
@@ -109,6 +112,9 @@ export class WorkspaceDefinition extends BaseModel {
         }
         if (data.deployments != null) {
             this.deployments = data.deployments.map((i: any) => new Deployment(i));
+        }
+        if (data.labels != null) {
+            this.labels = data.labels.map((i: any) => new Label(i));
         }
         if (data.id != null) {
             this.id = data.id;

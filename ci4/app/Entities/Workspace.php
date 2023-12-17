@@ -34,6 +34,7 @@ use RestExtension\Core\Entity;
  *
  * Many
  * @property Deployment $deployments
+ * @property Label $labels
  */
 class Workspace extends Entity {
 
@@ -282,6 +283,12 @@ class Workspace extends Entity {
         }
         $this->deployments = $deployments;
         return count($allErrors) ? implode("\n", $allErrors) : null;
+    }
+
+    public function updateLabels(Label $values): void {
+        $this->labels->find()->deleteAll();
+        $this->save($values);
+        $this->labels = $values;
     }
 
     public function delete($related = null) {
