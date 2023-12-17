@@ -10,6 +10,7 @@ export class DomainDefinition extends BaseModel {
     name?: string;
     certificate_namespace?: string;
     certificate_name?: string;
+    issuer_ref_name?: string;
     workspaces?: Workspace[];
     deployments?: Deployment[];
     id?: number;
@@ -30,6 +31,7 @@ export class DomainDefinition extends BaseModel {
             delete this.name;
             delete this.certificate_namespace;
             delete this.certificate_name;
+            delete this.issuer_ref_name;
             delete this.workspaces;
             delete this.deployments;
             delete this.id;
@@ -50,6 +52,9 @@ export class DomainDefinition extends BaseModel {
         }
         if (data.certificate_name != null) {
             this.certificate_name = data.certificate_name;
+        }
+        if (data.issuer_ref_name != null) {
+            this.issuer_ref_name = data.issuer_ref_name;
         }
         if (data.workspaces != null) {
             this.workspaces = data.workspaces.map((i: any) => new Workspace(i));

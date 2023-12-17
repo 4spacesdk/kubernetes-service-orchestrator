@@ -24,7 +24,7 @@ class Domains extends ResourceController {
         if ($item->exists()) {
             $auth = new KubeAuth();
             $cluster = $auth->authenticate();
-            $certificate = new KubeCertificate($item->name, $item->certificate_namespace, $item->certificate_name);
+            $certificate = new KubeCertificate($item);
             $certificate->apply($cluster);
         }
         $this->_setResource($item);
@@ -48,7 +48,7 @@ class Domains extends ResourceController {
         if ($item->exists()) {
             $auth = new KubeAuth();
             $cluster = $auth->authenticate();
-            $certificate = new KubeCertificate($item->name, $item->certificate_namespace, $item->certificate_name);
+            $certificate = new KubeCertificate($item);
             /** @var K8sEvent $event */
             foreach ($certificate->getEvents($cluster) as $event) {
                 $events[] = [
@@ -82,7 +82,7 @@ class Domains extends ResourceController {
         if ($item->exists()) {
             $auth = new KubeAuth();
             $cluster = $auth->authenticate();
-            $certificate = new KubeCertificate($item->name, $item->certificate_namespace, $item->certificate_name);
+            $certificate = new KubeCertificate($item);
             $status = $certificate->getStatus($cluster);
             $data['notAfter'] = date('Y-m-d H:i:s', strtotime_($status['notAfter'] ?? ''));
             $data['notBefore'] = date('Y-m-d H:i:s', strtotime_($status['notBefore'] ?? ''));

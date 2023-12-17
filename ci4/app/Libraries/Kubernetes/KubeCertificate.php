@@ -1,5 +1,6 @@
 <?php namespace App\Libraries\Kubernetes;
 
+use App\Entities\Domain;
 use App\Libraries\Kubernetes\CustomResourceDefinitions\K8sCertificate;
 use DebugTool\Data;
 use Exception;
@@ -8,14 +9,10 @@ use RenokiCo\PhpK8s\ResourcesList;
 
 class KubeCertificate {
 
-    private string $domain;
-    private string $certificateNamespace;
-    private string $certificateName;
+    private Domain $domain;
 
-    public function __construct(string $domain, string $certificateNamespace, string $certificateName) {
+    public function __construct(Domain $domain) {
         $this->domain = $domain;
-        $this->certificateNamespace = $certificateNamespace;
-        $this->certificateName = $certificateName;
     }
 
     public function apply(KubernetesCluster $cluster): void {
@@ -53,21 +50,24 @@ class KubeCertificate {
     private function getResource(KubernetesCluster $cluster): K8sCertificate {
         return new K8sCertificate($cluster, [
             'metadata' => [
-                'name' => $this->certificateName,
-                'namespace' => $this->certificateNamespace,
+                'name' => $this->domain->certificate_name,
+                'namespace' => $this->domain->certificate_namespace,
             ],
             'spec' => [
-                'secretName' => $this->certificateName,
+                'secretName' => $this->domain->certificate_name,
                 'issuerRef' => [
-                    'name' => 'letsencrypt-prod',
+                    'name' => $this->domain->issuer_ref_name,
                 ],
                 'dnsNames' => [
-                    "*.{$this->domain}",
-                    "{$this->domain}",
+                    "*.{$this->domain->name}",
+                    "{$this->domain->name}",
                 ],
                 'secretTemplate' => [
                     'annotations' => [
                         'kubed.appscode.com/sync' => '',
+                        'reflector.v1.k8s.emberstack.com/reflection-allowed' => 'true',
+                        'reflector.v1.k8s.emberstack.com/reflection-allowed-namespaces' => '',
+                        'reflector.v1.k8s.emberstack.com/reflection-auto-enabled' => 'true',
                     ],
                 ]
             ],

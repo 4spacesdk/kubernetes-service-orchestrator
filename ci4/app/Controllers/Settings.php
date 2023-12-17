@@ -16,6 +16,7 @@ class Settings extends \App\Core\BaseController {
         $data = [
             'system' => System::Get()->toArray(),
             'pushServiceUrl' => env('ZMQ_EXTERNAL_URL'),
+            'certManagerIssuerDefaultName' => env('CERT_MANAGER_ISSUER_DEFAULT_NAME'),
         ];
 
         if (RestRequest::getInstance()->userId) {

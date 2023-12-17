@@ -8,6 +8,7 @@ use RestExtension\Core\Entity;
  * @property string $name
  * @property string $certificate_namespace
  * @property string $certificate_name
+ * @property string $issuer_ref_name
  *
  * Many
  * @property Workspace $workspaces

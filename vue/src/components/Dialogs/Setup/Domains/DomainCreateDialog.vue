@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
-import {Domain} from "@/core/services/Deploy/models";
+import {Domain, System} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
@@ -30,6 +30,8 @@ onUnmounted(() => {
 });
 
 function render() {
+    item.value.issuer_ref_name = System.certManagerIssuerDefaultName;
+
     showDialog.value = true;
 }
 
@@ -94,6 +96,13 @@ function onCloseBtnClicked() {
                             label="Certificate Namespace"
                             persistent-hint
                             hint="default"/>
+                    </v-col>
+                    <v-col cols="12">
+                        <v-text-field
+                            variant="outlined"
+                            v-model="item.issuer_ref_name"
+                            label="Cert manager issuer name"
+                        />
                     </v-col>
                 </v-row>
             </v-card-text>
