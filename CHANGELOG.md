@@ -14,7 +14,7 @@
 
 1. Deploy new version
 2. Run database migration from inside pod: `cd /var/www/html/ci4 && php spark migrate`
-3. If you got multiple pods running this application, you need to clear orm cache in every pod
+3. If you have multiple pods running this application, you need to clear orm cache in every pod
     1. `cd /var/www/html/ci4 && php spark orm:clear:cache`
 
 
@@ -39,6 +39,6 @@
     2. Value: Check your cluster setup. Could be `letsencrypt-production` / `letsencrypt-prod`
 3. Redeploy your `deployment.yaml`
 4. Run database migration from inside pod: `cd /var/www/html/ci4 && php spark migrate`
-5. If you got multiple pods running this application, you need to clear orm cache in every pod
+5. If you have multiple pods running this application, you need to clear orm cache in every pod
     1. `cd /var/www/html/ci4 && php spark orm:clear:cache`
 6. Manually set `issuer_ref_name` on existing domains
