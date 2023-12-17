@@ -21,3 +21,4 @@
 3. Run database migration from inside pod: `cd /var/www/html/ci4 && php spark migrate`
 4. If you got multiple pods running this application, you need to clear orm cache in every pod
    1. `cd /var/www/html/ci4 && php spark orm:clear:cache`
+5. Manually set `issuer_ref_name` on existing domains
