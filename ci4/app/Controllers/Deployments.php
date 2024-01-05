@@ -146,7 +146,7 @@ class Deployments extends ResourceController {
         $item = new Deployment();
         $item->find($id);
         if ($item->exists()) {
-            $item->updateResourceManagemnet(
+            $item->updateResourceManagement(
                 $this->request->getGet('cpuLimit'),
                 $this->request->getGet('cpuRequest'),
                 $this->request->getGet('memoryLimit'),

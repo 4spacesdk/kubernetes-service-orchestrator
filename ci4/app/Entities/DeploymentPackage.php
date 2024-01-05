@@ -16,6 +16,7 @@ use RestExtension\Core\Entity;
  * Many
  * @property Workspace $workspaces
  * @property DeploymentPackageDeploymentSpecification $deployment_package_deployment_specifications
+ * @property DeploymentPackageEnvironmentVariable $deployment_package_environment_variables
  */
 class DeploymentPackage extends Entity {
 
@@ -23,6 +24,12 @@ class DeploymentPackage extends Entity {
         $this->deployment_package_deployment_specifications->find()->deleteAll();
         $this->save($values);
         $this->deployment_package_deployment_specifications = $values;
+    }
+
+    public function updateEnvironmentVariables(DeploymentPackageEnvironmentVariable $values): void {
+        $this->deployment_package_environment_variables->find()->deleteAll();
+        $this->save($values);
+        $this->deployment_package_environment_variables = $values;
     }
 
     /**

@@ -12,10 +12,15 @@ use RestExtension\Core\Entity;
  */
 class EnvironmentVariable extends Entity {
 
-    public static function Create(string $name, string $value): EnvironmentVariable {
+    public static function Prepare(string $name, string $value): EnvironmentVariable {
         $item = new EnvironmentVariable();
         $item->name = $name;
         $item->value = $value;
+        return $item;
+    }
+
+    public static function Create(string $name, string $value): EnvironmentVariable {
+        $item = self::Prepare($name, $value);
         $item->save();
         return $item;
     }

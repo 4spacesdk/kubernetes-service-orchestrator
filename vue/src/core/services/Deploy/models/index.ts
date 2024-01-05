@@ -5,6 +5,7 @@ export {Deletion as Deletion} from "./Deletion";
 export {Deployment as Deployment} from "./Deployment";
 export {DeploymentPackage as DeploymentPackage} from "./DeploymentPackage";
 export {DeploymentPackageDeploymentSpecification as DeploymentPackageDeploymentSpecification} from "./DeploymentPackageDeploymentSpecification";
+export {DeploymentPackageEnvironmentVariable as DeploymentPackageEnvironmentVariable} from "./DeploymentPackageEnvironmentVariable";
 export {DeploymentSpecification as DeploymentSpecification} from "./DeploymentSpecification";
 export {DeploymentSpecificationClusterRoleRule as DeploymentSpecificationClusterRoleRule} from "./DeploymentSpecificationClusterRoleRule";
 export {DeploymentSpecificationEnvironmentVariable as DeploymentSpecificationEnvironmentVariable} from "./DeploymentSpecificationEnvironmentVariable";

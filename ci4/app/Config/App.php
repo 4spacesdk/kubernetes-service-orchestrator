@@ -3,7 +3,6 @@
 namespace Config;
 
 use CodeIgniter\Config\BaseConfig;
-use CodeIgniter\Session\Handlers\FileHandler;
 
 class App extends BaseConfig {
     /**
@@ -467,12 +466,10 @@ class App extends BaseConfig {
         parent::__construct();
 
         if (isset($_SERVER['HTTP_HOST'])) {
-            if (isset($_SERVER['HTTPS'])) {
-                $protocol = ($_SERVER['HTTPS'] && $_SERVER['HTTPS'] != "off") ? "https" : "http";
-            } else {
-                $protocol = 'http';
-            }
-            $this->baseURL = $protocol . "://" . $_SERVER['HTTP_HOST'] . '/api';
+            $hasHttpsHeader = isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) == 'on';
+            $hasHttpForwardHeader = isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) == 'https';
+            $isHttps = $hasHttpsHeader || $hasHttpForwardHeader;
+            $this->baseURL	= ($isHttps ? "https" : "http") . "://" . $_SERVER['HTTP_HOST'] . '/api';
         } else {
             $this->baseURL = getenv('BASE_URL') . '/api';
         }

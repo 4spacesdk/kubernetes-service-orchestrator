@@ -141,6 +141,12 @@ import type {
 import type {
     WorkspaceUpdateLabelsDialog_Input
 } from "@/components/Dialogs/Workspaces/UpdateDialogs/WorkspaceUpdateLabelsDialog.vue";
+import type {
+    DeploymentPackageUpdateEnvironmentVariablesDialog_Input
+} from "@/components/Dialogs/Setup/DeploymentPackages/UpdateDialogs/DeploymentPackageUpdateEnvironmentVariablesDialog.vue";
+import type {
+    DeploymentPackageUpdateEnvironmentVariableDialog_Input
+} from "@/components/Dialogs/Setup/DeploymentPackages/UpdateDialogs/DeploymentPackageUpdateEnvironmentVariableDialog.vue";
 
 export type Events = {
     confirm: ConfirmationDialog_Input;
@@ -228,6 +234,8 @@ export type Events = {
     deploymentPackageEditDialog_closed: DeploymentPackage | undefined;
     deploymentPackageUpdateDeploymentSpecification: DeploymentPackageUpdateDeploymentSpecificationDialog_Input;
     deploymentPackageUpdateDeploymentSpecifications: DeploymentPackageUpdateDeploymentSpecificationsDialog_Input;
+    deploymentPackageUpdateEnvironmentVariables: DeploymentPackageUpdateEnvironmentVariablesDialog_Input;
+    deploymentPackageUpdateEnvironmentVariable: DeploymentPackageUpdateEnvironmentVariableDialog_Input;
 
     oauthClientSaved: OAuthClient | undefined;
     oauthClientEdit: OAuthClientEditDialog_Input;

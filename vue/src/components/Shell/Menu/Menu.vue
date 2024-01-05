@@ -93,7 +93,7 @@ const categories = ref<MenuCategory[]>([
                 url: '/setup/deployment-specifications',
             },
             {
-                title: 'Deployment Packages',
+                title: 'Workspace Templates',
                 url: '/setup/deployment-packages',
             },
         ],
@@ -150,7 +150,7 @@ function onListGroupClicked(category: MenuCategory) {
         >
             <v-list-item @click="onLogoClicked" class="d-flex align-items-start">
                 <v-list-item-title class="title" style="line-height: 1.4rem">
-                    <div class="logo">Deploy Service</div>
+                    <div class="logo">KSO</div>
                 </v-list-item-title>
             </v-list-item>
 

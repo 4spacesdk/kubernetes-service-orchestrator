@@ -124,7 +124,7 @@ function onCloseBtnClicked() {
         >
             <v-card
                 class="w-100 h-100">
-                <v-card-title>Deployment Package</v-card-title>
+                <v-card-title>Workspace Template</v-card-title>
                 <v-divider/>
                 <v-card-text>
                     <v-row

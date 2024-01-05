@@ -3,16 +3,14 @@
 use RestExtension\Core\Model;
 use RestExtension\ResourceModelInterface;
 
-class DeploymentPackageModel extends Model implements ResourceModelInterface {
+class DeploymentPackageEnvironmentVariableModel extends Model implements ResourceModelInterface {
 
     public $hasOne = [
-
+        DeploymentPackageModel::class,
     ];
 
     public $hasMany = [
-        WorkspaceModel::class,
-        DeploymentPackageDeploymentSpecificationModel::class,
-        DeploymentPackageEnvironmentVariableModel::class,
+
     ];
 
     public function preRestGet($queryParser, $id) {
@@ -38,11 +36,4 @@ class DeploymentPackageModel extends Model implements ResourceModelInterface {
     public function appleRestGetManyRelations($items) {
 
     }
-
-    public function ignoredRestGetOnRelations() {
-        return [
-            WorkspaceModel::class,
-        ];
-    }
-
 }

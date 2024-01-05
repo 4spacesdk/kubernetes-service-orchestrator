@@ -992,6 +992,63 @@ export class DeploymentPackagesUpdateDeploymentSpecificationsPutById extends Bas
     }
 }
 
+export class DeploymentPackagesUpdateEnvironmentVariablesPutById extends BaseApi<DeploymentPackage> {
+
+    public topic = 'Resources.DeploymentPackages';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/deployment-packages/${id}/environment-variables`;
+    }
+
+    protected convertToResource(data: any): DeploymentPackage {
+        return new DeploymentPackage(data);
+    }
+
+    public save(data: EnvironmentVariableList, next?: (value: DeploymentPackage) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class DeploymentPackagesCopyEnvironmentVariableToDeploymentsPutByDeploymentPackageId extends BaseApi<DeploymentPackage> {
+
+    public topic = 'Resources.DeploymentPackages';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(deploymentPackageId: number) {
+        super();
+        this.uri = `/deployment-packages/${deploymentPackageId}/environment-variables/copy-to-deployments`;
+    }
+
+    protected convertToResource(data: any): DeploymentPackage {
+        return new DeploymentPackage(data);
+    }
+
+    public name(value: string): DeploymentPackagesCopyEnvironmentVariableToDeploymentsPutByDeploymentPackageId {
+        this.addQueryParameter('name', value);
+        return this;
+    }
+
+    public value(value: string): DeploymentPackagesCopyEnvironmentVariableToDeploymentsPutByDeploymentPackageId {
+        this.addQueryParameter('value', value);
+        return this;
+    }
+
+    public override(value: boolean): DeploymentPackagesCopyEnvironmentVariableToDeploymentsPutByDeploymentPackageId {
+        this.addQueryParameter('override', value);
+        return this;
+    }
+
+    public save(data: any, next?: (value: DeploymentPackage) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
 class DeploymentPackages {
 
     public get(): DeploymentPackagesGet {
@@ -1020,6 +1077,14 @@ class DeploymentPackages {
 
     public updateDeploymentSpecificationsPutById(id: number): DeploymentPackagesUpdateDeploymentSpecificationsPutById {
         return new DeploymentPackagesUpdateDeploymentSpecificationsPutById(id);
+    }
+
+    public updateEnvironmentVariablesPutById(id: number): DeploymentPackagesUpdateEnvironmentVariablesPutById {
+        return new DeploymentPackagesUpdateEnvironmentVariablesPutById(id);
+    }
+
+    public copyEnvironmentVariableToDeploymentsPutByDeploymentPackageId(deploymentPackageId: number): DeploymentPackagesCopyEnvironmentVariableToDeploymentsPutByDeploymentPackageId {
+        return new DeploymentPackagesCopyEnvironmentVariableToDeploymentsPutByDeploymentPackageId(deploymentPackageId);
     }
 
 }

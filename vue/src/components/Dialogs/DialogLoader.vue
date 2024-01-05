@@ -204,6 +204,14 @@ bus.on('deploymentPackageUpdateDeploymentSpecification', async input => {
 bus.on('deploymentPackageUpdateDeploymentSpecifications', async input => {
     addComponent((await import('@/components/Dialogs/Setup/DeploymentPackages/UpdateDialogs/DeploymentPackageUpdateDeploymentSpecificationsDialog.vue')).default, input);
 });
+bus.on('deploymentPackageUpdateEnvironmentVariables', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/DeploymentPackages/UpdateDialogs/DeploymentPackageUpdateEnvironmentVariablesDialog.vue')).default, input);
+});
+bus.on('deploymentPackageUpdateEnvironmentVariable', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/DeploymentPackages/UpdateDialogs/DeploymentPackageUpdateEnvironmentVariableDialog.vue')).default, input);
+});
+
+
 
 bus.on('oauthClientEdit', async input => {
     addComponent((await import('@/components/Dialogs/Integrations/OAuthClients/OAuthClientEditDialog.vue')).default, input);

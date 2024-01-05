@@ -7,6 +7,7 @@ use App\Libraries\ZMQ\ChangeEvent;
 use App\Libraries\ZMQ\Events;
 use App\Libraries\ZMQ\ZMQProxy;
 use App\Models\DeploymentModel;
+use App\Models\EnvironmentVariableModel;
 use App\Models\WorkspaceModel;
 use DebugTool\Data;
 use RestExtension\Core\Entity;
@@ -138,7 +139,7 @@ class Deployment extends Entity {
         ]);
     }
 
-    public function updateResourceManagemnet(int $cpuLimit, int $cpuRequest,
+    public function updateResourceManagement(int $cpuLimit, int $cpuRequest,
                                              int $memoryLimit, int $memoryRequest,
                                              int $replicas): void {
         $this->cpu_limit = $cpuLimit;
@@ -168,6 +169,25 @@ class Deployment extends Entity {
         $this->environment_variables->find()->deleteAll();
         $this->save($values);
         $this->environment_variables = $values;
+
+        DeploymentStepHelper::ExecuteDeployCommand($this, [
+            DeploymentSteps::Deployment,
+        ]);
+    }
+
+    public function updateEnvironmentVariable(EnvironmentVariable $value, bool $override): void {
+        /** @var EnvironmentVariable $environmentVariable */
+        $environmentVariable = (new EnvironmentVariableModel())
+            ->where('deployment_id', $this->id)
+            ->where('name', $value->name)
+            ->find();
+        if ($environmentVariable->exists() && !$override) {
+            return;
+        }
+        $environmentVariable->deployment_id = $this->id;
+        $environmentVariable->name = $value->name;
+        $environmentVariable->value = $value->value;
+        $environmentVariable->save();
 
         DeploymentStepHelper::ExecuteDeployCommand($this, [
             DeploymentSteps::Deployment,

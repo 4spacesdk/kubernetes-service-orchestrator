@@ -10,6 +10,7 @@ use App\Libraries\ZMQ\ZMQProxy;
 use App\Models\ConfigurationSpecificationModel;
 use App\Models\DeploymentModel;
 use App\Models\DeploymentPackageDeploymentSpecificationModel;
+use App\Models\DeploymentPackageEnvironmentVariableModel;
 use App\Models\WorkspaceModel;
 use Google\ApiCore\ApiException;
 use RestExtension\Core\Entity;
@@ -40,6 +41,8 @@ class Workspace extends Entity {
 
     /**
      * @throws ValidationException
+     * @throws ApiException
+     * @throws \Google\ApiCore\ValidationException
      */
     public static function Create(DeploymentPackage $deploymentPackage, string $name, int $domainId, string $subdomain): ?Workspace {
         if (!$deploymentPackage->exists()) {
@@ -130,10 +133,6 @@ class Workspace extends Entity {
 
         $deployment = $this->prepareDeploymentFromSpecification($deploymentSpecification);
 
-        if (!$this->deployment_package->exists()) {
-            $this->deployment_package->find();
-        }
-
         if (strlen($deploymentPackageDeploymentSpecification->default_version)) {
             $deployment->version = $deploymentPackageDeploymentSpecification->default_version;
         } else {
@@ -159,6 +158,21 @@ class Workspace extends Entity {
         $deployment->replicas = $deploymentPackageDeploymentSpecification->default_replicas;
 
         $deployment->save();
+
+        // Copy environment variables from deployment package to deployment
+        /** @var DeploymentPackageEnvironmentVariable $deploymentPackageEnvironmentVariables */
+        $deploymentPackageEnvironmentVariables = (new DeploymentPackageEnvironmentVariableModel())
+            ->where('deployment_package_id', $deploymentPackageDeploymentSpecification->deployment_package_id)
+            ->find();
+        $values = new EnvironmentVariable();
+        $values->all = array_map(
+            fn(DeploymentPackageEnvironmentVariable $deploymentPackageEnvironmentVariable) => EnvironmentVariable::Create(
+                $deploymentPackageEnvironmentVariable->name,
+                $deploymentPackageEnvironmentVariable->value
+            ),
+            $deploymentPackageEnvironmentVariables->all ?? []
+        );
+        $deployment->save($values);
 
         return $deployment;
     }

@@ -8,6 +8,7 @@ const props = defineProps<{
 }>();
 
 const showUpdateDeploymentSpecifications = ref(false);
+const showUpdateEnvironmentVariables = ref(false);
 
 onMounted(() => {
     render();
@@ -17,10 +18,17 @@ onMounted(() => {
 
 function render() {
     showUpdateDeploymentSpecifications.value = true;
+    showUpdateEnvironmentVariables.value = true;
 }
 
 function onUpdateDeploymentSpecificationsClicked() {
     bus.emit('deploymentPackageUpdateDeploymentSpecifications', {
+        deploymentPackage: props.deploymentPackage
+    });
+}
+
+function onUpdateEnvironmentVariablesClicked() {
+    bus.emit('deploymentPackageUpdateEnvironmentVariables', {
         deploymentPackage: props.deploymentPackage
     });
 }
@@ -41,6 +49,15 @@ function onUpdateDeploymentSpecificationsClicked() {
                     @click="onUpdateDeploymentSpecificationsClicked">
                     <v-list-item-title>
                         <span class="ml-2">Deployment Specifications</span>
+                    </v-list-item-title>
+                </v-list-item>
+                <v-list-item
+                    v-if="showUpdateEnvironmentVariables"
+                    dense
+                    @click="onUpdateEnvironmentVariablesClicked">
+                    <v-list-item-title>
+                        <v-icon size="small" class="my-auto ml-2">fa fa-key</v-icon>
+                        <span class="ml-2">Environment Variables</span>
                     </v-list-item-title>
                 </v-list-item>
             </v-list>

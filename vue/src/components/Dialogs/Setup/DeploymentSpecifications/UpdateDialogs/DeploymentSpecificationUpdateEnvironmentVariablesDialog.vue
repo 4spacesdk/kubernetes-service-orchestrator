@@ -162,7 +162,7 @@ function onCloseBtnClicked() {
                     density="compact">
                     <template v-slot:item.value="{ item }">
                         <span
-                            class="text-truncate d-inline-block"
+                            class="text-truncate d-inline-block mt-1"
                             style="max-width: 300px;">{{ item.raw.value }}</span>
                     </template>
                     <template v-slot:item.actions="{ item }">

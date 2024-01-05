@@ -16,6 +16,7 @@ const rows = ref<DeploymentPackage[]>([]);
 const headers = ref([
     {title: 'Name', key: 'name', sortable: false},
     {title: 'Deployment Specifications', key: 'specifications', sortable: false},
+    {title: 'Environment Variables', key: 'environment-variables', sortable: false},
     {title: '', key: 'actions', sortable: false},
 ]);
 const isLoading = ref(true);
@@ -50,7 +51,8 @@ function getItems(doItems = true, doCount = false) {
 
     // Prepare API call
     const api = Api.deploymentPackages().get()
-        .include('deployment_package_deployment_specification');
+        .include('deployment_package_deployment_specification')
+        .include('deployment_package_environment_variable');
 
     if (searchValue.value?.length) {
         api
@@ -119,7 +121,7 @@ function onEditItemBtnClicked(item: DeploymentPackage) {
             color="blue-grey lighten-5"
             dark
         >
-            <v-toolbar-title>Deployment Packages</v-toolbar-title>
+            <v-toolbar-title>Workspace Templates</v-toolbar-title>
 
             <v-text-field
                 v-model="searchValue"
@@ -149,6 +151,9 @@ function onEditItemBtnClicked(item: DeploymentPackage) {
             @update:options="options = $event; getItems()">
             <template v-slot:item.specifications="{ item }">
                 <span>{{ item.raw.deployment_package_deployment_specifications?.length }}</span>
+            </template>
+            <template v-slot:item.environment-variables="{ item }">
+                <span>{{ item.raw.deployment_package_environment_variables?.length }}</span>
             </template>
 
             <template v-slot:item.actions="{ item }">

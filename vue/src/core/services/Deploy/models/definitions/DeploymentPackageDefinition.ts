@@ -3,6 +3,7 @@
  */
 import {Workspace} from '../Workspace';
 import {DeploymentPackageDeploymentSpecification} from '../DeploymentPackageDeploymentSpecification';
+import {DeploymentPackageEnvironmentVariable} from '../DeploymentPackageEnvironmentVariable';
 import {User} from '../User';
 import {BaseModel} from '../BaseModel';
 
@@ -14,6 +15,7 @@ export class DeploymentPackageDefinition extends BaseModel {
     default_domain_id?: number;
     workspaces?: Workspace[];
     deployment_package_deployment_specifications?: DeploymentPackageDeploymentSpecification[];
+    deployment_package_environment_variables?: DeploymentPackageEnvironmentVariable[];
     id?: number;
     created?: string;
     updated?: string;
@@ -36,6 +38,7 @@ export class DeploymentPackageDefinition extends BaseModel {
             delete this.default_domain_id;
             delete this.workspaces;
             delete this.deployment_package_deployment_specifications;
+            delete this.deployment_package_environment_variables;
             delete this.id;
             delete this.created;
             delete this.updated;
@@ -66,6 +69,9 @@ export class DeploymentPackageDefinition extends BaseModel {
         }
         if (data.deployment_package_deployment_specifications != null) {
             this.deployment_package_deployment_specifications = data.deployment_package_deployment_specifications.map((i: any) => new DeploymentPackageDeploymentSpecification(i));
+        }
+        if (data.deployment_package_environment_variables != null) {
+            this.deployment_package_environment_variables = data.deployment_package_environment_variables.map((i: any) => new DeploymentPackageEnvironmentVariable(i));
         }
         if (data.id != null) {
             this.id = data.id;

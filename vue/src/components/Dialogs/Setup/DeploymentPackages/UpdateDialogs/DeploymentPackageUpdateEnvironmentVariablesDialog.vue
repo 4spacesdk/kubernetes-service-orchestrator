@@ -1,29 +1,37 @@
 <script setup lang="ts">
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
-import {Deployment, EnvironmentVariable} from "@/core/services/Deploy/models";
+import {DeploymentPackage} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
-import {en} from "vuetify/locale";
 
-export interface DeploymentUpdateEnvirontmentVariablesDialog_Input {
-    deployment: Deployment;
+export interface DeploymentPackageUpdateEnvironmentVariablesDialog_Input {
+    deploymentPackage: DeploymentPackage;
 }
 
-const props = defineProps<{ input: DeploymentUpdateEnvirontmentVariablesDialog_Input, events: DialogEventsInterface }>();
+interface Row {
+    name: string;
+    value: string;
+
+    isLoadingCopyToDeploymentsBtn?: boolean;
+}
+
+const props = defineProps<{ input: DeploymentPackageUpdateEnvironmentVariablesDialog_Input, events: DialogEventsInterface }>();
 
 const used = ref(false);
 const showDialog = ref(false);
 
 const isLoading = ref(false);
 const itemCount = ref(0);
-const rows = ref<EnvironmentVariable[]>([]);
+const rows = ref<Row[]>([]);
 const headers = ref([
     {title: 'Name', key: 'name', sortable: false},
     {title: 'Value', key: 'value', sortable: false},
     {title: '', key: 'actions', sortable: false},
 ]);
 const isSaving = ref(false);
+const showCopyToDeploymentsDialog = ref(false);
+const copyToDeploymentsDialog_Row = ref<Row>();
 
 // <editor-fold desc="Functions">
 
@@ -42,11 +50,17 @@ function render() {
     showDialog.value = true;
 
     isLoading.value = true;
-    Api.deployments().get()
-        .where('id', props.input.deployment.id!)
-        .include('environment_variable')
+    Api.deploymentPackages().get()
+        .where('id', props.input.deploymentPackage.id!)
+        .include('deployment_package_environment_variable')
         .find(value => {
-            rows.value = value[0].environment_variables ?? [];
+            rows.value = value[0].deployment_package_environment_variables
+                ?.map(environmentVariable => {
+                    return {
+                        name: environmentVariable.name ?? '',
+                        value: environmentVariable.value ?? '',
+                    }
+                }) ?? [];
             itemCount.value = rows.value.length;
             isLoading.value = false;
         });
@@ -62,15 +76,18 @@ function close() {
 // <editor-fold desc="View Binding Functions">
 
 function onCreateBtnClicked() {
-    const newItem = new EnvironmentVariable();
-    bus.emit('deploymentUpdateEnvironmentVariable', {
+    const newItem = {
+        name: '',
+        value: '',
+    };
+    bus.emit('deploymentPackageUpdateEnvironmentVariable', {
         environmentVariable: newItem,
         onSaveCallback: () => rows.value.push(newItem),
     });
 }
 
-function onEditRowClicked(row: EnvironmentVariable) {
-    bus.emit('deploymentUpdateEnvironmentVariable', {
+function onEditRowClicked(row: Row) {
+    bus.emit('deploymentPackageUpdateEnvironmentVariable', {
         environmentVariable: row,
         onSaveCallback: () => {
 
@@ -78,13 +95,33 @@ function onEditRowClicked(row: EnvironmentVariable) {
     });
 }
 
-function onDeleteRowClicked(row: EnvironmentVariable) {
+function onCopyToDeploymentsClicked(row: Row) {
+    copyToDeploymentsDialog_Row.value = row;
+    showCopyToDeploymentsDialog.value = true;
+}
+
+function onCopyToDeploymentsConfirmed(row: Row, overwrite: boolean) {
+    showCopyToDeploymentsDialog.value = false;
+    row.isLoadingCopyToDeploymentsBtn = true;
+    Api.deploymentPackages().copyEnvironmentVariableToDeploymentsPutByDeploymentPackageId(props.input.deploymentPackage.id!)
+        .name(row.name)
+        .value(row.value)
+        .override(overwrite)
+        .save(null, _ => {
+            bus.emit('toast', {
+                text: 'Environment variable copied to deployments'
+            });
+            row.isLoadingCopyToDeploymentsBtn = false;
+        });
+}
+
+function onDeleteRowClicked(row: Row) {
     rows.value.splice(rows.value.indexOf(row), 1);
 }
 
 function onSaveBtnClicked() {
     isSaving.value = true;
-    const api = Api.deployments().updateEnvironmentVariablesPutById(props.input.deployment.id!);
+    const api = Api.deploymentPackages().updateEnvironmentVariablesPutById(props.input.deploymentPackage.id!);
     api.setErrorHandler(response => {
         if (response.error) {
             bus.emit('toast', {
@@ -97,7 +134,7 @@ function onSaveBtnClicked() {
     api.save({
         values: rows.value
     }, newItem => {
-        bus.emit('deploymentSaved', newItem);
+        bus.emit('deploymentPackageSaved', newItem);
         isSaving.value = false;
         close();
     });
@@ -123,7 +160,7 @@ function onCloseBtnClicked() {
             <v-card-title>
                 <div class="d-flex w-100">
                     <span class="my-auto">Environment Variables</span>
-                    <v-chip class="my-auto mx-auto">{{ props.input.deployment.name }}.{{ props.input.deployment.namespace }}</v-chip>
+                    <v-chip class="my-auto mx-auto">{{ props.input.deploymentPackage.name }}</v-chip>
 
                     <div class="my-auto ml-auto d-flex justify-end gap-1">
                         <v-btn
@@ -153,7 +190,15 @@ function onCloseBtnClicked() {
                             style="max-width: 300px;">{{ item.raw.value }}</span>
                     </template>
                     <template v-slot:item.actions="{ item }">
-                        <div class="d-flex justify-end gap-1">
+                        <div class="d-flex justify-end">
+                            <v-btn
+                                variant="plain" color="primary" size="small"
+                                @click="onCopyToDeploymentsClicked(item.raw)"
+                                :loading="item.raw.isLoadingCopyToDeploymentsBtn"
+                            >
+                                <v-icon>fa fa-copy</v-icon>
+                                <v-tooltip activator="parent" location="bottom">Copy to deployments</v-tooltip>
+                            </v-btn>
                             <v-btn
                                 variant="plain" color="primary" size="small"
                                 @click="onEditRowClicked(item.raw)">
@@ -170,6 +215,47 @@ function onCloseBtnClicked() {
                         </div>
                     </template>
                 </v-data-table-server>
+
+                <v-dialog
+                    ref="dialog"
+                    persistent
+                    width="60vw"
+                    v-model="showCopyToDeploymentsDialog">
+                    <v-card
+                        class="w-100 h-100">
+                        <v-card-title>Copy environment variable</v-card-title>
+                        <v-divider/>
+                        <v-card-text>
+                            If a deployment already has an environment variable named "{{copyToDeploymentsDialog_Row!.name}}", do you want to overwrite or skip?
+                        </v-card-text>
+                        <v-divider/>
+                        <v-card-actions>
+                            <v-btn
+                                text
+                                variant="tonal"
+                                prepend-icon="fa fa-circle-xmark"
+                                color="grey"
+                                @click="showCopyToDeploymentsDialog = false">
+                                Cancel
+                            </v-btn>
+                            <v-spacer/>
+                            <v-btn
+                                text
+                                variant="tonal"
+                                color="red"
+                                @click="onCopyToDeploymentsConfirmed(copyToDeploymentsDialog_Row!, true)">
+                                Overwrite
+                            </v-btn>
+                            <v-btn
+                                flat
+                                variant="tonal"
+                                color="red"
+                                @click="onCopyToDeploymentsConfirmed(copyToDeploymentsDialog_Row!, false)">
+                                Skip
+                            </v-btn>
+                        </v-card-actions>
+                    </v-card>
+                </v-dialog>
             </v-card-text>
             <v-divider/>
             <v-card-actions>
