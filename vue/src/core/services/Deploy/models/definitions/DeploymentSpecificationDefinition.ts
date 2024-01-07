@@ -9,6 +9,7 @@ import {DeploymentSpecificationServicePort} from '../DeploymentSpecificationServ
 import {DeploymentSpecificationIngress} from '../DeploymentSpecificationIngress';
 import {DeploymentSpecificationClusterRoleRule} from '../DeploymentSpecificationClusterRoleRule';
 import {DeploymentSpecificationServiceAnnotation} from '../DeploymentSpecificationServiceAnnotation';
+import {DeploymentSpecificationQuickCommand} from '../DeploymentSpecificationQuickCommand';
 import {DeploymentStep} from '../DeploymentStep';
 import {User} from '../User';
 import {BaseModel} from '../BaseModel';
@@ -36,6 +37,7 @@ export class DeploymentSpecificationDefinition extends BaseModel {
     deployment_specification_ingresses?: DeploymentSpecificationIngress[];
     deployment_specification_cluster_role_rules?: DeploymentSpecificationClusterRoleRule[];
     deployment_specification_service_annotations?: DeploymentSpecificationServiceAnnotation[];
+    deployment_specification_quick_commands?: DeploymentSpecificationQuickCommand[];
     deploymentSteps?: DeploymentStep[];
     id?: number;
     created?: string;
@@ -74,6 +76,7 @@ export class DeploymentSpecificationDefinition extends BaseModel {
             delete this.deployment_specification_ingresses;
             delete this.deployment_specification_cluster_role_rules;
             delete this.deployment_specification_service_annotations;
+            delete this.deployment_specification_quick_commands;
             delete this.deploymentSteps;
             delete this.id;
             delete this.created;
@@ -150,6 +153,9 @@ export class DeploymentSpecificationDefinition extends BaseModel {
         }
         if (data.deployment_specification_service_annotations != null) {
             this.deployment_specification_service_annotations = data.deployment_specification_service_annotations.map((i: any) => new DeploymentSpecificationServiceAnnotation(i));
+        }
+        if (data.deployment_specification_quick_commands != null) {
+            this.deployment_specification_quick_commands = data.deployment_specification_quick_commands.map((i: any) => new DeploymentSpecificationQuickCommand(i));
         }
         if (data.deploymentSteps != null) {
             this.deploymentSteps = data.deploymentSteps.map((i: any) => new DeploymentStep(i));

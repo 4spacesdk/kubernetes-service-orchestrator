@@ -6,12 +6,14 @@ use App\Entities\DeploymentSpecificationClusterRoleRule;
 use App\Entities\DeploymentSpecificationEnvironmentVariable;
 use App\Entities\DeploymentSpecificationIngress;
 use App\Entities\DeploymentSpecificationPostCommand;
+use App\Entities\DeploymentSpecificationQuickCommand;
 use App\Entities\DeploymentSpecificationServiceAnnotation;
 use App\Entities\DeploymentSpecificationServicePort;
 use App\Interfaces\ClusterRoleRuleList;
 use App\Interfaces\EnvironmentVariableList;
 use App\Interfaces\IngressList;
 use App\Interfaces\PostCommandList;
+use App\Interfaces\QuickCommandList;
 use App\Interfaces\ServiceAnnotationList;
 use App\Interfaces\ServicePortList;
 use App\Libraries\GoogleCloud\GoogleCloudArtifactRegistry;
@@ -72,6 +74,34 @@ class DeploymentSpecifications extends ResourceController {
                 $body->values
             );
             $item->updatePostCommands($values);
+        }
+        $this->_setResource($item);
+        $this->success();
+    }
+
+    /**
+     * @route /deployment-specifications/{id}/quick-commands
+     * @method put
+     * @custom true
+     * @param int $id
+     * @requestSchema QuickCommandList
+     * @return void
+     */
+    public function updateQuickCommands(int $id): void {
+        $item = new DeploymentSpecification();
+        $item->find($id);
+        if ($item->exists()) {
+            /** @var QuickCommandList $body */
+            $body = $this->request->getJSON();
+            $values = new DeploymentSpecificationQuickCommand();
+            $values->all = array_map(
+                fn($data) => DeploymentSpecificationQuickCommand::Create(
+                    $data->name,
+                    $data->command,
+                ),
+                $body->values
+            );
+            $item->updateQuickCommands($values);
         }
         $this->_setResource($item);
         $this->success();

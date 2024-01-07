@@ -161,12 +161,6 @@ function onShowMigrationJobsBtnClicked(item: Deployment) {
     });
 }
 
-function onShowLogsBtnClicked(item: Deployment) {
-    bus.emit('deploymentLogs', {
-        deployment: item,
-    });
-}
-
 // </editor-fold>
 
 </script>
@@ -257,7 +251,7 @@ function onShowLogsBtnClicked(item: Deployment) {
                 <div class="d-flex justify-end">
 
                     <v-menu
-                        min-width="250">
+                        width="500">
                         <template v-slot:activator="{ props }">
                             <v-btn
                                 v-bind="props"
@@ -279,13 +273,6 @@ function onShowLogsBtnClicked(item: Deployment) {
                         @click="onShowResourcesBtnClicked(item.raw)">
                         <v-icon>fa fa-box</v-icon>
                         <v-tooltip activator="parent" location="bottom">Resources</v-tooltip>
-                    </v-btn>
-
-                    <v-btn
-                        variant="plain" color="primary" size="small" icon
-                        @click="onShowLogsBtnClicked(item.raw)">
-                        <v-icon>fa fa-rectangle-list</v-icon>
-                        <v-tooltip activator="parent" location="bottom">Kubernetes Logs</v-tooltip>
                     </v-btn>
 
                     <v-btn

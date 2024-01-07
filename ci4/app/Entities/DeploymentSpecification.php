@@ -59,6 +59,7 @@ use RestExtension\Core\Entity;
  * @property DeploymentSpecificationIngress $deployment_specification_ingresses
  * @property DeploymentSpecificationClusterRoleRule $deployment_specification_cluster_role_rules
  * @property DeploymentSpecificationServiceAnnotation $deployment_specification_service_annotations
+ * @property DeploymentSpecificationQuickCommand $deployment_specification_quick_commands
  *
  * @property DeploymentStep $deploymentSteps
  */
@@ -203,6 +204,12 @@ class DeploymentSpecification extends Entity {
         $this->deployment_specification_post_commands->find()->deleteAll();
         $this->save($values);
         $this->deployment_specification_post_commands = $values;
+    }
+
+    public function updateQuickCommands(DeploymentSpecificationQuickCommand $values): void {
+        $this->deployment_specification_quick_commands->find()->deleteAll();
+        $this->save($values);
+        $this->deployment_specification_quick_commands = $values;
     }
 
     public function updateEnvironmentVariables(DeploymentSpecificationEnvironmentVariable $values): void {

@@ -7,6 +7,7 @@ import {VTextField} from "vuetify/components/VTextField";
 
 const props = defineProps<{
     pod: KubernetesPod;
+    quickCommandItems: QuickCommand[];
 }>();
 
 defineExpose({
@@ -18,7 +19,7 @@ interface Row {
     line: string;
 }
 
-interface QuickCommand {
+export interface QuickCommand {
     name: string,
     command: string;
 }
@@ -32,7 +33,6 @@ const isRunningCommand = ref(false);
 const commandHistory = ref<string[]>([]);
 const currentCommandHistoryIndex = ref(0);
 const showQuickCommandsMenu = ref(false);
-const quickCommandItems = ref<QuickCommand[]>([]);
 
 // <editor-fold desc="Functions">
 
@@ -41,17 +41,6 @@ onMounted(() => {
         reload();
     });
     reload();
-
-    quickCommandItems.value = [
-        {
-            name: 'Deploy Service Migration',
-            command: 'cd /var/www/html/ci4 && php spark migrate',
-        },
-        {
-            name: 'Deploy Service Clear ORM Cache',
-            command: 'cd /var/www/html/ci4 && php spark orm:clear:cache',
-        },
-    ];
 });
 
 onUnmounted(() => {
@@ -215,7 +204,7 @@ function clearCommandInput() {
                 <v-list
                     class="list-items">
                     <v-list-item
-                        v-for="(item, i) in quickCommandItems" :key="i"
+                        v-for="(item, i) in props.quickCommandItems" :key="i"
                         @click="onQuickCommandClicked(item)"
                     >
                         <v-list-item-title>

@@ -1,10 +1,14 @@
 <script setup lang="ts">
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
+import {Api} from "@/core/services/Deploy/Api";
 import type {KubernetesPod} from "@/core/services/Deploy/Api";
 import PodTerminal from "@/components/Modules/PodTerminal/PodTerminal.vue";
+import type {QuickCommand} from "@/components/Modules/PodTerminal/PodTerminal.vue";
+import {Deployment} from "@/core/services/Deploy/models";
 
 export interface PodTerminalDialog_Input {
+    deployment: Deployment;
     pod: KubernetesPod;
 }
 
@@ -13,6 +17,7 @@ const props = defineProps<{ input: PodTerminalDialog_Input, events: DialogEvents
 const used = ref(false);
 const showDialog = ref(false);
 const isLoading = ref(false);
+const quickCommands = ref<QuickCommand[]>([]);
 
 // <editor-fold desc="Functions">
 
@@ -29,6 +34,27 @@ onUnmounted(() => {
 
 function render() {
     showDialog.value = true;
+
+    Api.deploymentSpecifications().get()
+        .where('id', props.input.deployment.deployment_specification_id)
+        .include('deployment_specification_post_command')
+        .include('deployment_specification_quick_command')
+        .find(response => {
+            quickCommands.value = [
+                ...response[0].deployment_specification_post_commands?.map(postCommand => {
+                    return {
+                        name: postCommand.name,
+                        command: postCommand.command,
+                    };
+                }) ?? [],
+                ...response[0].deployment_specification_quick_commands?.map(quickCommand => {
+                    return {
+                        name: quickCommand.name,
+                        command: quickCommand.command,
+                    };
+                }) ?? [],
+            ];
+        })
 }
 
 function close() {
@@ -67,6 +93,7 @@ function onCloseBtnClicked() {
             <v-divider/>
             <v-card-text>
                 <PodTerminal
+                    :quick-command-items="quickCommands"
                     :pod="props.input.pod"/>
             </v-card-text>
             <v-divider/>

@@ -13,6 +13,7 @@ const showUpdateServicePorts = ref(false);
 const showUpdateIngresses = ref(false);
 const showUpdateClusterRoleRules = ref(false);
 const showUpdateServiceAnnotations = ref(false);
+const showUpdateQuickCommands = ref(false);
 
 onMounted(() => {
     render();
@@ -27,6 +28,7 @@ function render() {
     showUpdateServiceAnnotations.value = true;
     showUpdateIngresses.value = props.deploymentSpecification.enable_ingress ?? false;
     showUpdateClusterRoleRules.value = props.deploymentSpecification.enable_rbac ?? false;
+    showUpdateQuickCommands.value = true;
 }
 
 function onUpdatePostCommandsClicked() {
@@ -61,6 +63,12 @@ function onUpdateClusterRoleRulesClicked() {
 
 function onUpdateServiceAnnotationsClicked() {
     bus.emit('deploymentSpecificationUpdateServiceAnnotations', {
+        deploymentSpecification: props.deploymentSpecification
+    });
+}
+
+function onUpdateQuickCommandsClicked() {
+    bus.emit('deploymentSpecificationUpdateQuickCommands', {
         deploymentSpecification: props.deploymentSpecification
     });
 }
@@ -127,6 +135,15 @@ function onUpdateServiceAnnotationsClicked() {
                     <v-list-item-title>
                         <v-icon size="small" class="my-auto ml-2">fa fa-shield</v-icon>
                         <span class="ml-2">Cluster Role Rules</span>
+                    </v-list-item-title>
+                </v-list-item>
+                <v-list-item
+                    v-if="showUpdateQuickCommands"
+                    dense
+                    @click="onUpdateQuickCommandsClicked">
+                    <v-list-item-title>
+                        <v-icon size="small" class="my-auto ml-2">fa fa-terminal</v-icon>
+                        <span class="ml-2">Quick Commands</span>
                     </v-list-item-title>
                 </v-list-item>
             </v-list>

@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.1.9 (2024-01-07)
+
+### Fixed bugs
+
+
+### Enhancements
+* Setup quick commands for deployment specifications and execute these directly on deployments
+* Small UI adjustments
+
+### Upgrade guide
+1. Deploy new image
+2. Run database migration from inside pod: `cd /var/www/html/ci4 && php spark migrate`
+3. If you have multiple pods running this application, you need to clear orm cache in every pod
+    1. `cd /var/www/html/ci4 && php spark orm:clear:cache`
+
+
+
 ## v0.1.8 (2024-01-05)
 
 ### Fixed bugs

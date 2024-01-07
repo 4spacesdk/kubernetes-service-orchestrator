@@ -63,6 +63,7 @@ function onShowLogsBtnClicked(item: PodOption) {
 
 function onOpenTerminalBtnClicked(item: PodOption) {
     bus.emit('podTerminal', {
+        deployment: props.deployment,
         pod: item.pod,
     });
 }

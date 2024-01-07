@@ -1,39 +1,39 @@
-
-
-
-.v-label.v-field-label{
-  top: 8px!important;
+.v-label.v-field-label {
+  top: 8px !important;
 }
-.v-field__prepend-inner, .v-field__append-inner, .v-field__clearable{
-  padding-top: 11px!important;
-  font-size: 12px!important;
+
+.v-field__prepend-inner, .v-field__append-inner, .v-field__clearable {
+  padding-top: 11px !important;
+  font-size: 12px !important;
   margin-bottom: 11px;
 }
-.v-field__input{
-  padding: 0.5rem!important;
-  padding-left: .75rem!important;
-  padding-right: .75rem!important;
-  min-height: 1rem!important;
+
+.v-field__input {
+  padding: 0.5rem !important;
+  padding-left: .75rem !important;
+  padding-right: .75rem !important;
+  min-height: 1rem !important;
 }
 
 body,
 .v-label,
 .v-main,
-.v-field{
+.v-field {
   font-size: 13px;
 }
+
 .wrapper {
   background: #fff;
 }
 
 .gap-1,
-.btn-list{
+.btn-list {
   gap: .5rem;
 }
 
 .v-btn {
+  text-transform: capitalize !important;
 
-  text-transform: capitalize!important;
   .v-btn__prepend {
     padding-left: .25rem;
   }
@@ -41,118 +41,132 @@ body,
 
 
 // Datatable
-.v-table{
-  table tr th span{
+.v-table {
+  table tr th span {
     font-weight: 600;
   }
+
   table tr th,
-  table tr td{
-    background: var(--color-background)!important;
+  table tr td {
+    background: var(--color-background) !important;
+  }
+
+  table tbody tr:hover:not(.v-data-table__expanded__content):not(.v-data-table__empty-wrapper)  {
+    background: rgb(var(--v-theme-on-surface-variant));
   }
 }
+
 .v-data-table-footer {
-  .v-btn--icon.v-btn--size-default{
+  .v-btn--icon.v-btn--size-default {
     font-size: 12px;
   }
+
   .v-data-table-footer__items-per-page {
     .v-field__outline {
       display: none;
     }
+
     .v-field__input .v-select__selection-text {
       font-size: 13px;
       margin-top: 2px;
     }
   }
-
 }
 
-.v-list{
-  padding: 0!important;
+.v-list {
+  padding: 0 !important;
+
   .v-list-item-title {
     font-size: 12px !important;
   }
-  .v-list-item:not(:last-of-type){
-    border-bottom: 1px solid rgba(0,0,0,0.1);
+
+  .v-list-item:not(:last-of-type) {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   }
 }
 
-.v-list-item--density-default.v-list-item--one-line{
-  min-height: 32px!important;
+.v-list-item--density-default.v-list-item--one-line {
+  min-height: 32px !important;
 }
 
 
-
-.v-overlay{
-  .overlay__content{
+.v-overlay {
+  .overlay__content {
     height: unset;
   }
+
   .v-card {
 
     border-radius: .75rem;
     position: relative;
     //min-height: 200px;
-    overflow: visible!important;
+    overflow: visible !important;
 
-    > .v-divider{
+    > .v-divider {
       display: none;
     }
+
     > .dialog-content-wrapper,
-    > .v-card-text{
+    > .v-card-text {
       display: block;
       width: 100%;
       min-height: 200px;
       max-height: calc(100vh - 100px);
       overflow: hidden;
-      overflow-y: auto!important;
+      overflow-y: auto !important;
       --overflow-scroll: touch;
-      padding-top: 64px!important;
-      padding-bottom: 64px!important;
+      padding-top: 64px !important;
+      padding-bottom: 64px !important;
 
 
-      &:has(.tab-wrapper){
-        padding-left: 0!important;
-        padding-right: 0!important;
-        padding-top: 48px!important;
-        padding-bottom: 0px!important;
+      &:has(.tab-wrapper) {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        padding-top: 48px !important;
+        padding-bottom: 0px !important;
 
-        .v-tabs{
-          min-height: 48px!important;
+        .v-tabs {
+          min-height: 48px !important;
         }
 
-        code{
+        code {
           margin: 0;
         }
 
       }
 
-      &:has(.v-table){
-        padding-left:0!important;
-        padding-right:0!important;
+      &:has(.v-table) {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
       }
 
-      .v-card-text:has(code){
+      .v-card-text:has(code) {
         counter-increment: linenumber;
       }
 
       &:has(.jv-container),
-      &:has(code){
+      &:has(code) {
         display: inline-flex;
         gap: 10px;
+
         code {
           font-family: monospace;
         }
+
         line-height: 21px;
 
         border-radius: 2px;
         padding: 20px 10px;
       }
 
-      code.line-numbers{
+      code.line-numbers {
         white-space: unset;
+
         span {
           counter-increment: linenumber;
           display: flex;
           gap: 10px;
+
           &:before {
             content: counter(linenumber);
             display: block;
@@ -163,7 +177,7 @@ body,
       }
 
       .jv-container,
-      code{
+      code {
         margin-top: 1rem;
         margin-bottom: 1.4rem;
         white-space: pre-line;
@@ -173,7 +187,7 @@ body,
         //border: 1px solid #d1d8d9;
         overflow-y: auto;
 
-        &:empty:before{
+        &:empty:before {
           font-family: "Font Awesome 6 Pro";
           content: "\e236";
         }
@@ -181,16 +195,17 @@ body,
 
     }
 
-    > .v-card-text.pb-0{
-      padding-bottom: 24px!important;
+    > .v-card-text.pb-0 {
+      padding-bottom: 24px !important;
     }
 
-    .v-table{
+    .v-table {
       min-height: 100%;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      .v-data-table-footer{
+
+      .v-data-table-footer {
         align-self: end;
         justify-self: end;
         border-top: 1px solid #cdd3d5;
@@ -200,7 +215,7 @@ body,
 
     .v-card-actions,
     .v-card-title {
-      position: fixed!important;
+      position: fixed !important;
       background: var(--vt-c-white-mute);
       z-index: 5;
       width: 100%;
@@ -210,27 +225,27 @@ body,
     }
 
 
-
-    .v-card-title{
+    .v-card-title {
       top: 0;
       border-radius: .22rem .22rem 0 0;
       background: #e9f0f2;
-      box-shadow: 0px 1px 0px rgba(0,0,0,0.1), 0px 1px 8px rgba(0,0,0,0.1);
+      box-shadow: 0px 1px 0px rgba(0, 0, 0, 0.1), 0px 1px 8px rgba(0, 0, 0, 0.1);
       background: #1a3b46;
       color: #fff;
 
     }
-    .v-card-actions{
+
+    .v-card-actions {
       bottom: 0;
       border-radius: 0 0 .22rem .22rem;
-      box-shadow: 0px -1px 0px rgba(0,0,0,0.1);
+      box-shadow: 0px -1px 0px rgba(0, 0, 0, 0.1);
 
     }
 
   }
 }
 
-code{
+code {
   background: #1e1f22;
   color: #bababa;
   padding: 1rem;
@@ -241,10 +256,10 @@ code{
 
 }
 
-.min-height-unset{
-  min-height: unset!important;
+.min-height-unset {
+  min-height: unset !important;
 }
 
-.text-capitalize-first-letter:first-letter{
+.text-capitalize-first-letter:first-letter {
   text-transform: uppercase;
 }

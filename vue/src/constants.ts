@@ -147,6 +147,12 @@ import type {
 import type {
     DeploymentPackageUpdateEnvironmentVariableDialog_Input
 } from "@/components/Dialogs/Setup/DeploymentPackages/UpdateDialogs/DeploymentPackageUpdateEnvironmentVariableDialog.vue";
+import type {
+    DeploymentSpecificationUpdateQuickCommandsDialog_Input
+} from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateQuickCommandsDialog.vue";
+import type {
+    DeploymentSpecificationUpdateQuickCommandDialog_Input
+} from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateQuickCommandDialog.vue";
 
 export type Events = {
     confirm: ConfirmationDialog_Input;
@@ -218,6 +224,8 @@ export type Events = {
     deploymentSpecificationUpdateEnvironmentVariable: DeploymentSpecificationUpdateEnvironmentVariableDialog_Input;
     deploymentSpecificationUpdatePostCommands: DeploymentSpecificationUpdatePostCommandsDialog_Input;
     deploymentSpecificationUpdatePostCommand: DeploymentSpecificationUpdatePostCommandDialog_Input;
+    deploymentSpecificationUpdateQuickCommands: DeploymentSpecificationUpdateQuickCommandsDialog_Input;
+    deploymentSpecificationUpdateQuickCommand: DeploymentSpecificationUpdateQuickCommandDialog_Input;
     deploymentSpecificationUpdateServicePorts: DeploymentSpecificationUpdateServicePortsDialog_Input;
     deploymentSpecificationUpdateServicePort: DeploymentSpecificationUpdateServicePortDialog_Input;
     deploymentSpecificationUpdateIngresses: DeploymentSpecificationUpdateIngressesDialog_Input;

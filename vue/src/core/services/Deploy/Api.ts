@@ -207,6 +207,15 @@ export interface PostCommandList {
     values?: PostCommand[];
 }
 
+export interface QuickCommand {
+    name?: string;
+    command?: string;
+}
+
+export interface QuickCommandList {
+    values?: QuickCommand[];
+}
+
 export interface ResourceManagementProfile {
     workspaceType?: string;
     cpuRequest?: number;
@@ -1352,6 +1361,27 @@ export class DeploymentSpecificationsUpdatePostCommandsPutById extends BaseApi<D
     }
 }
 
+export class DeploymentSpecificationsUpdateQuickCommandsPutById extends BaseApi<DeploymentSpecification> {
+
+    public topic = 'Resources.DeploymentSpecifications';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/deployment-specifications/${id}/quick-commands`;
+    }
+
+    protected convertToResource(data: any): DeploymentSpecification {
+        return new DeploymentSpecification(data);
+    }
+
+    public save(data: QuickCommandList, next?: (value: DeploymentSpecification) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
 export class DeploymentSpecificationsUpdateEnvironmentVariablesPutById extends BaseApi<DeploymentSpecification> {
 
     public topic = 'Resources.DeploymentSpecifications';
@@ -1489,6 +1519,10 @@ class DeploymentSpecifications {
 
     public updatePostCommandsPutById(id: number): DeploymentSpecificationsUpdatePostCommandsPutById {
         return new DeploymentSpecificationsUpdatePostCommandsPutById(id);
+    }
+
+    public updateQuickCommandsPutById(id: number): DeploymentSpecificationsUpdateQuickCommandsPutById {
+        return new DeploymentSpecificationsUpdateQuickCommandsPutById(id);
     }
 
     public updateEnvironmentVariablesPutById(id: number): DeploymentSpecificationsUpdateEnvironmentVariablesPutById {

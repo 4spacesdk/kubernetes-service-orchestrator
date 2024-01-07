@@ -163,6 +163,12 @@ bus.on('deploymentSpecificationUpdatePostCommands', async input => {
 bus.on('deploymentSpecificationUpdatePostCommand', async input => {
     addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdatePostCommandDialog.vue')).default, input);
 });
+bus.on('deploymentSpecificationUpdateQuickCommands', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateQuickCommandsDialog.vue')).default, input);
+});
+bus.on('deploymentSpecificationUpdateQuickCommand', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateQuickCommandDialog.vue')).default, input);
+});
 bus.on('deploymentSpecificationUpdateServicePorts', async input => {
     addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateServicePortsDialog.vue')).default, input);
 });
