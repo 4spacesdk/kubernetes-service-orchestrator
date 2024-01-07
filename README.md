@@ -49,7 +49,7 @@ deployment:
 ```
 ### Install using helm
 ```
-helm upgrade --install kso 4spacesdk/kubernetes-service-orchestrator --values=values.yaml --namespace kso --create-namespace
+helm upgrade --install kso 4spacesdk/kso --values=values.yaml --namespace kso --create-namespace
 ```
 
 ### Delete kso
