@@ -3,12 +3,12 @@
 ## v0.1.9 (2024-01-07)
 
 ### Fixed bugs
-
+* 
 
 ### Enhancements
 * Setup quick commands for deployment specifications and execute these directly on deployments
 * Small UI adjustments
-* Added Helm charts
+* Added Helm charts and install guide
 
 ### Upgrade guide
 1. Deploy new image

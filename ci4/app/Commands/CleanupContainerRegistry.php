@@ -27,6 +27,12 @@ class CleanupContainerRegistry extends BaseCommand {
         $job->last_run = date('Y-m-d H:i:s');
         $job->save();
 
+        // Validate configuration
+        if (strlen(getenv('GCLOUD_PROJECT_ID')) == 0 || strlen(getenv('GCLOUD_SERVICE_KEY_FILE'))) {
+            Data::debug(get_class($this), 'GCloud not setup. Skip');
+            return;
+        }
+
         /** @var ContainerImage $containerImages */
         $containerImages = (new ContainerImageModel())
             ->find();
