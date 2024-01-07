@@ -8,6 +8,7 @@
 ### Enhancements
 * Setup quick commands for deployment specifications and execute these directly on deployments
 * Small UI adjustments
+* Added Helm charts
 
 ### Upgrade guide
 1. Deploy new image

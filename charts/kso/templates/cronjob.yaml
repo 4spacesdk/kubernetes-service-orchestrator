@@ -1,0 +1,21 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "kso.fullname" . }}
+spec:
+  schedule: "* * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: callout
+              image: buildpack-deps:curl
+              args:
+                - /bin/sh
+                - -ec
+                - curl {{ include "kso.fullname" . }}.{{ .Release.Namespace }}/api/jobby
+          restartPolicy: Never
