@@ -4,8 +4,8 @@ import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInter
 import {Api} from "@/core/services/Deploy/Api";
 import type {KubernetesPod} from "@/core/services/Deploy/Api";
 import PodTerminal from "@/components/Modules/PodTerminal/PodTerminal.vue";
-import type {QuickCommand} from "@/components/Modules/PodTerminal/PodTerminal.vue";
 import {Deployment} from "@/core/services/Deploy/models";
+import type {QuickCommand} from "@/components/Modules/PodTerminal/QuickCommand";
 
 export interface PodTerminalDialog_Input {
     deployment: Deployment;
@@ -43,14 +43,14 @@ function render() {
             quickCommands.value = [
                 ...response[0].deployment_specification_post_commands?.map(postCommand => {
                     return {
-                        name: postCommand.name,
-                        command: postCommand.command,
+                        name: postCommand.name ?? '',
+                        command: postCommand.command ?? '',
                     };
                 }) ?? [],
                 ...response[0].deployment_specification_quick_commands?.map(quickCommand => {
                     return {
-                        name: quickCommand.name,
-                        command: quickCommand.command,
+                        name: quickCommand.name ?? '',
+                        command: quickCommand.command ?? '',
                     };
                 }) ?? [],
             ];

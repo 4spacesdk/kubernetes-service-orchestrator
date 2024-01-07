@@ -4,6 +4,7 @@ import DateView from "@/components/Modules/Common/DateView.vue";
 import type {KubernetesPod} from "@/core/services/Deploy/Api";
 import {Api} from "@/core/services/Deploy/Api";
 import {VTextField} from "vuetify/components/VTextField";
+import type {QuickCommand} from "@/components/Modules/PodTerminal/QuickCommand";
 
 const props = defineProps<{
     pod: KubernetesPod;
@@ -17,11 +18,6 @@ defineExpose({
 interface Row {
     date: Date,
     line: string;
-}
-
-export interface QuickCommand {
-    name: string,
-    command: string;
 }
 
 const logs = ref<Row[]>([]);
