@@ -47,9 +47,14 @@ deployment:
 #      value: ""
 
 ```
-### Install using helm
+### Install
 ```
 helm upgrade --install kso 4spacesdk/kso --values=values.yaml --namespace kso --create-namespace
+```
+### Upgrade
+```
+helm repo update
+helm upgrade --install kso 4spacesdk/kso --values=values.yaml --namespace kso
 ```
 
 ### Delete kso
