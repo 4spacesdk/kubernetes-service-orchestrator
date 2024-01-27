@@ -8,6 +8,9 @@
 ### Enhancements
 * Added support for MSSQL database services
   * `docker-compose.yml` now contains a mssql database service
+* Migration jobs is no longer bound to deployment image
+  * Specify separate image for migrations at deployment specification
+  * Useful if you have database migration code separated from application code
 * Updated base docker image from `php:8-alpine3.16` to `php:8.3-alpine3.19`
 * Updated composer libraries
   * CodeIgniter has been updated from `v4.2.6` to `v4.4.5`
