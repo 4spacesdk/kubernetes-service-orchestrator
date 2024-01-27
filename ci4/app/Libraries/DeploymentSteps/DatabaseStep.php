@@ -99,8 +99,8 @@ class DatabaseStep extends BaseDeploymentStep {
 
         $chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         $count = mb_strlen($chars);
-        $dbPass = "";
-        for ($i = 0; $i < 8; $i++) {
+        $dbPass = "@"; // Must include @  for MSSQL
+        for ($i = 0; $i < 12; $i++) {
             $index = rand(0, $count - 1);
             $dbPass .= mb_substr($chars, $index, 1);
         }
@@ -114,7 +114,10 @@ class DatabaseStep extends BaseDeploymentStep {
             'username' => $databaseService->user,
             'password' => $databaseService->pass,
             'database' => '',
-            'DBDriver' => 'MySQLi',
+            'DBDriver' => match ($databaseService->driver) {
+                \DatabaseDrivers::MySQL => 'MySQL',
+                \DatabaseDrivers::MSSQL => 'SQLSRV',
+            },
             'DBPrefix' => '',
             'pConnect' => false,
             'DBDebug'  => (ENVIRONMENT !== 'production'),
@@ -127,9 +130,22 @@ class DatabaseStep extends BaseDeploymentStep {
             'failover' => [],
             'port' => $databaseService->port,
         ]);
-        $db->query("CREATE DATABASE IF NOT EXISTS {$dbName}");
-        $db->query("CREATE USER IF NOT EXISTS '{$dbUser}' IDENTIFIED BY '{$dbPass}'");
-        $db->query("GRANT ALL PRIVILEGES ON {$dbName}.* TO '{$dbUser}'@'%'");
+
+        switch ($databaseService->driver) {
+            case \DatabaseDrivers::MySQL:
+                $db->query("CREATE DATABASE IF NOT EXISTS {$dbName}");
+                $db->query("CREATE USER IF NOT EXISTS '{$dbUser}' IDENTIFIED BY '{$dbPass}'");
+                $db->query("GRANT ALL PRIVILEGES ON {$dbName}.* TO '{$dbUser}'@'%'");
+                break;
+            case \DatabaseDrivers::MSSQL:
+                $forge = Database::forge($db);
+                $forge->createDatabase($dbName);
+                $db->setDatabase($dbName);
+                $db->query("CREATE LOGIN [$dbUser] WITH PASSWORD = '$dbPass'");
+                $db->query("CREATE USER [$dbUser] FOR LOGIN [$dbUser]");
+                $db->query("EXEC sp_addrolemember 'db_owner', [$dbUser]");
+                break;
+        }
 
         $deployment->database_name = $dbName;
         $deployment->database_user = $dbUser;

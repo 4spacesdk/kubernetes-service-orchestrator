@@ -328,7 +328,7 @@ class Deployment extends Entity {
     /**
      * @return \ArrayIterator|\OrmExtension\Extensions\Entity[]|\Traversable|Deployment[]
      */
-    public function getIterator() {
+    public function getIterator(): \ArrayIterator {
         return parent::getIterator();
     }
 

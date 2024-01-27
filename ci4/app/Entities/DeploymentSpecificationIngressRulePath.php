@@ -25,7 +25,7 @@ class DeploymentSpecificationIngressRulePath extends Entity {
     /**
      * @return \ArrayIterator|\OrmExtension\Extensions\Entity[]|\Traversable|DeploymentSpecificationIngressRulePath[]
      */
-    public function getIterator() {
+    public function getIterator(): \ArrayIterator {
         return parent::getIterator();
     }
 

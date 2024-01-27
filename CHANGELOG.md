@@ -1,9 +1,29 @@
 # Changelog
 
+## v0.1.10 
+
+### Fixed bugs
+*
+
+### Enhancements
+* Added support for MSSQL database services
+  * `docker-compose.yml` now contains a mssql database service
+* Updated base docker image from `php:8-alpine3.16` to `php:8.3-alpine3.19`
+* Updated composer libraries
+  * CodeIgniter has been updated from `v4.2.6` to `v4.4.5`
+
+### Upgrade guide
+1. Deploy new image
+2. Run database migration from inside pod: `cd /var/www/html/ci4 && php spark migrate`
+3. If you have multiple pods running this application, you need to clear orm cache in every pod
+    1. `cd /var/www/html/ci4 && php spark orm:clear:cache`
+   
+
+
 ## v0.1.9 (2024-01-07)
 
 ### Fixed bugs
-* 
+*
 
 ### Enhancements
 * Setup quick commands for deployment specifications and execute these directly on deployments

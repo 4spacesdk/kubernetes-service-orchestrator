@@ -8,6 +8,7 @@ import {DatabaseService} from '../DatabaseService';
 import {Deployment} from '../Deployment';
 import {Label} from '../Label';
 import {User} from '../User';
+import {Deletion} from '../Deletion';
 import {BaseModel} from '../BaseModel';
 
 export class WorkspaceDefinition extends BaseModel {
@@ -34,6 +35,8 @@ export class WorkspaceDefinition extends BaseModel {
     created_by?: User;
     updated_by_id?: number;
     updated_by?: User;
+    deletion_id?: number;
+    deletion?: Deletion;
 
     constructor(data?: any) {
         super();
@@ -65,6 +68,8 @@ export class WorkspaceDefinition extends BaseModel {
             delete this.created_by;
             delete this.updated_by_id;
             delete this.updated_by;
+            delete this.deletion_id;
+            delete this.deletion;
         }
 
         if (!data) return;
@@ -136,6 +141,12 @@ export class WorkspaceDefinition extends BaseModel {
         }
         if (data.updated_by != null) {
             this.updated_by = new User(data.updated_by);
+        }
+        if (data.deletion_id != null) {
+            this.deletion_id = data.deletion_id;
+        }
+        if (data.deletion != null) {
+            this.deletion = new Deletion(data.deletion);
         }
     }
 

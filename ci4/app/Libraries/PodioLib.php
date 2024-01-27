@@ -97,11 +97,7 @@ class PodioLib {
             $gitHubCommitUrl = GitHubLib::getCommitUrl($spec->git_repo, $commitSha);
             $comment = "[GibHub]($gitHubCommitUrl)";
 
-            // TODO Udfas login-url - eller gør konfigurerbart
-            $baseUrl = str_replace('/api', '/app', base_url());
-            $requestSupportTokenUrl = "$baseUrl/workspaces/{$deployment->workspace_id}/request-support-login";
-            $loginUrl = base_url("login?redirect_uri=$requestSupportTokenUrl");
-            $comment .= "\nWorkspace {$deployment->workspace->name_readable} updated [Login]({$loginUrl})";
+            $comment .= "\nWorkspace {$deployment->workspace->name_readable} updated";
 
             $podioLib->addCommitComment($item, $comment);
         }

@@ -13,6 +13,7 @@ const itemCount = ref(0);
 const rows = ref<DatabaseService[]>([]);
 const headers = ref([
     {title: 'Name', key: 'name', sortable: false},
+    {title: 'Driver', key: 'driver', sortable: false},
     {title: '', key: 'actions', sortable: false},
 ]);
 const isLoading = ref(true);

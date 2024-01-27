@@ -16,9 +16,7 @@ RUN npm run build
 
 
 # PHP DeploymentSpecs can be found at https://hub.docker.com/_/php/
-FROM php:8.0-alpine3.16
-
-RUN echo "@testing http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
+FROM php:8.3-alpine3.19
 
 # Install OS dependencies
 RUN apk add --update  \
@@ -30,6 +28,7 @@ RUN apk add --update  \
     icu-dev \
     imagemagick \
     imagemagick-dev \
+    libwebp-dev \
     libxml2-dev \
     libzip-dev \
     unzip \
@@ -38,10 +37,12 @@ RUN apk add --update  \
     libxml2-dev \
     wget \
     git \
-    curl-dev@testing \
+    curl-dev \
     yaml-dev \
-    php8-apache2 php8-mbstring php8-session php8-json php8-tokenizer php8-mysqli php8-pdo php8-pdo_mysql php8-intl \
-    php8-curl php8-pecl-yaml php8-calendar php8-posix php8-zip php8-xml php8-simplexml php8-xmlwriter php8-ctype \
+    linux-headers \
+    php83-apache2 php83-mbstring php83-session php83-json php83-tokenizer php83-mysqli php83-pdo php83-pdo_mysql php83-intl \
+    php83-curl php83-pecl-yaml php83-calendar php83-posix php83-zip php83-xml php83-simplexml php83-xmlwriter php83-ctype \
+    php83-pecl-imagick php83-gd \
     # Alpine
     autoconf \
     gcc make g++ \
@@ -56,15 +57,40 @@ RUN apk add --update  \
     go
 
 RUN docker-php-ext-configure intl
-RUN docker-php-ext-install bcmath gd mysqli pdo pdo_mysql intl zip pcntl soap sockets calendar posix ctype && \
-	pecl install imagick curl
-RUN docker-php-ext-enable imagick pdo_mysql intl posix
+RUN docker-php-ext-install mysqli pdo pdo_mysql intl zip pcntl soap sockets calendar posix ctype
+RUN docker-php-ext-enable pdo_mysql intl posix
 RUN docker-php-ext-configure calendar
+
+# GD
 RUN docker-php-ext-configure gd \
       --enable-gd \
+      --with-webp \
       --with-freetype=/usr/include/ \
       --with-jpeg=/usr/include/
-RUN rm -rf /tmp/* /var/cache/apk/*
+RUN docker-php-ext-install -j$(nproc) bcmath gd
+RUN docker-php-ext-enable gd
+RUN cp /usr/local/etc/php/conf.d/docker-php-ext-gd.ini /etc/php83/conf.d/gd.ini
+
+# SQLSRV (MSSQL Driver)
+RUN wget https://download.microsoft.com/download/8/6/8/868e5fc4-7bfe-494d-8f9d-115cbcdb52ae/msodbcsql18_18.1.2.1-1_amd64.apk && \
+  wget https://download.microsoft.com/download/8/6/8/868e5fc4-7bfe-494d-8f9d-115cbcdb52ae/mssql-tools18_18.1.1.1-1_amd64.apk && \
+  apk add --allow-untrusted msodbcsql18_18.1.2.1-1_amd64.apk && \
+  apk add --allow-untrusted mssql-tools18_18.1.1.1-1_amd64.apk && \
+  apk add --no-cache --virtual .persistent-deps freetds && \
+  apk add --no-cache --virtual .build-deps $PHPIZE_DEPS unixodbc-dev freetds-dev && \
+  docker-php-source extract && \
+  docker-php-ext-install pdo_dblib && \
+  pecl install sqlsrv pdo_sqlsrv && \
+  docker-php-ext-enable pdo_sqlsrv && \
+  docker-php-ext-enable --ini-name 30-sqlsrv.ini sqlsrv && \
+  docker-php-ext-enable --ini-name 35-pdo_sqlsrv.ini pdo_sqlsrv && \
+  apk del .build-deps && \
+  rm msodbcsql18_18.1.2.1-1_amd64.apk && \
+  rm mssql-tools18_18.1.1.1-1_amd64.apk
+RUN cp /usr/local/etc/php/conf.d/30-sqlsrv.ini /etc/php83/conf.d/sqlsrv.ini
+RUN cp /usr/local/etc/php/conf.d/docker-php-ext-pdo_sqlsrv.ini /etc/php83/conf.d/pdo_sqlsrv.ini
+RUN cp /usr/local/lib/php/extensions/no-debug-non-zts-20230831/sqlsrv.so /usr/lib/php83/modules/sqlsrv.so
+RUN cp /usr/local/lib/php/extensions/no-debug-non-zts-20230831/pdo_sqlsrv.so /usr/lib/php83/modules/pdo_sqlsrv.so
 
 # ZMQ Server
 RUN wget https://archive.org/download/zeromq_4.1.4/zeromq-4.1.4.tar.gz \
@@ -86,43 +112,13 @@ RUN git clone https://github.com/zeromq/php-zmq.git \
  && cd .. \
  && rm -fr php-zmq
 RUN docker-php-ext-enable zmq
-RUN rm -rf /tmp/* /var/cache/apk/*
-RUN cp /usr/local/etc/php/conf.d/docker-php-ext-zmq.ini /etc/php8/conf.d/50_zmq.ini
-RUN cp /usr/local/lib/php/extensions/no-debug-non-zts-20200930/zmq.so /usr/lib/php8/modules/zmq.so
+RUN cp /usr/local/etc/php/conf.d/docker-php-ext-zmq.ini /etc/php83/conf.d/50_zmq.ini
+RUN cp /usr/local/lib/php/extensions/no-debug-non-zts-20230831/zmq.so /usr/lib/php83/modules/zmq.so
 
 # yaml_parse
 RUN pear config-set php_ini /etc/php7/php.ini
 RUN pecl channel-update pecl.php.net
 RUN pecl install yaml-2.2.2 && docker-php-ext-enable yaml
-
-# New Relic
-# Phpize issue: https://discuss.newrelic.com/t/alpine-linux-3-11-newrelic-php-agent-install-fails-to-detect-os-correctly-when-dpkg-installed/101360
-RUN rm -rf /etc/dpkg
-ARG NEW_RELIC_ENABLED=false
-ARG NEW_RELIC_LICENSE_KEY
-ARG NEW_RELIC_APP_NAME
-ENV NEW_RELIC_VERSION newrelic-php5-9.18.1.303-linux-musl
-RUN if [[ "$NEW_RELIC_ENABLED" == "TRUE" ]] ; then \
-    mkdir -p /var/log/newrelic /var/run/newrelic && \
-    touch /var/log/newrelic/php_agent.log /var/log/newrelic/newrelic-daemon.log && \
-    chmod -R g+ws /tmp /var/log/newrelic/ /var/run/newrelic/ && \
-    chown -R 1001:0 /tmp /var/log/newrelic/ /var/run/newrelic/ && \
-\
-    # Download and install New Relic binary
-    cd /tmp && curl -sS "https://download.newrelic.com/php_agent/archive/9.18.1.303/${NEW_RELIC_VERSION}.tar.gz" | gzip -dc | tar xf - && \
-    cd "${NEW_RELIC_VERSION}" && \
-    NR_INSTALL_SILENT=true ./newrelic-install install && \
-    rm -f /var/run/newrelic-daemon.pid && \
-    rm -f /tmp/.newrelic.sock && \
-\
-    # For Newrelic's APM (Application Monitoring) license and appname are required.
-    # Environment variables `NEW_RELIC_LICENSE_KEY` and `NEW_RELIC_APP_NAME` are required when buidling Docker image,
-    # so you must set them in your **BuildConfig** Environments.
-    sed -i \
-        -e "s/newrelic.license =.*/newrelic.license = ${NEW_RELIC_LICENSE_KEY}/" \
-        -e "s/newrelic.appname =.*/newrelic.appname = ${NEW_RELIC_APP_NAME}/" \
-        /usr/local/etc/php/conf.d/newrelic.ini \
-    ; fi
 
 # Install gke-auth
 ARG GKE_AUTH_ENABLED=false
@@ -141,6 +137,8 @@ RUN . "$NVM_DIR/nvm.sh" && nvm alias default v${NODE_VERSION}
 ENV PATH="/root/.nvm/versions/node/v${NODE_VERSION}/bin/:${PATH}"
 RUN node --version
 RUN npm --version
+
+RUN rm -rf /tmp/* /var/cache/apk/*
 
 # Configure apache
 COPY docker/apache/httpd.conf /etc/apache2/httpd.conf

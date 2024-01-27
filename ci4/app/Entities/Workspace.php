@@ -319,7 +319,7 @@ class Workspace extends Entity {
     /**
      * @return \ArrayIterator|\OrmExtension\Extensions\Entity[]|\Traversable|Workspace[]
      */
-    public function getIterator() {
+    public function getIterator(): \ArrayIterator {
         return parent::getIterator();
     }
 

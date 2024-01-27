@@ -4,10 +4,12 @@
 import {Workspace} from '../Workspace';
 import {Deployment} from '../Deployment';
 import {User} from '../User';
+import {Deletion} from '../Deletion';
 import {BaseModel} from '../BaseModel';
 
 export class DatabaseServiceDefinition extends BaseModel {
     name?: string;
+    driver?: string;
     host?: string;
     azure_host?: string;
     port?: string;
@@ -22,6 +24,8 @@ export class DatabaseServiceDefinition extends BaseModel {
     created_by?: User;
     updated_by_id?: number;
     updated_by?: User;
+    deletion_id?: number;
+    deletion?: Deletion;
 
     constructor(data?: any) {
         super();
@@ -31,6 +35,7 @@ export class DatabaseServiceDefinition extends BaseModel {
     public populate(data?: any, patch = false) {
         if (!patch) {
             delete this.name;
+            delete this.driver;
             delete this.host;
             delete this.azure_host;
             delete this.port;
@@ -45,11 +50,16 @@ export class DatabaseServiceDefinition extends BaseModel {
             delete this.created_by;
             delete this.updated_by_id;
             delete this.updated_by;
+            delete this.deletion_id;
+            delete this.deletion;
         }
 
         if (!data) return;
         if (data.name != null) {
             this.name = data.name;
+        }
+        if (data.driver != null) {
+            this.driver = data.driver;
         }
         if (data.host != null) {
             this.host = data.host;
@@ -92,6 +102,12 @@ export class DatabaseServiceDefinition extends BaseModel {
         }
         if (data.updated_by != null) {
             this.updated_by = new User(data.updated_by);
+        }
+        if (data.deletion_id != null) {
+            this.deletion_id = data.deletion_id;
+        }
+        if (data.deletion != null) {
+            this.deletion = new Deletion(data.deletion);
         }
     }
 

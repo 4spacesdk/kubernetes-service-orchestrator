@@ -22,6 +22,8 @@
  */
 
 // Refuse to run when called from php-cgi
+use CodeIgniter\Events\Events;
+
 if (strpos(PHP_SAPI, 'cgi') === 0) {
     exit("The cli tool is not supported when running php-cgi. It needs php-cli to function!\n\n");
 }
@@ -39,7 +41,7 @@ if (version_compare(PHP_VERSION, $minPhpVersion, '<')) {
 }
 
 // We want errors to be shown when using it from the CLI.
-error_reporting(-1);
+error_reporting(E_ALL);
 ini_set('display_errors', '1');
 
 /**
@@ -80,13 +82,17 @@ require_once SYSTEMPATH . 'Config/DotEnv.php';
 $_ENV = []; // We need to clear $_ENV for DotEnv to overwrite. $_ENV is empty when accessed from web
 (new CodeIgniter\Config\DotEnv(ROOTPATH))->load();
 
+// Define ENVIRONMENT
+if (! defined('ENVIRONMENT')) {
+    define('ENVIRONMENT', env('CI_ENVIRONMENT', 'production'));
+}
+
 // Grab our CodeIgniter
 $app = Config\Services::codeigniter();
 $app->initialize();
-$app->setContext('spark');
 
 // Grab our Console
-$console = new CodeIgniter\CLI\Console($app);
+$console = new CodeIgniter\CLI\Console();
 
 // Show basic information before we do anything else.
 if (is_int($suppress = array_search('--no-header', $_SERVER['argv'], true))) {
@@ -97,8 +103,8 @@ if (is_int($suppress = array_search('--no-header', $_SERVER['argv'], true))) {
 $console->showHeader($suppress);
 
 // fire off the command in the main framework.
-$response = $console->run();
+Events::trigger('pre_system');
+$exit = $console->run();
+Events::trigger('post_system');
 
-if ($response->getStatusCode() >= 300) {
-    exit($response->getStatusCode());
-}
+exit(is_int($exit) ? $exit : EXIT_SUCCESS);

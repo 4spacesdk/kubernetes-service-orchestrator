@@ -6,6 +6,7 @@ use RestExtension\Core\Entity;
  * Class DatabaseService
  * @package App\Entities
  * @property string $name
+ * @property string $driver
  * @property string $host
  * @property string $azure_host
  * @property string $port
@@ -29,7 +30,7 @@ class DatabaseService extends Entity {
     /**
      * @return \ArrayIterator|\OrmExtension\Extensions\Entity[]|\Traversable|DatabaseService[]
      */
-    public function getIterator() {
+    public function getIterator(): \ArrayIterator {
         return parent::getIterator();
     }
 

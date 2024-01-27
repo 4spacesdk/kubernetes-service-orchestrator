@@ -14,7 +14,7 @@ class ZMQEvent extends Entity {
     /**
      * @return \ArrayIterator|Entity[]|\Traversable|ZMQEvent[]
      */
-    public function getIterator() {
+    public function getIterator(): \ArrayIterator {
         return parent::getIterator();
     }
 

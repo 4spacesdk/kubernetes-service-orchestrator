@@ -21,7 +21,7 @@ class CronJob extends Entity {
     /**
      * @return \ArrayIterator|Entity[]|\Traversable|CronJob[]
      */
-    public function getIterator() {
+    public function getIterator(): \ArrayIterator {
         return parent::getIterator();
     }
 

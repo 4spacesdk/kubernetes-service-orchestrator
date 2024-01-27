@@ -1,6 +1,6 @@
 {
-  "name": "4spacesdk/deploy-service",
-  "description": "Deploy Service",
+  "name": "4spacesdk/kubernetes-service-orchestrator",
+  "description": "Service Orchestrator for Kubernetes",
   "require": {
     "php": ">=8.0",
     "ext-json": "*",
@@ -8,15 +8,16 @@
     "ext-intl": "*",
     "ext-yaml": "*",
     "ext-zmq": "*",
+    "ext-sqlsrv": "*",
     "hellogerard/jobby": "v3.5.0",
-    "codeigniter4/framework": "v4.2.6",
+    "codeigniter4/framework": "v4.4.5",
     "4spacesdk/ci4debugtool": "1.0.8",
-    "4spacesdk/ci4ormextension": "v1.0.7",
-    "4spacesdk/ci4restextension": "v1.0.5",
-    "4spacesdk/ci4authextension": "v1.0.0",
+    "4spacesdk/ci4ormextension": "dev-master",
+    "4spacesdk/ci4restextension": "dev-master",
+    "4spacesdk/ci4authextension": "v1.0.1",
     "renoki-co/php-k8s": "3.8.1",
     "google/cloud-artifact-registry": "^0.3.7",
-    "podio-community/podio-php": "dev-master",
+    "podio-community/podio-php": "7.0.2",
     "knplabs/github-api": "^v3.9.0"
   },
   "require-dev": {

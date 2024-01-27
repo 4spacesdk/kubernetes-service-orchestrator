@@ -73,7 +73,7 @@ class User extends \RestExtension\Entities\User {
     /**
      * @return \ArrayIterator|\OrmExtension\Extensions\Entity[]|\Traversable|User[]
      */
-    public function getIterator() {
+    public function getIterator(): \ArrayIterator {
         return parent::getIterator();
     }
 

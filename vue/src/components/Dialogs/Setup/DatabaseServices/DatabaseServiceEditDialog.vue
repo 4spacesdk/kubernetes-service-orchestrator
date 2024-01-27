@@ -16,6 +16,16 @@ const showDialog = ref(false);
 const isLoading = ref(false);
 
 const item = ref<DatabaseService>(new DatabaseService());
+const drivers = ref([
+    {
+        identifier: 'mysql',
+        name: 'MySQL',
+    },
+    {
+        identifier: 'mssql',
+        name: 'MSSQL',
+    },
+]);
 
 // <editor-fold desc="Functions">
 
@@ -95,13 +105,25 @@ function onCloseBtnClicked() {
                             label="Name"/>
                     </v-col>
 
+                    <v-col cols="12">
+                        <v-select
+                            v-model="item.driver"
+                            :items="drivers"
+                            item-value="identifier"
+                            item-title="name"
+                            variant="outlined"
+                            label="Driver"/>
+                    </v-col>
                     <v-col cols="6">
                         <v-text-field
                             variant="outlined"
                             v-model="item.host"
                             label="Host"/>
                     </v-col>
-                    <v-col cols="6">
+                    <v-col
+                        v-if="item.driver == 'mysql'"
+                        cols="6"
+                    >
                         <v-text-field
                             variant="outlined"
                             v-model="item.azure_host"

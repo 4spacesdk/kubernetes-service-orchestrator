@@ -58,6 +58,15 @@ services:
     networks:
       - deploy-service-network
 
+#  mssql:
+#    build: ./docker/mssql
+#    ports:
+#      - "${DATABASE_MSSQL_PORT}:1433"
+#    environment:
+#      MSSQL_SA_PASSWORD: yTyQLXjH7uOXqwOowPK0@
+#    networks:
+#      - deploy-service-network
+
 # Docker Networks
 networks:
   deploy-service-network:
