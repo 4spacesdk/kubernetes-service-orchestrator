@@ -1,5 +1,6 @@
 <?php namespace App\Libraries\DeploymentSteps;
 
+use App\Entities\ContainerImage;
 use App\Entities\DatabaseService;
 use App\Entities\Deployment;
 use App\Entities\DeploymentVolume;
@@ -10,6 +11,7 @@ use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
 use App\Libraries\Kubernetes\KubeAuth;
 use App\Libraries\Kubernetes\KubeHelper;
+use App\Models\ContainerImageModel;
 use App\Models\DeploymentVolumeModel;
 use App\Models\EnvironmentVariableModel;
 use DebugTool\Data;
@@ -194,6 +196,10 @@ class MigrationJobStep extends BaseDeploymentStep {
         $template->setContainers([$container]);
         $resource->setTemplate($template);
 
+        $migrationJob->image = $container->getAttribute('image');
+        $migrationJob->command = $deployment->findDeploymentSpecification()->database_migration_command;
+        $migrationJob->save();
+
         $resource->create();
     }
 
@@ -232,14 +238,24 @@ class MigrationJobStep extends BaseDeploymentStep {
      */
     private function getResource(Deployment $deployment, bool $auth = false): K8sJob {
         $spec = $deployment->findDeploymentSpecification();
-        if (!$spec->container_image->exists()) {
-            $spec->container_image->find();
+
+        $containerImage = new ContainerImage();
+
+        if ($spec->database_migration_container_image_id) {
+            $containerImage->find($spec->database_migration_container_image_id);
+            $tag = match ($spec->database_migration_container_image_tag_policy) {
+                \DatabaseMigrationContainerImageTagPolicies::MatchDeployment => $deployment->version,
+                \DatabaseMigrationContainerImageTagPolicies::Static => $spec->database_migration_container_image_tag_value
+            };
+        } else {
+            $containerImage->find($spec->container_image_id);
+            $tag = $deployment->version;
         }
 
         $container = new Container();
         $container
             ->setAttribute('name', $deployment->name)
-            ->setImage($spec->container_image->url, $deployment->version)
+            ->setImage($containerImage->url, $tag)
             ->setAttribute('imagePullPolicy', \KeelPolicies::GetImagePullPolicy($deployment->keel_policy))
             ->setAttribute('command', [
                 '/bin/sh'

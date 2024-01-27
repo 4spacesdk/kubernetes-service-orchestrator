@@ -46,6 +46,10 @@ use RestExtension\Core\Entity;
  * @property string $domain_aliases
  *
  * # Database Migration settings
+ * @property int $database_migration_container_image_id
+ * @property ContainerImage $database_migration_container_image
+ * @property string $database_migration_container_image_tag_policy
+ * @property string $database_migration_container_image_tag_value
  * @property string $database_migration_command
  *
  * # Cron Job settings

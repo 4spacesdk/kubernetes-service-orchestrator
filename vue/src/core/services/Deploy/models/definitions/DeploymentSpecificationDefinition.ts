@@ -29,6 +29,10 @@ export class DeploymentSpecificationDefinition extends BaseModel {
     domain_prefix?: string;
     domain_suffix?: string;
     domain_aliases?: string;
+    database_migration_container_image_id?: number;
+    database_migration_container_image?: ContainerImage;
+    database_migration_container_image_tag_policy?: string;
+    database_migration_container_image_tag_value?: string;
     database_migration_command?: string;
     cronjob_url?: string;
     deployments?: Deployment[];
@@ -70,6 +74,10 @@ export class DeploymentSpecificationDefinition extends BaseModel {
             delete this.domain_prefix;
             delete this.domain_suffix;
             delete this.domain_aliases;
+            delete this.database_migration_container_image_id;
+            delete this.database_migration_container_image;
+            delete this.database_migration_container_image_tag_policy;
+            delete this.database_migration_container_image_tag_value;
             delete this.database_migration_command;
             delete this.cronjob_url;
             delete this.deployments;
@@ -131,6 +139,18 @@ export class DeploymentSpecificationDefinition extends BaseModel {
         }
         if (data.domain_aliases != null) {
             this.domain_aliases = data.domain_aliases;
+        }
+        if (data.database_migration_container_image_id != null) {
+            this.database_migration_container_image_id = data.database_migration_container_image_id;
+        }
+        if (data.database_migration_container_image != null) {
+            this.database_migration_container_image = new ContainerImage(data.database_migration_container_image);
+        }
+        if (data.database_migration_container_image_tag_policy != null) {
+            this.database_migration_container_image_tag_policy = data.database_migration_container_image_tag_policy;
+        }
+        if (data.database_migration_container_image_tag_value != null) {
+            this.database_migration_container_image_tag_value = data.database_migration_container_image_tag_value;
         }
         if (data.database_migration_command != null) {
             this.database_migration_command = data.database_migration_command;

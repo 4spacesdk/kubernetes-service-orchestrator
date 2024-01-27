@@ -115,7 +115,7 @@ class DatabaseStep extends BaseDeploymentStep {
             'password' => $databaseService->pass,
             'database' => '',
             'DBDriver' => match ($databaseService->driver) {
-                \DatabaseDrivers::MySQL => 'MySQL',
+                \DatabaseDrivers::MySQL => 'MySQLi',
                 \DatabaseDrivers::MSSQL => 'SQLSRV',
             },
             'DBPrefix' => '',

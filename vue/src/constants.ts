@@ -276,3 +276,8 @@ export const KeelHookStatusTypes = {
     Finished: 'finished',
     Error: 'error',
 };
+
+export const DatabaseMigrationContainerImageTagPolicies = {
+    MatchDeployment: 'match-deployment',
+    Static: 'static',
+};

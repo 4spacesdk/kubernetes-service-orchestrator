@@ -107,4 +107,8 @@ Events::trigger('pre_system');
 $exit = $console->run();
 Events::trigger('post_system');
 
+// Clear OrmExtensionCache
+\OrmExtension\DataMapper\ModelDefinitionCache::getInstance()->clearCache();
+
+
 exit(is_int($exit) ? $exit : EXIT_SUCCESS);

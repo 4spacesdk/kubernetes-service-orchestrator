@@ -4,6 +4,7 @@ import {ContainerImage, DeploymentSpecification} from "@/core/services/Deploy/mo
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
+import {DatabaseMigrationContainerImageTagPolicies} from "@/constants";
 
 export interface DeploymentSpecificationEditDialog_Input {
     deploymentSpecification: DeploymentSpecification;
@@ -19,7 +20,19 @@ const item = ref<DeploymentSpecification>(new DeploymentSpecification());
 
 // Mandatory settings
 const containerImageItems = ref<ContainerImage[]>([]);
-const isLoadingContainerImageitems = ref(false);
+const isLoadingContainerImageItems = ref(false);
+
+const isCustomMigrationImage = ref(false);
+const migrationTagPolicies = ref([
+    {
+        identifier: DatabaseMigrationContainerImageTagPolicies.MatchDeployment,
+        name: "Match deployment",
+    },
+    {
+        identifier: DatabaseMigrationContainerImageTagPolicies.Static,
+        name: "Static",
+    },
+]);
 
 // <editor-fold desc="Functions">
 
@@ -42,19 +55,26 @@ function render() {
             .find(items => {
                 item.value = items[0];
                 isLoading.value = false;
+                renderIsCustomMigrationImage();
             });
     } else {
         item.value = props.input.deploymentSpecification;
         showDialog.value = true;
+        renderIsCustomMigrationImage();
     }
 
-    isLoadingContainerImageitems.value = true;
+    isLoadingContainerImageItems.value = true;
     Api.containerImages().get()
         .orderAsc('name')
         .find(items => {
             containerImageItems.value = items;
-            isLoadingContainerImageitems.value = false;
+            isLoadingContainerImageItems.value = false;
         });
+}
+
+function renderIsCustomMigrationImage() {
+    isCustomMigrationImage.value = (item.value.database_migration_container_image_id ?? 0) > 0
+        && item.value.container_image_id != item.value.database_migration_container_image_id;
 }
 
 function close() {
@@ -68,6 +88,10 @@ function close() {
 // <editor-fold desc="View Binding Functions">
 
 function onSaveBtnClicked() {
+    if (!isCustomMigrationImage) {
+        item.value.database_migration_container_image_id = 0;
+    }
+
     const api = item.value!.exists() ? Api.deploymentSpecifications().patchById(item.value!.id!) : Api.deploymentSpecifications().post();
 
     api.save(item.value!, newItem => {
@@ -106,7 +130,7 @@ function onCloseBtnClicked() {
                     <v-col cols="6">
                         <v-select
                             v-model="item.container_image_id"
-                            :loading="isLoadingContainerImageitems"
+                            :loading="isLoadingContainerImageItems"
                             :items="containerImageItems"
                             item-title="name"
                             item-value="id"
@@ -131,7 +155,7 @@ function onCloseBtnClicked() {
                             label="Name"/>
                     </v-col>
 
-                    <v-col cols="6">
+                    <v-col cols="12">
                         <v-card>
                             <v-checkbox
                                 v-model="item.enable_database"
@@ -143,6 +167,61 @@ function onCloseBtnClicked() {
                                 class="px-2"
                             >
                                 <v-row>
+                                    <v-col cols="12">
+                                        <v-switch
+                                            v-model="isCustomMigrationImage"
+                                            variant="outlined"
+                                            label="Use separate container image for migration"
+                                            density="compact"
+                                            hide-details
+                                            color="secondary"
+                                        />
+                                    </v-col>
+                                    <v-col cols="12"
+                                           v-if="isCustomMigrationImage"
+                                    >
+                                        <v-select
+                                            v-model="item.database_migration_container_image_id"
+                                            :loading="isLoadingContainerImageItems"
+                                            :items="containerImageItems"
+                                            item-title="name"
+                                            item-value="id"
+                                            variant="outlined"
+                                            label="Container Image"
+                                            density="compact"
+                                            hide-details
+                                        />
+                                    </v-col>
+                                    <v-col cols="12"
+                                           v-if="isCustomMigrationImage"
+                                    >
+                                        <v-row>
+                                            <v-col cols="6">
+                                                <v-select
+                                                    v-model="item.database_migration_container_image_tag_policy"
+                                                    :items="migrationTagPolicies"
+                                                    item-title="name"
+                                                    item-value="identifier"
+                                                    variant="outlined"
+                                                    label="Tag policy"
+                                                    density="compact"
+                                                    hide-details
+                                                />
+                                            </v-col>
+                                            <v-col cols="6"
+                                                   v-if="item.database_migration_container_image_tag_policy == DatabaseMigrationContainerImageTagPolicies.Static"
+                                            >
+                                                <v-text-field
+                                                    v-model="item.database_migration_container_image_tag_value"
+                                                    variant="outlined"
+                                                    label="Tag"
+                                                    density="compact"
+                                                    hide-details
+                                                />
+                                            </v-col>
+                                        </v-row>
+                                    </v-col>
+
                                     <v-col cols="12">
                                         <v-text-field
                                             variant="outlined"
@@ -157,7 +236,9 @@ function onCloseBtnClicked() {
                         </v-card>
                     </v-col>
 
-                    <v-col cols="6">
+                    <v-col cols="12"
+                           class="mt-4"
+                    >
                         <v-card>
                             <v-checkbox
                                 v-model="item.enable_cronjob"

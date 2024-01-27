@@ -17,6 +17,8 @@ use \App\Libraries\DeploymentSteps\DeploymentStep;
  * @property string $started
  * @property string $ended
  * @property string $log
+ * @property string $image
+ * @property string $command
  */
 class MigrationJob extends Entity {
 

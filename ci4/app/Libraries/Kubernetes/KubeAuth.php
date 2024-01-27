@@ -30,10 +30,12 @@ class KubeAuth {
         if (getenv('GCLOUD_SERVICE_KEY_FILE')) {
             if (!file_exists('/tmp/gcloud-service-account.json')) {
                 file_put_contents('/tmp/gcloud-service-account.json', base64_decode(getenv('GCLOUD_SERVICE_KEY_FILE')));
+                putenv('GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcloud-service-account.json');
 
                 $gcloudProject = getenv('GCLOUD_PROJECT_ID');
                 $gcloudLocation = getenv('GCLOUD_LOCATION');
                 $gcloudCluster = getenv('GCLOUD_CLUSTER');
+                putenv('HOME=/home/www-data/');
                 shell_exec("gke-auth --project=$gcloudProject --location=$gcloudLocation --cluster=$gcloudCluster");
             }
             putenv('GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcloud-service-account.json');
@@ -43,7 +45,7 @@ class KubeAuth {
         if (getenv('KUBERNETES_KUBECONFIG')) {
             $config = base64_decode(getenv('KUBERNETES_KUBECONFIG'));
         } else {
-            $config = file_get_contents('~/.kube/config');
+            $config = file_get_contents('/home/www-data/.kube/config');
         }
 
         $cluster = KubernetesCluster::fromKubeConfigYaml($config);

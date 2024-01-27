@@ -7,6 +7,12 @@ class DeploymentSpecificationModel extends Model implements ResourceModelInterfa
 
     public $hasOne = [
         ContainerImageModel::class,
+        'database_migration_container_image' => [
+            'class' => ContainerImageModel::class,
+            'otherField' => 'deployment_specification_database_migration_container_image',
+            'joinSelfAs' => 'id',
+            'joinTable' => 'deployment_specifications',
+        ],
     ];
 
     public $hasMany = [

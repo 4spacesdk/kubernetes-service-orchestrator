@@ -94,6 +94,12 @@ class DatabaseDrivers {
         MSSQL = 'mssql';
 }
 
+class DatabaseMigrationContainerImageTagPolicies {
+    const
+        MatchDeployment = 'match-deployment',
+        Static = 'static';
+}
+
 
 /*
  | --------------------------------------------------------------------

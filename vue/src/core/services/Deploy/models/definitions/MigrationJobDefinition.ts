@@ -13,6 +13,9 @@ export class MigrationJobDefinition extends BaseModel {
     started?: string;
     ended?: string;
     log?: string;
+    image?: string;
+    tag?: string;
+    command?: string;
     id?: number;
     created?: string;
     updated?: string;
@@ -36,6 +39,9 @@ export class MigrationJobDefinition extends BaseModel {
             delete this.started;
             delete this.ended;
             delete this.log;
+            delete this.image;
+            delete this.tag;
+            delete this.command;
             delete this.id;
             delete this.created;
             delete this.updated;
@@ -65,6 +71,15 @@ export class MigrationJobDefinition extends BaseModel {
         }
         if (data.log != null) {
             this.log = data.log;
+        }
+        if (data.image != null) {
+            this.image = data.image;
+        }
+        if (data.tag != null) {
+            this.tag = data.tag;
+        }
+        if (data.command != null) {
+            this.command = data.command;
         }
         if (data.id != null) {
             this.id = data.id;
