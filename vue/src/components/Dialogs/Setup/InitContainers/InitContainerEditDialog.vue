@@ -232,7 +232,7 @@ function onRemoveArgBtnClicked(index: number) {
                             />
 
                             <variable-btn
-                                @add-variable="item.command += $event"
+                                @add-variable="value => item.command += value"
                             />
 
                             <v-btn
@@ -264,7 +264,7 @@ function onRemoveArgBtnClicked(index: number) {
                                 hide-details
                             />
                             <variable-btn
-                                @add-variable="arg.value += $event"
+                                @add-variable="value => arg.value += value"
                             />
                             <v-btn
                                 icon

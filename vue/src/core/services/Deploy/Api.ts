@@ -140,6 +140,10 @@ export interface IngressRulePath {
     backendServicePortName?: string;
 }
 
+export interface IntArrayInterface {
+    values?: number[];
+}
+
 export interface KeelPoliciesGetResponse {
     name?: string;
 }
@@ -1504,7 +1508,7 @@ export class DeploymentSpecificationsUpdateInitContainersPutById extends BaseApi
         return new DeploymentSpecification(data);
     }
 
-    public save(data: int[], next?: (value: DeploymentSpecification) => void) {
+    public save(data: IntArrayInterface, next?: (value: DeploymentSpecification) => void) {
         return super.executeSave(data, next);
     }
 }

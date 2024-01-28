@@ -14,6 +14,7 @@ use App\Entities\InitContainer;
 use App\Interfaces\ClusterRoleRuleList;
 use App\Interfaces\EnvironmentVariableList;
 use App\Interfaces\IngressList;
+use App\Interfaces\IntArrayInterface;
 use App\Interfaces\PostCommandList;
 use App\Interfaces\QuickCommandList;
 use App\Interfaces\ServiceAnnotationList;
@@ -258,19 +259,22 @@ class DeploymentSpecifications extends ResourceController {
      * @method put
      * @custom true
      * @param int $id
-     * @requestSchema int[]
+     * @requestSchema IntArrayInterface
      * @return void
      */
     public function updateInitContainers(int $id): void {
         $item = new DeploymentSpecification();
         $item->find($id);
         if ($item->exists()) {
+            /** @var IntArrayInterface $body */
+            $body = $this->request->getJSON();
+
             $values = new DeploymentSpecificationInitContainer();
             $pos = 0;
             $values->all = array_map(
                 fn($initContainerId, $i) => DeploymentSpecificationInitContainer::Create($initContainerId, $pos + $i),
-                $this->request->getJSON(),
-                array_keys($this->request->getJSON())
+                $body->values,
+                array_keys($body->values)
             );
 
             $item->updateInitContainers($values);

@@ -122,10 +122,11 @@ function onSaveBtnClicked() {
         isSaving.value = false;
         return false;
     });
-    api.save(
-        rows.value
-            .sort((a, b) => a.position - b.position)
-            .map(row => row.item.id!),
+    api.save({
+            values: rows.value
+                .sort((a, b) => a.position - b.position)
+                .map(row => row.item.id!)
+        },
         newItem => {
             bus.emit('deploymentSpecificationSaved', newItem);
             isSaving.value = false;
