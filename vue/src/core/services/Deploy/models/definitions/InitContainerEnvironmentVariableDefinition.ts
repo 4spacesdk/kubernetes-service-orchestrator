@@ -1,20 +1,16 @@
 /**
  * Created by ModelParser
  */
-import {Deployment} from '../Deployment';
+import {InitContainer} from '../InitContainer';
 import {User} from '../User';
 import {Deletion} from '../Deletion';
 import {BaseModel} from '../BaseModel';
 
-export class MigrationJobDefinition extends BaseModel {
-    deployment_id?: number;
-    deployment?: Deployment;
-    status?: string;
-    started?: string;
-    ended?: string;
-    log?: string;
-    image?: string;
-    command?: string;
+export class InitContainerEnvironmentVariableDefinition extends BaseModel {
+    init_container_id?: number;
+    init_container?: InitContainer;
+    name?: string;
+    value?: string;
     id?: number;
     created?: string;
     updated?: string;
@@ -32,14 +28,10 @@ export class MigrationJobDefinition extends BaseModel {
 
     public populate(data?: any, patch = false) {
         if (!patch) {
-            delete this.deployment_id;
-            delete this.deployment;
-            delete this.status;
-            delete this.started;
-            delete this.ended;
-            delete this.log;
-            delete this.image;
-            delete this.command;
+            delete this.init_container_id;
+            delete this.init_container;
+            delete this.name;
+            delete this.value;
             delete this.id;
             delete this.created;
             delete this.updated;
@@ -52,29 +44,17 @@ export class MigrationJobDefinition extends BaseModel {
         }
 
         if (!data) return;
-        if (data.deployment_id != null) {
-            this.deployment_id = data.deployment_id;
+        if (data.init_container_id != null) {
+            this.init_container_id = data.init_container_id;
         }
-        if (data.deployment != null) {
-            this.deployment = new Deployment(data.deployment);
+        if (data.init_container != null) {
+            this.init_container = new InitContainer(data.init_container);
         }
-        if (data.status != null) {
-            this.status = data.status;
+        if (data.name != null) {
+            this.name = data.name;
         }
-        if (data.started != null) {
-            this.started = data.started;
-        }
-        if (data.ended != null) {
-            this.ended = data.ended;
-        }
-        if (data.log != null) {
-            this.log = data.log;
-        }
-        if (data.image != null) {
-            this.image = data.image;
-        }
-        if (data.command != null) {
-            this.command = data.command;
+        if (data.value != null) {
+            this.value = data.value;
         }
         if (data.id != null) {
             this.id = data.id;

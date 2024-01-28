@@ -199,6 +199,9 @@ bus.on('deploymentSpecificationUpdateServiceAnnotations', async input => {
 bus.on('deploymentSpecificationUpdateServiceAnnotation', async input => {
     addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateServiceAnnotationDialog.vue')).default, input);
 });
+bus.on('deploymentSpecificationUpdateInitContainers', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateInitContainersDialog.vue')).default, input);
+});
 
 
 bus.on('deploymentPackageEdit', async input => {
@@ -228,6 +231,16 @@ bus.on('webhookEdit', async input => {
 });
 bus.on('webhookDeliveryList', async input => {
     addComponent((await import('@/components/Dialogs/Integrations/Webhooks/Deliveries/WebhookDeliveryListDialog.vue')).default, input);
+});
+
+bus.on('initContainerEdit', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/InitContainers/InitContainerEditDialog.vue')).default, input);
+});
+bus.on('initContainerUpdateEnvironmentVariables', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/InitContainers/UpdateDialogs/InitContainerUpdateEnvironmentVariablesDialog.vue')).default, input);
+});
+bus.on('initContainerUpdateEnvironmentVariable', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/InitContainers/UpdateDialogs/InitContainerUpdateEnvironmentVariableDialog.vue')).default, input);
 });
 
 

@@ -9,6 +9,8 @@ use App\Entities\DeploymentSpecificationPostCommand;
 use App\Entities\DeploymentSpecificationQuickCommand;
 use App\Entities\DeploymentSpecificationServiceAnnotation;
 use App\Entities\DeploymentSpecificationServicePort;
+use App\Entities\DeploymentSpecificationInitContainer;
+use App\Entities\InitContainer;
 use App\Interfaces\ClusterRoleRuleList;
 use App\Interfaces\EnvironmentVariableList;
 use App\Interfaces\IngressList;
@@ -17,6 +19,7 @@ use App\Interfaces\QuickCommandList;
 use App\Interfaces\ServiceAnnotationList;
 use App\Interfaces\ServicePortList;
 use App\Libraries\GoogleCloud\GoogleCloudArtifactRegistry;
+use App\Models\InitContainerModel;
 use DebugTool\Data;
 use Google\ApiCore\ApiException;
 use Google\ApiCore\ValidationException;
@@ -245,6 +248,32 @@ class DeploymentSpecifications extends ResourceController {
                 $body->values
             );
             $item->updateServiceAnnotations($values);
+        }
+        $this->_setResource($item);
+        $this->success();
+    }
+
+    /**
+     * @route /deployment-specifications/{id}/init-containers
+     * @method put
+     * @custom true
+     * @param int $id
+     * @requestSchema int[]
+     * @return void
+     */
+    public function updateInitContainers(int $id): void {
+        $item = new DeploymentSpecification();
+        $item->find($id);
+        if ($item->exists()) {
+            $values = new DeploymentSpecificationInitContainer();
+            $pos = 0;
+            $values->all = array_map(
+                fn($initContainerId, $i) => DeploymentSpecificationInitContainer::Create($initContainerId, $pos + $i),
+                $this->request->getJSON(),
+                array_keys($this->request->getJSON())
+            );
+
+            $item->updateInitContainers($values);
         }
         $this->_setResource($item);
         $this->success();

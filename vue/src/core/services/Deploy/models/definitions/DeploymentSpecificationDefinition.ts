@@ -10,6 +10,7 @@ import {DeploymentSpecificationIngress} from '../DeploymentSpecificationIngress'
 import {DeploymentSpecificationClusterRoleRule} from '../DeploymentSpecificationClusterRoleRule';
 import {DeploymentSpecificationServiceAnnotation} from '../DeploymentSpecificationServiceAnnotation';
 import {DeploymentSpecificationQuickCommand} from '../DeploymentSpecificationQuickCommand';
+import {DeploymentSpecificationInitContainer} from '../DeploymentSpecificationInitContainer';
 import {DeploymentStep} from '../DeploymentStep';
 import {User} from '../User';
 import {Deletion} from '../Deletion';
@@ -43,6 +44,7 @@ export class DeploymentSpecificationDefinition extends BaseModel {
     deployment_specification_cluster_role_rules?: DeploymentSpecificationClusterRoleRule[];
     deployment_specification_service_annotations?: DeploymentSpecificationServiceAnnotation[];
     deployment_specification_quick_commands?: DeploymentSpecificationQuickCommand[];
+    deployment_specification_init_containers?: DeploymentSpecificationInitContainer[];
     deploymentSteps?: DeploymentStep[];
     id?: number;
     created?: string;
@@ -88,6 +90,7 @@ export class DeploymentSpecificationDefinition extends BaseModel {
             delete this.deployment_specification_cluster_role_rules;
             delete this.deployment_specification_service_annotations;
             delete this.deployment_specification_quick_commands;
+            delete this.deployment_specification_init_containers;
             delete this.deploymentSteps;
             delete this.id;
             delete this.created;
@@ -181,6 +184,9 @@ export class DeploymentSpecificationDefinition extends BaseModel {
         }
         if (data.deployment_specification_quick_commands != null) {
             this.deployment_specification_quick_commands = data.deployment_specification_quick_commands.map((i: any) => new DeploymentSpecificationQuickCommand(i));
+        }
+        if (data.deployment_specification_init_containers != null) {
+            this.deployment_specification_init_containers = data.deployment_specification_init_containers.map((i: any) => new DeploymentSpecificationInitContainer(i));
         }
         if (data.deploymentSteps != null) {
             this.deploymentSteps = data.deploymentSteps.map((i: any) => new DeploymentStep(i));

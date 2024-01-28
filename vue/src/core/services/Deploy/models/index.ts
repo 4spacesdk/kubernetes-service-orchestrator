@@ -11,6 +11,7 @@ export {DeploymentSpecificationClusterRoleRule as DeploymentSpecificationCluster
 export {DeploymentSpecificationEnvironmentVariable as DeploymentSpecificationEnvironmentVariable} from "./DeploymentSpecificationEnvironmentVariable";
 export {DeploymentSpecificationIngress as DeploymentSpecificationIngress} from "./DeploymentSpecificationIngress";
 export {DeploymentSpecificationIngressRulePath as DeploymentSpecificationIngressRulePath} from "./DeploymentSpecificationIngressRulePath";
+export {DeploymentSpecificationInitContainer as DeploymentSpecificationInitContainer} from "./DeploymentSpecificationInitContainer";
 export {DeploymentSpecificationPostCommand as DeploymentSpecificationPostCommand} from "./DeploymentSpecificationPostCommand";
 export {DeploymentSpecificationQuickCommand as DeploymentSpecificationQuickCommand} from "./DeploymentSpecificationQuickCommand";
 export {DeploymentSpecificationServiceAnnotation as DeploymentSpecificationServiceAnnotation} from "./DeploymentSpecificationServiceAnnotation";
@@ -20,6 +21,8 @@ export {DeploymentVolume as DeploymentVolume} from "./DeploymentVolume";
 export {Domain as Domain} from "./Domain";
 export {EmailService as EmailService} from "./EmailService";
 export {EnvironmentVariable as EnvironmentVariable} from "./EnvironmentVariable";
+export {InitContainer as InitContainer} from "./InitContainer";
+export {InitContainerEnvironmentVariable as InitContainerEnvironmentVariable} from "./InitContainerEnvironmentVariable";
 export {KeelHookQueueItem as KeelHookQueueItem} from "./KeelHookQueueItem";
 export {Label as Label} from "./Label";
 export {MigrationJob as MigrationJob} from "./MigrationJob";

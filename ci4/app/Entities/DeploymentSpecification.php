@@ -64,6 +64,7 @@ use RestExtension\Core\Entity;
  * @property DeploymentSpecificationClusterRoleRule $deployment_specification_cluster_role_rules
  * @property DeploymentSpecificationServiceAnnotation $deployment_specification_service_annotations
  * @property DeploymentSpecificationQuickCommand $deployment_specification_quick_commands
+ * @property DeploymentSpecificationInitContainer $deployment_specification_init_containers
  *
  * @property DeploymentStep $deploymentSteps
  */
@@ -244,6 +245,12 @@ class DeploymentSpecification extends Entity {
         $this->deployment_specification_service_annotations->find()->deleteAll();
         $this->save($values);
         $this->deployment_specification_service_annotations = $values;
+    }
+
+    public function updateInitContainers(DeploymentSpecificationInitContainer $values): void {
+        $this->deployment_specification_init_containers->find()->deleteAll();
+        $this->save($values);
+        $this->deployment_specification_init_containers = $values;
     }
 
     // </editor-fold>

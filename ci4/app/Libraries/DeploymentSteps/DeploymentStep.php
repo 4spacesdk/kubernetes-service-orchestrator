@@ -2,14 +2,20 @@
 
 use App\Entities\DatabaseService;
 use App\Entities\Deployment;
+use App\Entities\DeploymentSpecificationInitContainer;
 use App\Entities\DeploymentVolume;
 use App\Entities\Domain;
 use App\Entities\EnvironmentVariable;
+use App\Entities\InitContainer;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
 use App\Libraries\Kubernetes\KubeAuth;
+use App\Models\ContainerImageModel;
+use App\Models\DeploymentSpecificationInitContainerModel;
+use App\Models\DeploymentSpecificationModel;
 use App\Models\DeploymentVolumeModel;
 use App\Models\EnvironmentVariableModel;
+use App\Models\InitContainerModel;
 use DebugTool\Data;
 use RenokiCo\PhpK8s\Exceptions\KubernetesAPIException;
 use RenokiCo\PhpK8s\Instances\Container;
@@ -326,6 +332,17 @@ class DeploymentStep extends BaseDeploymentStep {
             $container->maxMemory($deployment->memory_limit, 'Mi');
         }
 
+        $initContainers = [];
+        /** @var DeploymentSpecificationInitContainer $deploymentSpecificationInitContainers */
+        $deploymentSpecificationInitContainers = (new DeploymentSpecificationInitContainerModel())
+            ->includeRelated([InitContainerModel::class, ContainerImageModel::class])
+            ->where('deployment_specification_id', $spec->id)
+            ->orderBy('position', 'asc')
+            ->find();
+        foreach ($deploymentSpecificationInitContainers as $deploymentSpecificationInitContainer) {
+            $initContainers[] = $deploymentSpecificationInitContainer->init_container->toKubernetesResource($deployment);
+        }
+
         $volumes = [];
         /** @var DeploymentVolume $deploymentVolumes */
         $deploymentVolumes = (new DeploymentVolumeModel())
@@ -357,6 +374,7 @@ class DeploymentStep extends BaseDeploymentStep {
                     'name' => 'gcr-service-account',
                 ],
             ])
+            ->setInitContainers($initContainers)
             ->setContainers([
                 $container
             ]);
@@ -387,6 +405,8 @@ class DeploymentStep extends BaseDeploymentStep {
         if (!$deployment->keel_auto_update) {
             $annotations['keel.sh/approvals'] = '1';
         }
+
+
 
         $resource = new K8sDeployment();
         $resource

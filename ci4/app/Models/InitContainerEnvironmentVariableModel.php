@@ -1,23 +1,17 @@
 <?php namespace App\Models;
 
+use App\Entities\InitContainerEnvironmentVariable;
 use RestExtension\Core\Model;
 use RestExtension\ResourceModelInterface;
 
-class ContainerImageModel extends Model implements ResourceModelInterface {
+class InitContainerEnvironmentVariableModel extends Model implements ResourceModelInterface {
 
     public $hasOne = [
-
+        InitContainerModel::class,
     ];
 
     public $hasMany = [
-        DeploymentSpecificationModel::class,
-        'deployment_specification_database_migration_container_image' => [
-            'class' => DeploymentSpecificationModel::class,
-            'otherField' => 'database_migration_container_image',
-            'joinTable' => 'deployment_specifications',
-            'joinSelfAs' => 'database_migration_container_image_id',
-        ],
-        InitContainerModel::class,
+
     ];
 
     public function preRestGet($queryParser, $id) {
@@ -46,7 +40,7 @@ class ContainerImageModel extends Model implements ResourceModelInterface {
 
     public function ignoredRestGetOnRelations(): array {
         return [
-            DeploymentSpecificationModel::class,
+            InitContainerModel::class,
         ];
     }
 

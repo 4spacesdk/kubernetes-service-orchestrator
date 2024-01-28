@@ -244,8 +244,8 @@ class MigrationJobStep extends BaseDeploymentStep {
         if ($spec->database_migration_container_image_id) {
             $containerImage->find($spec->database_migration_container_image_id);
             $tag = match ($spec->database_migration_container_image_tag_policy) {
-                \DatabaseMigrationContainerImageTagPolicies::MatchDeployment => $deployment->version,
-                \DatabaseMigrationContainerImageTagPolicies::Static => $spec->database_migration_container_image_tag_value
+                \ContainerImageTagPolicies::MatchDeployment => $deployment->version,
+                \ContainerImageTagPolicies::Static => $spec->database_migration_container_image_tag_value
             };
         } else {
             $containerImage->find($spec->container_image_id);
@@ -263,13 +263,13 @@ class MigrationJobStep extends BaseDeploymentStep {
             ->setAttribute('args', [
                 '-c',
 
-                // Tell DeployService about migration job started
+                // Tell KSO about migration job started
                 'curl -i -v -X PUT ' . $this->getMigrationStartedUrl()
 
                 // Perform migration
                 . ' && ' . $spec->database_migration_command
 
-                // Tell DeployService about migration job ended
+                // Tell KSO about migration job ended
                 . ' | curl --connect-timeout 5 --max-time 60 --retry 10 --retry-delay 5 --retry-max-time 300 -i -v -X PUT --data-binary @- ' . $this->getMigrationEndedUrl(),
             ])
             ->addEnv('ENVIRONMENT', \Environments::Development)
@@ -321,9 +321,6 @@ class MigrationJobStep extends BaseDeploymentStep {
                 [
                     'name' => 'gcr-service-account',
                 ],
-            ])
-            ->setContainers([
-                $container
             ])
             ->setContainers([
                 $container

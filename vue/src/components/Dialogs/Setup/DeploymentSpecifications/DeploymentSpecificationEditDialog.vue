@@ -4,7 +4,7 @@ import {ContainerImage, DeploymentSpecification} from "@/core/services/Deploy/mo
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
-import {DatabaseMigrationContainerImageTagPolicies} from "@/constants";
+import {ContainerImageTagPolicies} from "@/constants";
 
 export interface DeploymentSpecificationEditDialog_Input {
     deploymentSpecification: DeploymentSpecification;
@@ -25,11 +25,11 @@ const isLoadingContainerImageItems = ref(false);
 const isCustomMigrationImage = ref(false);
 const migrationTagPolicies = ref([
     {
-        identifier: DatabaseMigrationContainerImageTagPolicies.MatchDeployment,
+        identifier: ContainerImageTagPolicies.MatchDeployment,
         name: "Match deployment",
     },
     {
-        identifier: DatabaseMigrationContainerImageTagPolicies.Static,
+        identifier: ContainerImageTagPolicies.Static,
         name: "Static",
     },
 ]);
@@ -209,7 +209,7 @@ function onCloseBtnClicked() {
                                                 />
                                             </v-col>
                                             <v-col cols="6"
-                                                   v-if="item.database_migration_container_image_tag_policy == DatabaseMigrationContainerImageTagPolicies.Static"
+                                                   v-if="item.database_migration_container_image_tag_policy == ContainerImageTagPolicies.Static"
                                             >
                                                 <v-text-field
                                                     v-model="item.database_migration_container_image_tag_value"

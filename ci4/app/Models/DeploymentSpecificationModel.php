@@ -25,6 +25,7 @@ class DeploymentSpecificationModel extends Model implements ResourceModelInterfa
         DeploymentPackageDeploymentSpecificationModel::class,
         DeploymentSpecificationServiceAnnotationModel::class,
         DeploymentSpecificationQuickCommandModel::class,
+        DeploymentSpecificationInitContainerModel::class,
     ];
 
     public function preRestGet($queryParser, $id) {

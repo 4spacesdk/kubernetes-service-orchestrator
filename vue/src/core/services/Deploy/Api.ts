@@ -7,6 +7,7 @@ import {Deployment} from "./models";
 import {MigrationJob} from "./models";
 import {Domain} from "./models";
 import {EmailService} from "./models";
+import {InitContainer} from "./models";
 import {KeelHookQueueItem} from "./models";
 import {OAuthClient} from "./models";
 import {User} from "./models";
@@ -1487,6 +1488,27 @@ export class DeploymentSpecificationsUpdateServiceAnnotationsPutById extends Bas
     }
 }
 
+export class DeploymentSpecificationsUpdateInitContainersPutById extends BaseApi<DeploymentSpecification> {
+
+    public topic = 'Resources.DeploymentSpecifications';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/deployment-specifications/${id}/init-containers`;
+    }
+
+    protected convertToResource(data: any): DeploymentSpecification {
+        return new DeploymentSpecification(data);
+    }
+
+    public save(data: int[], next?: (value: DeploymentSpecification) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
 class DeploymentSpecifications {
 
     public get(): DeploymentSpecificationsGet {
@@ -1543,6 +1565,10 @@ class DeploymentSpecifications {
 
     public updateServiceAnnotationsPutById(id: number): DeploymentSpecificationsUpdateServiceAnnotationsPutById {
         return new DeploymentSpecificationsUpdateServiceAnnotationsPutById(id);
+    }
+
+    public updateInitContainersPutById(id: number): DeploymentSpecificationsUpdateInitContainersPutById {
+        return new DeploymentSpecificationsUpdateInitContainersPutById(id);
     }
 
 }
@@ -2940,6 +2966,280 @@ class Environments {
 
     public getGet(): EnvironmentsGetGet {
         return new EnvironmentsGetGet();
+    }
+
+}
+
+
+export class InitContainersGet extends BaseApi<InitContainer> {
+
+    public topic = 'Resources.InitContainers';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/init_containers`;
+    }
+
+    protected convertToResource(data: any): InitContainer {
+        return new InitContainer(data);
+    }
+
+    public where(name: string, value: any): InitContainersGet {
+        this.filter().where(name, value);
+        return this;
+    }
+
+    public whereEquals(name: string, value: any): InitContainersGet {
+        this.filter().whereEquals(name, value);
+        return this;
+    }
+
+    public whereIn(name: string, value: any[]): InitContainersGet {
+        this.filter().whereIn(name, value);
+        return this;
+    }
+
+    public whereInArray(name: string, value: any[]): InitContainersGet {
+        this.filter().whereInArray(name, value);
+        return this;
+    }
+
+    public whereNot(name: string, value: any): InitContainersGet {
+        this.filter().whereNot(name, value);
+        return this;
+    }
+
+    public whereNotIn(name: string, value: any[]): InitContainersGet {
+        this.filter().whereNotIn(name, value);
+        return this;
+    }
+
+    public whereGreaterThan(name: string, value: any): InitContainersGet {
+        this.filter().whereGreaterThan(name, value);
+        return this;
+    }
+
+    public whereGreaterThanOrEqual(name: string, value: any): InitContainersGet {
+        this.filter().whereGreaterThanOrEqual(name, value);
+        return this;
+    }
+
+    public whereLessThan(name: string, value: any): InitContainersGet {
+        this.filter().whereLessThan(name, value);
+        return this;
+    }
+
+    public whereLessThanOrEqual(name: string, value: any): InitContainersGet {
+        this.filter().whereLessThanOrEqual(name, value);
+        return this;
+    }
+
+    public search(name: string, value: any): InitContainersGet {
+        this.filter().search(name, value);
+        return this;
+    }
+
+    public include(name: string): InitContainersGet {
+        this.getInclude().include(name);
+        return this;
+    }
+
+    public orderBy(name: string, direction: string): InitContainersGet {
+        this.ordering().orderBy(name, direction);
+        return this;
+    }
+
+    public orderAsc(name: string): InitContainersGet {
+        this.ordering().orderAsc(name);
+        return this;
+    }
+
+    public orderDesc(name: string): InitContainersGet {
+        this.ordering().orderDesc(name);
+        return this;
+    }
+
+    public limit(value: number): InitContainersGet {
+        this.limitValue = value;
+        return this;
+    }
+
+    public offset(value: number): InitContainersGet {
+        this.offsetValue = value;
+        return this;
+    }
+
+    public count(next?: (value: number) => void) {
+        return this.executeCount(next);
+    }
+
+    public find(next?: (value: InitContainer[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class InitContainersGetById extends BaseApi<InitContainer> {
+
+    public topic = 'Resources.InitContainers';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/init_containers/${id}`;
+    }
+
+    protected convertToResource(data: any): InitContainer {
+        return new InitContainer(data);
+    }
+
+    public include(name: string): InitContainersGetById {
+        this.getInclude().include(name);
+        return this;
+    }
+
+    public find(next?: (value: InitContainer[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class InitContainersPost extends BaseApi<InitContainer> {
+
+    public topic = 'Resources.InitContainers';
+    protected method = 'post';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/init_containers`;
+    }
+
+    protected convertToResource(data: any): InitContainer {
+        return new InitContainer(data);
+    }
+
+    public save(data: InitContainer, next?: (value: InitContainer) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class InitContainersPatchById extends BaseApi<InitContainer> {
+
+    public topic = 'Resources.InitContainers';
+    protected method = 'patch';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/init_containers/${id}`;
+    }
+
+    protected convertToResource(data: any): InitContainer {
+        return new InitContainer(data);
+    }
+
+    public save(data: InitContainer, next?: (value: InitContainer) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class InitContainersPatch extends BaseApi<InitContainer> {
+
+    public topic = 'Resources.InitContainers';
+    protected method = 'patch';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/init_containers`;
+    }
+
+    protected convertToResource(data: any): InitContainer {
+        return new InitContainer(data);
+    }
+
+    public save(data: InitContainer, next?: (value: InitContainer) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class InitContainersDeleteById extends BaseApi<InitContainer> {
+
+    public topic = 'Resources.InitContainers';
+    protected method = 'delete';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/init_containers/${id}`;
+    }
+
+    protected convertToResource(data: any): InitContainer {
+        return new InitContainer(data);
+    }
+
+    public delete(next?: (value: InitContainer) => void) {
+        return super.executeDelete(next);
+    }
+}
+
+export class InitContainersUpdateEnvironmentVariablesPutById extends BaseApi<InitContainer> {
+
+    public topic = 'Resources.InitContainers';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/init-containers/${id}/environment-variables`;
+    }
+
+    protected convertToResource(data: any): InitContainer {
+        return new InitContainer(data);
+    }
+
+    public save(data: EnvironmentVariableList, next?: (value: InitContainer) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+class InitContainers {
+
+    public get(): InitContainersGet {
+        return new InitContainersGet();
+    }
+
+    public getById(id: number): InitContainersGetById {
+        return new InitContainersGetById(id);
+    }
+
+    public post(): InitContainersPost {
+        return new InitContainersPost();
+    }
+
+    public patchById(id: number): InitContainersPatchById {
+        return new InitContainersPatchById(id);
+    }
+
+    public patch(): InitContainersPatch {
+        return new InitContainersPatch();
+    }
+
+    public deleteById(id: number): InitContainersDeleteById {
+        return new InitContainersDeleteById(id);
+    }
+
+    public updateEnvironmentVariablesPutById(id: number): InitContainersUpdateEnvironmentVariablesPutById {
+        return new InitContainersUpdateEnvironmentVariablesPutById(id);
     }
 
 }
@@ -5174,6 +5474,10 @@ export class Api {
 
     public static environments(): Environments {
         return new Environments();
+    }
+
+    public static initContainers(): InitContainers {
+        return new InitContainers();
     }
 
     public static keelHookQueueItems(): KeelHookQueueItems {

@@ -15,7 +15,7 @@ class AddMigrationContainerImage extends Migration {
 
         Database::connect()
             ->table('deployment_specifications')
-            ->set('database_migration_container_image_tag_policy', \DatabaseMigrationContainerImageTagPolicies::MatchDeployment)
+            ->set('database_migration_container_image_tag_policy', \ContainerImageTagPolicies::MatchDeployment)
             ->update();
 
         Table::init('migration_jobs')

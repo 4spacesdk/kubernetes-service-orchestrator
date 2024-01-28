@@ -94,10 +94,17 @@ class DatabaseDrivers {
         MSSQL = 'mssql';
 }
 
-class DatabaseMigrationContainerImageTagPolicies {
+class ContainerImageTagPolicies {
     const
         MatchDeployment = 'match-deployment',
         Static = 'static';
+}
+
+class ImagePullPolicies {
+    const
+        IfNotPresent = 'IfNotPresent',
+        Always = 'Always',
+        Never = 'Never';
 }
 
 

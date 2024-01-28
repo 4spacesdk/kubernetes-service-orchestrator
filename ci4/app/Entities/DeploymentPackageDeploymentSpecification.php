@@ -46,7 +46,7 @@ class DeploymentPackageDeploymentSpecification extends Entity {
     }
 
     /**
-     * @return \ArrayIterator|\OrmExtension\Extensions\Entity[]|\Traversable|DeploymentPackage[]
+     * @return \ArrayIterator|\OrmExtension\Extensions\Entity[]|\Traversable|DeploymentPackageDeploymentSpecification[]
      */
     public function getIterator(): \ArrayIterator {
         return parent::getIterator();

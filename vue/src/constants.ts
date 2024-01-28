@@ -12,7 +12,7 @@ import {
     DatabaseService,
     Deployment, DeploymentPackage, DeploymentSpecification,
     Domain,
-    EmailService, OAuthClient,
+    EmailService, InitContainer, OAuthClient,
     User, Webhook,
     Workspace
 } from "@/core/services/Deploy/models";
@@ -153,6 +153,16 @@ import type {
 import type {
     DeploymentSpecificationUpdateQuickCommandDialog_Input
 } from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateQuickCommandDialog.vue";
+import type {InitContainerEditDialog_Input} from "@/components/Dialogs/Setup/InitContainers/InitContainerEditDialog.vue";
+import type {
+    DeploymentSpecificationUpdateInitContainersDialog_Input
+} from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateInitContainersDialog.vue";
+import type {
+    InitContainerUpdateEnvironmentVariableDialog_Input
+} from "@/components/Dialogs/Setup/InitContainers/UpdateDialogs/InitContainerUpdateEnvironmentVariableDialog.vue";
+import type {
+    InitContainerUpdateEnvironmentVariablesDialog_Input
+} from "@/components/Dialogs/Setup/InitContainers/UpdateDialogs/InitContainerUpdateEnvironmentVariablesDialog.vue";
 
 export type Events = {
     confirm: ConfirmationDialog_Input;
@@ -236,6 +246,7 @@ export type Events = {
     deploymentSpecificationUpdateClusterRoleRule: DeploymentSpecificationUpdateClusterRoleRuleDialog_Input;
     deploymentSpecificationUpdateServiceAnnotations: DeploymentSpecificationUpdateServiceAnnotationsDialog_Input;
     deploymentSpecificationUpdateServiceAnnotation: DeploymentSpecificationUpdateServiceAnnotationDialog_Input;
+    deploymentSpecificationUpdateInitContainers: DeploymentSpecificationUpdateInitContainersDialog_Input;
 
     deploymentPackageSaved: DeploymentPackage | undefined;
     deploymentPackageEdit: DeploymentPackageCreateDialog_Input;
@@ -253,6 +264,12 @@ export type Events = {
     webhookEdit: WebhookEditDialog_Input;
     webhookEditDialog_closed: Webhook | undefined;
     webhookDeliveryList: WebhookDeliveryListDialog_Input;
+
+    initContainerEdit: InitContainerEditDialog_Input;
+    initContainerSaved: InitContainer | undefined;
+    initContainerEditDialog_closed: InitContainer | undefined;
+    initContainerUpdateEnvironmentVariables: InitContainerUpdateEnvironmentVariablesDialog_Input;
+    initContainerUpdateEnvironmentVariable: InitContainerUpdateEnvironmentVariableDialog_Input;
 }
 
 export const DeploymentStatusTypes = {
@@ -277,7 +294,13 @@ export const KeelHookStatusTypes = {
     Error: 'error',
 };
 
-export const DatabaseMigrationContainerImageTagPolicies = {
+export const ContainerImageTagPolicies = {
     MatchDeployment: 'match-deployment',
     Static: 'static',
+};
+
+export const ImagePullPolicies = {
+    IfNotPresent: 'IfNotPresent',
+    Always: 'Always',
+    Never: 'Never',
 };
