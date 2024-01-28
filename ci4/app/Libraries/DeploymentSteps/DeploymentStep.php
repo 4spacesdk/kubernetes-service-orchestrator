@@ -138,21 +138,23 @@ class DeploymentStep extends BaseDeploymentStep {
             return 'Replicas must be > 0';
         }
 
-        if (!$deployment->domain_id) {
-            return 'Missing domain';
-        }
-        $domain = new Domain();
-        $domain->find($deployment->domain_id);
-        if (!$domain->exists()) {
-            return 'domain no longer exists';
-        }
-
         $namespaceStep = new NamespaceStep();
         if ($namespaceStep->getStatus($deployment) != DeploymentStepHelper::Namespace_Found) {
             return 'Missing Namespace';
         }
 
         $spec = $deployment->findDeploymentSpecification();
+        if ($spec->enable_ingress) {
+            if (!$deployment->domain_id) {
+                return 'Missing domain';
+            }
+            $domain = new Domain();
+            $domain->find($deployment->domain_id);
+            if (!$domain->exists()) {
+                return 'domain no longer exists';
+            }
+        }
+
         if ($spec->hasDeploymentStep($deployment, DatabaseStep::class)) {
             if (!$deployment->database_service_id) {
                 return 'Missing database service';

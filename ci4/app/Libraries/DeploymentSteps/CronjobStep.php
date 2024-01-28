@@ -115,10 +115,14 @@ class CronjobStep extends BaseDeploymentStep {
         if (!$deployment->domain_id) {
             return 'Missing domain';
         }
-        $domain = new Domain();
-        $domain->find($deployment->domain_id);
-        if (!$domain->exists()) {
-            return 'domain no longer exists';
+
+        $spec = $deployment->findDeploymentSpecification();
+        if ($spec->enable_ingress) {
+            $domain = new Domain();
+            $domain->find($deployment->domain_id);
+            if (!$domain->exists()) {
+                return 'domain no longer exists';
+            }
         }
 
         $namespaceStep = new NamespaceStep();

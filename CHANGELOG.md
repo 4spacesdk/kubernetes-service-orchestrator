@@ -3,7 +3,7 @@
 ## v0.1.10  (2024-01-28)
 
 ### Fixed bugs
-*
+* Deployments couldn't deploy without ingress
 
 ### Enhancements
 * Added support for MSSQL database services
