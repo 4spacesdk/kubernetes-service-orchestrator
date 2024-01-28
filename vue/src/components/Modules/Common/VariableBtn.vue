@@ -3,10 +3,6 @@ import {computed, defineComponent, onMounted, reactive, ref, watch} from 'vue';
 import moment from 'moment';
 import {Domain} from "@/core/services/Deploy/models";
 
-const props = defineProps({
-
-});
-
 const emit = defineEmits<{
     (e: 'addVariable', item: string): void
 }>();

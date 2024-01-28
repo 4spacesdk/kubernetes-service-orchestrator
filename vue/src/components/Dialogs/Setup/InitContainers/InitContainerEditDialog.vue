@@ -136,6 +136,14 @@ function onRemoveArgBtnClicked(index: number) {
     args.value.splice(index, 1);
 }
 
+function onCommandVariableAdded(value: string) {
+    item.value.command += value;
+}
+
+function onArgVariableAdded(index: number, value: string) {
+    args.value[index].value += value;
+}
+
 // </editor-fold>
 
 </script>
@@ -232,7 +240,7 @@ function onRemoveArgBtnClicked(index: number) {
                             />
 
                             <variable-btn
-                                @add-variable="value => item.command += value"
+                                @add-variable="onCommandVariableAdded($event)"
                             />
 
                             <v-btn
@@ -264,7 +272,7 @@ function onRemoveArgBtnClicked(index: number) {
                                 hide-details
                             />
                             <variable-btn
-                                @add-variable="value => arg.value += value"
+                                @add-variable="onArgVariableAdded(i, $event)"
                             />
                             <v-btn
                                 icon
