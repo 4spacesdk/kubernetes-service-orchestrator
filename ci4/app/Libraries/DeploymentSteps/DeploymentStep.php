@@ -376,11 +376,13 @@ class DeploymentStep extends BaseDeploymentStep {
                     'name' => 'gcr-service-account',
                 ],
             ])
-            ->setInitContainers($initContainers)
             ->setContainers([
                 $container
             ]);
 
+        if (count($initContainers) > 0) {
+            $template->setInitContainers($initContainers);
+        }
         if (count($volumes) > 0) {
             $template->setVolumes($volumes);
         }
