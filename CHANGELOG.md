@@ -7,7 +7,7 @@
 * Added service port type
 
 ### Enhancements
-* Added `${database.host}` variable
+* Added more variable to use with environment variables
 * Made email service, database service and domain optional for workspace templates
 
 ### Upgrade guide

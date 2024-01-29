@@ -67,11 +67,6 @@ function onCloseBtnClicked() {
     close();
 }
 
-function onVariableClicked(variable: Variable) {
-    value.value += variable.code;
-    showVariablesMenu.value = false;
-}
-
 // </editor-fold>
 
 </script>
