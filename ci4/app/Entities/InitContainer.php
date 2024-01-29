@@ -52,14 +52,14 @@ class InitContainer extends Entity {
             ->setAttribute('imagePullPolicy', $this->container_image_pull_policy);
         if (strlen($this->command)) {
             $container->setAttribute('command', [
-                $this->applyVariablesToString($this->command, $deployment)
+                EnvironmentVariable::ApplyVariablesToString($this->command, $deployment),
             ]);
         }
         $args = json_decode($this->args);
         if ($args != null && count($args) > 0) {
             $container->setAttribute(
                 'args',
-                array_map(fn($arg) => $this->applyVariablesToString($arg, $deployment), $args)
+                array_map(fn($arg) => EnvironmentVariable::ApplyVariablesToString($arg, $deployment), $args)
             );
         }
 
@@ -89,46 +89,6 @@ class InitContainer extends Entity {
         return $container;
     }
 
-    public function applyVariablesToString(string $value, Deployment $deployment): string {
-        if (!$deployment->database_service->exists() && $deployment->database_service_id) {
-            $deployment->database_service->find();
-        }
-        if ($deployment->workspace_id) {
-            if (!$deployment->workspace->exists()) {
-                $deployment->workspace->find();
-            }
-            if (!$deployment->workspace->email_service->exists() && $deployment->workspace->email_service_id) {
-                $deployment->workspace->email_service->find();
-            }
-        }
-
-        $modifiers = [
-            fn(string $value) => str_replace('${namespace}', $deployment->namespace, $value),
-
-            fn(string $value) => str_replace('${database.host}', $deployment->database_service->host, $value),
-            fn(string $value) => str_replace('${database.name}', $deployment->database_name, $value),
-            fn(string $value) => str_replace('${database.user}', $deployment->database_service->getDatabaseUser($deployment->database_user), $value),
-            fn(string $value) => str_replace('${database.pass}', $deployment->database_pass, $value),
-
-            fn(string $value) => str_replace('${emailService.host}', $deployment->workspace->email_service->host, $value),
-            fn(string $value) => str_replace('${emailService.port}', $deployment->workspace->email_service->port, $value),
-            fn(string $value) => str_replace('${emailService.user}', $deployment->workspace->email_service->user, $value),
-            fn(string $value) => str_replace('${emailService.pass}', $deployment->workspace->email_service->pass, $value),
-            fn(string $value) => str_replace('${emailService.sender}', $deployment->workspace->email_service->from, $value),
-
-            fn(string $value) => str_replace('${workspace.id}', $deployment->workspace->id, $value),
-            fn(string $value) => str_replace('${workspace.name}', $deployment->workspace->namespace, $value),
-
-            fn(string $value) => str_replace('${migration.job.name}', $deployment->name, $value),
-        ];
-
-        foreach ($modifiers as $fn) {
-            $value = $fn($value);
-        }
-
-        return $value;
-    }
-
     public function getEnvironmentVariables(Deployment $deployment): array {
         if (!$deployment->database_service->exists()) {
             $deployment->database_service->find();
@@ -144,7 +104,10 @@ class InitContainer extends Entity {
 
         $variables = [];
         foreach ($environmentVariables as $environmentVariable) {
-            $variables[$environmentVariable->name] = $environmentVariable->generateValue($deployment->workspace, $deployment);
+            $variables[$environmentVariable->name] = EnvironmentVariable::ApplyVariablesToString(
+                $environmentVariable->value,
+                $deployment
+            );
         }
 
         return $variables;

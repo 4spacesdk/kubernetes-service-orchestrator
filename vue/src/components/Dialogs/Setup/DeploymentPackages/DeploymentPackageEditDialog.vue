@@ -154,7 +154,6 @@ function onCloseBtnClicked() {
                                 item-value="id"
                                 variant="outlined"
                                 label="Default Email Service"
-                                :rules="rules.required"
                             />
                         </v-col>
                         <v-col cols="12">
@@ -166,7 +165,6 @@ function onCloseBtnClicked() {
                                 item-value="id"
                                 variant="outlined"
                                 label="Default Database Service"
-                                :rules="rules.required"
                             />
                         </v-col>
                         <v-col cols="12">
@@ -178,7 +176,6 @@ function onCloseBtnClicked() {
                                 item-value="id"
                                 variant="outlined"
                                 label="Default Domain"
-                                :rules="rules.required"
                             />
                         </v-col>
                     </v-row>

@@ -159,8 +159,8 @@ class DeploymentSpecification extends Entity {
             $ports[] = [
                 'protocol' => $servicePort->protocol,
                 'name' => $servicePort->name,
-                'port' => $servicePort->port,
-                'targetPort' => $servicePort->target_port,
+                'port' => (int)$servicePort->port,
+                'targetPort' => (int)$servicePort->target_port,
             ];
         }
         return $ports;
@@ -182,7 +182,10 @@ class DeploymentSpecification extends Entity {
 
         $variables = [];
         foreach ($environmentVariables as $environmentVariable) {
-            $variables[$environmentVariable->name] = $environmentVariable->generateValue($deployment->workspace, $deployment);
+            $variables[$environmentVariable->name] = EnvironmentVariable::ApplyVariablesToString(
+                $environmentVariable->value,
+                $deployment
+            );
         }
 
         return $variables;

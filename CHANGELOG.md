@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.1.11  (2024-01-29)
+
+### Fixed bugs
+* Deployments could deploy without init containers
+* Added service port type
+
+### Enhancements
+* Added `${database.host}` variable
+* Made email service, database service and domain optional for workspace templates
+
+### Upgrade guide
+1. Deploy new image
+   1. No database migration required 
+
+
+
 ## v0.1.10  (2024-01-28)
 
 ### Fixed bugs
@@ -7,22 +23,22 @@
 
 ### Enhancements
 * Added support for MSSQL database services
-  * `docker-compose.yml` now contains a mssql database service
+    * `docker-compose.yml` now contains a mssql database service
 * Migration jobs is no longer bound to deployment image
-  * Specify separate image for migrations at deployment specification
-  * Useful if you have database migration code separated from application code
+    * Specify separate image for migrations at deployment specification
+    * Useful if you have database migration code separated from application code
 * You can now add init containers to deployment specifications
-  * With every init container having their own image, tag and environment variables
+    * With every init container having their own image, tag and environment variables
 * Updated base docker image from `php:8-alpine3.16` to `php:8.3-alpine3.19`
 * Updated composer libraries
-  * CodeIgniter has been updated from `v4.2.6` to `v4.4.5`
+    * CodeIgniter has been updated from `v4.2.6` to `v4.4.5`
 
 ### Upgrade guide
 1. Deploy new image
 2. Run database migration from inside pod: `cd /var/www/html/ci4 && php spark migrate`
 3. If you have multiple pods running this application, you need to clear orm cache in every pod
     1. `cd /var/www/html/ci4 && php spark orm:clear:cache`
-   
+
 
 
 ## v0.1.9 (2024-01-07)
