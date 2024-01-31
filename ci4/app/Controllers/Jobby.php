@@ -51,19 +51,14 @@ class Jobby extends \App\Core\BaseController {
         if(!defined('STDOUT')) define('STDOUT', fopen('php://stdout', 'w'));
         if(!defined('STDERR')) define('STDERR', fopen('php://stderr', 'w'));
 
-        $commandRunner = new CommandRunner();
-        $commandRunner->initController($this->request, $this->response, $this->logger);
-
         $cronJob = new CronJob();
         $cronJob->find($cronJobId);
         if($cronJob->exists()) {
             $cronJob->last_run = date('Y-m-d H:i:s');
 
             try {
-                $response = $commandRunner->index([$cronJob->command]);
-                \DebugTool\Data::debug('response:');
+                $response = command($cronJob->command);
                 Data::debug($response);
-                \DebugTool\Data::debug("^");
             } catch(\ReflectionException $e) {
                 \DebugTool\Data::debug($e->getMessage());
             }

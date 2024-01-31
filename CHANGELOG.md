@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.1.12  ()
+
+### Fixed bugs
+* Jobby broken after CI4 upgrade
+
+### Enhancements
+
+### Upgrade guide
+1. Deploy new image
+    1. No database migration required
+
+
+
 ## v0.1.11  (2024-01-29)
 
 ### Fixed bugs
@@ -12,7 +25,7 @@
 
 ### Upgrade guide
 1. Deploy new image
-   1. No database migration required 
+    1. No database migration required
 
 
 
