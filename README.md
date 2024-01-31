@@ -51,6 +51,7 @@ deployment:
 ```
 helm upgrade --install kso 4spacesdk/kso --values=values.yaml --namespace kso --create-namespace
 ```
+
 ### Upgrade
 ```
 helm repo update
@@ -61,3 +62,12 @@ helm upgrade --install kso 4spacesdk/kso --values=values.yaml --namespace kso
 ```
 helm delete kso
 ```
+
+### Migrate database (Helm)
+Deploying with helm will automatically start a migration job.
+A init container is added to wait for the migration to finish.
+
+### Migrate database (Manually)
+1. Run database migration from inside a pod: `cd /var/www/html/ci4 && php spark migrate`
+2. If you have multiple pods running this application, you need to clear ORM cache in every pod
+    1. `cd /var/www/html/ci4 && php spark orm:clear:cache` 
