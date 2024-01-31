@@ -46,6 +46,14 @@ deployment:
 #    - name: ""
 #      value: ""
 
+resources:
+  limits:
+    cpu: 500m
+    memory: 896Mi
+  requests:
+   cpu: 100m
+   memory: 128Mi
+
 ```
 ### Install
 ```

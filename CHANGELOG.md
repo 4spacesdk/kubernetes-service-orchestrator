@@ -12,7 +12,7 @@
 
 ### Upgrade guide
 1. Deploy new image
-2. Migrate database
+2. Migrate database. [(Guide)](https://github.com/4spacesdk/kubernetes-service-orchestrator?tab=readme-ov-file#migrate-database-helm)
 
 
 
