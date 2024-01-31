@@ -7,6 +7,8 @@
 
 ### Enhancements
 * Moved kubernetes.io/ingress.class annotation to spec ingressClassName [link](https://kubernetes.io/docs/concepts/services-networking/ingress/#deprecated-annotation).
+* You can now specify `imagePullSecret` for container images
+  * Set default value with `IMAGE_PULL_SECRET_DEFAULT_NAME` environment variable or set value in helm `values.yaml` 
 
 ### Upgrade guide
 1. Deploy new image

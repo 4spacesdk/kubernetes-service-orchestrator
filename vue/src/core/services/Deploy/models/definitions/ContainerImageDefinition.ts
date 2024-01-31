@@ -8,6 +8,7 @@ import {BaseModel} from '../BaseModel';
 export class ContainerImageDefinition extends BaseModel {
     name?: string;
     url?: string;
+    pull_secret?: string;
     id?: number;
     created?: string;
     updated?: string;
@@ -27,6 +28,7 @@ export class ContainerImageDefinition extends BaseModel {
         if (!patch) {
             delete this.name;
             delete this.url;
+            delete this.pull_secret;
             delete this.id;
             delete this.created;
             delete this.updated;
@@ -44,6 +46,9 @@ export class ContainerImageDefinition extends BaseModel {
         }
         if (data.url != null) {
             this.url = data.url;
+        }
+        if (data.pull_secret != null) {
+            this.pull_secret = data.pull_secret;
         }
         if (data.id != null) {
             this.id = data.id;

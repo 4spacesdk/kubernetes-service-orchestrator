@@ -14,6 +14,7 @@ const rows = ref<ContainerImage[]>([]);
 const headers = ref([
     {title: 'Name', key: 'name', sortable: false},
     {title: 'Url', key: 'url', sortable: false},
+    {title: 'Pull secret', key: 'pull_secret', sortable: false},
     {title: '', key: 'actions', sortable: false},
 ]);
 const isLoading = ref(true);
@@ -78,7 +79,7 @@ function getItems(doItems = true, doCount = false) {
 
 function createItem() {
     bus.emit('containerImageEdit', {
-        containerImage: new ContainerImage(),
+        containerImage: ContainerImage.Create(),
     });
 }
 

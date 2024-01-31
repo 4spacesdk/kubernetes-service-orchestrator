@@ -33,6 +33,7 @@ class ApiService {
 
                 System.Instance = new System(data.system);
                 System.certManagerIssuerDefaultName = data.certManagerIssuerDefaultName;
+                System.imagePullSecretDefaultName = data.imagePullSecretDefaultName;
                 this.pushServiceUrl = data.pushServiceUrl;
 
                 // All done

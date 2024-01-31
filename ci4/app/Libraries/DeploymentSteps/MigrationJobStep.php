@@ -320,15 +320,18 @@ class MigrationJobStep extends BaseDeploymentStep {
                     'role' => 'migration',
                 ],
             ])
-            ->setSpec('imagePullSecrets', [
-                [
-                    'name' => 'gcr-service-account',
-                ],
-            ])
             ->setContainers([
                 $container
             ])
             ->neverRestart();
+
+        if (strlen($spec->container_image->pull_secret) > 0) {
+            $template->setSpec('imagePullSecrets', [
+                [
+                    'name' => $spec->container_image->pull_secret,
+                ],
+            ]);
+        }
 
         if (count($volumes) > 0) {
             $template->setVolumes($volumes);

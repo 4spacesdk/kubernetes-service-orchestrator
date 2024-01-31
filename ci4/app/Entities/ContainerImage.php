@@ -7,6 +7,7 @@ use RestExtension\Core\Entity;
  * @package App\Entities
  * @property string $name
  * @property string $url
+ * @property string $pull_secret
  */
 class ContainerImage extends Entity {
 

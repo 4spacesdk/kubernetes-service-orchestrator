@@ -16,6 +16,7 @@ const showDialog = ref(false);
 const isLoading = ref(false);
 
 const item = ref<ContainerImage>(new ContainerImage());
+const showPullSecret = ref(false);
 
 // <editor-fold desc="Functions">
 
@@ -24,13 +25,13 @@ onMounted(() => {
         return;
     }
     used.value = true;
-    render();
+    load();
 });
 
 onUnmounted(() => {
 });
 
-function render() {
+function load() {
     if (props.input.containerImage.exists()) {
         isLoading.value = true;
         showDialog.value = true;
@@ -38,11 +39,17 @@ function render() {
             .find(items => {
                 item.value = items[0];
                 isLoading.value = false;
+                render();
             });
     } else {
         item.value = props.input.containerImage;
         showDialog.value = true;
+        render();
     }
+}
+
+function render() {
+    showPullSecret.value = (item.value.pull_secret?.length ?? 0) > 0;
 }
 
 function close() {
@@ -56,6 +63,9 @@ function close() {
 // <editor-fold desc="View Binding Functions">
 
 function onSaveBtnClicked() {
+    if (!showPullSecret.value) {
+        item.value.pull_secret = '';
+    }
     const api = item.value!.exists()
         ? Api.containerImages().patchById(item.value!.id!)
         : Api.containerImages().post();
@@ -102,7 +112,32 @@ function onCloseBtnClicked() {
                         <v-text-field
                             variant="outlined"
                             v-model="item.url"
-                            label="Url"/>
+                            label="Url"
+                            density="compact"
+                            hide-details
+                        />
+                    </v-col>
+                    <v-col cols="12">
+                        <v-switch
+                            v-model="showPullSecret"
+                            variant="outlined"
+                            label="Use image pull secret"
+                            density="compact"
+                            hide-details
+                            color="secondary"
+                        />
+                    </v-col>
+                    <v-col
+                        v-if="showPullSecret"
+                        cols="12"
+                    >
+                        <v-text-field
+                            variant="outlined"
+                            v-model="item.pull_secret"
+                            label="Url"
+                            density="compact"
+                            hide-details
+                        />
                     </v-col>
                 </v-row>
             </v-card-text>

@@ -17,6 +17,7 @@ class Settings extends \App\Core\BaseController {
             'system' => System::Get()->toArray(),
             'pushServiceUrl' => env('ZMQ_EXTERNAL_URL'),
             'certManagerIssuerDefaultName' => env('CERT_MANAGER_ISSUER_DEFAULT_NAME'),
+            'imagePullSecretDefaultName' => env('IMAGE_PULL_SECRET_DEFAULT_NAME'),
         ];
 
         if (RestRequest::getInstance()->userId) {

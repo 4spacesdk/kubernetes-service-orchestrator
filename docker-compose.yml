@@ -8,9 +8,6 @@ services:
       dockerfile: docker/Dockerfile
       args:
         GKE_AUTH_ENABLED: "${DEPLOY_GKE_AUTH_ENABLED}"
-        NEW_RELIC_ENABLED: "${DEPLOY_NEW_RELIC_ENABLED}"
-        NEW_RELIC_LICENSE_KEY: "${DEPLOY_NEW_RELIC_LICENSE_KEY}"
-        NEW_RELIC_APP_NAME: "${DEPLOY_NEW_RELIC_APP_NAME}"
 
     container_name: 4s-deploy-service-app
     restart: unless-stopped
@@ -32,6 +29,8 @@ services:
       - DB_PASS=${DEPLOY_DB_PASS}
       - KEEL_TRIGGER=poll
       - ZMQ_EXTERNAL_URL=ws://localhost:${DEPLOY_ZMQ_PORT}
+      - CERT_MANAGER_ISSUER_DEFAULT_NAME=${CONFIG_DEFAULTS_CERT_MANAGER_ISSUER_DEFAULT_NAME}
+      - IMAGE_PULL_SECRET_DEFAULT_NAME=${CONFIG_DEFAULTS_IMAGE_PULL_SECRET_DEFAULT_NAME}
 
     volumes:
       - ./:/var/www/html:delegated

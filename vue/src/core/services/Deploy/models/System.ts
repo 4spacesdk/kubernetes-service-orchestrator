@@ -14,5 +14,6 @@ export class System extends SystemDefinition {
     public static Instance: System;
 
     public static certManagerIssuerDefaultName: string;
+    public static imagePullSecretDefaultName: string;
 
 }

@@ -371,14 +371,17 @@ class DeploymentStep extends BaseDeploymentStep {
                     'role' => 'app',
                 ],
             ])
-            ->setSpec('imagePullSecrets', [
-                [
-                    'name' => 'gcr-service-account',
-                ],
-            ])
             ->setContainers([
                 $container
             ]);
+
+        if (strlen($spec->container_image->pull_secret) > 0) {
+            $template->setSpec('imagePullSecrets', [
+                [
+                    'name' => $spec->container_image->pull_secret,
+                ],
+            ]);
+        }
 
         if (count($initContainers) > 0) {
             $template->setInitContainers($initContainers);
