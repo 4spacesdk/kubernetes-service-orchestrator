@@ -206,13 +206,13 @@ class IngressStep extends BaseDeploymentStep {
                 ->setName($deployment->name . ($index == 0 ? '' : '-'.$index))
                 ->setNamespace($deployment->namespace)
                 ->setAnnotations([
-                    'kubernetes.io/ingress.class' => $ingress->ingress_class,
                     'nginx.ingress.kubernetes.io/proxy-body-size' => "{$ingress->proxy_body_size}m",
                     'nginx.ingress.kubernetes.io/proxy-connect-timeout' => (string)$ingress->proxy_connect_timeout,
                     'nginx.ingress.kubernetes.io/proxy-read-timeout' => (string)$ingress->proxy_read_timeout,
                     'nginx.ingress.kubernetes.io/proxy-send-timeout' => (string)$ingress->proxy_send_timeout,
                     'nginx.ingress.kubernetes.io/ssl-redirect' => $ingress->ssl_redirect ? 'true' : 'false',
                 ])
+                ->setSpec('ingressClassName', $ingress->ingress_class)
                 ->setRules($ingress->getIngressRules($deployment));
 
             if ($ingress->enable_tls) {

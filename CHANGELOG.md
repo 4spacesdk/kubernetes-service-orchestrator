@@ -6,6 +6,7 @@
 * Jobby broken after CI4 upgrade
 
 ### Enhancements
+* Moved kubernetes.io/ingress.class annotation to spec ingressClassName [link](https://kubernetes.io/docs/concepts/services-networking/ingress/#deprecated-annotation).
 
 ### Upgrade guide
 1. Deploy new image

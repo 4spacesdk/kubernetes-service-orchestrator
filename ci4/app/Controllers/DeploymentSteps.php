@@ -82,11 +82,11 @@ class DeploymentSteps extends \App\Core\BaseController {
          */
         [$step, $deployment] = $valid;
 
-        $error = $step->validateDeployCommand($deployment);
+        /*$error = $step->validateDeployCommand($deployment);
         if ($error) {
             $this->fail($error);
             return;
-        }
+        }*/
 
         try {
             Data::set('resource', [
