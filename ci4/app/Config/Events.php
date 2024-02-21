@@ -58,3 +58,6 @@ Events::on('pre_system', static function () {
 Events::on('pre_system', [\RestExtension\Hooks::class, 'preSystem']);
 Events::on('pre_system', [\OrmExtension\Hooks\PreController::class, 'execute']);
 Events::on('pre_system', [\AuthExtension\Hooks\PreController::class, 'execute']);
+Events::on('pre_command', [\RestExtension\Hooks::class, 'preSystem']);
+Events::on('pre_command', [\OrmExtension\Hooks\PreController::class, 'execute']);
+Events::on('pre_command', [\AuthExtension\Hooks\PreController::class, 'execute']);

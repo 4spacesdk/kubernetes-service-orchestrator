@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.1.12  ()
+## v0.1.12  (2024-02-21)
 
 ### Fixed bugs
 * Jobby broken after CI4 upgrade
