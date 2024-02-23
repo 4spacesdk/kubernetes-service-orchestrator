@@ -10,6 +10,9 @@ const props = defineProps<{
 const showUpdateDeploymentSpecifications = ref(false);
 const showUpdateEnvironmentVariables = ref(false);
 
+const showUpdateLabels = ref(false);
+const isUpdateLabelsEnabled = ref(false);
+
 onMounted(() => {
     render();
 
@@ -19,6 +22,9 @@ onMounted(() => {
 function render() {
     showUpdateDeploymentSpecifications.value = true;
     showUpdateEnvironmentVariables.value = true;
+
+    showUpdateLabels.value = true;
+    isUpdateLabelsEnabled.value = true;
 }
 
 function onUpdateDeploymentSpecificationsClicked() {
@@ -29,6 +35,12 @@ function onUpdateDeploymentSpecificationsClicked() {
 
 function onUpdateEnvironmentVariablesClicked() {
     bus.emit('deploymentPackageUpdateEnvironmentVariables', {
+        deploymentPackage: props.deploymentPackage
+    });
+}
+
+function onUpdateLabelsClicked() {
+    bus.emit('deploymentPackageUpdateLabels', {
         deploymentPackage: props.deploymentPackage
     });
 }
@@ -58,6 +70,17 @@ function onUpdateEnvironmentVariablesClicked() {
                     <v-list-item-title>
                         <v-icon size="small" class="my-auto ml-2">fa fa-key</v-icon>
                         <span class="ml-2">Environment Variables</span>
+                    </v-list-item-title>
+                </v-list-item>
+
+                <v-list-item
+                    v-if="showUpdateLabels"
+                    :disabled="!isUpdateLabelsEnabled"
+                    dense
+                    @click="onUpdateLabelsClicked">
+                    <v-list-item-title>
+                        <v-icon size="small" class="my-auto ml-2">fa fa-tags</v-icon>
+                        <span class="ml-2">Labels</span>
                     </v-list-item-title>
                 </v-list-item>
             </v-list>

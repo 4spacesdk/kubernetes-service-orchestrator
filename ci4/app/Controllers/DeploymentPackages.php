@@ -8,8 +8,10 @@ use App\Entities\DeploymentPackageEnvironmentVariable;
 use App\Entities\DeploymentSpecification;
 use App\Entities\DeploymentSpecificationEnvironmentVariable;
 use App\Entities\EnvironmentVariable;
+use App\Entities\Label;
 use App\Interfaces\DeploymentPackageDeploymentSpecificationList;
 use App\Interfaces\EnvironmentVariableList;
+use App\Interfaces\LabelList;
 use App\Models\DeploymentModel;
 use App\Models\DeploymentPackageEnvironmentVariableModel;
 use App\Models\WorkspaceModel;
@@ -97,6 +99,36 @@ class DeploymentPackages extends ResourceController {
             $deployment->updateEnvironmentVariable($environmentVariable, $override);
         }
 
+        $this->_setResource($item);
+        $this->success();
+    }
+
+    /**
+     * @route /deployment-packages/{deploymentPackageId}/labels
+     * @method put
+     * @custom true
+     * @param int $deploymentPackageId
+     * @requestSchema LabelList
+     * @return void
+     */
+    public function updateLabels(int $deploymentPackageId): void {
+        $item = new DeploymentPackage();
+        $item->find($deploymentPackageId);
+        if (!$item->exists()) {
+            $this->fail('unknown deployment package');
+            return;
+        }
+
+        if ($item->exists()) {
+            /** @var LabelList $body */
+            $body = $this->request->getJSON();
+            $values = new Label();
+            $values->all = array_map(
+                fn($data) => Label::Create($data->name, $data->value),
+                $body->values
+            );
+            $item->updateLabels($values);
+        }
         $this->_setResource($item);
         $this->success();
     }

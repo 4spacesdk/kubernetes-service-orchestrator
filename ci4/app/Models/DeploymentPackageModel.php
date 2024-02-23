@@ -13,6 +13,7 @@ class DeploymentPackageModel extends Model implements ResourceModelInterface {
         WorkspaceModel::class,
         DeploymentPackageDeploymentSpecificationModel::class,
         DeploymentPackageEnvironmentVariableModel::class,
+        LabelModel::class,
     ];
 
     public function preRestGet($queryParser, $id) {

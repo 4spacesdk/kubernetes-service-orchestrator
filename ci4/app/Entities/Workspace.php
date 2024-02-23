@@ -12,6 +12,7 @@ use App\Models\DeploymentModel;
 use App\Models\DeploymentPackageDeploymentSpecificationModel;
 use App\Models\DeploymentPackageEnvironmentVariableModel;
 use App\Models\WorkspaceModel;
+use DebugTool\Data;
 use Google\ApiCore\ApiException;
 use RestExtension\Core\Entity;
 
@@ -100,6 +101,13 @@ class Workspace extends Entity {
 
         $item->save();
 
+        // Create labels
+        $deploymentPackage->labels->find();
+        foreach ($deploymentPackage->labels as $label) {
+            $newLabel = Label::Create($label->name, $label->value);
+            $newLabel->save($item);
+        }
+
         // Create deployments
         /** @var DeploymentPackageDeploymentSpecification $deploymentPackageDeploymentSpecifications */
         $deploymentPackageDeploymentSpecifications = (new DeploymentPackageDeploymentSpecificationModel())
@@ -184,7 +192,7 @@ class Workspace extends Entity {
         $deployment = Deployment::Prepare(
             $specification,
             $this->namespace,
-            $specification->name
+            $specification->name ?? ''
         );
         $deployment->workspace_id = $this->id;
 

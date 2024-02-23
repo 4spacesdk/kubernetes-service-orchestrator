@@ -219,6 +219,12 @@ bus.on('deploymentPackageUpdateEnvironmentVariables', async input => {
 bus.on('deploymentPackageUpdateEnvironmentVariable', async input => {
     addComponent((await import('@/components/Dialogs/Setup/DeploymentPackages/UpdateDialogs/DeploymentPackageUpdateEnvironmentVariableDialog.vue')).default, input);
 });
+bus.on('deploymentPackageUpdateLabels', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/DeploymentPackages/UpdateDialogs/DeploymentPackageUpdateLabelsDialog.vue')).default, input);
+});
+bus.on('deploymentPackageUpdateLabel', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/DeploymentPackages/UpdateDialogs/DeploymentPackageUpdateLabelDialog.vue')).default, input);
+});
 
 
 

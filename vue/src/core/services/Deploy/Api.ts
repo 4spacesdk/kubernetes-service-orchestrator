@@ -1063,6 +1063,27 @@ export class DeploymentPackagesCopyEnvironmentVariableToDeploymentsPutByDeployme
     }
 }
 
+export class DeploymentPackagesUpdateLabelsPutByDeploymentPackageId extends BaseApi<DeploymentPackage> {
+
+    public topic = 'Resources.DeploymentPackages';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(deploymentPackageId: number) {
+        super();
+        this.uri = `/deployment-packages/${deploymentPackageId}/labels`;
+    }
+
+    protected convertToResource(data: any): DeploymentPackage {
+        return new DeploymentPackage(data);
+    }
+
+    public save(data: LabelList, next?: (value: DeploymentPackage) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
 class DeploymentPackages {
 
     public get(): DeploymentPackagesGet {
@@ -1099,6 +1120,10 @@ class DeploymentPackages {
 
     public copyEnvironmentVariableToDeploymentsPutByDeploymentPackageId(deploymentPackageId: number): DeploymentPackagesCopyEnvironmentVariableToDeploymentsPutByDeploymentPackageId {
         return new DeploymentPackagesCopyEnvironmentVariableToDeploymentsPutByDeploymentPackageId(deploymentPackageId);
+    }
+
+    public updateLabelsPutByDeploymentPackageId(deploymentPackageId: number): DeploymentPackagesUpdateLabelsPutByDeploymentPackageId {
+        return new DeploymentPackagesUpdateLabelsPutByDeploymentPackageId(deploymentPackageId);
     }
 
 }

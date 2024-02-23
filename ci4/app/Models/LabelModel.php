@@ -11,6 +11,7 @@ class LabelModel extends Model implements ResourceModelInterface {
 
     public $hasMany = [
         WorkspaceModel::class,
+        DeploymentPackageModel::class,
     ];
 
     public function preRestGet($queryParser, $id) {
