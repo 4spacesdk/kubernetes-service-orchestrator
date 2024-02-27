@@ -113,6 +113,8 @@ class MigrationJob extends Entity {
                     $this->save();
                     $this->updateStatus(\MigrationJobStatusTypes::Failed_PostCommands);
                 }
+            } else {
+                $this->updateStatus(\MigrationJobStatusTypes::Completed);
             }
         } else {
             $this->updateStatus(\MigrationJobStatusTypes::Failed_LogVerification);

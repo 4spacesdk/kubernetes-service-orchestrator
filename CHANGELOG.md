@@ -1,9 +1,24 @@
 # Changelog
 
+## v0.1.14  (2024-02-27)
+
+### Fixed bugs
+* Fix issue with migration jobs hanging if no post commands
+
+### Enhancements
+* Lowered default log level to avoid excessive deprecation logs "[DEPRECATED] Creation of dynamic property"
+* Allow for larger migration logs (TEXT -> LONGTEXT)
+
+### Upgrade guide
+1. Deploy new image
+2. Migrate database. [(Guide)](https://github.com/4spacesdk/kubernetes-service-orchestrator?tab=readme-ov-file#migrate-database-helm)
+
+
+
 ## v0.1.13  (2024-02-27)
 
 ### Fixed bugs
-* 
+*
 
 ### Enhancements
 * Add labels to workspace templates [Issue #15](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/15)

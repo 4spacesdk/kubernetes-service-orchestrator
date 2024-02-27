@@ -1,7 +1,6 @@
 <?php namespace App\Controllers;
 
 use App\Entities\CronJob;
-use CodeIgniter\CLI\CommandRunner;
 use DebugTool\Data;
 
 class Jobby extends \App\Core\BaseController {

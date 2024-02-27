@@ -15,6 +15,7 @@ namespace App\Core;
  * @package CodeIgniter
  */
 
+use AllowDynamicProperties;
 use App\Entities\User;
 use App\Helpers\Client;
 use CodeIgniter\Controller;
@@ -31,7 +32,7 @@ use RestExtension\RestRequest;
 /**
  * @property QueryParser $queryParser
  */
-abstract class BaseController extends Controller {
+#[AllowDynamicProperties] abstract class BaseController extends Controller {
 
     /**
      * Instance of the main Request object.
