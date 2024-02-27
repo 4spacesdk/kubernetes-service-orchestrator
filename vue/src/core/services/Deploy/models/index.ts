@@ -27,6 +27,8 @@ export {KeelHookQueueItem as KeelHookQueueItem} from "./KeelHookQueueItem";
 export {Label as Label} from "./Label";
 export {MigrationJob as MigrationJob} from "./MigrationJob";
 export {OAuthClient as OAuthClient} from "./OAuthClient";
+export {RbacPermission as RbacPermission} from "./RbacPermission";
+export {RbacRole as RbacRole} from "./RbacRole";
 export {System as System} from "./System";
 export {User as User} from "./User";
 export {Webhook as Webhook} from "./Webhook";

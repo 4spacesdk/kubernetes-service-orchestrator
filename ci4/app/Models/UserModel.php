@@ -17,6 +17,7 @@ class UserModel extends \RestExtension\Models\UserModel implements ResourceModel
             'joinOtherAs' => 'id',
             'joinSelfAs' => 'user_id',
         ],
+        RbacRoleModel::class,
     ];
 
     public function preRestGet($queryParser, $id) {

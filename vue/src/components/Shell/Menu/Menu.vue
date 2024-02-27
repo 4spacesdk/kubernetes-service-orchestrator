@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import {computed, defineComponent, reactive, ref} from 'vue'
+import {computed, defineComponent, onMounted, reactive, ref} from 'vue'
 import {useRouter} from "vue-router";
+import {RbacPermissions} from "@/constants";
+import AuthService from "@/services/AuthService";
 
 interface MenuCategory {
     identifier: string;
@@ -14,6 +16,7 @@ interface MenuItem {
     title: string;
     url: string;
     active?: boolean;
+    permissions: string[];
 }
 
 const router = useRouter();
@@ -27,6 +30,10 @@ const categories = ref<MenuCategory[]>([
             {
                 title: 'All',
                 url: '/users',
+                permissions: [
+                    RbacPermissions.Developer,
+                    RbacPermissions.Users.List,
+                ],
             },
         ],
     },
@@ -38,6 +45,10 @@ const categories = ref<MenuCategory[]>([
             {
                 title: 'All',
                 url: '/workspaces',
+                permissions: [
+                    RbacPermissions.Developer,
+                    RbacPermissions.Workspaces.List,
+                ],
             },
         ],
     },
@@ -49,6 +60,9 @@ const categories = ref<MenuCategory[]>([
             {
                 title: 'All',
                 url: '/migration-jobs',
+                permissions: [
+                    RbacPermissions.Developer,
+                ],
             },
         ],
     },
@@ -60,6 +74,9 @@ const categories = ref<MenuCategory[]>([
             {
                 title: 'All',
                 url: '/keel-hook-queue-items',
+                permissions: [
+                    RbacPermissions.Developer,
+                ],
             },
         ],
     },
@@ -71,30 +88,51 @@ const categories = ref<MenuCategory[]>([
             {
                 title: 'Deployments',
                 url: '/setup/deployments',
+                permissions: [
+                    RbacPermissions.Developer,
+                ],
             },
             {
                 title: 'Domains',
                 url: '/setup/domains',
+                permissions: [
+                    RbacPermissions.Developer,
+                ],
             },
             {
                 title: 'Email Services',
                 url: '/setup/email-services',
+                permissions: [
+                    RbacPermissions.Developer,
+                ],
             },
             {
                 title: 'Database Services',
                 url: '/setup/database-services',
+                permissions: [
+                    RbacPermissions.Developer,
+                ],
             },
             {
                 title: 'Container Images',
                 url: '/setup/container-images',
+                permissions: [
+                    RbacPermissions.Developer,
+                ],
             },
             {
                 title: 'Deployment Specifications',
                 url: '/setup/deployment-specifications',
+                permissions: [
+                    RbacPermissions.Developer,
+                ],
             },
             {
                 title: 'Workspace Templates',
                 url: '/setup/deployment-packages',
+                permissions: [
+                    RbacPermissions.Developer,
+                ],
             },
         ],
     },
@@ -106,14 +144,19 @@ const categories = ref<MenuCategory[]>([
             {
                 title: 'OAuth Clients',
                 url: '/integrations/oauth-clients',
+                permissions: [
+                    RbacPermissions.Developer,
+                ],
             },
             {
                 title: 'Webhooks',
                 url: '/integrations/webhooks',
+                permissions: [
+                    RbacPermissions.Developer,
+                ],
             },
         ],
     }
-
 ]);
 
 function onLogoClicked(event: Event) {
@@ -129,6 +172,16 @@ function onListGroupClicked(category: MenuCategory) {
         });
     }
 }
+
+onMounted(() => {
+    const userPermissions: string[] = AuthService.currentAuthUser?.allPermissions ?? [];
+    categories.value = categories.value.filter(category => {
+        category.items = category.items.filter(item => {
+            return item.permissions.some(permission => userPermissions.includes(permission));
+        });
+        return category.items.length > 0;
+    });
+});
 
 </script>
 

@@ -10,6 +10,8 @@ import {EmailService} from "./models";
 import {InitContainer} from "./models";
 import {KeelHookQueueItem} from "./models";
 import {OAuthClient} from "./models";
+import {RbacPermission} from "./models";
+import {RbacRole} from "./models";
 import {User} from "./models";
 import {Webhook} from "./models";
 import {WebhookDelivery} from "./models";
@@ -4246,6 +4248,304 @@ class OAuthClients {
 }
 
 
+export class RbacPermissionsGet extends BaseApi<RbacPermission> {
+
+    public topic = 'Resources.RbacPermissions';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/rbac_permissions`;
+    }
+
+    protected convertToResource(data: any): RbacPermission {
+        return new RbacPermission(data);
+    }
+
+    public where(name: string, value: any): RbacPermissionsGet {
+        this.filter().where(name, value);
+        return this;
+    }
+
+    public whereEquals(name: string, value: any): RbacPermissionsGet {
+        this.filter().whereEquals(name, value);
+        return this;
+    }
+
+    public whereIn(name: string, value: any[]): RbacPermissionsGet {
+        this.filter().whereIn(name, value);
+        return this;
+    }
+
+    public whereInArray(name: string, value: any[]): RbacPermissionsGet {
+        this.filter().whereInArray(name, value);
+        return this;
+    }
+
+    public whereNot(name: string, value: any): RbacPermissionsGet {
+        this.filter().whereNot(name, value);
+        return this;
+    }
+
+    public whereNotIn(name: string, value: any[]): RbacPermissionsGet {
+        this.filter().whereNotIn(name, value);
+        return this;
+    }
+
+    public whereGreaterThan(name: string, value: any): RbacPermissionsGet {
+        this.filter().whereGreaterThan(name, value);
+        return this;
+    }
+
+    public whereGreaterThanOrEqual(name: string, value: any): RbacPermissionsGet {
+        this.filter().whereGreaterThanOrEqual(name, value);
+        return this;
+    }
+
+    public whereLessThan(name: string, value: any): RbacPermissionsGet {
+        this.filter().whereLessThan(name, value);
+        return this;
+    }
+
+    public whereLessThanOrEqual(name: string, value: any): RbacPermissionsGet {
+        this.filter().whereLessThanOrEqual(name, value);
+        return this;
+    }
+
+    public search(name: string, value: any): RbacPermissionsGet {
+        this.filter().search(name, value);
+        return this;
+    }
+
+    public include(name: string): RbacPermissionsGet {
+        this.getInclude().include(name);
+        return this;
+    }
+
+    public orderBy(name: string, direction: string): RbacPermissionsGet {
+        this.ordering().orderBy(name, direction);
+        return this;
+    }
+
+    public orderAsc(name: string): RbacPermissionsGet {
+        this.ordering().orderAsc(name);
+        return this;
+    }
+
+    public orderDesc(name: string): RbacPermissionsGet {
+        this.ordering().orderDesc(name);
+        return this;
+    }
+
+    public limit(value: number): RbacPermissionsGet {
+        this.limitValue = value;
+        return this;
+    }
+
+    public offset(value: number): RbacPermissionsGet {
+        this.offsetValue = value;
+        return this;
+    }
+
+    public count(next?: (value: number) => void) {
+        return this.executeCount(next);
+    }
+
+    public find(next?: (value: RbacPermission[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class RbacPermissionsGetById extends BaseApi<RbacPermission> {
+
+    public topic = 'Resources.RbacPermissions';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/rbac_permissions/${id}`;
+    }
+
+    protected convertToResource(data: any): RbacPermission {
+        return new RbacPermission(data);
+    }
+
+    public include(name: string): RbacPermissionsGetById {
+        this.getInclude().include(name);
+        return this;
+    }
+
+    public find(next?: (value: RbacPermission[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+class RbacPermissions {
+
+    public get(): RbacPermissionsGet {
+        return new RbacPermissionsGet();
+    }
+
+    public getById(id: number): RbacPermissionsGetById {
+        return new RbacPermissionsGetById(id);
+    }
+
+}
+
+
+export class RbacRolesGet extends BaseApi<RbacRole> {
+
+    public topic = 'Resources.RbacRoles';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/rbac_roles`;
+    }
+
+    protected convertToResource(data: any): RbacRole {
+        return new RbacRole(data);
+    }
+
+    public where(name: string, value: any): RbacRolesGet {
+        this.filter().where(name, value);
+        return this;
+    }
+
+    public whereEquals(name: string, value: any): RbacRolesGet {
+        this.filter().whereEquals(name, value);
+        return this;
+    }
+
+    public whereIn(name: string, value: any[]): RbacRolesGet {
+        this.filter().whereIn(name, value);
+        return this;
+    }
+
+    public whereInArray(name: string, value: any[]): RbacRolesGet {
+        this.filter().whereInArray(name, value);
+        return this;
+    }
+
+    public whereNot(name: string, value: any): RbacRolesGet {
+        this.filter().whereNot(name, value);
+        return this;
+    }
+
+    public whereNotIn(name: string, value: any[]): RbacRolesGet {
+        this.filter().whereNotIn(name, value);
+        return this;
+    }
+
+    public whereGreaterThan(name: string, value: any): RbacRolesGet {
+        this.filter().whereGreaterThan(name, value);
+        return this;
+    }
+
+    public whereGreaterThanOrEqual(name: string, value: any): RbacRolesGet {
+        this.filter().whereGreaterThanOrEqual(name, value);
+        return this;
+    }
+
+    public whereLessThan(name: string, value: any): RbacRolesGet {
+        this.filter().whereLessThan(name, value);
+        return this;
+    }
+
+    public whereLessThanOrEqual(name: string, value: any): RbacRolesGet {
+        this.filter().whereLessThanOrEqual(name, value);
+        return this;
+    }
+
+    public search(name: string, value: any): RbacRolesGet {
+        this.filter().search(name, value);
+        return this;
+    }
+
+    public include(name: string): RbacRolesGet {
+        this.getInclude().include(name);
+        return this;
+    }
+
+    public orderBy(name: string, direction: string): RbacRolesGet {
+        this.ordering().orderBy(name, direction);
+        return this;
+    }
+
+    public orderAsc(name: string): RbacRolesGet {
+        this.ordering().orderAsc(name);
+        return this;
+    }
+
+    public orderDesc(name: string): RbacRolesGet {
+        this.ordering().orderDesc(name);
+        return this;
+    }
+
+    public limit(value: number): RbacRolesGet {
+        this.limitValue = value;
+        return this;
+    }
+
+    public offset(value: number): RbacRolesGet {
+        this.offsetValue = value;
+        return this;
+    }
+
+    public count(next?: (value: number) => void) {
+        return this.executeCount(next);
+    }
+
+    public find(next?: (value: RbacRole[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class RbacRolesGetById extends BaseApi<RbacRole> {
+
+    public topic = 'Resources.RbacRoles';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/rbac_roles/${id}`;
+    }
+
+    protected convertToResource(data: any): RbacRole {
+        return new RbacRole(data);
+    }
+
+    public include(name: string): RbacRolesGetById {
+        this.getInclude().include(name);
+        return this;
+    }
+
+    public find(next?: (value: RbacRole[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+class RbacRoles {
+
+    public get(): RbacRolesGet {
+        return new RbacRolesGet();
+    }
+
+    public getById(id: number): RbacRolesGetById {
+        return new RbacRolesGetById(id);
+    }
+
+}
+
+
 export class UsersGet extends BaseApi<User> {
 
     public topic = 'Resources.Users';
@@ -5527,6 +5827,14 @@ export class Api {
 
     public static oAuthClients(): OAuthClients {
         return new OAuthClients();
+    }
+
+    public static rbacPermissions(): RbacPermissions {
+        return new RbacPermissions();
+    }
+
+    public static rbacRoles(): RbacRoles {
+        return new RbacRoles();
     }
 
     public static users(): Users {

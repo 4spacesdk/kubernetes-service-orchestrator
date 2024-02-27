@@ -6,13 +6,9 @@ import {User} from '../User';
 import {Deletion} from '../Deletion';
 import {BaseModel} from '../BaseModel';
 
-export class UserDefinition extends BaseModel {
-    username?: string;
-    first_name?: string;
-    last_name?: string;
-    password?: string;
-    scope?: string;
-    type?: string;
+export class RbacPermissionDefinition extends BaseModel {
+    name?: string;
+    description?: string;
     rbac_roles?: RbacRole[];
     id?: number;
     created?: string;
@@ -31,12 +27,8 @@ export class UserDefinition extends BaseModel {
 
     public populate(data?: any, patch = false) {
         if (!patch) {
-            delete this.username;
-            delete this.first_name;
-            delete this.last_name;
-            delete this.password;
-            delete this.scope;
-            delete this.type;
+            delete this.name;
+            delete this.description;
             delete this.rbac_roles;
             delete this.id;
             delete this.created;
@@ -50,23 +42,11 @@ export class UserDefinition extends BaseModel {
         }
 
         if (!data) return;
-        if (data.username != null) {
-            this.username = data.username;
+        if (data.name != null) {
+            this.name = data.name;
         }
-        if (data.first_name != null) {
-            this.first_name = data.first_name;
-        }
-        if (data.last_name != null) {
-            this.last_name = data.last_name;
-        }
-        if (data.password != null) {
-            this.password = data.password;
-        }
-        if (data.scope != null) {
-            this.scope = data.scope;
-        }
-        if (data.type != null) {
-            this.type = data.type;
+        if (data.description != null) {
+            this.description = data.description;
         }
         if (data.rbac_roles != null) {
             this.rbac_roles = data.rbac_roles.map((i: any) => new RbacRole(i));

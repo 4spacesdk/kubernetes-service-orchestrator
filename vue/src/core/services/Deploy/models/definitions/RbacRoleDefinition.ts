@@ -1,19 +1,17 @@
 /**
  * Created by ModelParser
  */
-import {RbacRole} from '../RbacRole';
 import {User} from '../User';
+import {RbacPermission} from '../RbacPermission';
 import {Deletion} from '../Deletion';
 import {BaseModel} from '../BaseModel';
 
-export class UserDefinition extends BaseModel {
-    username?: string;
-    first_name?: string;
-    last_name?: string;
-    password?: string;
-    scope?: string;
-    type?: string;
-    rbac_roles?: RbacRole[];
+export class RbacRoleDefinition extends BaseModel {
+    name?: string;
+    identifier?: string;
+    description?: string;
+    users?: User[];
+    rbac_permissions?: RbacPermission[];
     id?: number;
     created?: string;
     updated?: string;
@@ -31,13 +29,11 @@ export class UserDefinition extends BaseModel {
 
     public populate(data?: any, patch = false) {
         if (!patch) {
-            delete this.username;
-            delete this.first_name;
-            delete this.last_name;
-            delete this.password;
-            delete this.scope;
-            delete this.type;
-            delete this.rbac_roles;
+            delete this.name;
+            delete this.identifier;
+            delete this.description;
+            delete this.users;
+            delete this.rbac_permissions;
             delete this.id;
             delete this.created;
             delete this.updated;
@@ -50,26 +46,20 @@ export class UserDefinition extends BaseModel {
         }
 
         if (!data) return;
-        if (data.username != null) {
-            this.username = data.username;
+        if (data.name != null) {
+            this.name = data.name;
         }
-        if (data.first_name != null) {
-            this.first_name = data.first_name;
+        if (data.identifier != null) {
+            this.identifier = data.identifier;
         }
-        if (data.last_name != null) {
-            this.last_name = data.last_name;
+        if (data.description != null) {
+            this.description = data.description;
         }
-        if (data.password != null) {
-            this.password = data.password;
+        if (data.users != null) {
+            this.users = data.users.map((i: any) => new User(i));
         }
-        if (data.scope != null) {
-            this.scope = data.scope;
-        }
-        if (data.type != null) {
-            this.type = data.type;
-        }
-        if (data.rbac_roles != null) {
-            this.rbac_roles = data.rbac_roles.map((i: any) => new RbacRole(i));
+        if (data.rbac_permissions != null) {
+            this.rbac_permissions = data.rbac_permissions.map((i: any) => new RbacPermission(i));
         }
         if (data.id != null) {
             this.id = data.id;

@@ -8,6 +8,7 @@
 ### Enhancements
 * Add labels to workspace templates [Issue #15](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/15)
 * Add configuration for migration job log verification [Issue #10](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/10)
+* Add RBAC for KSO Users [Issue #14](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/14)
 
 ### Upgrade guide
 1. Deploy new image

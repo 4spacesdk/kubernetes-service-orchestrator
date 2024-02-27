@@ -11,6 +11,9 @@ use App\Models\UserModel;
  * @property string $password
  * @property string $scope
  * @property string $type
+ *
+ *  Many
+ * @property RbacRole $rbac_roles
  */
 class User extends \RestExtension\Entities\User {
 

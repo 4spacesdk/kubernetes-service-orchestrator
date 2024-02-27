@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
-import {User} from "@/core/services/Deploy/models";
+import {RbacRole, User} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
@@ -19,6 +19,10 @@ const item = ref<User>(new User());
 const password = ref('');
 const passwordConfirm = ref('');
 
+const roles = ref<RbacRole[]>([]);
+const isLoadingRoles = ref(false);
+const selectedRoles = ref<number[]>([]);
+
 // <editor-fold desc="Functions">
 
 onMounted(() => {
@@ -33,11 +37,19 @@ onUnmounted(() => {
 });
 
 function render() {
+    isLoadingRoles.value = true;
+    Api.rbacRoles().get()
+        .find(rbacRoles => {
+            roles.value = rbacRoles;
+            isLoadingRoles.value = false;
+        })
+
     if (props.input.user.exists()) {
         isLoading.value = true;
         showDialog.value = true;
         Api.users().getById(props.input.user.id!).find(items => {
             item.value = items[0];
+            selectedRoles.value = item.value.rbac_roles?.map(role => role.id!) ?? [];
             isLoading.value = false;
         });
     } else {
@@ -57,6 +69,8 @@ function close() {
 // <editor-fold desc="View Binding Functions">
 
 function onSaveBtnClicked() {
+    item.value.rbac_roles = roles.value.filter(role => selectedRoles.value.includes(role.id!));
+
     const api = item.value!.exists() ? Api.users().patchById(item.value!.id!) : Api.users().post();
 
     if (password.value?.length >= 6 && password.value.localeCompare(passwordConfirm.value) === 0) {
@@ -129,6 +143,28 @@ function onCloseBtnClicked() {
                             v-model="passwordConfirm"
                             type="password"
                             label="Confirm password"/>
+                    </v-col>
+
+
+                    <v-col cols="12">
+                        <v-select
+                            v-model="selectedRoles"
+                            label="Roles"
+                            :items="roles"
+                            :loading="isLoadingRoles"
+                            item-title="name"
+                            item-value="id"
+                            variant="outlined"
+                            :multiple="true"
+                        >
+                            <template v-slot:item="{ props, item }">
+                                <v-list-item
+                                    v-bind="props"
+                                    :title="item.raw.name"
+                                    :subtitle="item.raw.description"
+                                />
+                            </template>
+                        </v-select>
                     </v-col>
                 </v-row>
             </v-card-text>

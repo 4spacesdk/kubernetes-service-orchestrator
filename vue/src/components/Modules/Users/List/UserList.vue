@@ -15,6 +15,7 @@ const rows = ref<User[]>([]);
 const headers = ref([
     {title: 'Name', key: 'name', sortable: false},
     {title: 'E-mail', key: 'username', sortable: false},
+    {title: 'Roles', key: 'roles', sortable: false},
     {title: '', key: 'actions', sortable: false},
 ]);
 const isLoading = ref(true);
@@ -59,6 +60,7 @@ function getItems(doItems = true, doCount = false) {
 
     if (doItems) {
         api
+            .include('rbac_role')
             .limit(tableOptions.itemsPerPage)
             .offset(tableOptions.itemsPerPage * (tableOptions.page - 1))
             .orderAsc('name')
@@ -142,6 +144,20 @@ function deleteItem(item: User) {
             class="table"
             density="compact"
             @update:options="options = $event; getItems()">
+            <template v-slot:item.roles="{ item }">
+                <div
+                    class="d-flex gap-1"
+                >
+                    <v-chip
+                        v-for="role in item.raw.rbac_roles"
+                        size="small"
+                    >
+                        {{ role.name }}
+                        <v-tooltip activator="parent" location="bottom">{{ role.description }}</v-tooltip>
+                    </v-chip>
+                </div>
+            </template>
+
             <template v-slot:item.actions="{ item }">
                 <div class="d-flex justify-end gap-1">
                     <v-btn variant="plain" color="primary" size="small" @click="editItem(item.raw)">

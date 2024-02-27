@@ -317,3 +317,21 @@ export const MigrationVerificationTypes = {
     EndsWith: 'ends-with',
     Regex: 'regex'
 };
+
+export const RbacPermissions = {
+    Developer: 'developer',
+    Workspaces: {
+        Get: 'workspaces.get',
+        List: 'workspaces.list',
+        Create: 'workspaces.create',
+        Update: 'workspaces.update',
+        Delete: 'workspaces.delete',
+    },
+    Users: {
+        Get: 'users.get',
+        List: 'users.list',
+        Create: 'users.create',
+        Update: 'users.update',
+        Delete: 'users.delete',
+    },
+}

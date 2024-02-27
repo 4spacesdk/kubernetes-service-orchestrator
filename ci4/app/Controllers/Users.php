@@ -11,7 +11,12 @@ class Users extends ResourceController {
      * @custom true
      */
     public function me() {
-        $this->_setResource(Client::$user);
+        $me = Client::$user;
+        $me->rbac_roles->find();
+        foreach ($me->rbac_roles as $role) {
+            $role->rbac_permissions->find();
+        }
+        $this->_setResource($me);
         $this->success();
     }
 

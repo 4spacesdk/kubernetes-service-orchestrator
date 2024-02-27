@@ -11,6 +11,8 @@ import debounce from 'lodash.debounce'
 import WorkspaceDeploymentDomains
     from "@/components/Modules/Workspaces/WorkspaceDeploymentDomains/WorkspaceDeploymentDomains.vue";
 import {it} from "vuetify/locale";
+import AuthService from "@/services/AuthService";
+import {RbacPermissions} from "@/constants";
 
 interface Row {
     workspace: Workspace;
@@ -34,7 +36,17 @@ const deploymentPackages = ref<DeploymentPackage[]>([]);
 
 const searchValue = ref('');
 
+const rbacDeveloper = ref(false);
+const rbacWorkspaceCreate = ref(false);
+const rbacWorkspaceUpdate = ref(false);
+const rbacWorkspaceDelete = ref(false);
+
 onMounted(() => {
+    rbacDeveloper.value = AuthService.currentAuthUser?.hasPermission(RbacPermissions.Developer) ?? false;
+    rbacWorkspaceCreate.value = AuthService.currentAuthUser?.hasPermission(RbacPermissions.Workspaces.Create) ?? false;
+    rbacWorkspaceUpdate.value = AuthService.currentAuthUser?.hasPermission(RbacPermissions.Workspaces.Update) ?? false;
+    rbacWorkspaceDelete.value = AuthService.currentAuthUser?.hasPermission(RbacPermissions.Workspaces.Delete) ?? false;
+
     bus.on('workspaceSaved', onItemSaved);
 
     getItems(false, true);
@@ -250,6 +262,7 @@ function onShowLogsBtnClicked(item: Workspace) {
             <v-spacer></v-spacer>
 
             <v-menu
+                v-if="rbacWorkspaceCreate"
                 v-model="showCreateMenu"
                 :close-on-content-click="false"
                 left
@@ -304,6 +317,7 @@ function onShowLogsBtnClicked(item: Workspace) {
                 <div class="d-flex justify-end">
 
                     <v-btn
+                        v-if="rbacDeveloper"
                         variant="plain" color="primary" size="small" icon
                         @click="onShowDeploymentsBtnClicked(item.raw.workspace)">
                         <v-icon>fa fa-box</v-icon>
@@ -311,6 +325,7 @@ function onShowLogsBtnClicked(item: Workspace) {
                     </v-btn>
 
                     <v-btn
+                        v-if="rbacDeveloper"
                         variant="plain" color="primary" size="small" icon
                         @click="onShowLogsBtnClicked(item.raw.workspace)">
                         <v-icon>fa fa-rectangle-list</v-icon>
@@ -318,14 +333,15 @@ function onShowLogsBtnClicked(item: Workspace) {
                     </v-btn>
 
                     <v-btn
+                        v-if="rbacDeveloper"
                         variant="plain" color="primary" size="small" icon
                         @click="onShowMigrationJobsBtnClicked(item.raw.workspace)">
                         <v-icon>fa fa-truck-arrow-right</v-icon>
                         <v-tooltip activator="parent" location="bottom">Migration Jobs</v-tooltip>
-
                     </v-btn>
 
                     <v-menu
+                        v-if="rbacWorkspaceUpdate"
                         min-width="250">
                         <template v-slot:activator="{ props }">
                             <v-btn
@@ -340,6 +356,7 @@ function onShowLogsBtnClicked(item: Workspace) {
                     </v-menu>
 
                     <v-btn
+                        v-if="rbacWorkspaceCreate"
                         variant="plain" color="warning" size="small" icon
                         @click="onDeployItemBtnClicked(item.raw.workspace)">
                         <v-icon>fa fa-play</v-icon>
@@ -347,6 +364,7 @@ function onShowLogsBtnClicked(item: Workspace) {
                     </v-btn>
 
                     <v-btn
+                        v-if="rbacDeveloper"
                         variant="plain" color="red" size="small" icon
                         @click="onTerminateItemBtnClicked(item.raw.workspace)">
                         <v-icon>fa fa-skull</v-icon>
@@ -354,6 +372,7 @@ function onShowLogsBtnClicked(item: Workspace) {
                     </v-btn>
 
                     <v-btn
+                        v-if="rbacWorkspaceUpdate"
                         variant="plain" color="red" size="small" icon
                         @click="onDeleteItemBtnClicked(item.raw)"
                         :loading="item.raw.isLoadingDeleteBtn"
