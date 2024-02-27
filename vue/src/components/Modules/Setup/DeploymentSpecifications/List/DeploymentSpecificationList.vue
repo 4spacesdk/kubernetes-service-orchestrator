@@ -83,7 +83,7 @@ function getItems(doItems = true, doCount = false) {
 
 function createItem() {
     bus.emit('deploymentSpecificationEdit', {
-        deploymentSpecification: new DeploymentSpecification(),
+        deploymentSpecification: DeploymentSpecification.Create(),
     });
 }
 

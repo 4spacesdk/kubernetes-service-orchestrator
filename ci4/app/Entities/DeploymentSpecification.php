@@ -51,6 +51,8 @@ use RestExtension\Core\Entity;
  * @property string $database_migration_container_image_tag_policy
  * @property string $database_migration_container_image_tag_value
  * @property string $database_migration_command
+ * @property string $database_migration_verification_type
+ * @property string $database_migration_verification_value
  *
  * # Cron Job settings
  * @property string $cronjob_url

@@ -107,6 +107,12 @@ class ImagePullPolicies {
         Never = 'Never';
 }
 
+class MigrationVerificationTypes {
+    const
+        EndsWith = 'ends-with',
+        Regex = 'regex';
+}
+
 
 /*
  | --------------------------------------------------------------------

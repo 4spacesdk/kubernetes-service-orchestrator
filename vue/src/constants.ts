@@ -312,3 +312,8 @@ export const ImagePullPolicies = {
     Always: 'Always',
     Never: 'Never',
 };
+
+export const MigrationVerificationTypes = {
+    EndsWith: 'ends-with',
+    Regex: 'regex'
+};

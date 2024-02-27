@@ -35,6 +35,8 @@ export class DeploymentSpecificationDefinition extends BaseModel {
     database_migration_container_image_tag_policy?: string;
     database_migration_container_image_tag_value?: string;
     database_migration_command?: string;
+    database_migration_verification_type?: string;
+    database_migration_verification_value?: string;
     cronjob_url?: string;
     deployments?: Deployment[];
     deployment_specification_post_commands?: DeploymentSpecificationPostCommand[];
@@ -81,6 +83,8 @@ export class DeploymentSpecificationDefinition extends BaseModel {
             delete this.database_migration_container_image_tag_policy;
             delete this.database_migration_container_image_tag_value;
             delete this.database_migration_command;
+            delete this.database_migration_verification_type;
+            delete this.database_migration_verification_value;
             delete this.cronjob_url;
             delete this.deployments;
             delete this.deployment_specification_post_commands;
@@ -157,6 +161,12 @@ export class DeploymentSpecificationDefinition extends BaseModel {
         }
         if (data.database_migration_command != null) {
             this.database_migration_command = data.database_migration_command;
+        }
+        if (data.database_migration_verification_type != null) {
+            this.database_migration_verification_type = data.database_migration_verification_type;
+        }
+        if (data.database_migration_verification_value != null) {
+            this.database_migration_verification_value = data.database_migration_verification_value;
         }
         if (data.cronjob_url != null) {
             this.cronjob_url = data.cronjob_url;

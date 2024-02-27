@@ -4,7 +4,7 @@ import {ContainerImage, DeploymentSpecification} from "@/core/services/Deploy/mo
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
-import {ContainerImageTagPolicies} from "@/constants";
+import {ContainerImageTagPolicies, MigrationVerificationTypes} from "@/constants";
 
 export interface DeploymentSpecificationEditDialog_Input {
     deploymentSpecification: DeploymentSpecification;
@@ -31,6 +31,17 @@ const migrationTagPolicies = ref([
     {
         identifier: ContainerImageTagPolicies.Static,
         name: "Static",
+    },
+]);
+
+const migrationVerificationTypes = ref([
+    {
+        identifier: MigrationVerificationTypes.EndsWith,
+        name: 'Ends With',
+    },
+    {
+        identifier: MigrationVerificationTypes.Regex,
+        name: "Regex",
     },
 ]);
 
@@ -171,7 +182,7 @@ function onCloseBtnClicked() {
                                         <v-switch
                                             v-model="isCustomMigrationImage"
                                             variant="outlined"
-                                            label="Use separate container image for migration"
+                                            label="Use different container image for migration"
                                             density="compact"
                                             hide-details
                                             color="secondary"
@@ -226,10 +237,36 @@ function onCloseBtnClicked() {
                                         <v-text-field
                                             variant="outlined"
                                             v-model="item.database_migration_command"
-                                            label="Database migration command"
+                                            label="Migration command"
                                             hint="cd /var/www/html/ci4 && php spark migrate"
                                             persistent-hint
                                         />
+                                    </v-col>
+
+                                    <v-col cols="12">
+                                        <v-row>
+                                            <v-col cols="6">
+                                                <v-select
+                                                    v-model="item.database_migration_verification_type"
+                                                    :items="migrationVerificationTypes"
+                                                    item-title="name"
+                                                    item-value="identifier"
+                                                    variant="outlined"
+                                                    label="Migration verification type"
+                                                    density="compact"
+                                                />
+                                            </v-col>
+                                            <v-col cols="6">
+                                                <v-text-field
+                                                    v-model="item.database_migration_verification_value"
+                                                    variant="outlined"
+                                                    label="Verification value"
+                                                    density="compact"
+                                                    persistent-hint
+                                                    hint="Ex. Done. or (?:[a-z0-9\-]{0,61})?"
+                                                />
+                                            </v-col>
+                                        </v-row>
                                     </v-col>
                                 </v-row>
                             </div>

@@ -13,6 +13,7 @@ const props = defineProps<{ input: WorkspaceCreateDialog_Input, events: DialogEv
 
 const used = ref(false);
 const showDialog = ref(false);
+const isFormValid = ref(false);
 
 const item = ref<Workspace | null>(null);
 const isLoadingDomains = ref(false);
@@ -92,66 +93,75 @@ function onCloseBtnClicked() {
         persistent
         width="60vw"
         v-model="showDialog">
-        <v-card
-            class="w-100 h-100">
-            <v-card-title>Workspace: Create {{ props.input.deploymentPackage.name }}</v-card-title>
-            <v-divider/>
-            <v-card-text>
-                <v-row
-                    dense>
-                    <v-col cols="12">
-                        <v-text-field
-                            v-model="item!.name_readable"
-                            variant="outlined"
-                            label="Name"
-                            clearable/>
-                    </v-col>
-                    <v-col cols="12">
-                        <v-select
-                            v-model="item!.domain_id"
-                            :loading="isLoadingDomains"
-                            :items="domains"
-                            item-title="name"
-                            item-value="id"
-                            variant="outlined"
-                            label="Domains"/>
-                    </v-col>
-                    <v-col cols="12">
-                        <v-text-field
-                            v-model="item!.subdomain"
-                            variant="outlined"
-                            label="Subdomain"
-                            clearable
-                            :rules="[
-                                v => /[A-Za-z0-9](?:[A-Za-z0-9\-]{0,61}[A-Za-z0-9])?/.test(v) || 'Invalid format'
-                            ]"
-                            persistent-hint
-                            hint="Max 63 characters, must begin with an alpha-numeric"/>
-                    </v-col>
-                </v-row>
-            </v-card-text>
-            <v-divider/>
-            <v-card-actions>
-                <v-spacer/>
-                <v-btn
-                    variant="tonal"
-                    color="grey"
-                    prepend-icon="fa fa-circle-xmark"
-                    @click="onCloseBtnClicked">
-                    Close
-                </v-btn>
+        <v-form
+            v-model="isFormValid"
+        >
+            <v-card
+                class="w-100 h-100">
+                <v-card-title>Workspace: Create {{ props.input.deploymentPackage.name }}</v-card-title>
+                <v-divider/>
+                <v-card-text>
+                    <v-row
+                        dense>
+                        <v-col cols="12">
+                            <v-text-field
+                                v-model="item!.name_readable"
+                                variant="outlined"
+                                label="Name"
+                                clearable
+                                :rules="[
+                                    v => (v?.length ?? 0) >= 4 || 'Must be at least four characters long'
+                                ]"
+                            />
+                        </v-col>
+                        <v-col cols="12">
+                            <v-select
+                                v-model="item!.domain_id"
+                                :loading="isLoadingDomains"
+                                :items="domains"
+                                item-title="name"
+                                item-value="id"
+                                variant="outlined"
+                                label="Domains"/>
+                        </v-col>
+                        <v-col cols="12">
+                            <v-text-field
+                                v-model="item!.subdomain"
+                                variant="outlined"
+                                label="Subdomain"
+                                clearable
+                                :rules="[
+                                    v => /^([a-z0-9](?:[a-z0-9\-]{0,61}[a-z0-9])?)$/.test(v) || 'Invalid format'
+                                ]"
+                                persistent-hint
+                                hint="Max 63 characters, must begin with an alpha-numeric"/>
+                        </v-col>
+                    </v-row>
+                </v-card-text>
+                <v-divider/>
+                <v-card-actions>
+                    <v-spacer/>
+                    <v-btn
+                        variant="tonal"
+                        color="grey"
+                        prepend-icon="fa fa-circle-xmark"
+                        @click="onCloseBtnClicked">
+                        Close
+                    </v-btn>
 
-                <v-btn
-                    :loading="isSaving"
-                    flat
-                    variant="tonal"
-                    prepend-icon="fa fa-check"
-                    color="green"
-                    @click="onSaveBtnClicked">
-                    Save
-                </v-btn>
-            </v-card-actions>
-        </v-card>
+                    <v-btn
+                        :loading="isSaving"
+                        :disabled="!isFormValid"
+                        flat
+                        variant="tonal"
+                        prepend-icon="fa fa-check"
+                        color="green"
+                        @click="onSaveBtnClicked">
+                        Save
+                    </v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-form>
     </v-dialog>
 </template>
 

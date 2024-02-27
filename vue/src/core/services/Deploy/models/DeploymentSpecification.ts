@@ -5,11 +5,19 @@
  */
 import {DeploymentSpecificationDefinition} from './definitions/DeploymentSpecificationDefinition';
 import {Deployment} from "@/core/services/Deploy/models/Deployment";
+import {MigrationVerificationTypes} from "@/constants";
 
 export class DeploymentSpecification extends DeploymentSpecificationDefinition {
 
     constructor(json?: any) {
         super(json);
+    }
+
+    public static Create(): DeploymentSpecification {
+        const item = new DeploymentSpecification();
+        item.database_migration_verification_type = MigrationVerificationTypes.EndsWith;
+        item.database_migration_verification_value = 'Done migrations.';
+        return item;
     }
 
     public generateUrl(deployment: Deployment, includeTls: boolean): string {

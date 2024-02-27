@@ -65,39 +65,53 @@ class MigrationJob extends Entity {
     }
 
     public function validateLog(): void {
-        if (str_ends_with($this->log, 'Migrations complete.')
-            || str_ends_with($this->log, 'Done migrations.')) {
+        $deployment = new Deployment();
+        $deployment->find($this->deployment_id);
+        $spec = $deployment->findDeploymentSpecification();
+        if (!$spec->exists()) {
+            $this->log .= "\nNo deployment spec found";
+            $this->save();
+            $this->updateStatus(\MigrationJobStatusTypes::Failed_LogVerification);
+            return;
+        }
 
+        $isValid = false;
+        switch ($spec->database_migration_verification_type) {
+            case \MigrationVerificationTypes::EndsWith:
+                $isValid = str_ends_with($this->log, $spec->database_migration_verification_value);
+                break;
+            case \MigrationVerificationTypes::Regex:
+                $isValid = preg_match($this->log, $spec->database_migration_verification_value) == 1;
+                break;
+        }
+
+
+        if ($isValid) {
             // TODO Add type to post command (post-migration / post-deployment)
-            $deployment = new Deployment();
-            $deployment->find($this->deployment_id);
-            $spec = $deployment->findDeploymentSpecification();
-            if ($spec->exists()) {
-                $spec->deployment_specification_post_commands->find();
-                if ($spec->deployment_specification_post_commands->exists()) {
+            $spec->deployment_specification_post_commands->find();
+            if ($spec->deployment_specification_post_commands->exists()) {
 
-                    try {
-                        $deploymentStep = new DeploymentStep();
-                        Data::debug('found', $spec->deployment_specification_post_commands->count(), 'commands to execute');
-                        foreach ($spec->deployment_specification_post_commands as $postCommand) {
-                            Data::debug($postCommand->command);
-                            $commandOutputLines = $deploymentStep->executeCommand(
-                                $deployment,
-                                [
-                                    '/bin/sh',
-                                    '-c',
-                                    $postCommand->command
-                                ],
-                                $postCommand->all_pods
-                            );
-                            Data::debug($commandOutputLines);
-                        }
-                        $this->updateStatus(\MigrationJobStatusTypes::Completed);
-                    } catch (\Exception $e) {
-                        $this->log .= "\n{$e->getMessage()}";
-                        $this->save();
-                        $this->updateStatus(\MigrationJobStatusTypes::Failed_PostCommands);
+                try {
+                    $deploymentStep = new DeploymentStep();
+                    Data::debug('found', $spec->deployment_specification_post_commands->count(), 'commands to execute');
+                    foreach ($spec->deployment_specification_post_commands as $postCommand) {
+                        Data::debug($postCommand->command);
+                        $commandOutputLines = $deploymentStep->executeCommand(
+                            $deployment,
+                            [
+                                '/bin/sh',
+                                '-c',
+                                $postCommand->command
+                            ],
+                            $postCommand->all_pods
+                        );
+                        Data::debug($commandOutputLines);
                     }
+                    $this->updateStatus(\MigrationJobStatusTypes::Completed);
+                } catch (\Exception $e) {
+                    $this->log .= "\n{$e->getMessage()}";
+                    $this->save();
+                    $this->updateStatus(\MigrationJobStatusTypes::Failed_PostCommands);
                 }
             }
         } else {
