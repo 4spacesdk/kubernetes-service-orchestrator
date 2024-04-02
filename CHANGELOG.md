@@ -6,8 +6,9 @@
 * 
 
 ### Enhancements
-* Added "Password renewal" feature
-* Added "Forgot password" feature
+* Added "Password renewal" feature [Issue #20](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/20)
+* Added "Forgot password" feature [Issue #20](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/20)
+* New webhook event "workspace.updated" [Issue #16](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/16)
 
 ### Upgrade guide
 1. Deploy new image

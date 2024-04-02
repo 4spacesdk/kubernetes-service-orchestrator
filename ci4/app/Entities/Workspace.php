@@ -7,7 +7,6 @@ use App\Libraries\GoogleCloud\GoogleCloudArtifactRegistry;
 use App\Libraries\ZMQ\ChangeEvent;
 use App\Libraries\ZMQ\Events;
 use App\Libraries\ZMQ\ZMQProxy;
-use App\Models\ConfigurationSpecificationModel;
 use App\Models\DeploymentModel;
 use App\Models\DeploymentPackageDeploymentSpecificationModel;
 use App\Models\DeploymentPackageEnvironmentVariableModel;
@@ -263,6 +262,12 @@ class Workspace extends Entity {
         }
     }
 
+    public function updateLabels(Label $values): void {
+        $this->labels->find()->deleteAll();
+        $this->save($values);
+        $this->labels = $values;
+    }
+
     public function checkStatus(): void {
         /** @var Deployment $deployments */
         $deployments = (new DeploymentModel())
@@ -307,10 +312,21 @@ class Workspace extends Entity {
         return count($allErrors) ? implode("\n", $allErrors) : null;
     }
 
-    public function updateLabels(Label $values): void {
-        $this->labels->find()->deleteAll();
-        $this->save($values);
-        $this->labels = $values;
+    public function save($related = null, $relatedField = null) {
+        $isChanged = $this->hasChanged();
+
+        $original = $this->getOriginal();
+        Data::debug($isChanged);
+        parent::save($related, $relatedField);
+
+        if (is_null($related)) {
+            if ($isChanged) {
+                ZMQProxy::getInstance()->send(
+                    Events::Workspace_Updated(),
+                    (new ChangeEvent($original, $this->toArray()))->toArray()
+                );
+            }
+        }
     }
 
     public function delete($related = null) {

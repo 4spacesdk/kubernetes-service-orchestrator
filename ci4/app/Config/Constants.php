@@ -78,11 +78,13 @@ class MigrationJobStatusTypes {
 class WebHookTypes {
     const
         Workspace_Created = 'workspace-created',
+        Workspace_Updated = 'workspace-updated',
         Workspace_Deleted = 'workspace-deleted';
 
     public static function All(): array  {
         return [
             self::Workspace_Created,
+            self::Workspace_Updated,
             self::Workspace_Deleted,
         ];
     }

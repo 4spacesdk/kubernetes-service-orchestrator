@@ -45,6 +45,10 @@ class Events {
         return Events::Generate("workspace.created");
     }
 
+    public static function Workspace_Updated(): string {
+        return Events::Generate("workspace.updated");
+    }
+
     public static function Workspace_Deleted(): string {
         return Events::Generate("workspace.deleted");
     }

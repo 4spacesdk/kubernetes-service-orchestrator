@@ -1,6 +1,6 @@
 <?php namespace App;
 
-use React\EventLoop\Factory;
+use React\EventLoop\Loop;
 use React\EventLoop\LoopInterface;
 use Vinelab\Minion\Client;
 
@@ -11,7 +11,7 @@ class Subscriber {
     public function __construct() {
         $internalHost = 'localhost';
 
-        $loop = Factory::create();
+        $loop = Loop::get();
 
         $this->setupInternalClient($internalHost, $loop);
 
@@ -20,7 +20,7 @@ class Subscriber {
         $loop->run();
     }
 
-    private function subscribe(Client $client) {
+    private function subscribe(Client $client): void {
         $client->subscribe(Events::MigrationJob_Changed_Status(0), function ($payload) {
             log_('MigrationJob_Changed_Status');
             [$identifier, $event, $data] = self::ParsePayload($payload);
@@ -32,6 +32,13 @@ class Subscriber {
             log_('Workspace_Created');
             [$identifier, $event, $data] = self::ParsePayload($payload);
             $result = php("ZMQ workspaceCreated --identifier $identifier --event $event --data $data");
+            log_($result);
+        });
+
+        $client->subscribe(Events::Workspace_Updated(), function ($payload) {
+            log_('Workspace_Updated');
+            [$identifier, $event, $data] = self::ParsePayload($payload);
+            $result = php("ZMQ workspaceUpdated --identifier $identifier --event $event --data $data");
             log_($result);
         });
 

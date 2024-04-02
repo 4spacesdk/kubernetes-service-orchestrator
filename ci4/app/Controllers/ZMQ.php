@@ -75,6 +75,15 @@ class ZMQ extends Controller {
         Data::debug('OK');
     }
 
+    public function workspaceUpdated(): void {
+        $changeEvent = ChangeEvent::Parse(json_decode($this->event->data, true));
+        WebhookHelper::Deliver(
+            \WebHookTypes::Workspace_Updated,
+            json_encode($changeEvent->next)
+        );
+        Data::debug('OK');
+    }
+
     public function workspaceDeleted(): void {
         $changeEvent = ChangeEvent::Parse(json_decode($this->event->data, true));
         WebhookHelper::Deliver(
