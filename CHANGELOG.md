@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.1.15  ()
+## v0.1.15  (2024-04-02)
 
 ### Fixed bugs
 * Fix ingress redirect tls secret name
