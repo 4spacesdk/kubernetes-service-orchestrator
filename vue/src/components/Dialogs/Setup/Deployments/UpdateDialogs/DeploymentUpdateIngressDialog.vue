@@ -20,7 +20,7 @@ const domains = ref<Domain[]>([]);
 const isLoadingDomains = ref(false);
 const subdomain = ref<string>();
 const aliases = ref<string>();
-const isDomainEnaled = ref(false);
+const isDomainEnabled = ref(false);
 const isSubdomainEnabled = ref(false);
 const isAliasEnabled = ref(false);
 
@@ -41,7 +41,7 @@ function render() {
     domainId.value = props.input.deployment.domain_id;
     subdomain.value = props.input.deployment.subdomain ?? '';
     aliases.value = props.input.deployment.aliases ?? '';
-    isDomainEnaled.value = props.input.deployment.status === DeploymentStatusTypes.Draft;
+    isDomainEnabled.value = props.input.deployment.status === DeploymentStatusTypes.Draft;
     isSubdomainEnabled.value = props.input.deployment.status === DeploymentStatusTypes.Draft;
     isAliasEnabled.value = true;
     showDialog.value = true;
@@ -106,14 +106,14 @@ function onCloseBtnClicked() {
                     dense>
                     <v-col cols="12">
                         <v-tooltip
-                            :disabled="isDomainEnaled"
+                            :disabled="isDomainEnabled"
                             location="bottom">
                             <template v-slot:activator="{ props }">
                                 <div
                                     v-bind="props">
                                     <v-select
                                         v-model="domainId"
-                                        :disabled="!isDomainEnaled"
+                                        :disabled="!isDomainEnabled"
                                         :loading="isLoadingDomains"
                                         :items="domains"
                                         item-title="name"
@@ -154,6 +154,7 @@ function onCloseBtnClicked() {
                             variant="outlined"
                             label="Aliases"
                             persistent-hint
+                            clearable
                             hint="Comma-seperated: deploy,deployment,server"/>
                     </v-col>
                 </v-row>

@@ -110,9 +110,7 @@ class DeploymentSpecification extends Entity {
         }
         if ($this->enable_ingress) {
             $steps[] = new IngressStep();
-            if (strlen($deployment?->aliases ?? $this->domain_aliases)) {
-                $steps[] = new RedirectsStep();
-            }
+            $steps[] = new RedirectsStep();
         }
         if ($this->enable_cronjob) {
             $steps[] = new CronjobStep();

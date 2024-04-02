@@ -3,7 +3,8 @@
 ## v0.1.15  ()
 
 ### Fixed bugs
-* 
+* Fix ingress redirect tls secret name
+* Remove ingress-redirect when deployment alias is removed [Issue #18](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/18)
 
 ### Enhancements
 * Added "Password renewal" feature [Issue #20](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/20)

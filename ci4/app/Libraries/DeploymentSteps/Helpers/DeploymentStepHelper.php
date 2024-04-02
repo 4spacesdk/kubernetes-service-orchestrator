@@ -55,6 +55,8 @@ class DeploymentStepHelper {
 
     const
         Redirects_NotFound = 'not-found',
+        Redirects_NotFoundNotExpected = 'not-found-not-expected',
+        Redirects_FoundNotExpected = 'found-not-expected',
         Redirects_Found = 'found';
 
     const

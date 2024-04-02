@@ -59,9 +59,15 @@ function reload() {
                 color.value = 'red';
                 break;
 
+            case 'found-not-expected':
+                icon.value = 'fa-circle-xmark';
+                color.value = 'red';
+                break;
+
             case 'found':
             case 'success':
             case 'completed':
+            case 'not-found-not-expected':
                 icon.value = 'fa-circle-check';
                 color.value = 'green';
                 break;

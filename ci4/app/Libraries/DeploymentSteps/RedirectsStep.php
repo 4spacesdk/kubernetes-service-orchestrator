@@ -79,16 +79,18 @@ class RedirectsStep extends BaseDeploymentStep {
      * @throws \Exception
      */
     public function getStatus(Deployment $deployment): string {
-        if (strlen($deployment->aliases) == 0) {
-            // No need for deploying this step
-            return DeploymentStepHelper::Redirects_Found;
-        }
+        $expectAlias = strlen($deployment->aliases) > 0;
 
         $resource = $this->getResource($deployment, true);
-        if ($resource->exists()) {
-            return DeploymentStepHelper::Redirects_Found;
+        $hasAlias = $resource->exists();
+        if ($hasAlias) {
+            return $expectAlias
+                ? DeploymentStepHelper::Redirects_Found
+                : DeploymentStepHelper::Redirects_FoundNotExpected;
         } else {
-            return DeploymentStepHelper::Redirects_NotFound;
+            return $expectAlias
+                ? DeploymentStepHelper::Redirects_NotFound
+                : DeploymentStepHelper::Redirects_NotFoundNotExpected;
         }
     }
 
@@ -123,7 +125,7 @@ class RedirectsStep extends BaseDeploymentStep {
 
     public function startDeployCommand(Deployment $deployment): void {
         if (strlen($deployment->aliases) == 0) {
-            // No need for deploying this step
+            $this->startTerminateCommand($deployment);
             return;
         }
         $resource = $this->getResource($deployment, true);
@@ -132,8 +134,10 @@ class RedirectsStep extends BaseDeploymentStep {
 
     public function startTerminateCommand(Deployment $deployment): void {
         $resource = $this->getResource($deployment, true);
-        $resource->synced();
-        $resource->delete();
+        if ($resource->exists()) {
+            $resource->synced();
+            $resource->delete();
+        }
     }
 
     public function getKubernetesEvents(Deployment $deployment): array {
@@ -208,7 +212,7 @@ class RedirectsStep extends BaseDeploymentStep {
             ->setTls([
                 [
                     'hosts' => $tlsHosts,
-                    'secretName' => $deployment->getUrl(),
+                    'secretName' => $deployment->domain->certificate_name,
                 ]
             ])
             ->setRules($rules);
