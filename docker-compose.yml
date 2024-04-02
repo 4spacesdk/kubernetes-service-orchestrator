@@ -7,7 +7,7 @@ services:
       context: .
       dockerfile: docker/Dockerfile
       args:
-        GKE_AUTH_ENABLED: "${DEPLOY_GKE_AUTH_ENABLED}"
+        GKE_AUTH_ENABLED: "${KSO_GKE_AUTH_ENABLED}"
 
     container_name: 4s-deploy-service-app
     restart: unless-stopped
@@ -16,21 +16,26 @@ services:
     working_dir: /var/www/html
 
     ports:
-      - "${DEPLOY_CI4_PORT}:80"
-      - "${DEPLOY_VUE_PORT}:8901"
-      - "${DEPLOY_ZMQ_PORT}:9100"
+      - "${KSO_CI4_PORT}:80"
+      - "${KSO_VUE_PORT}:8901"
+      - "${KSO_ZMQ_PORT}:9100"
 
     environment:
       - ENVIRONMENT=development
-      - BASE_URL=http://localhost:${DEPLOY_CI4_PORT}
-      - DB_HOST=${DEPLOY_DB_HOST}
-      - DB_NAME=${DEPLOY_DB_NAME}
-      - DB_USER=${DEPLOY_DB_USER}
-      - DB_PASS=${DEPLOY_DB_PASS}
+      - BASE_URL=http://localhost:${KSO_CI4_PORT}
+      - DB_HOST=${KSO_DB_HOST}
+      - DB_NAME=${KSO_DB_NAME}
+      - DB_USER=${KSO_DB_USER}
+      - DB_PASS=${KSO_DB_PASS}
       - KEEL_TRIGGER=poll
-      - ZMQ_EXTERNAL_URL=ws://localhost:${DEPLOY_ZMQ_PORT}
+      - ZMQ_EXTERNAL_URL=ws://localhost:${KSO_ZMQ_PORT}
       - CERT_MANAGER_ISSUER_DEFAULT_NAME=${CONFIG_DEFAULTS_CERT_MANAGER_ISSUER_DEFAULT_NAME}
       - IMAGE_PULL_SECRET_DEFAULT_NAME=${CONFIG_DEFAULTS_IMAGE_PULL_SECRET_DEFAULT_NAME}
+      - EMAIL_SERVICE_HOST=${CONFIG_EMAIL_HOST}
+      - EMAIL_SERVICE_PORT=${CONFIG_EMAIL_PORT}
+      - EMAIL_SERVICE_USER=${CONFIG_EMAIL_USER}
+      - EMAIL_SERVICE_PASS=${CONFIG_EMAIL_PASS}
+      - EMAIL_SERVICE_SENDER=${CONFIG_EMAIL_SENDER}
 
     volumes:
       - ./:/var/www/html:delegated

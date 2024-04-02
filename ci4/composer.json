@@ -18,7 +18,8 @@
     "renoki-co/php-k8s": "3.8.1",
     "google/cloud-artifact-registry": "^0.3.7",
     "podio-community/podio-php": "7.0.2",
-    "knplabs/github-api": "^v3.9.0"
+    "knplabs/github-api": "^v3.9.0",
+    "ext-openssl": "*"
   },
   "require-dev": {
     "phpunit/phpunit": "^9.1"

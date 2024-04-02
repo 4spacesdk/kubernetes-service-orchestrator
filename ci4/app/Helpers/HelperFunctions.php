@@ -108,3 +108,15 @@ if (!function_exists('datetimezone')) {
         }
     }
 }
+
+if (!function_exists('getFrontendUrl')) {
+
+    function getFrontendUrl(): string {
+        if (str_contains(base_url(), 'localhost')) {
+            return 'http://localhost:8951';
+        } else {
+            return str_replace('/api', '', base_url());
+        }
+    }
+
+}

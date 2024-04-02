@@ -1,5 +1,6 @@
 <?php namespace App\Entities;
 
+use App\Libraries\EmailLib;
 use App\Models\UserModel;
 
 /**
@@ -11,6 +12,7 @@ use App\Models\UserModel;
  * @property string $password
  * @property string $scope
  * @property string $type
+ * @property bool $renew_password
  *
  *  Many
  * @property RbacRole $rbac_roles
@@ -63,7 +65,7 @@ class User extends \RestExtension\Entities\User {
 
     public function getTableFields() {
         return [
-            'id', 'first_name', 'last_name', 'username', 'password', 'scope', 'type',
+            'id', 'first_name', 'last_name', 'username', 'password', 'renew_password', 'scope', 'type',
         ];
     }
 
@@ -71,6 +73,28 @@ class User extends \RestExtension\Entities\User {
 
     public function getScopes(): array {
         return strlen($this->scope) ? explode(' ', $this->scope) : [];
+    }
+
+    private static function generatePassword(): string {
+        return bin2hex(openssl_random_pseudo_bytes(4));
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public function sendForgotPasswordEmail(): void {
+        $password = self::generatePassword();
+        $this->password = $this->encryptPassword($password);
+        $this->renew_password = true;
+        $this->save();
+
+        $emailLib = new EmailLib();
+        $emailLib->send(
+            '4 Spaces KSO | New password',
+            "Your new password is \"{$password}\"",
+            $this->first_name,
+            $this->username
+        );
     }
 
     /**

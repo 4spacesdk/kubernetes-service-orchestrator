@@ -41,6 +41,19 @@ deployment:
   kubernetes:
     remoteClusterUrl: "https://kubernetes.default.svc.cluster.local"
 
+  config:
+    defaults:
+      imagePullSecretName: ""
+      certManagerIssuerName: ""
+      
+    # Enable email features. Used for "forgot password". This is optional.  
+#    email:
+#      host: ""
+#      port: ""
+#      user: ""
+#      pass: ""
+#      sender: ""
+
   env: [ ]
 #  env:
 #    - name: ""

@@ -145,6 +145,15 @@ function onCloseBtnClicked() {
                             label="Confirm password"/>
                     </v-col>
 
+                    <v-col cols="12">
+                        <v-checkbox
+                            v-model="item.renew_password"
+                            color="accent"
+                            density="compact"
+                            label="Require password renewal on next login"
+                        />
+                    </v-col>
+
 
                     <v-col cols="12">
                         <v-select

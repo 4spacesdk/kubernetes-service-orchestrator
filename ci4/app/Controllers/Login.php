@@ -1,9 +1,11 @@
 <?php namespace App\Controllers;
 
 use App\Entities\User;
+use App\Helpers\Client;
 use AuthExtension\AuthExtension;
 use AuthExtension\Config\LoginResponse;
 use AuthExtension\Models\UserModel;
+use DebugTool\Data;
 
 class Login extends \App\Core\BaseController {
 
@@ -23,7 +25,7 @@ class Login extends \App\Core\BaseController {
             $requestUrl = $this->request->getGet('redirect_uri');
         }
         if (!$requestUrl) {
-            $requestUrl = base_url('home'); // Should never happen in production
+            $requestUrl = getFrontendUrl();
         }
         session()->setFlashdata('requestUrl', $requestUrl);
         $data['requestUrl'] = $requestUrl;
@@ -40,37 +42,17 @@ class Login extends \App\Core\BaseController {
                 case LoginResponse::Success:
                     $this->response->redirect($data['requestUrl']);
                     break;
-                case LoginResponse::RenewPassword:
 
-                    /** @var User $user */
-                    $user = (new UserModel())
-                        ->where('id', session('user_id'))
-                        ->find();
-                    return $this->renewPassword($user, $scopes);
+                case LoginResponse::RenewPassword:
+                    $this->response->redirect(base_url('login/renewPassword'));
+                    break;
 
                 case LoginResponse::WrongPassword:
-
-                    // Temporary legacy password check, added in 5.4.0 (2021.01). To be removed at 2021.07.
-                    /** @var User $legacyUser */
-                    $legacyUser = (new UserModel())
-                        ->where('username', $username)
-                        ->find();
-                    if ($legacyUser->exists() && strlen($legacyUser->password) && substr($legacyUser->password, 1, 1) != '$') {
-                        // User has a password and it is not bcrypt. Check for SHA1.
-                        if ($legacyUser->password == sha1($password)) {
-                            session()->set('user_id', $legacyUser->id);
-                            if (!$legacyUser->renew_password) { // Force renew password
-                                $legacyUser->renew_password = true;
-                                $legacyUser->save();
-                            }
-                            return $this->renewPassword($legacyUser, $scopes);
-                        }
-                    }
-                    $data['loginResponse'] = 'Forkert kodeord';
+                    $data['loginResponse'] = 'Wrong password';
                     break;
 
                 case LoginResponse::UnknownUser:
-                    $data['loginResponse'] = 'Ukendt email';
+                    $data['loginResponse'] = 'Unknown username';
                     break;
 
                 case LoginResponse::WrongScope:
@@ -80,23 +62,97 @@ class Login extends \App\Core\BaseController {
 
         }
 
-        return view('Login/Form', $data);
+        return view('Login/Login', $data);
     }
 
-    public function success() {
+    public function success(): void {
         $user = AuthExtension::checkSession();
-        if ($user)
+        if ($user) {
             echo 'Success - Welcome ' . $user->name();
-        else
+        } else {
             $this->response->redirect(base_url('/login'));
+        }
     }
 
-    private function renewPassword(User $user, string $scope) {
-//        $token = Token::RequestToken(\TokenTypes::RenewPassword, $user);
-//        return $this->response->redirect(base_url('/ForgotPassword/Recover') . '?' . http_build_query([
-//                'token' => $token->value,
-//                'scope' => $scope,
-//            ]));
+    public function renewPassword(): string {
+        /** @var string $requestUrl */
+        $requestUrl = session()->getFlashdata('request_url');
+        if (!$requestUrl) {
+            $requestUrl = getFrontendUrl();
+        }
+
+        if ($_POST) {
+
+            $password = $this->request->getPost('password');
+            $passwordConfirm = $this->request->getPost('password_confirm');
+
+            if ($password == $passwordConfirm) {
+
+                if (strlen($password) < 8) {
+                    $passError = 'At least eight characters';
+                }
+
+                if (!preg_match("#[0-9]+#", $password)) {
+                    $passError = 'At least one number';
+                }
+
+                if (!preg_match("#[a-zA-Z]+#", $password)) {
+                    $passError = 'At least one letter';
+                }
+
+                if (!preg_match("#[A-Z]+#", $password)) {
+                    $passError = 'At least one uppercase letter';
+                }
+
+                if (!isset($passError)) {
+
+                    $user = AuthExtension::checkSession();
+                    if ($user) {
+                        $user->password = User::encryptPassword($password);
+                        $user->renew_password = false;
+                        $user->save();
+
+                        $this->response->redirect($requestUrl);
+                        $this->response->send();
+                        exit;
+                    }
+
+                } else {
+                    Data::set('description', $passError);
+                }
+
+            } else {
+                Data::set('description', 'Must be identical');
+            }
+        }
+
+        session()->setFlashdata('request_url', $requestUrl);
+
+        return view('Login/PasswordRenewal', Data::getStore());
+    }
+
+    public function forgotPassword(): string {
+        session()->setFlashdata('request_url', session()->getFlashdata('request_url'));
+
+        if ($this->request->getPost('username')) {
+            /** @var User $user */
+            $user = (new \App\Models\UserModel())
+                ->where('username', $this->request->getPost('username'))
+                ->find();
+
+            if ($user->exists()) {
+                $user->sendForgotPasswordEmail();
+                Data::set('success', true);
+                Data::set('message', 'Check your e-mail inbox');
+            } else {
+                Data::set('success', false);
+                Data::set('message', 'Unknown e-mail');
+            }
+        } else {
+            Data::set('success', false);
+        }
+
+        return view('Login/ForgotPassword');
     }
 
 }

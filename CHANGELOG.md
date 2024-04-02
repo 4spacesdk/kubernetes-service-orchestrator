@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.1.15  ()
+
+### Fixed bugs
+* 
+
+### Enhancements
+* Added "Password renewal" feature
+* Added "Forgot password" feature
+
+### Upgrade guide
+1. Deploy new image
+2. Migrate database. [(Guide)](https://github.com/4spacesdk/kubernetes-service-orchestrator?tab=readme-ov-file#migrate-database-helm)
+
+
+
 ## v0.1.14  (2024-02-27)
 
 ### Fixed bugs

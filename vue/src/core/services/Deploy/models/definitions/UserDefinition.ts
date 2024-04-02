@@ -13,6 +13,7 @@ export class UserDefinition extends BaseModel {
     password?: string;
     scope?: string;
     type?: string;
+    renew_password?: boolean;
     rbac_roles?: RbacRole[];
     id?: number;
     created?: string;
@@ -37,6 +38,7 @@ export class UserDefinition extends BaseModel {
             delete this.password;
             delete this.scope;
             delete this.type;
+            delete this.renew_password;
             delete this.rbac_roles;
             delete this.id;
             delete this.created;
@@ -67,6 +69,9 @@ export class UserDefinition extends BaseModel {
         }
         if (data.type != null) {
             this.type = data.type;
+        }
+        if (data.renew_password != null) {
+            this.renew_password = data.renew_password;
         }
         if (data.rbac_roles != null) {
             this.rbac_roles = data.rbac_roles.map((i: any) => new RbacRole(i));

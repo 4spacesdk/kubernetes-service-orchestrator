@@ -2,11 +2,14 @@
 /**
  * @var string $loginResponse
  */
+
+use App\Libraries\EmailLib;
+
 ?>
 
 <html>
 <head>
-    <title>Login</title>
+    <title>KSO | Login</title>
 
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
           integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
@@ -316,6 +319,7 @@
         }
 
     </style>
+
     <script>
         $(function () {
             $('.toggle-password').on('click', (e) => {
@@ -364,6 +368,14 @@
                         <button class="btn btn-lg btn-primary btn-block text-uppercase"
                                 type="submit">Login
                         </button>
+
+                        <?php if (EmailLib::IsConfigured()) { ?>
+                        <a href="<?= base_url('/login/forgotPassword') ?>"
+                           class="mt-2 w-100 text-center d-block text-secondary d-flex align-items-center justify-content-center">
+                            <i class="far fa-envelope mr-1"></i>
+                            Forgot password
+                        </a>
+                        <?php } ?>
 
                         <div class="w-100 text-center d-block mt-2 mb-2">
                         </div>
