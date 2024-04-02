@@ -325,10 +325,10 @@ class MigrationJobStep extends BaseDeploymentStep {
             ])
             ->neverRestart();
 
-        if (strlen($spec->container_image->pull_secret) > 0) {
+        if (strlen($containerImage->pull_secret) > 0) {
             $template->setSpec('imagePullSecrets', [
                 [
-                    'name' => $spec->container_image->pull_secret,
+                    'name' => $containerImage->pull_secret,
                 ],
             ]);
         }
