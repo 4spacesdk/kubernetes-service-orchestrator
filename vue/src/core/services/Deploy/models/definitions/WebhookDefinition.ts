@@ -10,6 +10,7 @@ export class WebhookDefinition extends BaseModel {
     type?: string;
     name?: string;
     url?: string;
+    http_method?: string;
     content_type?: string;
     auth_bearer_token?: string;
     webhook_deliveries?: WebhookDelivery[];
@@ -33,6 +34,7 @@ export class WebhookDefinition extends BaseModel {
             delete this.type;
             delete this.name;
             delete this.url;
+            delete this.http_method;
             delete this.content_type;
             delete this.auth_bearer_token;
             delete this.webhook_deliveries;
@@ -56,6 +58,9 @@ export class WebhookDefinition extends BaseModel {
         }
         if (data.url != null) {
             this.url = data.url;
+        }
+        if (data.http_method != null) {
+            this.http_method = data.http_method;
         }
         if (data.content_type != null) {
             this.content_type = data.content_type;

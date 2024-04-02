@@ -26,6 +26,7 @@ const rows = ref<Row[]>([]);
 const headers = ref([
     {title: 'Date', key: 'created', sortable: false},
     {title: 'Url', key: 'item.url', sortable: false},
+    {title: 'Method', key: 'item.method', sortable: false},
     {title: 'Response code', key: 'item.response_code', sortable: false},
     {title: 'Time', key: 'response_time', sortable: false},
     {title: '', key: 'actions', sortable: false},

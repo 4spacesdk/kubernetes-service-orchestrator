@@ -8,6 +8,7 @@ use RestExtension\Core\Entity;
  * @property string $type
  * @property string $name
  * @property string $url
+ * @property string $http_method
  * @property string $content_type
  * @property string $auth_bearer_token
  *
@@ -20,7 +21,7 @@ class Webhook extends Entity {
         $delivery = new WebhookDelivery();
         $delivery->webhook_id = $this->id;
         $delivery->url = $this->url;
-        $delivery->method = 'post';
+        $delivery->method = $this->http_method;
         $delivery->content_type = $this->content_type;
         $delivery->auth_bearer_token = $this->auth_bearer_token;
         $delivery->payload = json_encode([

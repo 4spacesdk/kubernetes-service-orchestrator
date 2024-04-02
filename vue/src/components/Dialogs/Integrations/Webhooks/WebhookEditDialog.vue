@@ -25,6 +25,14 @@ const contentTypeItems = ref([
     'application/x-www-form-urlencoded',
 ]);
 
+const httpMethodItems = ref([
+    'get',
+    'post',
+    'patch',
+    'put',
+    'delete',
+]);
+
 // <editor-fold desc="Functions">
 
 onMounted(() => {
@@ -128,6 +136,14 @@ function onCloseBtnClicked() {
                             variant="outlined"
                             v-model="item.url"
                             label="Url"
+                        />
+                    </v-col>
+                    <v-col cols="12">
+                        <v-select
+                            variant="outlined"
+                            v-model="item.http_method"
+                            label="Method"
+                            :items="httpMethodItems"
                         />
                     </v-col>
                     <v-col cols="12">

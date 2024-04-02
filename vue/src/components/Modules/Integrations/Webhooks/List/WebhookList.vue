@@ -15,6 +15,7 @@ const headers = ref([
     {title: 'Name', key: 'name', sortable: false},
     {title: 'Type', key: 'type', sortable: false},
     {title: 'Url', key: 'url', sortable: false},
+    {title: 'Method', key: 'http_method', sortable: false},
     {title: '', key: 'actions', sortable: false},
 ]);
 const isLoading = ref(true);
