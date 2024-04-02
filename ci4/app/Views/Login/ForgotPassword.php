@@ -332,9 +332,11 @@ use DebugTool\Data; ?>
                                    placeholder="E-mail" required autofocus="autofocus">
                         </div>
 
+                        <?php if (Data::get('message')) { ?>
                         <div class="alert alert-warning mt-4" role="alert">
                             <?=Data::get('message')?>
                         </div>
+                        <?php } ?>
 
                         <button class="btn btn-lg btn-primary btn-block text-uppercase mt-4" type="submit">Send</button>
 
