@@ -44,8 +44,11 @@ class RedirectsStep extends BaseDeploymentStep {
         return true;
     }
 
-    public function getSuccessStatus(): string {
-        return DeploymentStepHelper::Redirects_Found;
+    public function getSuccessStatus(Deployment $deployment): string {
+        $expectAlias = strlen($deployment->aliases) > 0;
+        return $expectAlias
+            ? DeploymentStepHelper::Redirects_Found
+            : DeploymentStepHelper::Redirects_NotFoundNotExpected;
     }
 
     /**

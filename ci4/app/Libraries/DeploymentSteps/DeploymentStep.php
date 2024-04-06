@@ -58,7 +58,7 @@ class DeploymentStep extends BaseDeploymentStep {
         return true;
     }
 
-    public function getSuccessStatus(): string {
+    public function getSuccessStatus(Deployment $deployment): string {
         return DeploymentStepHelper::Deployment_Found;
     }
 

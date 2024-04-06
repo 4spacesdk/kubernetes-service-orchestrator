@@ -48,7 +48,7 @@ class CronjobStep extends BaseDeploymentStep {
         return true;
     }
 
-    public function getSuccessStatus(): string {
+    public function getSuccessStatus(Deployment $deployment): string {
         return DeploymentStepHelper::Cronjob_Found;
     }
 

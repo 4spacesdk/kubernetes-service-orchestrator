@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.1.17  ()
+
+### Fixed bugs
+* Fixed deployment status check
+
+### Enhancements
+
+### Upgrade guide
+1. Deploy new image
+
+
+
 ## v0.1.16  (2024-04-02)
 
 ### Fixed bugs

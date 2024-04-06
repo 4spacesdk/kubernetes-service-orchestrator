@@ -46,7 +46,7 @@ class IngressStep extends BaseDeploymentStep {
         return true;
     }
 
-    public function getSuccessStatus(): string {
+    public function getSuccessStatus(Deployment $deployment): string {
         return DeploymentStepHelper::Ingress_Found;
     }
 

@@ -44,7 +44,7 @@ class PersistentVolumeClaimStep extends BaseDeploymentStep {
         return false;
     }
 
-    public function getSuccessStatus(): string {
+    public function getSuccessStatus(Deployment $deployment): string {
         return DeploymentStepHelper::PersistentVolumeClaim_Found;
     }
 

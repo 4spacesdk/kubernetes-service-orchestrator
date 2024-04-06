@@ -22,7 +22,7 @@ abstract class BaseDeploymentStep {
 
     abstract public function hasKubernetesStatus(): bool;
 
-    abstract public function getSuccessStatus(): string;
+    abstract public function getSuccessStatus(Deployment $deployment): string;
 
     abstract public function getPreview(Deployment $deployment): string;
 

@@ -56,7 +56,7 @@ class MigrationJobStep extends BaseDeploymentStep {
         return true;
     }
 
-    public function getSuccessStatus(): string {
+    public function getSuccessStatus(Deployment $deployment): string {
         return DeploymentStepHelper::MigrationJob_Completed;
     }
 

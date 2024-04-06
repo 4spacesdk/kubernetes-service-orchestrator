@@ -40,7 +40,7 @@ class DatabaseStep extends BaseDeploymentStep {
         return false;
     }
 
-    public function getSuccessStatus(): string {
+    public function getSuccessStatus(Deployment $deployment): string {
         return DeploymentStepHelper::DatabaseStatus_Success;
     }
 

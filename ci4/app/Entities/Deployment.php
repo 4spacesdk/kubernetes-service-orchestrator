@@ -267,7 +267,7 @@ class Deployment extends Entity {
 
         $hasFailedStep = false;
         foreach ($steps as $step) {
-            if ($step->getStatus($this) != $step->getSuccessStatus()) {
+            if ($step->getStatus($this) != $step->getSuccessStatus($this)) {
                 $hasFailedStep = true;
                 break;
             }
