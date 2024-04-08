@@ -153,8 +153,9 @@ class Workspace extends Entity {
             $deployment->version = end($tags);
         }
 
-        $deployment->keel_policy = $deploymentPackageDeploymentSpecification->default_keel_policy;
-        $deployment->keel_auto_update = $deploymentPackageDeploymentSpecification->default_keel_auto_update;
+        $deployment->auto_update_enabled = $deploymentPackageDeploymentSpecification->default_auto_update_enabled;
+        $deployment->auto_update_tag_regex = $deploymentPackageDeploymentSpecification->default_auto_update_tag_regex;
+        $deployment->auto_update_require_approval = $deploymentPackageDeploymentSpecification->default_auto_update_require_approval;
         $deployment->environment = $deploymentPackageDeploymentSpecification->default_environment;
         $deployment->enable_podio_notification = $deploymentPackageDeploymentSpecification->default_enable_podio_notification;
 

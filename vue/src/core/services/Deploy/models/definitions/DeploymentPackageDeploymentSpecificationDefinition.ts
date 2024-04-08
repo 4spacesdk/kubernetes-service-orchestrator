@@ -14,14 +14,15 @@ export class DeploymentPackageDeploymentSpecificationDefinition extends BaseMode
     deployment_specification?: DeploymentSpecification;
     default_enable_podio_notification?: boolean;
     default_version?: string;
-    default_keel_policy?: string;
-    default_keel_auto_update?: boolean;
     default_environment?: string;
     default_cpu_request?: number;
     default_cpu_limit?: number;
     default_memory_request?: number;
     default_memory_limit?: number;
     default_replicas?: number;
+    default_auto_update_enabled?: boolean;
+    default_auto_update_tag_regex?: string;
+    default_auto_update_require_approval?: boolean;
     id?: number;
     created?: string;
     updated?: string;
@@ -45,14 +46,15 @@ export class DeploymentPackageDeploymentSpecificationDefinition extends BaseMode
             delete this.deployment_specification;
             delete this.default_enable_podio_notification;
             delete this.default_version;
-            delete this.default_keel_policy;
-            delete this.default_keel_auto_update;
             delete this.default_environment;
             delete this.default_cpu_request;
             delete this.default_cpu_limit;
             delete this.default_memory_request;
             delete this.default_memory_limit;
             delete this.default_replicas;
+            delete this.default_auto_update_enabled;
+            delete this.default_auto_update_tag_regex;
+            delete this.default_auto_update_require_approval;
             delete this.id;
             delete this.created;
             delete this.updated;
@@ -83,12 +85,6 @@ export class DeploymentPackageDeploymentSpecificationDefinition extends BaseMode
         if (data.default_version != null) {
             this.default_version = data.default_version;
         }
-        if (data.default_keel_policy != null) {
-            this.default_keel_policy = data.default_keel_policy;
-        }
-        if (data.default_keel_auto_update != null) {
-            this.default_keel_auto_update = data.default_keel_auto_update;
-        }
         if (data.default_environment != null) {
             this.default_environment = data.default_environment;
         }
@@ -106,6 +102,15 @@ export class DeploymentPackageDeploymentSpecificationDefinition extends BaseMode
         }
         if (data.default_replicas != null) {
             this.default_replicas = data.default_replicas;
+        }
+        if (data.default_auto_update_enabled != null) {
+            this.default_auto_update_enabled = data.default_auto_update_enabled;
+        }
+        if (data.default_auto_update_tag_regex != null) {
+            this.default_auto_update_tag_regex = data.default_auto_update_tag_regex;
+        }
+        if (data.default_auto_update_require_approval != null) {
+            this.default_auto_update_require_approval = data.default_auto_update_require_approval;
         }
         if (data.id != null) {
             this.id = data.id;

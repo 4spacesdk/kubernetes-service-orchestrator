@@ -13,14 +13,17 @@ use RestExtension\Core\Entity;
  * # Settings
  * @property bool $default_enable_podio_notification
  * @property string $default_version
- * @property string $default_keel_policy
- * @property bool $default_keel_auto_update
  * @property string $default_environment
  * @property int $default_cpu_request
  * @property int $default_cpu_limit
  * @property int $default_memory_request
  * @property int $default_memory_limit
  * @property int $default_replicas
+ *
+ *  # Update management
+ * @property bool $default_auto_update_enabled
+ * @property string $default_auto_update_tag_regex
+ * @property bool $default_auto_update_require_approval
  */
 class DeploymentPackageDeploymentSpecification extends Entity {
 
@@ -33,8 +36,9 @@ class DeploymentPackageDeploymentSpecification extends Entity {
         $item->deployment_specification_id = $data->deploymentSpecification->id;
         $item->default_enable_podio_notification = $data->defaultEnablePodioNotification;
         $item->default_version = $data->defaultVersion;
-        $item->default_keel_policy = $data->defaultKeelPolicy;
-        $item->default_keel_auto_update = $data->defaultKeelAutoUpdate;
+        $item->default_auto_update_enabled = $data->defaultAutoUpdateEnabled;
+        $item->default_auto_update_tag_regex = $data->defaultAutoUpdateTagRegex;
+        $item->default_auto_update_require_approval = $data->defaultAutoUpdateRequireApproval;
         $item->default_environment = $data->defaultEnvironment;
         $item->default_cpu_request = $data->defaultCpuRequest;
         $item->default_cpu_limit = $data->defaultCpuLimit;

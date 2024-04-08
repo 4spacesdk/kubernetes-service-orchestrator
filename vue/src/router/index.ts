@@ -8,6 +8,7 @@ import SetupRoutes from '@/components/Pages/Setup/routes';
 import MigrationJobsRoutes from '@/components/Pages/MigrationJobs/routes';
 import KeelHookQueueItemsRoutes from '@/components/Pages/KeelHookQueueItems/routes';
 import IntegrationRoutes from '@/components/Pages/Integrations/routes';
+import AutoUpdatesRoutes from '@/components/Pages/AutoUpdates/routes';
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -27,6 +28,7 @@ const router = createRouter({
         ...IntegrationRoutes,
         ...MigrationJobsRoutes,
         ...KeelHookQueueItemsRoutes,
+        ...AutoUpdatesRoutes,
 
         {
             path: "/login",

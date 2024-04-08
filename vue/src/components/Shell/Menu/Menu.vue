@@ -81,6 +81,20 @@ const categories = ref<MenuCategory[]>([
         ],
     },
     {
+        identifier: 'auto-updates',
+        name: 'Auto Updates',
+        icon: 'fa fa-list-check',
+        items: [
+            {
+                title: 'All',
+                url: '/auto-updates',
+                permissions: [
+                    RbacPermissions.Developer,
+                ],
+            },
+        ],
+    },
+    {
         identifier: 'setup',
         name: 'Setup',
         icon: 'fa fa-gear',

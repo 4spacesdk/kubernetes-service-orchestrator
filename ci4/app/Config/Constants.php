@@ -3,7 +3,9 @@
 class CronJobIds {
     const
         CleanupGoogleContainerRegistry = 1,
-        RunKeelHooks = 2;
+        RunKeelHooks = 2,
+        PullContainerRegistries = 3
+    ;
 }
 
 class Environments {
@@ -113,6 +115,10 @@ class MigrationVerificationTypes {
     const
         EndsWith = 'ends-with',
         Regex = 'regex';
+}
+
+class ContainerRegistries {
+    const string ArtifactContainerRegistry = 'artifact-container-registry';
 }
 
 

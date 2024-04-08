@@ -22,3 +22,24 @@ $routes->get('connect/check', function() {
 $routes->post('connect/token', function() {
     \AuthExtension\OAuth2\Token::handle(Services::response());
 });
+
+/*
+$routes->get('regex', function() {
+    $regex = '/latest-minor/';
+    $tag = 'latest-minor';
+
+    if (preg_match($regex, $tag)) {
+        Data::debug('cool', $regex, $tag);
+    }
+
+    $regex = '/[0-9]+.[0-9]+.[0-9]+$/';
+    $tag = '3.3.0';
+
+    if (preg_match($regex, $tag)) {
+        Data::debug('cool', $regex, $tag);
+    }
+
+    Services::response()->setJSON(Data::getStore());
+    Services::response()->send();
+});
+*/

@@ -33,6 +33,9 @@ export class DeploymentDefinition extends BaseModel {
     domain?: Domain;
     subdomain?: string;
     aliases?: string;
+    auto_update_enabled?: boolean;
+    auto_update_tag_regex?: string;
+    auto_update_require_approval?: boolean;
     keel_policy?: string;
     keel_auto_update?: boolean;
     enable_podio_notification?: boolean;
@@ -83,6 +86,9 @@ export class DeploymentDefinition extends BaseModel {
             delete this.domain;
             delete this.subdomain;
             delete this.aliases;
+            delete this.auto_update_enabled;
+            delete this.auto_update_tag_regex;
+            delete this.auto_update_require_approval;
             delete this.keel_policy;
             delete this.keel_auto_update;
             delete this.enable_podio_notification;
@@ -167,6 +173,15 @@ export class DeploymentDefinition extends BaseModel {
         }
         if (data.aliases != null) {
             this.aliases = data.aliases;
+        }
+        if (data.auto_update_enabled != null) {
+            this.auto_update_enabled = data.auto_update_enabled;
+        }
+        if (data.auto_update_tag_regex != null) {
+            this.auto_update_tag_regex = data.auto_update_tag_regex;
+        }
+        if (data.auto_update_require_approval != null) {
+            this.auto_update_require_approval = data.auto_update_require_approval;
         }
         if (data.keel_policy != null) {
             this.keel_policy = data.keel_policy;

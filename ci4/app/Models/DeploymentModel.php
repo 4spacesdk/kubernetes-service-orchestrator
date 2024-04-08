@@ -20,6 +20,7 @@ class DeploymentModel extends \RestExtension\Models\UserModel implements Resourc
         EnvironmentVariableModel::class,
         MigrationJobModel::class,
         DeploymentVolumeModel::class,
+        AutoUpdateModel::class,
     ];
 
     public function preRestGet($queryParser, $id) {
@@ -57,6 +58,7 @@ class DeploymentModel extends \RestExtension\Models\UserModel implements Resourc
     public function ignoredRestGetOnRelations() {
         return [
             MigrationJobModel::class,
+            AutoUpdateModel::class,
         ];
     }
 

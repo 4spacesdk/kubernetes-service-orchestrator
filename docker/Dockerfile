@@ -42,7 +42,7 @@ RUN apk add --update  \
     linux-headers \
     php83-apache2 php83-mbstring php83-session php83-json php83-tokenizer php83-mysqli php83-pdo php83-pdo_mysql php83-intl \
     php83-curl php83-pecl-yaml php83-calendar php83-posix php83-zip php83-xml php83-simplexml php83-xmlwriter php83-ctype \
-    php83-pecl-imagick php83-gd \
+    php83-pecl-imagick php83-gd php83-bcmath \
     # Alpine
     autoconf \
     gcc make g++ \

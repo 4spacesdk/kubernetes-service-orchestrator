@@ -163,8 +163,9 @@ class Deployments extends ResourceController {
      * @method put
      * @custom true
      * @param int $id
-     * @parameter string $keelPolicy parameterType=query
-     * @parameter bool $keelAutoUpdate parameterType=query
+     * @parameter bool $enabled parameterType=query
+     * @parameter string $tagRegex parameterType=query
+     * @parameter bool $requireApproval parameterType=query
      * @parameter bool $enablePodioNotification parameterType=query
      * @return void
      */
@@ -174,8 +175,9 @@ class Deployments extends ResourceController {
         if ($item->exists()) {
             try {
                 $item->updateUpdateManagement(
-                    $this->request->getGet('keelPolicy'),
-                    in_array($this->request->getGet('keelAutoUpdate'), ['1', 'true']),
+                    in_array($this->request->getGet('enabled'), ['1', 'true']),
+                    $this->request->getGet('tagRegex'),
+                    in_array($this->request->getGet('requireApproval'), ['1', 'true']),
                     in_array($this->request->getGet('enablePodioNotification'), ['1', 'true'])
                 );
             } catch (\Exception $e) {

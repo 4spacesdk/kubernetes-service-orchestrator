@@ -10,8 +10,9 @@ export interface DeploymentPackageUpdateDeploymentSpecificationDialog_Input {
 
         defaultEnablePodioNotification?: boolean,
         defaultVersion?: string,
-        defaultKeelPolicy?: string,
-        defaultKeelAutoUpdate?: boolean,
+        defaultAutoUpdateEnabled?: boolean,
+        defaultAutoUpdateTagRegex?: string,
+        defaultAutoUpdateRequireApproval?: boolean,
         defaultEnvironment?: string;
         defaultCpuRequest?: number;
         defaultCpuLimit?: number;
@@ -35,8 +36,9 @@ const formIsValid = ref<boolean>();
 const defaultEnablePodioNotification = ref<boolean>();
 const specifyDefaultVersion = ref<boolean>();
 const defaultVersion = ref<string>();
-const defaultKeelPolicy = ref<string>();
-const defaultKeelAutoUpdate = ref<boolean>();
+const defaultAutoUpdateEnabled = ref<boolean>();
+const defaultAutoUpdateTagRegex = ref<string>();
+const defaultAutoUpdateRequireApproval = ref<boolean>();
 const defaultEnvironment = ref<string>();
 const defaultCpuRequest = ref<number>();
 const defaultCpuLimit = ref<number>();
@@ -82,8 +84,9 @@ function render() {
     defaultEnablePodioNotification.value = props.input.settings.defaultEnablePodioNotification ?? false;
     defaultVersion.value = props.input.settings.defaultVersion ?? '';
     specifyDefaultVersion.value = (defaultVersion.value?.length ?? 0) > 0;
-    defaultKeelPolicy.value = props.input.settings.defaultKeelPolicy ?? '';
-    defaultKeelAutoUpdate.value = props.input.settings.defaultKeelAutoUpdate ?? false;
+    defaultAutoUpdateEnabled.value = props.input.settings.defaultAutoUpdateEnabled ?? false;
+    defaultAutoUpdateTagRegex.value = props.input.settings.defaultAutoUpdateTagRegex ?? '';
+    defaultAutoUpdateRequireApproval.value = props.input.settings.defaultAutoUpdateRequireApproval ?? false;
     defaultEnvironment.value = props.input.settings.defaultEnvironment ?? '';
     defaultCpuRequest.value = props.input.settings.defaultCpuRequest;
     defaultCpuLimit.value = props.input.settings.defaultCpuLimit;
@@ -133,8 +136,9 @@ function loadVersionTags() {
 function onSaveBtnClicked() {
     props.input.settings.defaultEnablePodioNotification = defaultEnablePodioNotification.value;
     props.input.settings.defaultVersion = defaultVersion.value;
-    props.input.settings.defaultKeelPolicy = defaultKeelPolicy.value;
-    props.input.settings.defaultKeelAutoUpdate = defaultKeelAutoUpdate.value;
+    props.input.settings.defaultAutoUpdateEnabled = defaultAutoUpdateEnabled.value;
+    props.input.settings.defaultAutoUpdateTagRegex = defaultAutoUpdateTagRegex.value;
+    props.input.settings.defaultAutoUpdateRequireApproval = defaultAutoUpdateRequireApproval.value;
     props.input.settings.defaultEnvironment = defaultEnvironment.value;
     props.input.settings.defaultCpuRequest = defaultCpuRequest.value;
     props.input.settings.defaultCpuLimit = defaultCpuLimit.value;
@@ -175,6 +179,7 @@ function onCloseBtnClicked() {
                                 label="Default Enable Podio Notification"
                             />
                         </v-col>
+
                         <v-col cols="12">
                             <v-card>
                                 <v-checkbox
@@ -201,24 +206,46 @@ function onCloseBtnClicked() {
                                 </div>
                             </v-card>
                         </v-col>
-                        <v-col cols="6">
-                            <v-select
-                                v-model="defaultKeelPolicy"
-                                :loading="isLoadingKeelPolicies"
-                                :items="keelPolicyItems"
-                                variant="outlined"
-                                label="Default Keel Policy"
-                                :rules="required"
-                            />
+
+                        <v-col cols="12">
+                            <v-card
+                                class="px-2"
+                            >
+                                <v-switch
+                                    v-model="defaultAutoUpdateEnabled"
+                                    variant="outlined"
+                                    label="Auto update"
+                                    color="secondary"
+                                    hide-details
+                                />
+                                <div
+                                    v-if="defaultAutoUpdateEnabled"
+                                >
+                                    <v-row>
+                                        <v-col cols="6">
+                                            <v-text-field
+                                                v-model="defaultAutoUpdateTagRegex"
+                                                variant="outlined"
+                                                label="Tag regex"
+                                                density="compact"
+                                                hide-details
+                                            />
+                                        </v-col>
+                                        <v-col cols="6">
+                                            <v-switch
+                                                v-model="defaultAutoUpdateRequireApproval"
+                                                variant="outlined"
+                                                label="Require approval"
+                                                density="compact"
+                                                hide-details
+                                                color="secondary"
+                                            />
+                                        </v-col>
+                                    </v-row>
+                                </div>
+                            </v-card>
                         </v-col>
-                        <v-col cols="6">
-                            <v-checkbox
-                                v-model="defaultKeelAutoUpdate"
-                                variant="outlined"
-                                label="Default Keel Auto Update"
-                                density="compact"
-                            />
-                        </v-col>
+
                         <v-col cols="12">
                             <v-select
                                 v-model="defaultEnvironment"

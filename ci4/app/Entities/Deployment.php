@@ -37,8 +37,11 @@ use RestExtension\Core\Entity;
  * @property Domain $domain
  * @property string $subdomain
  * @property string $aliases
- * @property string $keel_policy
- * @property bool $keel_auto_update
+ *
+ * # Update management
+ * @property bool $auto_update_enabled
+ * @property string $auto_update_tag_regex
+ * @property bool $auto_update_require_approval
  * @property bool $enable_podio_notification
  *
  * # Resource management
@@ -154,9 +157,10 @@ class Deployment extends Entity {
         ]);
     }
 
-    public function updateUpdateManagement(string $policy, bool $autoUpdate, bool $enablePodioNotification): void {
-        $this->keel_policy = $policy;
-        $this->keel_auto_update = $autoUpdate;
+    public function updateUpdateManagement(bool $enabled, string $tagRegex, bool $requireApproval, bool $enablePodioNotification): void {
+        $this->auto_update_enabled = $enabled;
+        $this->auto_update_tag_regex = $tagRegex;
+        $this->auto_update_require_approval = $requireApproval;
         $this->enable_podio_notification = $enablePodioNotification;
         $this->save();
 

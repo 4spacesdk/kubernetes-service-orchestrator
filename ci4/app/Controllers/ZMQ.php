@@ -1,5 +1,6 @@
 <?php namespace App\Controllers;
 
+use App\Entities\AutoUpdate;
 use App\Entities\Deployment;
 use App\Entities\ZMQEvent;
 use App\Libraries\WebHooks\WebhookHelper;
@@ -90,6 +91,16 @@ class ZMQ extends Controller {
             \WebHookTypes::Workspace_Deleted,
             json_encode($changeEvent->next)
         );
+        Data::debug('OK');
+    }
+
+    public function autoUpdateApproved(): void {
+        $changeEvent = ChangeEvent::Parse(json_decode($this->event->data, true));
+
+        $autoUpdate = new AutoUpdate();
+        $autoUpdate->find($changeEvent->next['id']);
+        $autoUpdate->rollout();
+
         Data::debug('OK');
     }
 

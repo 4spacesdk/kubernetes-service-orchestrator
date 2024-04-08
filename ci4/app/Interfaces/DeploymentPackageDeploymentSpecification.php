@@ -5,6 +5,9 @@ use App\Entities\DeploymentSpecification;
  * @property DeploymentSpecification $deploymentSpecification
  * @property bool $defaultEnablePodioNotification
  * @property string $defaultVersion
+ * @property bool $defaultAutoUpdateEnabled
+ * @property string $defaultAutoUpdateTagRegex
+ * @property bool $defaultAutoUpdateRequireApproval
  * @property string $defaultKeelPolicy
  * @property bool $defaultKeelAutoUpdate
  * @property string $defaultEnvironment

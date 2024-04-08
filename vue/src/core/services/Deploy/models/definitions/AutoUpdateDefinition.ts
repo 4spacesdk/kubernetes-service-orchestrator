@@ -1,18 +1,20 @@
 /**
  * Created by ModelParser
  */
+import {Deployment} from '../Deployment';
 import {User} from '../User';
 import {Deletion} from '../Deletion';
 import {BaseModel} from '../BaseModel';
 
-export class ContainerImageDefinition extends BaseModel {
-    name?: string;
-    url?: string;
-    pull_secret?: string;
-    registry_subscribe?: boolean;
-    registry_provider?: string;
-    registry_provider_project?: string;
-    registry_provider_credentials?: string;
+export class AutoUpdateDefinition extends BaseModel {
+    deployment_id?: number;
+    deployment?: Deployment;
+    image?: string;
+    previous_tag?: string;
+    next_tag?: string;
+    is_approved?: boolean;
+    approved_date?: string;
+    log?: string;
     id?: number;
     created?: string;
     updated?: string;
@@ -30,13 +32,14 @@ export class ContainerImageDefinition extends BaseModel {
 
     public populate(data?: any, patch = false) {
         if (!patch) {
-            delete this.name;
-            delete this.url;
-            delete this.pull_secret;
-            delete this.registry_subscribe;
-            delete this.registry_provider;
-            delete this.registry_provider_project;
-            delete this.registry_provider_credentials;
+            delete this.deployment_id;
+            delete this.deployment;
+            delete this.image;
+            delete this.previous_tag;
+            delete this.next_tag;
+            delete this.is_approved;
+            delete this.approved_date;
+            delete this.log;
             delete this.id;
             delete this.created;
             delete this.updated;
@@ -49,26 +52,29 @@ export class ContainerImageDefinition extends BaseModel {
         }
 
         if (!data) return;
-        if (data.name != null) {
-            this.name = data.name;
+        if (data.deployment_id != null) {
+            this.deployment_id = data.deployment_id;
         }
-        if (data.url != null) {
-            this.url = data.url;
+        if (data.deployment != null) {
+            this.deployment = new Deployment(data.deployment);
         }
-        if (data.pull_secret != null) {
-            this.pull_secret = data.pull_secret;
+        if (data.image != null) {
+            this.image = data.image;
         }
-        if (data.registry_subscribe != null) {
-            this.registry_subscribe = data.registry_subscribe;
+        if (data.previous_tag != null) {
+            this.previous_tag = data.previous_tag;
         }
-        if (data.registry_provider != null) {
-            this.registry_provider = data.registry_provider;
+        if (data.next_tag != null) {
+            this.next_tag = data.next_tag;
         }
-        if (data.registry_provider_project != null) {
-            this.registry_provider_project = data.registry_provider_project;
+        if (data.is_approved != null) {
+            this.is_approved = data.is_approved;
         }
-        if (data.registry_provider_credentials != null) {
-            this.registry_provider_credentials = data.registry_provider_credentials;
+        if (data.approved_date != null) {
+            this.approved_date = data.approved_date;
+        }
+        if (data.log != null) {
+            this.log = data.log;
         }
         if (data.id != null) {
             this.id = data.id;

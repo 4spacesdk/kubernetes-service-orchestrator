@@ -1,3 +1,4 @@
+export {AutoUpdate as AutoUpdate} from "./AutoUpdate";
 export {ContainerImage as ContainerImage} from "./ContainerImage";
 export {CronJob as CronJob} from "./CronJob";
 export {DatabaseService as DatabaseService} from "./DatabaseService";

@@ -18,6 +18,7 @@
     "4spacesdk/ci4authextension": "v1.0.1",
     "renoki-co/php-k8s": "3.8.1",
     "google/cloud-artifact-registry": "^0.3.7",
+    "google/cloud-pubsub": "^2.0",
     "podio-community/podio-php": "7.0.2",
     "knplabs/github-api": "^v3.9.0"
   },

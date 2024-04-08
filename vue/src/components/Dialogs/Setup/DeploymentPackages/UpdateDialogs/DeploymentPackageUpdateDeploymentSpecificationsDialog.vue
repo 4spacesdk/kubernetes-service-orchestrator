@@ -13,8 +13,9 @@ interface Row {
     deploymentSpecification: DeploymentSpecification;
     defaultEnablePodioNotification?: boolean;
     defaultVersion?: string;
-    defaultKeelPolicy?: string;
-    defaultKeelAutoUpdate?: boolean;
+    defaultAutoUpdateEnabled?: boolean,
+    defaultAutoUpdateTagRegex?: string,
+    defaultAutoUpdateRequireApproval?: boolean,
     defaultEnvironment?: string;
     defaultCpuRequest?: number;
     defaultCpuLimit?: number;
@@ -73,8 +74,9 @@ function render() {
                         deploymentSpecification: deploymentSpecificationSettings.deployment_specification!,
                         defaultEnablePodioNotification: deploymentSpecificationSettings.default_enable_podio_notification,
                         defaultVersion: deploymentSpecificationSettings.default_version,
-                        defaultKeelPolicy: deploymentSpecificationSettings.default_keel_policy,
-                        defaultKeelAutoUpdate: deploymentSpecificationSettings.default_keel_auto_update,
+                        defaultAutoUpdateEnabled: deploymentSpecificationSettings.default_auto_update_enabled,
+                        defaultAutoUpdateTagRegex: deploymentSpecificationSettings.default_auto_update_tag_regex,
+                        defaultAutoUpdateRequireApproval: deploymentSpecificationSettings.default_auto_update_require_approval,
                         defaultEnvironment: deploymentSpecificationSettings.default_environment,
                         defaultCpuRequest: deploymentSpecificationSettings.default_cpu_request,
                         defaultCpuLimit: deploymentSpecificationSettings.default_cpu_limit,

@@ -48,6 +48,13 @@ class Subscriber {
             $result = php("ZMQ workspaceDeleted --identifier $identifier --event $event --data $data");
             log_($result);
         });
+
+        $client->subscribe(Events::AutoUpdate_Approved(), function ($payload) {
+            log_('AutoUpdate_Approved');
+            [$identifier, $event, $data] = self::ParsePayload($payload);
+            $result = php("ZMQ autoUpdateApproved --identifier $identifier --event $event --data $data");
+            log_($result);
+        });
     }
 
     private function setupInternalClient(string $host, LoopInterface $loop): void {

@@ -14,10 +14,9 @@ const props = defineProps<{ input: DeploymentUpdateUpdateManagementDialog_Input,
 const used = ref(false);
 const showDialog = ref(false);
 
-const keelPolicy = ref<string>();
-const keelPolicies = ref<string[]>([]);
-const isLoadingKeelPolicies = ref(false);
-const keelAutoUpdate = ref<boolean>();
+const enabled = ref<boolean>();
+const tagRegex = ref<string>();
+const requireApproval = ref<boolean>();
 const enablePodioNotifications = ref<boolean>();
 
 // <editor-fold desc="Functions">
@@ -34,17 +33,11 @@ onUnmounted(() => {
 });
 
 function render() {
-    keelPolicy.value = props.input.deployment.keel_policy ?? '';
-    keelAutoUpdate.value = props.input.deployment.keel_auto_update ?? false;
+    enabled.value = props.input.deployment.auto_update_enabled ?? false;
+    tagRegex.value = props.input.deployment.auto_update_tag_regex ?? '';
+    requireApproval.value = props.input.deployment.auto_update_require_approval ?? false;
     enablePodioNotifications.value = props.input.deployment.enable_podio_notification ?? false;
     showDialog.value = true;
-
-    isLoadingKeelPolicies.value = true;
-    Api.keelPolicies().getGet()
-        .find(response => {
-            keelPolicies.value = response.map(item => item.name!);
-            isLoadingKeelPolicies.value = false;
-        });
 }
 
 function close() {
@@ -58,8 +51,9 @@ function close() {
 
 function onSaveBtnClicked() {
     const api = Api.deployments().updateUpdateManagementPutById(props.input.deployment.id!)
-        .keelPolicy(keelPolicy.value!)
-        .keelAutoUpdate(keelAutoUpdate.value!)
+        .enabled(enabled.value!)
+        .tagRegex(tagRegex.value!)
+        .requireApproval(requireApproval.value!)
         .enablePodioNotification(enablePodioNotifications.value!);
     api.setErrorHandler(response => {
         if (response.error) {
@@ -98,18 +92,22 @@ function onCloseBtnClicked() {
                 <v-row
                     dense>
                     <v-col cols="6">
-                        <v-select
-                            v-model="keelPolicy"
-                            :loading="isLoadingKeelPolicies"
-                            :items="keelPolicies"
+                        <v-checkbox
+                            v-model="enabled"
+                            density="compact"
+                            label="Enabled"/>
+                    </v-col>
+                    <v-col cols="6">
+                        <v-text-field
+                            v-model="tagRegex"
                             variant="outlined"
-                            label="Keel Policies"/>
+                            label="Tag regex"/>
                     </v-col>
                     <v-col cols="6">
                         <v-checkbox
-                            v-model="keelAutoUpdate"
+                            v-model="requireApproval"
                             density="compact"
-                            label="Auto Update"/>
+                            label="Require approval"/>
                     </v-col>
                     <v-col cols="6">
                         <v-checkbox

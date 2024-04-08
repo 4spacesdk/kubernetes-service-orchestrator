@@ -4,6 +4,7 @@ import {ContainerImage} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
+import {ContainerImageTagPolicies, ContainerRegistries} from "@/constants";
 
 export interface ContainerImageEditDialog_Input {
     containerImage: ContainerImage;
@@ -17,6 +18,15 @@ const isLoading = ref(false);
 
 const item = ref<ContainerImage>(new ContainerImage());
 const showPullSecret = ref(false);
+
+const containerRegistries = ref([
+    {
+        identifier: ContainerRegistries.ArtifactContainerRegistry,
+        name: "Artifact Container Registry",
+    },
+]);
+const hasFile = ref(false);
+const file = ref<File[]>();
 
 // <editor-fold desc="Functions">
 
@@ -50,6 +60,7 @@ function load() {
 
 function render() {
     showPullSecret.value = (item.value.pull_secret?.length ?? 0) > 0;
+    hasFile.value = (item.value.registry_provider_credentials?.length ?? 0) > 0;
 }
 
 function close() {
@@ -80,6 +91,22 @@ function onSaveBtnClicked() {
 
 function onCloseBtnClicked() {
     close();
+}
+
+function onFileSelected() {
+    const reader = new FileReader();
+    reader.onload = file => {
+        if (file.target?.result) {
+            item.value.registry_provider_credentials = file.target.result as string;
+            hasFile.value = true;
+        }
+    }
+    reader.readAsText(file.value![0]!);
+}
+
+function onRemoveFileClicked() {
+    file.value = [];
+    hasFile.value = false;
 }
 
 // </editor-fold>
@@ -117,27 +144,120 @@ function onCloseBtnClicked() {
                             hide-details
                         />
                     </v-col>
-                    <v-col cols="12">
-                        <v-switch
-                            v-model="showPullSecret"
-                            variant="outlined"
-                            label="Use image pull secret"
-                            density="compact"
-                            hide-details
-                            color="secondary"
-                        />
-                    </v-col>
+
                     <v-col
-                        v-if="showPullSecret"
                         cols="12"
+                        class="mt-4"
                     >
-                        <v-text-field
-                            variant="outlined"
-                            v-model="item.pull_secret"
-                            label="Url"
-                            density="compact"
-                            hide-details
-                        />
+                        <v-card
+                            class="px-2"
+                        >
+                            <v-switch
+                                v-model="showPullSecret"
+                                variant="outlined"
+                                label="Use image pull secret"
+                                density="compact"
+                                color="secondary"
+                            />
+                            <div
+                                v-if="showPullSecret"
+                            >
+                                <v-row>
+                                    <v-col
+                                        cols="12"
+                                    >
+                                        <v-text-field
+                                            variant="outlined"
+                                            v-model="item.pull_secret"
+                                            label="Image pull secret"
+                                            density="compact"
+                                            hide-details
+                                        />
+                                    </v-col>
+                                </v-row>
+                            </div>
+                        </v-card>
+                    </v-col>
+
+                    <v-col
+                        cols="12"
+                        class="mt-4"
+                    >
+                        <v-card
+                            class="px-2"
+                        >
+                            <v-switch
+                                v-model="item.registry_subscribe"
+                                variant="outlined"
+                                label="Setup registry"
+                                density="compact"
+                                color="secondary"
+                            />
+                            <div
+                                v-if="item.registry_subscribe"
+                            >
+                                <v-row>
+                                    <v-col
+                                        cols="12"
+                                    >
+                                        <v-select
+                                            v-model="item.registry_provider"
+                                            :items="containerRegistries"
+                                            item-title="name"
+                                            item-value="identifier"
+                                            variant="outlined"
+                                            label="Registry"
+                                            density="compact"
+                                            hide-details
+                                        />
+                                    </v-col>
+                                    <v-col
+                                        cols="12"
+                                    >
+                                        <v-text-field
+                                            variant="outlined"
+                                            v-model="item.registry_provider_project"
+                                            label="Registry project/tenant"
+                                            density="compact"
+                                            hide-details
+                                        />
+                                    </v-col>
+                                    <v-col
+                                        cols="12"
+                                    >
+                                        <div
+                                            class="d-flex"
+                                        >
+                                            <v-file-input
+                                                v-model="file"
+                                                variant="outlined"
+                                                label="Credentials"
+                                                hide-details
+                                                accept="application/json"
+                                                :disabled="hasFile"
+                                                @change="onFileSelected"
+                                            />
+                                            <v-btn
+                                                v-if="hasFile"
+                                                @click="onRemoveFileClicked"
+                                                size="sm"
+                                                variant="text"
+                                                class="my-auto ml-2"
+                                                color="grey"
+                                            >
+                                                <v-icon>fa fa-trash</v-icon>
+                                                <v-tooltip
+                                                    activator="parent"
+                                                    location="bottom"
+                                                >
+                                                    Remove credentials file
+                                                </v-tooltip>
+                                            </v-btn>
+                                        </div>
+                                    </v-col>
+                                </v-row>
+                            </div>
+                        </v-card>
                     </v-col>
                 </v-row>
             </v-card-text>

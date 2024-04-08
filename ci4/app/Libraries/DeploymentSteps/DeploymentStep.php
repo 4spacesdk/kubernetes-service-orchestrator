@@ -128,9 +128,6 @@ class DeploymentStep extends BaseDeploymentStep {
         if (strlen($deployment->version) == 0) {
             return 'Missing version';
         }
-        if (!in_array($deployment->keel_policy, \KeelPolicies::All())) {
-            return 'Missing keel policy';
-        }
         if (!in_array($deployment->environment, \Environments::All())) {
             return 'Missing environment';
         }
@@ -300,7 +297,7 @@ class DeploymentStep extends BaseDeploymentStep {
         $container
             ->setAttribute('name', $deployment->name)
             ->setImage($spec->container_image->url, $deployment->version)
-            ->setAttribute('imagePullPolicy', \KeelPolicies::GetImagePullPolicy($deployment->keel_policy))
+            ->setAttribute('imagePullPolicy', 'Always')
             ->addPort(80)
             ->addEnv('ENVIRONMENT', $deployment->environment)
             ->addEnv('BASE_URL', $deployment->getUrl(true, true));
@@ -395,25 +392,8 @@ class DeploymentStep extends BaseDeploymentStep {
         }
 
         $annotations = [
-            'keel.sh/policy' => $deployment->keel_policy,
+
         ];
-
-        switch (getenv('KEEL_TRIGGER')) {
-            case 'poll':
-                $annotations['keel.sh/trigger'] = 'poll';
-                $annotations['keel.sh/pollSchedule'] = '@every 2m';
-                break;
-            default:
-            case 'push':
-                // Use keel defaults
-                break;
-        }
-
-        if (!$deployment->keel_auto_update) {
-            $annotations['keel.sh/approvals'] = '1';
-        }
-
-
 
         $resource = new K8sDeployment();
         $resource

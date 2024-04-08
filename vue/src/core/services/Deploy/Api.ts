@@ -1,4 +1,5 @@
 import {BaseApi} from "./BaseApi";
+import {AutoUpdate} from "./models";
 import {ContainerImage} from "./models";
 import {DatabaseService} from "./models";
 import {DeploymentPackage} from "./models";
@@ -31,6 +32,9 @@ export interface DeploymentPackageDeploymentSpecification {
     deploymentSpecification?: DeploymentSpecification;
     defaultEnablePodioNotification?: boolean;
     defaultVersion?: string;
+    defaultAutoUpdateEnabled?: boolean;
+    defaultAutoUpdateTagRegex?: string;
+    defaultAutoUpdateRequireApproval?: boolean;
     defaultKeelPolicy?: string;
     defaultKeelAutoUpdate?: boolean;
     defaultEnvironment?: string;
@@ -266,6 +270,205 @@ export interface StringInterface {
 
 export interface WebhookTypesGetResponse {
     name?: string;
+}
+
+
+export class AutoUpdatesGet extends BaseApi<AutoUpdate> {
+
+    public topic = 'Resources.AutoUpdates';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/auto_updates`;
+    }
+
+    protected convertToResource(data: any): AutoUpdate {
+        return new AutoUpdate(data);
+    }
+
+    public where(name: string, value: any): AutoUpdatesGet {
+        this.filter().where(name, value);
+        return this;
+    }
+
+    public whereEquals(name: string, value: any): AutoUpdatesGet {
+        this.filter().whereEquals(name, value);
+        return this;
+    }
+
+    public whereIn(name: string, value: any[]): AutoUpdatesGet {
+        this.filter().whereIn(name, value);
+        return this;
+    }
+
+    public whereInArray(name: string, value: any[]): AutoUpdatesGet {
+        this.filter().whereInArray(name, value);
+        return this;
+    }
+
+    public whereNot(name: string, value: any): AutoUpdatesGet {
+        this.filter().whereNot(name, value);
+        return this;
+    }
+
+    public whereNotIn(name: string, value: any[]): AutoUpdatesGet {
+        this.filter().whereNotIn(name, value);
+        return this;
+    }
+
+    public whereGreaterThan(name: string, value: any): AutoUpdatesGet {
+        this.filter().whereGreaterThan(name, value);
+        return this;
+    }
+
+    public whereGreaterThanOrEqual(name: string, value: any): AutoUpdatesGet {
+        this.filter().whereGreaterThanOrEqual(name, value);
+        return this;
+    }
+
+    public whereLessThan(name: string, value: any): AutoUpdatesGet {
+        this.filter().whereLessThan(name, value);
+        return this;
+    }
+
+    public whereLessThanOrEqual(name: string, value: any): AutoUpdatesGet {
+        this.filter().whereLessThanOrEqual(name, value);
+        return this;
+    }
+
+    public search(name: string, value: any): AutoUpdatesGet {
+        this.filter().search(name, value);
+        return this;
+    }
+
+    public include(name: string): AutoUpdatesGet {
+        this.getInclude().include(name);
+        return this;
+    }
+
+    public orderBy(name: string, direction: string): AutoUpdatesGet {
+        this.ordering().orderBy(name, direction);
+        return this;
+    }
+
+    public orderAsc(name: string): AutoUpdatesGet {
+        this.ordering().orderAsc(name);
+        return this;
+    }
+
+    public orderDesc(name: string): AutoUpdatesGet {
+        this.ordering().orderDesc(name);
+        return this;
+    }
+
+    public limit(value: number): AutoUpdatesGet {
+        this.limitValue = value;
+        return this;
+    }
+
+    public offset(value: number): AutoUpdatesGet {
+        this.offsetValue = value;
+        return this;
+    }
+
+    public count(next?: (value: number) => void) {
+        return this.executeCount(next);
+    }
+
+    public find(next?: (value: AutoUpdate[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class AutoUpdatesGetById extends BaseApi<AutoUpdate> {
+
+    public topic = 'Resources.AutoUpdates';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/auto_updates/${id}`;
+    }
+
+    protected convertToResource(data: any): AutoUpdate {
+        return new AutoUpdate(data);
+    }
+
+    public include(name: string): AutoUpdatesGetById {
+        this.getInclude().include(name);
+        return this;
+    }
+
+    public find(next?: (value: AutoUpdate[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class AutoUpdatesPost extends BaseApi<AutoUpdate> {
+
+    public topic = 'Resources.AutoUpdates';
+    protected method = 'post';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/auto_updates`;
+    }
+
+    protected convertToResource(data: any): AutoUpdate {
+        return new AutoUpdate(data);
+    }
+
+    public save(data: AutoUpdate, next?: (value: AutoUpdate) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class AutoUpdatesApprovePutById extends BaseApi<AutoUpdate> {
+
+    public topic = 'Resources.AutoUpdates';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/auto-updates/${id}/approve`;
+    }
+
+    protected convertToResource(data: any): AutoUpdate {
+        return new AutoUpdate(data);
+    }
+
+    public save(data: any, next?: (value: AutoUpdate) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+class AutoUpdates {
+
+    public get(): AutoUpdatesGet {
+        return new AutoUpdatesGet();
+    }
+
+    public getById(id: number): AutoUpdatesGetById {
+        return new AutoUpdatesGetById(id);
+    }
+
+    public post(): AutoUpdatesPost {
+        return new AutoUpdatesPost();
+    }
+
+    public approvePutById(id: number): AutoUpdatesApprovePutById {
+        return new AutoUpdatesApprovePutById(id);
+    }
+
 }
 
 
@@ -2201,13 +2404,18 @@ export class DeploymentsUpdateUpdateManagementPutById extends BaseApi<Deployment
         return new Deployment(data);
     }
 
-    public keelPolicy(value: string): DeploymentsUpdateUpdateManagementPutById {
-        this.addQueryParameter('keelPolicy', value);
+    public enabled(value: boolean): DeploymentsUpdateUpdateManagementPutById {
+        this.addQueryParameter('enabled', value);
         return this;
     }
 
-    public keelAutoUpdate(value: boolean): DeploymentsUpdateUpdateManagementPutById {
-        this.addQueryParameter('keelAutoUpdate', value);
+    public tagRegex(value: string): DeploymentsUpdateUpdateManagementPutById {
+        this.addQueryParameter('tagRegex', value);
+        return this;
+    }
+
+    public requireApproval(value: boolean): DeploymentsUpdateUpdateManagementPutById {
+        this.addQueryParameter('requireApproval', value);
         return this;
     }
 
@@ -5768,6 +5976,10 @@ class Workspaces {
 }
 
 export class Api {
+
+    public static autoUpdates(): AutoUpdates {
+        return new AutoUpdates();
+    }
 
     public static containerImages(): ContainerImages {
         return new ContainerImages();

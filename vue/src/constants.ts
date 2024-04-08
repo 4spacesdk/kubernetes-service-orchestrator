@@ -335,3 +335,7 @@ export const RbacPermissions = {
         Delete: 'users.delete',
     },
 }
+
+export const ContainerRegistries = {
+    ArtifactContainerRegistry: 'artifact-container-registry',
+};
