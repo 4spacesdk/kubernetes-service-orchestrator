@@ -95,7 +95,7 @@ class PodioLib {
 
             // Add commit comment
             $gitHubCommitUrl = GitHubLib::getCommitUrl($spec->git_repo, $commitSha);
-            $comment = "[GibHub]($gitHubCommitUrl)";
+            $comment = "[GitHub]($gitHubCommitUrl)";
 
             $comment .= "\nWorkspace {$deployment->workspace->name_readable} updated";
 
