@@ -1,9 +1,12 @@
 # Changelog
 
-## v0.1.17  ()
+## v0.1.17 (2024-06-10)
 
 ### Fixed bugs
 * Fixed deployment status check
+* Increased timeout for post migration job hook
+* Fixed email issue for AWS SES (Port 465)
+* Fixed typo
 
 ### Enhancements
 
@@ -12,7 +15,7 @@
 
 
 
-## v0.1.16  (2024-04-02)
+## v0.1.16 (2024-04-02)
 
 ### Fixed bugs
 * Fix missing "image pull secret" for migration jobs
@@ -24,7 +27,7 @@
 
 
 
-## v0.1.15  (2024-04-02)
+## v0.1.15 (2024-04-02)
 
 ### Fixed bugs
 * Fix ingress redirect tls secret name
@@ -42,7 +45,7 @@
 
 
 
-## v0.1.14  (2024-02-27)
+## v0.1.14 (2024-02-27)
 
 ### Fixed bugs
 * Fix issue with migration jobs hanging if no post commands
@@ -57,7 +60,7 @@
 
 
 
-## v0.1.13  (2024-02-27)
+## v0.1.13 (2024-02-27)
 
 ### Fixed bugs
 *
@@ -73,7 +76,7 @@
 
 
 
-## v0.1.12  (2024-02-21)
+## v0.1.12 (2024-02-21)
 
 ### Fixed bugs
 * Jobby broken after CI4 upgrade
@@ -89,7 +92,7 @@
 
 
 
-## v0.1.11  (2024-01-29)
+## v0.1.11 (2024-01-29)
 
 ### Fixed bugs
 * Deployments could deploy without init containers
@@ -105,7 +108,7 @@
 
 
 
-## v0.1.10  (2024-01-28)
+## v0.1.10 (2024-01-28)
 
 ### Fixed bugs
 * Deployments couldn't deploy without ingress
