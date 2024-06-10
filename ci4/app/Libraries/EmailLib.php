@@ -26,7 +26,7 @@ class EmailLib {
         $config = new Email();
         $config->SMTPHost = getenv('EMAIL_SERVICE_HOST');
         $config->SMTPPort = getenv('EMAIL_SERVICE_PORT');
-        if ($config->SMTPPort) {
+        if ($config->SMTPPort == 465) {
             $config->SMTPCrypto = '';
         }
         $config->SMTPUser = getenv('EMAIL_SERVICE_USER');
