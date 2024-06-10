@@ -11,6 +11,7 @@
     "Tools: docker build": "docker-compose build deploy",
     "Tools: ssh": "docker exec -it 4s-deploy-service-app sh",
     "Tools: rerun last migration": "docker exec -it 4s-deploy-service-app sh -c \"cd ci4 && php spark app:migrate\"",
-    "Tools: sync models & api": "docker exec -it 4s-deploy-service-app sh -c \"cd ci4 && php spark dev:sync_models_and_api\""
+    "Tools: sync models & api": "docker exec -it 4s-deploy-service-app sh -c \"cd ci4 && php spark dev:sync_models_and_api\"",
+    "Tools: clear gke-auth": "docker exec -it 4s-deploy-service-app sh -c \"rm /tmp/gcloud-service-account.json\""
   }
 }

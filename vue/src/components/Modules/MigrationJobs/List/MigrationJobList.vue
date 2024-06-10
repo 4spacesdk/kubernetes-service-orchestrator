@@ -226,7 +226,7 @@ function onRerunBtnClicked(row: Row) {
                         variant="plain" color="primary" size="small" icon
                         @click="onShowLogsBtnClicked(item.raw.item)">
                         <v-icon>fa fa-rectangle-list</v-icon>
-                        <v-tooltip activator="parent" location="bottom">CodeIgniter Log</v-tooltip>
+                        <v-tooltip activator="parent" location="bottom">Job Log</v-tooltip>
                     </v-btn>
                     <v-btn
                         variant="plain" color="warning" size="small" icon

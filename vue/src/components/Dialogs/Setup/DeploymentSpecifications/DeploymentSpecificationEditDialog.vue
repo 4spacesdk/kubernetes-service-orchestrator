@@ -99,8 +99,9 @@ function close() {
 // <editor-fold desc="View Binding Functions">
 
 function onSaveBtnClicked() {
-    if (!isCustomMigrationImage) {
+    if (!isCustomMigrationImage.value) {
         item.value.database_migration_container_image_id = 0;
+        item.value.database_migration_container_image = undefined;
     }
 
     const api = item.value!.exists() ? Api.deploymentSpecifications().patchById(item.value!.id!) : Api.deploymentSpecifications().post();
