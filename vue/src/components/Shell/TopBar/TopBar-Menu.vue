@@ -28,7 +28,6 @@ function onLogoutBtnClicked() {
         offset-y>
         <template v-slot:activator="{ props }">
             <v-btn v-bind="props"
-                   text
                    flat
                    class="text-none d-flex p-2"
                    color="transparent"

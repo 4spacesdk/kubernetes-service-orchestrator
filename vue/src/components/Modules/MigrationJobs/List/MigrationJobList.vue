@@ -25,7 +25,12 @@ const props = defineProps<{
 const used = ref(false);
 const itemCount = ref(0);
 const rows = ref<Row[]>([]);
-const headers = ref([
+const headers = ref<{
+    readonly key?: string,
+    readonly title?: string | undefined,
+    readonly sortable?: boolean | undefined,
+    readonly align?: "end" | "center" | "start" | undefined,
+}[]>([
     {title: 'Status', key: 'status', sortable: false, align: "center"},
     {title: 'Workspace', key: 'item.deployment.workspace.name', sortable: false},
     {title: 'Deployment', key: 'deployment', sortable: false},

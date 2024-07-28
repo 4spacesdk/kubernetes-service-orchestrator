@@ -231,7 +231,6 @@ function onCloseBtnClicked() {
                         <v-divider/>
                         <v-card-actions>
                             <v-btn
-                                text
                                 variant="tonal"
                                 prepend-icon="fa fa-circle-xmark"
                                 color="grey"
@@ -240,7 +239,6 @@ function onCloseBtnClicked() {
                             </v-btn>
                             <v-spacer/>
                             <v-btn
-                                text
                                 variant="tonal"
                                 color="red"
                                 @click="onCopyToDeploymentsConfirmed(copyToDeploymentsDialog_Row!, true)">

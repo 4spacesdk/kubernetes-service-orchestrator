@@ -87,7 +87,6 @@ function onNoBtnClicked() {
             <v-card-actions>
                 <v-spacer/>
                 <v-btn
-                    text
                     variant="tonal"
                     :prepend-icon="cancelIcon"
                     :color="cancelColor"

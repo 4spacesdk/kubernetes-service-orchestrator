@@ -11,7 +11,7 @@ export class KeelHookQueueItem extends KeelHookQueueItemDefinition {
         super(json);
     }
 
-    public get payload(): object {
+    public get payload(): any {
         return JSON.parse(this.data ?? '{}');
     }
 

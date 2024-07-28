@@ -19,7 +19,12 @@ const used = ref(false);
 const showDialog = ref(false);
 const itemCount = ref(0);
 const rows = ref<KeelHookQueueItem[]>([]);
-const headers = ref([
+const headers = ref<{
+    readonly key?: string,
+    readonly title?: string | undefined,
+    readonly sortable?: boolean | undefined,
+    readonly align?: "end" | "center" | "start" | undefined,
+}[]>([
     {title: 'Status', key: 'status', sortable: false, align: "center"},
     {title: 'Type', key: 'type', sortable: false},
     {title: 'Deployment', key: 'deployment', sortable: false},

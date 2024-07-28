@@ -36,7 +36,7 @@ const headers = ref<{
 }[]>([
     {title: 'No.', key: 'no', sortable: false},
     {title: 'Step', key: 'item.name', sortable: false},
-    {title: 'Status', key: 'status', sortable: false, align: 'right'},
+    {title: 'Status', key: 'status', sortable: false, align: 'end'},
     {title: '', key: 'actions', sortable: false},
 ]);
 const isLoading = ref(false);
