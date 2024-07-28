@@ -28,7 +28,12 @@ interface Row {
 
 const itemCount = ref(0);
 const rows = ref<Row[]>([]);
-const headers = ref([
+const headers = ref<{
+    readonly key?: string,
+    readonly title?: string | undefined,
+    readonly sortable?: boolean | undefined,
+    readonly align?: "end" | "center" | "start" | undefined,
+}[]>([
     {title: 'No.', key: 'no', sortable: false},
     {title: 'Step', key: 'item.name', sortable: false},
     {title: 'Status', key: 'status', sortable: false, align: 'right'},
@@ -90,12 +95,12 @@ function onKubernetesStatusBtnClicked(row: Row) {
         if (response.error) {
             try {
                 bus.emit('json', {
-                    title: `Failed to deploy ${row.item.name}`,
+                    title: `Failed to get status ${row.item.name}`,
                     body: JSON.parse(response.error),
                 });
             } catch (e) {
                 bus.emit('info', {
-                    title: `Failed to deploy ${row.item.name}`,
+                    title: `Failed to get status ${row.item.name}`,
                     body: response.error
                 });
             }
@@ -353,16 +358,17 @@ function onCloseBtnClicked() {
                     :loading="isLoading"
                     :items-per-page="-1"
                     :show-select="true"
+                    return-object
                     class="table"
                     density="compact">
 
                     <template v-slot:item.no="{ item }">
-                        <v-chip size="x-small" variant="outlined" color="grey">{{ item.raw.no }}</v-chip>
+                        <v-chip size="x-small" variant="outlined" color="grey">{{ item.no }}</v-chip>
                     </template>
 
                     <template v-slot:item.status="{ item }">
                         <deployment-step-status
-                            :step="item.raw.item"
+                            :step="item.item"
                             :deployment="props.input.deployment"/>
                     </template>
 
@@ -370,74 +376,74 @@ function onCloseBtnClicked() {
                         <div class="d-flex justify-end gap-1">
                             <div>
                                 <v-btn
-                                    :disabled="!item.raw.item.hasKubernetesStatus"
-                                    :loading="item.raw.isLoadingKubernetesStatus"
+                                    :disabled="!item.item.hasKubernetesStatus"
+                                    :loading="item.isLoadingKubernetesStatus"
                                     variant="plain" :color="'grey'" size="small" icon
-                                    @click="onKubernetesStatusBtnClicked(item.raw)">
+                                    @click="onKubernetesStatusBtnClicked(item)">
                                     <v-icon>fa fa-signal</v-icon>
                                     <v-tooltip activator="parent" location="bottom">Kubernetes Status</v-tooltip>
                                 </v-btn>
                                 <v-tooltip
-                                    :disabled="item.raw.item.hasKubernetesStatus"
+                                    :disabled="item.item.hasKubernetesStatus"
                                     activator="parent" location="bottom">Not available for this step
                                 </v-tooltip>
                             </div>
                             <div>
                                 <v-btn
-                                    :disabled="!item.raw.item.hasKubernetesEvents"
-                                    :loading="item.raw.isLoadingKubernetesEvents"
+                                    :disabled="!item.item.hasKubernetesEvents"
+                                    :loading="item.isLoadingKubernetesEvents"
                                     variant="plain" :color="'grey'" size="small" icon
-                                    @click="onKubernetesEventsBtnClicked(item.raw)">
+                                    @click="onKubernetesEventsBtnClicked(item)">
                                     <v-icon>fa fa-calendar-days</v-icon>
                                     <v-tooltip activator="parent" location="bottom">Kubernetes Events</v-tooltip>
                                 </v-btn>
                                 <v-tooltip
-                                    :disabled="item.raw.item.hasKubernetesEvents"
+                                    :disabled="item.item.hasKubernetesEvents"
                                     activator="parent" location="bottom">Not available for this step
                                 </v-tooltip>
                             </div>
                             <div>
                                 <v-btn
-                                    :disabled="!item.raw.item.hasPreviewCommand"
+                                    :disabled="!item.item.hasPreviewCommand"
                                     variant="plain" :color="'grey'" size="small" icon
-                                    @click="onPreviewBtnClicked(item.raw)">
+                                    @click="onPreviewBtnClicked(item)">
                                     <v-icon>fa fa-file-code</v-icon>
                                     <v-tooltip activator="parent" location="bottom">Preview</v-tooltip>
                                 </v-btn>
                                 <v-tooltip
-                                    :disabled="item.raw.item.hasPreviewCommand"
+                                    :disabled="item.item.hasPreviewCommand"
                                     activator="parent" location="bottom">Not available for this step
                                 </v-tooltip>
                             </div>
                             <div>
                                 <v-btn
-                                    :disabled="!item.raw.item.hasDeployCommand"
-                                    :loading="item.raw.isLoadingDeploy"
+                                    :disabled="!item.item.hasDeployCommand"
+                                    :loading="item.isLoadingDeploy"
                                     variant="plain" icon
-                                    :color="item.raw.item.hasDeployCommand ? 'green' : 'grey'"
+                                    :color="item.item.hasDeployCommand ? 'green' : 'grey'"
                                     size="small"
-                                    @click="onDeployBtnClicked(item.raw)">
+                                    @click="onDeployBtnClicked(item)">
                                     <v-icon>fa fa-circle-play</v-icon>
                                     <v-tooltip activator="parent" location="bottom">Deploy</v-tooltip>
                                 </v-btn>
                                 <v-tooltip
-                                    :disabled="item.raw.item.hasDeployCommand"
+                                    :disabled="item.item.hasDeployCommand"
                                     activator="parent" location="bottom">Not available for this step
                                 </v-tooltip>
                             </div>
                             <div>
                                 <v-btn
-                                    :disabled="!item.raw.item.hasTerminateCommand"
-                                    :loading="item.raw.isLoadingTerminate"
+                                    :disabled="!item.item.hasTerminateCommand"
+                                    :loading="item.isLoadingTerminate"
                                     icon
-                                    variant="plain" :color="item.raw.item.hasTerminateCommand ? 'red' : 'grey'"
+                                    variant="plain" :color="item.item.hasTerminateCommand ? 'red' : 'grey'"
                                     size="small"
-                                    @click="onTerminateBtnClicked(item.raw)">
+                                    @click="onTerminateBtnClicked(item)">
                                     <v-icon>fa fa-skull</v-icon>
                                     <v-tooltip activator="parent" location="bottom">Terminate</v-tooltip>
                                 </v-btn>
                                 <v-tooltip
-                                    :disabled="item.raw.item.hasTerminateCommand"
+                                    :disabled="item.item.hasTerminateCommand"
                                     activator="parent" location="bottom">Not available for this step
                                 </v-tooltip>
                             </div>

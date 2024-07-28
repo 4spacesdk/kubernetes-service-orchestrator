@@ -4,6 +4,7 @@ import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
 import {DeploymentPackage, DeploymentSpecification} from "@/core/services/Deploy/models";
+import {DeploymentSpecificationTypes} from "@/constants";
 
 export interface DeploymentPackageUpdateDeploymentSpecificationsDialog_Input {
     deploymentPackage: DeploymentPackage;
@@ -119,13 +120,21 @@ function onCreateItemBtnClicked(createItem: CreateItem) {
     const newItem = {
         deploymentSpecification: createItem.deploymentSpecification,
     };
-    bus.emit('deploymentPackageUpdateDeploymentSpecification', {
-        settings: newItem,
-        onSaveCallback: () => {
+    switch (createItem.deploymentSpecification.type) {
+        case DeploymentSpecificationTypes.Deployment:
+            bus.emit('deploymentPackageUpdateDeploymentSpecification', {
+                settings: newItem,
+                onSaveCallback: () => {
+                    createItem.inUse = true;
+                    rows.value.push(newItem);
+                }
+            });
+            break;
+        case DeploymentSpecificationTypes.Custom:
             createItem.inUse = true;
             rows.value.push(newItem);
-        }
-    });
+            break;
+    }
 }
 
 function onEditRowClicked(row: Row) {
@@ -244,15 +253,16 @@ function onCloseBtnClicked() {
                     <template v-slot:item.actions="{ item }">
                         <div class="d-flex justify-end gap-1">
                             <v-btn
+                                v-if="item.deploymentSpecification.type == DeploymentSpecificationTypes.Deployment"
                                 variant="plain" color="primary" size="small"
-                                @click="onEditRowClicked(item.raw)">
+                                @click="onEditRowClicked(item)">
                                 <v-icon>fa fa-pen</v-icon>
                                 <v-tooltip activator="parent" location="bottom">Edit</v-tooltip>
                             </v-btn>
                             <v-btn
                                 variant="plain"
                                 color="red" size="small"
-                                @click="onDeleteRowClicked(item.raw)">
+                                @click="onDeleteRowClicked(item)">
                                 <v-icon>fa fa-trash</v-icon>
                                 <v-tooltip activator="parent" location="bottom">Delete</v-tooltip>
                             </v-btn>

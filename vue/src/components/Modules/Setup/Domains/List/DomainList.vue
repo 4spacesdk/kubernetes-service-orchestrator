@@ -189,7 +189,7 @@ function getCertificateStatus(item: Domain) {
 
                     <v-btn
                         variant="plain" color="primary" size="small"
-                        @click="applyCertificate(item.raw)">
+                        @click="applyCertificate(item)">
 
                         <v-icon>fa fa-certificate</v-icon>
                         <v-tooltip activator="parent" location="bottom">Apply certificate</v-tooltip>
@@ -197,19 +197,19 @@ function getCertificateStatus(item: Domain) {
 
                     <v-btn
                         variant="plain" color="primary" size="small"
-                        @click="getCertificateEvents(item.raw)">
+                        @click="getCertificateEvents(item)">
                         <v-icon>fa fa-terminal</v-icon>
                         <v-tooltip activator="parent" location="bottom">Events</v-tooltip>
                     </v-btn>
 
                     <v-btn
                         variant="plain" color="primary" size="small"
-                        @click="getCertificateStatus(item.raw)">
+                        @click="getCertificateStatus(item)">
                         <v-icon>fa fa-signal</v-icon>
                         <v-tooltip activator="parent" location="bottom">Status</v-tooltip>
                     </v-btn>
 
-                    <v-btn variant="plain" color="red" size="small" @click="deleteItem(item.raw)">
+                    <v-btn variant="plain" color="red" size="small" @click="deleteItem(item)">
                         <v-icon>fa fa-trash</v-icon>
                         <v-tooltip activator="parent" location="bottom">Delete</v-tooltip>
                     </v-btn>

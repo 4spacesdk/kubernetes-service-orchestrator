@@ -18,6 +18,7 @@ import {BaseModel} from '../BaseModel';
 
 export class DeploymentSpecificationDefinition extends BaseModel {
     name?: string;
+    type?: string;
     container_image_id?: number;
     container_image?: ContainerImage;
     git_repo?: string;
@@ -38,6 +39,7 @@ export class DeploymentSpecificationDefinition extends BaseModel {
     database_migration_verification_type?: string;
     database_migration_verification_value?: string;
     cronjob_url?: string;
+    custom_resource?: string;
     deployments?: Deployment[];
     deployment_specification_post_commands?: DeploymentSpecificationPostCommand[];
     deployment_specification_environment_variables?: DeploymentSpecificationEnvironmentVariable[];
@@ -66,6 +68,7 @@ export class DeploymentSpecificationDefinition extends BaseModel {
     public populate(data?: any, patch = false) {
         if (!patch) {
             delete this.name;
+            delete this.type;
             delete this.container_image_id;
             delete this.container_image;
             delete this.git_repo;
@@ -86,6 +89,7 @@ export class DeploymentSpecificationDefinition extends BaseModel {
             delete this.database_migration_verification_type;
             delete this.database_migration_verification_value;
             delete this.cronjob_url;
+            delete this.custom_resource;
             delete this.deployments;
             delete this.deployment_specification_post_commands;
             delete this.deployment_specification_environment_variables;
@@ -110,6 +114,9 @@ export class DeploymentSpecificationDefinition extends BaseModel {
         if (!data) return;
         if (data.name != null) {
             this.name = data.name;
+        }
+        if (data.type != null) {
+            this.type = data.type;
         }
         if (data.container_image_id != null) {
             this.container_image_id = data.container_image_id;
@@ -170,6 +177,9 @@ export class DeploymentSpecificationDefinition extends BaseModel {
         }
         if (data.cronjob_url != null) {
             this.cronjob_url = data.cronjob_url;
+        }
+        if (data.custom_resource != null) {
+            this.custom_resource = data.custom_resource;
         }
         if (data.deployments != null) {
             this.deployments = data.deployments.map((i: any) => new Deployment(i));

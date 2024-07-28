@@ -231,19 +231,19 @@ function onShowMigrationJobsBtnClicked(item: Deployment) {
 
             <template v-slot:item.status="{ item }">
                 <deployment-status
-                    :deployment="item.raw"/>
+                    :deployment="item"/>
             </template>
 
             <template v-slot:item.last-migration="{ item }">
                 <DeploymentLastMigrationStatus
-                    v-if="item.raw.canMigrate"
-                    :deployment="item.raw"/>
+                    v-if="item.canMigrate"
+                    :deployment="item"/>
             </template>
 
             <template v-slot:item.last_updated="{ item }">
                 <DateView
-                    v-if="item.raw.last_updated"
-                    :date-string="item.raw.last_updated"/>
+                    v-if="item.last_updated"
+                    :date-string="item.last_updated"/>
             </template>
 
             <template v-slot:item.actions="{ item }">
@@ -262,23 +262,23 @@ function onShowMigrationJobsBtnClicked(item: Deployment) {
                             </v-btn>
                         </template>
                         <deployment-pods-button
-                            :deployment="item.raw"
-                            :app="item.raw.name"
+                            :deployment="item"
+                            :app="item.name"
                             role="app"
                         />
                     </v-menu>
 
                     <v-btn
                         variant="plain" color="primary" size="small" icon
-                        @click="onShowResourcesBtnClicked(item.raw)">
+                        @click="onShowResourcesBtnClicked(item)">
                         <v-icon>fa fa-box</v-icon>
                         <v-tooltip activator="parent" location="bottom">Resources</v-tooltip>
                     </v-btn>
 
                     <v-btn
-                        :disabled="!item.raw.canMigrate"
+                        :disabled="!item.canMigrate"
                         variant="plain" color="primary" size="small" icon
-                        @click="onShowMigrationJobsBtnClicked(item.raw)">
+                        @click="onShowMigrationJobsBtnClicked(item)">
                         <v-icon>fa fa-truck-arrow-right</v-icon>
                         <v-tooltip activator="parent" location="bottom">Migration Jobs</v-tooltip>
                     </v-btn>
@@ -294,12 +294,12 @@ function onShowMigrationJobsBtnClicked(item: Deployment) {
                             </v-btn>
                         </template>
                         <deployment-edit-button
-                            :deployment="item.raw"/>
+                            :deployment="item"/>
                     </v-menu>
 
                     <v-btn
                         variant="plain" color="red" size="small" icon
-                        @click="onDeleteItemBtnClicked(item.raw)">
+                        @click="onDeleteItemBtnClicked(item)">
                         <v-icon>fa fa-trash</v-icon>
                         <v-tooltip activator="parent" location="bottom">Delete</v-tooltip>
                     </v-btn>

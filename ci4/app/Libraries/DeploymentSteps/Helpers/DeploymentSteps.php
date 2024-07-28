@@ -2,7 +2,7 @@
 
 class DeploymentSteps {
 
-    const
+    const string
         Database = 'database',
         Namespace = 'namespace',
         ClusterRole = 'cluster-role',
@@ -11,6 +11,7 @@ class DeploymentSteps {
         PersistentVolume = 'persistent-volume',
         PersistentVolumeClaim = 'persistent-volume-claim',
         Cronjob = 'cronjob',
+        CustomResource = 'custom-resource',
         Deployment = 'deployment',
         Service = 'service',
         Ingress = 'ingress',

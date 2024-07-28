@@ -27,6 +27,7 @@ use RestExtension\Core\Entity;
  * @property string $environment
  * @property string $status
  * @property string $last_updated
+ * @property string $custom_resource
  *
  * @property int $database_service_id
  * @property DatabaseService $database_service
@@ -79,7 +80,7 @@ class Deployment extends Entity {
             throw new ValidationException("Deployment already exists");
         }
 
-        if (!$spec->container_image->exists()) {
+        if ($spec->container_image_id && !$spec->container_image->exists()) {
             $spec->container_image->find();
         }
 
@@ -87,7 +88,10 @@ class Deployment extends Entity {
         $item->deployment_specification_id = $spec->id;
         $item->namespace = $namespace;
         $item->name = $name;
-        $item->image = $spec->container_image->url;
+        if ($spec->container_image->exists()) {
+            $item->image = $spec->container_image->url;
+        }
+        $item->custom_resource = $spec->custom_resource;
         $item->status = \DeploymentStatusTypes::Draft;
         return $item;
     }
@@ -203,6 +207,15 @@ class Deployment extends Entity {
             DeploymentSteps::PersistentVolume,
             DeploymentSteps::PersistentVolumeClaim,
             DeploymentSteps::Deployment,
+        ]);
+    }
+
+    public function updateCustomResource(string $content): void {
+        $this->custom_resource = $content;
+        $this->save();
+
+        DeploymentStepHelper::ExecuteDeployCommand($this, [
+            DeploymentSteps::CustomResource,
         ]);
     }
 

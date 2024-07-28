@@ -4,6 +4,7 @@ import {Deployment, DeploymentSpecification, Workspace} from "@/core/services/De
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
+import {DeploymentSpecificationTypes} from "@/constants";
 
 export interface DeploymentCreateDialog_Input {
     spec: DeploymentSpecification;
@@ -106,28 +107,40 @@ function onCloseBtnClicked() {
             <v-card-text>
                 <v-row
                     dense>
-                    <v-col cols="12">
+                    <v-col
+                        v-if="props.input.spec.type == DeploymentSpecificationTypes.Deployment"
+                        cols="12"
+                    >
                         <v-text-field
                             v-model="item.image"
                             :disabled="true"
                             variant="outlined"
                             label="Image"/>
                     </v-col>
-                    <v-col cols="4">
+                    <v-col
+                        v-if="props.input.spec.type == DeploymentSpecificationTypes.Deployment"
+                        cols="4"
+                    >
                         <v-checkbox
                             v-model="props.input.spec.enable_database"
                             :disabled="true"
                             color="black"
                             label="Database"/>
                     </v-col>
-                    <v-col cols="4">
+                    <v-col
+                        v-if="props.input.spec.type == DeploymentSpecificationTypes.Deployment"
+                        cols="4"
+                    >
                         <v-checkbox
                             v-model="props.input.spec.enable_cronjob"
                             :disabled="true"
                             color="black"
                             label="CronJob"/>
                     </v-col>
-                    <v-col cols="4">
+                    <v-col
+                        v-if="props.input.spec.type == DeploymentSpecificationTypes.Deployment"
+                        cols="4"
+                    >
                         <v-checkbox
                             v-model="props.input.spec.enable_ingress"
                             :disabled="true"

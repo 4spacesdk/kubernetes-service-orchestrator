@@ -3,6 +3,10 @@ import {computed, defineComponent, onMounted, reactive, ref, watch} from 'vue';
 import moment from 'moment';
 import {Domain} from "@/core/services/Deploy/models";
 
+const props = defineProps<{
+    color?: string;
+}>();
+
 const emit = defineEmits<{
     (e: 'addVariable', item: string): void
 }>();
@@ -99,7 +103,7 @@ function onVariableClicked(variable: Variable) {
                 v-bind="props"
                 icon
                 variant="plain"
-                color="primary"
+                :color="color ?? 'primary'"
                 size="small">
                 <v-icon>fa fa-key</v-icon>
                 <v-tooltip activator="parent" location="bottom">Insert variable</v-tooltip>

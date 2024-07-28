@@ -169,6 +169,9 @@ import type {
 import type {
     DeploymentPackageUpdateLabelsDialog_Input
 } from "@/components/Dialogs/Setup/DeploymentPackages/UpdateDialogs/DeploymentPackageUpdateLabelsDialog.vue";
+import type {
+    DeploymentUpdateCustomResourceDialog_Input
+} from "@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateCustomResourceDialog.vue";
 
 export type Events = {
     confirm: ConfirmationDialog_Input;
@@ -193,6 +196,7 @@ export type Events = {
     deploymentUpdateEnvironmentVariable: DeploymentUpdateEnvirontmentVariableDialog_Input;
     deploymentUpdateVolumes: DeploymentUpdateVolumesDialog_Input;
     deploymentUpdateVolume: DeploymentUpdateVolumeDialog_Input;
+    deploymentUpdateCustomResource: DeploymentUpdateCustomResourceDialog_Input;
     deploymentResourceList: DeploymentResourceListDialog_Input;
     deploymentResourcePreview: DeploymentResourcePreviewDialog_Input;
     deployment_DeploymentStep_Status_Change: {
@@ -335,3 +339,8 @@ export const RbacPermissions = {
         Delete: 'users.delete',
     },
 }
+
+export const DeploymentSpecificationTypes = {
+    Deployment: 'deployment',
+    Custom: 'custom'
+};

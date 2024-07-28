@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.1.18 ()
+
+### Fixed bugs
+
+### Enhancements
+* Added support for deploying custom resources
+* Upgraded packages 
+  * Vue 3.2.45 -> 3.4.34
+  * Vuetify 3.1.0 -> 3.6.13
+  * and many more...
+
+### Upgrade guide
+1. Deploy new image
+2. Migrate database. [(Guide)](https://github.com/4spacesdk/kubernetes-service-orchestrator?tab=readme-ov-file#migrate-database-helm)
+
+
+
 ## v0.1.17 (2024-06-10)
 
 ### Fixed bugs

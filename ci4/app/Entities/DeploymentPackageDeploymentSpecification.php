@@ -31,16 +31,16 @@ class DeploymentPackageDeploymentSpecification extends Entity {
     public static function Create($data): DeploymentPackageDeploymentSpecification {
         $item = new DeploymentPackageDeploymentSpecification();
         $item->deployment_specification_id = $data->deploymentSpecification->id;
-        $item->default_enable_podio_notification = $data->defaultEnablePodioNotification;
-        $item->default_version = $data->defaultVersion;
-        $item->default_keel_policy = $data->defaultKeelPolicy;
-        $item->default_keel_auto_update = $data->defaultKeelAutoUpdate;
-        $item->default_environment = $data->defaultEnvironment;
-        $item->default_cpu_request = $data->defaultCpuRequest;
-        $item->default_cpu_limit = $data->defaultCpuLimit;
-        $item->default_memory_request = $data->defaultMemoryRequest;
-        $item->default_memory_limit = $data->defaultMemoryLimit;
-        $item->default_replicas = $data->defaultReplicas;
+        $item->default_enable_podio_notification = $data->defaultEnablePodioNotification ?? null;
+        $item->default_version = $data->defaultVersion ?? null;
+        $item->default_keel_policy = $data->defaultKeelPolicy ?? null;
+        $item->default_keel_auto_update = $data->defaultKeelAutoUpdate ?? null;
+        $item->default_environment = $data->defaultEnvironment ?? null;
+        $item->default_cpu_request = $data->defaultCpuRequest ?? null;
+        $item->default_cpu_limit = $data->defaultCpuLimit ?? null;
+        $item->default_memory_request = $data->defaultMemoryRequest ?? null;
+        $item->default_memory_limit = $data->defaultMemoryLimit ?? null;
+        $item->default_replicas = $data->defaultReplicas ?? null;
         $item->save();
         return $item;
     }

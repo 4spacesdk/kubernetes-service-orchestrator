@@ -208,18 +208,18 @@ function onSortChanged(event: CustomEvent) {
                                     </v-btn>
                                 </template>
                                 <init-container-edit-button
-                                    :init-container="item.raw.item"/>
+                                    :init-container="item.item"/>
                             </v-menu>
                             <v-btn
                                 variant="plain" color="primary" size="small" icon
-                                @click="onEditRowClicked(item.raw)">
+                                @click="onEditRowClicked(item)">
                                 <v-icon>fa fa-pen</v-icon>
                                 <v-tooltip activator="parent" location="bottom">Edit</v-tooltip>
                             </v-btn>
                             <v-btn
                                 variant="plain"
                                 color="red" size="small" icon
-                                @click="onDeleteRowClicked(item.raw)">
+                                @click="onDeleteRowClicked(item)">
                                 <v-icon>fa fa-trash</v-icon>
                                 <v-tooltip activator="parent" location="bottom">Delete</v-tooltip>
                             </v-btn>

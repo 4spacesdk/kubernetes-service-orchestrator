@@ -161,17 +161,17 @@ function onResponseBodyBtnClicked(item: Row) {
             density="compact"
             @update:options="options = $event; getItems()">
             <template v-slot:item.created="{ item }">
-                <DateView :date-string="item.raw.item.created"/>
+                <DateView :date-string="item.item.created"/>
             </template>
             <template v-slot:item.response_time="{ item }">
-                <span>{{ item.raw.item.response_time }}ms</span>
+                <span>{{ item.item.response_time }}ms</span>
             </template>
             <template v-slot:item.actions="{ item }">
                 <div class="d-flex justify-end">
 
                     <v-btn
                         variant="plain" color="primary" size="small" icon
-                        @click="onRequestPayloadBtnClicked(item.raw)"
+                        @click="onRequestPayloadBtnClicked(item)"
                     >
                         <v-icon>fa fa-eye</v-icon>
                         <v-tooltip activator="parent" location="bottom">Request payload</v-tooltip>
@@ -179,7 +179,7 @@ function onResponseBodyBtnClicked(item: Row) {
 
                     <v-btn
                         variant="plain" color="secondary" size="small" icon
-                        @click="onResponseHeadersBtnClicked(item.raw)"
+                        @click="onResponseHeadersBtnClicked(item)"
                     >
                         <v-icon>fa fa-eye</v-icon>
                         <v-tooltip activator="parent" location="bottom">Response headers</v-tooltip>
@@ -187,7 +187,7 @@ function onResponseBodyBtnClicked(item: Row) {
 
                     <v-btn
                         variant="plain" color="secondary" size="small" icon
-                        @click="onResponseBodyBtnClicked(item.raw)"
+                        @click="onResponseBodyBtnClicked(item)"
                     >
                         <v-icon>fa fa-eye</v-icon>
                         <v-tooltip activator="parent" location="bottom">Response body</v-tooltip>
@@ -195,8 +195,8 @@ function onResponseBodyBtnClicked(item: Row) {
 
                     <v-btn
                         variant="plain" color="primary" size="small" icon
-                        @click="onRetryItemBtnClicked(item.raw)"
-                        :loading="item.raw.isRunning"
+                        @click="onRetryItemBtnClicked(item)"
+                        :loading="item.isRunning"
                     >
                         <v-icon>fa fa-play</v-icon>
                         <v-tooltip activator="parent" location="bottom">Redelivery</v-tooltip>

@@ -245,6 +245,28 @@ class Deployments extends ResourceController {
     }
 
     /**
+     * @route /deployments/{id}/custom-resource
+     * @method put
+     * @custom true
+     * @param int $id
+     * @parameter string $content parameterType=query
+     * @return void
+     */
+    public function updateCustomResource(int $id): void {
+        $item = new Deployment();
+        $item->find($id);
+        if ($item->exists()) {
+            try {
+                $item->updateCustomResource($this->request->getGet('content'),);
+            } catch (\Exception $e) {
+                Data::debug($e->getMessage());
+            }
+        }
+        $this->_setResource($item);
+        $this->success();
+    }
+
+    /**
      * @route /deployments/{id}/status
      * @method get
      * @custom true

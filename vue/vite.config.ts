@@ -20,6 +20,11 @@ export default defineConfig(({ command, mode }) => {
                 registerType: "prompt",
             }),
         ],
+        optimizeDeps: {
+            include: [
+                'highlight.js'
+            ]
+        },
         resolve: {
             alias: {
                 '@': fileURLToPath(new URL('./src', import.meta.url))

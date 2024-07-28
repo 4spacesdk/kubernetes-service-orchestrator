@@ -169,8 +169,8 @@ function onCloseBtnClicked() {
                             <template v-slot:item="{ props, item }">
                                 <v-list-item
                                     v-bind="props"
-                                    :title="item.raw.name"
-                                    :subtitle="item.raw.description"
+                                    :title="item.name"
+                                    :subtitle="item.description"
                                 />
                             </template>
                         </v-select>

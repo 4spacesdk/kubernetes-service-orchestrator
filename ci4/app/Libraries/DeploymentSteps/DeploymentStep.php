@@ -211,7 +211,6 @@ class DeploymentStep extends BaseDeploymentStep {
         /** @var K8sDeployment $resource */
         $resource = $this->getResource($deployment, true)->get();
         $status = $resource->getAttribute('status');
-        Data::debug($status);
         return $status;
     }
 

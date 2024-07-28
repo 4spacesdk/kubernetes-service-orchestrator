@@ -150,12 +150,12 @@ function onDeleteItemBtnClicked(item: DatabaseService) {
             @update:options="options = $event; getItems()">
             <template v-slot:item.actions="{ item }">
                 <div class="d-flex justify-end gap-1">
-                    <v-btn variant="plain" color="primary" size="small" @click="onEditItemBtnClicked(item.raw)"
+                    <v-btn variant="plain" color="primary" size="small" @click="onEditItemBtnClicked(item)"
                     >
                         <v-icon>fa fa-pen</v-icon>
                         <v-tooltip activator="parent" location="bottom">Edit</v-tooltip>
                     </v-btn>
-                    <v-btn variant="plain" color="red" size="small" @click="onDeleteItemBtnClicked(item.raw)">
+                    <v-btn variant="plain" color="red" size="small" @click="onDeleteItemBtnClicked(item)">
                         <v-icon>fa fa-trash</v-icon>
                         <v-tooltip activator="parent" location="bottom">Delete</v-tooltip>
                     </v-btn>

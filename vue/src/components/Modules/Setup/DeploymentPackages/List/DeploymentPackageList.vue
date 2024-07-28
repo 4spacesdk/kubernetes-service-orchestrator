@@ -150,10 +150,10 @@ function onEditItemBtnClicked(item: DeploymentPackage) {
             density="compact"
             @update:options="options = $event; getItems()">
             <template v-slot:item.specifications="{ item }">
-                <span>{{ item.raw.deployment_package_deployment_specifications?.length }}</span>
+                <span>{{ item.deployment_package_deployment_specifications?.length }}</span>
             </template>
             <template v-slot:item.environment-variables="{ item }">
-                <span>{{ item.raw.deployment_package_environment_variables?.length }}</span>
+                <span>{{ item.deployment_package_environment_variables?.length }}</span>
             </template>
 
             <template v-slot:item.actions="{ item }">
@@ -170,19 +170,19 @@ function onEditItemBtnClicked(item: DeploymentPackage) {
                             </v-btn>
                         </template>
                         <deployment-package-edit-button
-                            :deployment-package="item.raw"/>
+                            :deployment-package="item"/>
                     </v-menu>
 
                     <v-btn
                         variant="plain" color="primary" size="small" icon
-                        @click="onEditItemBtnClicked(item.raw)">
+                        @click="onEditItemBtnClicked(item)">
                         <v-icon>fa fa-pen</v-icon>
                         <v-tooltip activator="parent" location="bottom">Edit</v-tooltip>
                     </v-btn>
 
                     <v-btn
                         variant="plain" color="red" size="small" icon
-                        @click="onDeleteItemBtnClicked(item.raw)">
+                        @click="onDeleteItemBtnClicked(item)">
                         <v-icon>fa fa-trash</v-icon>
                         <v-tooltip activator="parent" location="bottom">Delete</v-tooltip>
                     </v-btn>

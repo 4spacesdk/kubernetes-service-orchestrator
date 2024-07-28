@@ -2,7 +2,6 @@ import { createVuetify } from 'vuetify'
 import { aliases, fa } from 'vuetify/iconsets/fa'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
-import { VDataTableServer } from 'vuetify/labs/VDataTable'
 
 const customLightTheme = {
     dark: false,
@@ -23,7 +22,6 @@ const customLightTheme = {
 export default createVuetify({
     components: {
         ...components,
-        VDataTableServer,
     },
     directives,
     theme: {
