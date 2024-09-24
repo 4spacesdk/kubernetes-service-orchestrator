@@ -4,6 +4,7 @@ use App\Libraries\DeploymentSteps\BaseDeploymentStep;
 use App\Libraries\DeploymentSteps\ClusterRoleBindingStep;
 use App\Libraries\DeploymentSteps\ClusterRoleStep;
 use App\Libraries\DeploymentSteps\CronjobStep;
+use App\Libraries\DeploymentSteps\CustomResourceStep;
 use App\Libraries\DeploymentSteps\DatabaseStep;
 use App\Libraries\DeploymentSteps\DeploymentStep;
 use App\Libraries\DeploymentSteps\IngressStep;
@@ -28,6 +29,7 @@ use RestExtension\Core\Entity;
  *
  * # Mandatory settings
  * @property string $name
+ * @property string $type
  * @property int $container_image_id
  * @property ContainerImage $container_image
  * @property string $git_repo
@@ -57,6 +59,9 @@ use RestExtension\Core\Entity;
  * # Cron Job settings
  * @property string $cronjob_url
  *
+ * # Custom Resource
+ * @property string $custom_resource
+ *
  * Many
  * @property Deployment $deployments
  * @property DeploymentSpecificationPostCommand $deployment_specification_post_commands
@@ -85,6 +90,7 @@ class DeploymentSpecification extends Entity {
             ClusterRoleBindingStep::class,
             PersistentVolumeStep::class,
             PersistentVolumeClaimStep::class,
+            CustomResourceStep::class,
             DeploymentStep::class,
             ServiceStep::class,
             IngressStep::class,
@@ -95,9 +101,17 @@ class DeploymentSpecification extends Entity {
 
         $steps = [
             new NamespaceStep(),
-            new DeploymentStep(),
-            new ServiceStep(),
         ];
+
+        switch ($this->type) {
+            case \DeploymentSpecificationTypes::Deployment:
+                $steps[] = new DeploymentStep();
+                $steps[] = new ServiceStep();
+                break;
+            case \DeploymentSpecificationTypes::Custom:
+                $steps[] = new CustomResourceStep();
+                break;
+        }
 
         if ($this->enable_database) {
             $steps[] = new DatabaseStep();

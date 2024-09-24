@@ -1,7 +1,7 @@
 <?php
 
 class CronJobIds {
-    const
+    const int
         CleanupGoogleContainerRegistry = 1,
         RunKeelHooks = 2,
         PullContainerRegistries = 3
@@ -10,11 +10,11 @@ class CronJobIds {
 
 class Environments {
 
-    const
+    const string
         Development = 'development',
         Production = 'production';
 
-    public static function All(): array  {
+    public static function All(): array {
         return [
             self::Development, self::Production,
         ];
@@ -23,7 +23,7 @@ class Environments {
 
 class KeelPolicies {
 
-    public const
+    public const string
         Major = 'major',
         Minor = 'minor',
         LatestPatch = 'glob:latest-patch',
@@ -55,21 +55,21 @@ class KeelPolicies {
 }
 
 class DeploymentStatusTypes {
-    const Draft         = 'draft';
-    const Deploying     = 'deploying';
-    const Active        = 'active';
-    const Error         = 'error';
+    const string Draft = 'draft';
+    const string Deploying = 'deploying';
+    const string Active = 'active';
+    const string Error = 'error';
 }
 
 class KeelHookStatusTypes {
-    const New       = 'new';
-    const Running   = 'running';
-    const Finished  = 'finished';
-    const Error     = 'error';
+    const string New = 'new';
+    const string Running = 'running';
+    const string Finished = 'finished';
+    const string Error = 'error';
 }
 
 class MigrationJobStatusTypes {
-    const
+    const string
         Deploying = 'deploying',
         Started = 'started',
         Completed = 'completed',
@@ -78,12 +78,12 @@ class MigrationJobStatusTypes {
 }
 
 class WebHookTypes {
-    const
+    const string
         Workspace_Created = 'workspace-created',
         Workspace_Updated = 'workspace-updated',
         Workspace_Deleted = 'workspace-deleted';
 
-    public static function All(): array  {
+    public static function All(): array {
         return [
             self::Workspace_Created,
             self::Workspace_Updated,
@@ -93,28 +93,34 @@ class WebHookTypes {
 }
 
 class DatabaseDrivers {
-    const
+    const string
         MySQL = 'mysql',
         MSSQL = 'mssql';
 }
 
 class ContainerImageTagPolicies {
-    const
+    const string
         MatchDeployment = 'match-deployment',
         Static = 'static';
 }
 
 class ImagePullPolicies {
-    const
+    const string
         IfNotPresent = 'IfNotPresent',
         Always = 'Always',
         Never = 'Never';
 }
 
 class MigrationVerificationTypes {
-    const
+    const string
         EndsWith = 'ends-with',
         Regex = 'regex';
+}
+
+class DeploymentSpecificationTypes {
+    const string
+        Deployment = 'deployment',
+        Custom = 'custom';
 }
 
 class ContainerRegistries {
@@ -157,11 +163,11 @@ defined('COMPOSER_PATH') || define('COMPOSER_PATH', ROOTPATH . 'vendor/autoload.
  */
 defined('SECOND') || define('SECOND', 1);
 defined('MINUTE') || define('MINUTE', 60);
-defined('HOUR')   || define('HOUR', 3600);
-defined('DAY')    || define('DAY', 86400);
-defined('WEEK')   || define('WEEK', 604800);
-defined('MONTH')  || define('MONTH', 2_592_000);
-defined('YEAR')   || define('YEAR', 31_536_000);
+defined('HOUR') || define('HOUR', 3600);
+defined('DAY') || define('DAY', 86400);
+defined('WEEK') || define('WEEK', 604800);
+defined('MONTH') || define('MONTH', 2_592_000);
+defined('YEAR') || define('YEAR', 31_536_000);
 defined('DECADE') || define('DECADE', 315_360_000);
 
 /*
@@ -189,16 +195,16 @@ defined('DECADE') || define('DECADE', 315_360_000);
  |       http://tldp.org/LDP/abs/html/exitcodes.html
  |
  */
-defined('EXIT_SUCCESS')        || define('EXIT_SUCCESS', 0);        // no errors
-defined('EXIT_ERROR')          || define('EXIT_ERROR', 1);          // generic error
-defined('EXIT_CONFIG')         || define('EXIT_CONFIG', 3);         // configuration error
-defined('EXIT_UNKNOWN_FILE')   || define('EXIT_UNKNOWN_FILE', 4);   // file not found
-defined('EXIT_UNKNOWN_CLASS')  || define('EXIT_UNKNOWN_CLASS', 5);  // unknown class
+defined('EXIT_SUCCESS') || define('EXIT_SUCCESS', 0);        // no errors
+defined('EXIT_ERROR') || define('EXIT_ERROR', 1);          // generic error
+defined('EXIT_CONFIG') || define('EXIT_CONFIG', 3);         // configuration error
+defined('EXIT_UNKNOWN_FILE') || define('EXIT_UNKNOWN_FILE', 4);   // file not found
+defined('EXIT_UNKNOWN_CLASS') || define('EXIT_UNKNOWN_CLASS', 5);  // unknown class
 defined('EXIT_UNKNOWN_METHOD') || define('EXIT_UNKNOWN_METHOD', 6); // unknown class member
-defined('EXIT_USER_INPUT')     || define('EXIT_USER_INPUT', 7);     // invalid user input
-defined('EXIT_DATABASE')       || define('EXIT_DATABASE', 8);       // database error
-defined('EXIT__AUTO_MIN')      || define('EXIT__AUTO_MIN', 9);      // lowest automatically-assigned error code
-defined('EXIT__AUTO_MAX')      || define('EXIT__AUTO_MAX', 125);    // highest automatically-assigned error code
+defined('EXIT_USER_INPUT') || define('EXIT_USER_INPUT', 7);     // invalid user input
+defined('EXIT_DATABASE') || define('EXIT_DATABASE', 8);       // database error
+defined('EXIT__AUTO_MIN') || define('EXIT__AUTO_MIN', 9);      // lowest automatically-assigned error code
+defined('EXIT__AUTO_MAX') || define('EXIT__AUTO_MAX', 125);    // highest automatically-assigned error code
 
 /**
  * @deprecated Use \CodeIgniter\Events\Events::PRIORITY_LOW instead.

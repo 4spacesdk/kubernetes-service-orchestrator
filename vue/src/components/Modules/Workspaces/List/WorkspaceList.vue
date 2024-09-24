@@ -304,12 +304,12 @@ function onShowLogsBtnClicked(item: Workspace) {
 
             <template v-slot:item.status="{ item }">
                 <WorkspaceDeploymentStatus
-                    :workspace="item.raw.workspace"/>
+                    :workspace="item.workspace"/>
             </template>
 
             <template v-slot:item.url="{ item }">
                 <workspace-deployment-domains
-                    :workspace="item.raw.workspace"
+                    :workspace="item.workspace"
                 />
             </template>
 
@@ -319,7 +319,7 @@ function onShowLogsBtnClicked(item: Workspace) {
                     <v-btn
                         v-if="rbacDeveloper"
                         variant="plain" color="primary" size="small" icon
-                        @click="onShowDeploymentsBtnClicked(item.raw.workspace)">
+                        @click="onShowDeploymentsBtnClicked(item.workspace)">
                         <v-icon>fa fa-box</v-icon>
                         <v-tooltip activator="parent" location="bottom">Deployments</v-tooltip>
                     </v-btn>
@@ -327,7 +327,7 @@ function onShowLogsBtnClicked(item: Workspace) {
                     <v-btn
                         v-if="rbacDeveloper"
                         variant="plain" color="primary" size="small" icon
-                        @click="onShowLogsBtnClicked(item.raw.workspace)">
+                        @click="onShowLogsBtnClicked(item.workspace)">
                         <v-icon>fa fa-rectangle-list</v-icon>
                         <v-tooltip activator="parent" location="bottom">Kubernetes Logs</v-tooltip>
                     </v-btn>
@@ -335,7 +335,7 @@ function onShowLogsBtnClicked(item: Workspace) {
                     <v-btn
                         v-if="rbacDeveloper"
                         variant="plain" color="primary" size="small" icon
-                        @click="onShowMigrationJobsBtnClicked(item.raw.workspace)">
+                        @click="onShowMigrationJobsBtnClicked(item.workspace)">
                         <v-icon>fa fa-truck-arrow-right</v-icon>
                         <v-tooltip activator="parent" location="bottom">Migration Jobs</v-tooltip>
                     </v-btn>
@@ -352,13 +352,13 @@ function onShowLogsBtnClicked(item: Workspace) {
                             </v-btn>
                         </template>
                         <WorkspaceEditButton
-                            :workspace="item.raw.workspace"/>
+                            :workspace="item.workspace"/>
                     </v-menu>
 
                     <v-btn
                         v-if="rbacWorkspaceCreate"
                         variant="plain" color="warning" size="small" icon
-                        @click="onDeployItemBtnClicked(item.raw.workspace)">
+                        @click="onDeployItemBtnClicked(item.workspace)">
                         <v-icon>fa fa-play</v-icon>
                         <v-tooltip activator="parent" location="bottom">Deploy</v-tooltip>
                     </v-btn>
@@ -366,7 +366,7 @@ function onShowLogsBtnClicked(item: Workspace) {
                     <v-btn
                         v-if="rbacDeveloper"
                         variant="plain" color="red" size="small" icon
-                        @click="onTerminateItemBtnClicked(item.raw.workspace)">
+                        @click="onTerminateItemBtnClicked(item.workspace)">
                         <v-icon>fa fa-skull</v-icon>
                         <v-tooltip activator="parent" location="bottom">Terminate</v-tooltip>
                     </v-btn>
@@ -374,8 +374,8 @@ function onShowLogsBtnClicked(item: Workspace) {
                     <v-btn
                         v-if="rbacWorkspaceUpdate"
                         variant="plain" color="red" size="small" icon
-                        @click="onDeleteItemBtnClicked(item.raw)"
-                        :loading="item.raw.isLoadingDeleteBtn"
+                        @click="onDeleteItemBtnClicked(item)"
+                        :loading="item.isLoadingDeleteBtn"
                     >
                         <v-icon>fa fa-trash</v-icon>
                         <v-tooltip activator="parent" location="bottom">Delete</v-tooltip>

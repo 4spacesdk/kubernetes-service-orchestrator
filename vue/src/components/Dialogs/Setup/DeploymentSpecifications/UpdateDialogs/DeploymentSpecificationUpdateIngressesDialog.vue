@@ -212,32 +212,32 @@ function onCloseBtnClicked() {
                     class="table"
                     density="compact">
                     <template v-slot:item.sslRedirect="{ item }">
-                        <v-icon v-if="item.raw.sslRedirect">fa fa-check</v-icon>
+                        <v-icon v-if="item.sslRedirect">fa fa-check</v-icon>
                     </template>
                     <template v-slot:item.enableTls="{ item }">
-                        <v-icon v-if="item.raw.enableTls">fa fa-check</v-icon>
+                        <v-icon v-if="item.enableTls">fa fa-check</v-icon>
                     </template>
                     <template v-slot:item.paths="{ item }">
-                        <span v-if="item.raw.paths">{{ item.raw.paths.length }}</span>
+                        <span v-if="item.paths">{{ item.paths.length }}</span>
                     </template>
                     <template v-slot:item.actions="{ item }">
                         <div class="d-flex justify-end">
                             <v-btn
                                 variant="plain" color="primary" size="small"
-                                @click="onRulePathsBtnClicked(item.raw)">
+                                @click="onRulePathsBtnClicked(item)">
                                 <v-icon>fa fa-link</v-icon>
                                 <v-tooltip activator="parent" location="bottom">Rule paths</v-tooltip>
                             </v-btn>
                             <v-btn
                                 variant="plain" color="primary" size="small"
-                                @click="onEditRowClicked(item.raw)">
+                                @click="onEditRowClicked(item)">
                                 <v-icon>fa fa-pen</v-icon>
                                 <v-tooltip activator="parent" location="bottom">Edit</v-tooltip>
                             </v-btn>
                             <v-btn
                                 variant="plain"
                                 color="red" size="small"
-                                @click="onDeleteRowClicked(item.raw)">
+                                @click="onDeleteRowClicked(item)">
                                 <v-icon>fa fa-trash</v-icon>
                                 <v-tooltip activator="parent" location="bottom">Delete</v-tooltip>
                             </v-btn>

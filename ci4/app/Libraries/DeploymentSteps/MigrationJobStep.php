@@ -273,7 +273,7 @@ class MigrationJobStep extends BaseDeploymentStep {
                 . ' && ' . $spec->database_migration_command
 
                 // Tell KSO about migration job ended
-                . ' | curl --connect-timeout 5 --max-time 60 --retry 10 --retry-delay 5 --retry-max-time 300 -i -v -X PUT --data-binary @- ' . $this->getMigrationEndedUrl(),
+                . ' | curl --connect-timeout 5 --max-time 300 --retry 10 --retry-delay 5 --retry-max-time 300 -i -v -X PUT --data-binary @- ' . $this->getMigrationEndedUrl(),
             ])
             ->addEnv('ENVIRONMENT', \Environments::Development)
             ->addEnv('BASE_URL', $deployment->getUrl(true, true));
@@ -357,12 +357,20 @@ class MigrationJobStep extends BaseDeploymentStep {
     }
 
     private function getMigrationStartedUrl(): string {
-        $domain = KubeHelper::GetMyHostname() . '.' . KubeHelper::GetMyNamespace();
+        if (getenv('DEV_REMOTE_BASE_URL')) {
+            $domain = getenv('DEV_REMOTE_BASE_URL');
+        } else {
+            $domain = KubeHelper::GetMyHostname() . '.' . KubeHelper::GetMyNamespace();
+        }
         return "$domain/api/migration-jobs/$(MIGRATION_JOB_ID)/started";
     }
 
     private function getMigrationEndedUrl(): string {
-        $domain = KubeHelper::GetMyHostname() . '.' . KubeHelper::GetMyNamespace();
+        if (getenv('DEV_REMOTE_BASE_URL')) {
+            $domain = getenv('DEV_REMOTE_BASE_URL');
+        } else {
+            $domain = KubeHelper::GetMyHostname() . '.' . KubeHelper::GetMyNamespace();
+        }
         return "$domain/api/migration-jobs/$(MIGRATION_JOB_ID)/ended";
     }
 

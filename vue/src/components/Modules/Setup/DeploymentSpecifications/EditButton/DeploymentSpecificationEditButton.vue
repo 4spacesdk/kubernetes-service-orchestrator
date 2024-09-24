@@ -2,11 +2,13 @@
 import {computed, defineComponent, onMounted, reactive, ref, watch} from 'vue'
 import {DeploymentSpecification} from "@/core/services/Deploy/models";
 import bus from "@/plugins/bus";
+import {DeploymentSpecificationTypes} from "@/constants";
 
 const props = defineProps<{
     deploymentSpecification: DeploymentSpecification
 }>();
 
+const isVisible = ref(false);
 const showUpdatePostCommands = ref(false);
 const showUpdateEnvironmentVariables = ref(false);
 const showUpdateServicePorts = ref(false);
@@ -23,6 +25,7 @@ onMounted(() => {
 });
 
 function render() {
+    isVisible.value = props.deploymentSpecification.type == DeploymentSpecificationTypes.Deployment;
     showUpdatePostCommands.value = true;
     showUpdateEnvironmentVariables.value = true;
     showUpdateServicePorts.value = true;
@@ -85,6 +88,7 @@ function onUpdateInitContainersClicked() {
 
 <template>
     <div
+        v-if="isVisible"
         class="pa-2 w-100">
         <v-card
             class="w-100 list-wrapper">

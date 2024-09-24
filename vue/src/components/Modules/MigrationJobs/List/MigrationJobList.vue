@@ -25,7 +25,12 @@ const props = defineProps<{
 const used = ref(false);
 const itemCount = ref(0);
 const rows = ref<Row[]>([]);
-const headers = ref([
+const headers = ref<{
+    readonly key?: string,
+    readonly title?: string | undefined,
+    readonly sortable?: boolean | undefined,
+    readonly align?: "end" | "center" | "start" | undefined,
+}[]>([
     {title: 'Status', key: 'status', sortable: false, align: "center"},
     {title: 'Workspace', key: 'item.deployment.workspace.name', sortable: false},
     {title: 'Deployment', key: 'deployment', sortable: false},
@@ -183,55 +188,55 @@ function onRerunBtnClicked(row: Row) {
 
             <template v-slot:item.status="{ item }">
                 <MigrationJobStatus
-                    :migration-job="item.raw.item"/>
+                    :migration-job="item.item"/>
             </template>
 
             <template v-slot:item.deployment="{ item }">
                 <v-chip
-                    v-if="item.raw.item.deployment"
+                    v-if="item.item.deployment"
                     style="max-width: 200px"
                 >
                     <span class="text-truncate">
-                        {{ item.raw.item.deployment.name }}.{{ item.raw.item.deployment.namespace }}
+                        {{ item.item.deployment.name }}.{{ item.item.deployment.namespace }}
                     </span>
-                    <v-tooltip activator="parent" location="bottom">{{ item.raw.item.deployment.name }}.{{ item.raw.item.deployment.namespace }}</v-tooltip>
+                    <v-tooltip activator="parent" location="bottom">{{ item.item.deployment.name }}.{{ item.item.deployment.namespace }}</v-tooltip>
                 </v-chip>
             </template>
 
             <template v-slot:item.created="{ item }">
-                <DateView :date-string="item.raw.item.created"/>
+                <DateView :date-string="item.item.created"/>
             </template>
 
             <template v-slot:item.started="{ item }">
                 <DateView
-                    v-if="item.raw.item.started"
-                    :date-string="item.raw.item.started"/>
+                    v-if="item.item.started"
+                    :date-string="item.item.started"/>
             </template>
 
             <template v-slot:item.ended="{ item }">
                 <DateView
-                    v-if="item.raw.item.ended"
-                    :date-string="item.raw.item.ended"/>
+                    v-if="item.item.ended"
+                    :date-string="item.item.ended"/>
             </template>
 
             <template v-slot:item.actions="{ item }">
                 <div class="d-flex justify-end gap-1">
                     <v-btn
                         variant="plain" color="primary" size="small" icon
-                        @click="onShowKubernetesLogsBtnClicked(item.raw.item)">
+                        @click="onShowKubernetesLogsBtnClicked(item.item)">
                         <v-icon>fa fa-rectangle-list</v-icon>
                         <v-tooltip activator="parent" location="bottom">Kubernetes Log</v-tooltip>
                     </v-btn>
                     <v-btn
                         variant="plain" color="primary" size="small" icon
-                        @click="onShowLogsBtnClicked(item.raw.item)">
+                        @click="onShowLogsBtnClicked(item.item)">
                         <v-icon>fa fa-rectangle-list</v-icon>
-                        <v-tooltip activator="parent" location="bottom">CodeIgniter Log</v-tooltip>
+                        <v-tooltip activator="parent" location="bottom">Job Log</v-tooltip>
                     </v-btn>
                     <v-btn
                         variant="plain" color="warning" size="small" icon
-                        @click="onRerunBtnClicked(item.raw)"
-                        :loading="item.raw.isLoadingRerun"
+                        @click="onRerunBtnClicked(item)"
+                        :loading="item.isLoadingRerun"
                     >
                         <v-icon>fa fa-play</v-icon>
                         <v-tooltip activator="parent" location="bottom">Rerun</v-tooltip>

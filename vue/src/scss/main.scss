@@ -1,7 +1,3 @@
-.v-label.v-field-label {
-  top: 8px !important;
-}
-
 .v-field__prepend-inner, .v-field__append-inner, .v-field__clearable {
   padding-top: 11px !important;
   font-size: 12px !important;
@@ -44,11 +40,14 @@ body,
 .v-table {
   table tr th span {
     font-weight: 600;
+    color: rgba(var(--v-theme-on-surface),var(--v-medium-emphasis-opacity));
+    font-size: 13px;
   }
 
   table tr th,
   table tr td {
     background: var(--color-background) !important;
+    font-size: 13px;
   }
 
   table tbody tr:hover:not(.v-data-table__expanded__content):not(.v-data-table__empty-wrapper)  {
@@ -96,7 +95,6 @@ body,
   }
 
   .v-card {
-
     border-radius: .75rem;
     position: relative;
     //min-height: 200px;
@@ -129,68 +127,11 @@ body,
           min-height: 48px !important;
         }
 
-        code {
-          margin: 0;
-        }
-
       }
 
       &:has(.v-table) {
         padding-left: 0 !important;
         padding-right: 0 !important;
-      }
-
-      .v-card-text:has(code) {
-        counter-increment: linenumber;
-      }
-
-      &:has(.jv-container),
-      &:has(code) {
-        display: inline-flex;
-        gap: 10px;
-
-        code {
-          font-family: monospace;
-        }
-
-        line-height: 21px;
-
-        border-radius: 2px;
-        padding: 20px 10px;
-      }
-
-      code.line-numbers {
-        white-space: unset;
-
-        span {
-          counter-increment: linenumber;
-          display: flex;
-          gap: 10px;
-
-          &:before {
-            content: counter(linenumber);
-            display: block;
-            color: #506882;
-            color: #b0b2b2;
-          }
-        }
-      }
-
-      .jv-container,
-      code {
-        margin-top: 1rem;
-        margin-bottom: 1.4rem;
-        white-space: pre-line;
-        //background: #282a3a;
-        color: #1a3b46;
-        background: #e1e7e9;
-        //border: 1px solid #d1d8d9;
-        overflow-y: auto;
-
-        &:empty:before {
-          font-family: "Font Awesome 6 Pro";
-          content: "\e236";
-        }
       }
 
     }
@@ -243,17 +184,6 @@ body,
     }
 
   }
-}
-
-code {
-  background: #1e1f22;
-  color: #bababa;
-  padding: 1rem;
-  width: 100%;
-  margin: .25rem;
-  border-radius: .25rem;
-  display: block;
-
 }
 
 .min-height-unset {

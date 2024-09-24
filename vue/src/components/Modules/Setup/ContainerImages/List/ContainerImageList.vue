@@ -149,14 +149,14 @@ function deleteItem(item: ContainerImage) {
 
                     <v-btn
                         variant="plain" color="primary" size="small" icon
-                        @click="onEditItemBtnClicked(item.raw)">
+                        @click="onEditItemBtnClicked(item)">
                         <v-icon>fa fa-pen</v-icon>
                         <v-tooltip activator="parent" location="bottom">Edit</v-tooltip>
                     </v-btn>
 
                     <v-btn
                         variant="plain" color="red" size="small" icon
-                        @click="deleteItem(item.raw)">
+                        @click="deleteItem(item)">
                         <v-icon>fa fa-trash</v-icon>
                         <v-tooltip activator="parent" location="bottom">Delete</v-tooltip>
                     </v-btn>

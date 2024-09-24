@@ -187,28 +187,28 @@ function onCloseBtnClicked() {
                     <template v-slot:item.value="{ item }">
                         <span
                             class="text-truncate d-inline-block mt-1"
-                            style="max-width: 300px;">{{ item.raw.value }}</span>
+                            style="max-width: 300px;">{{ item.value }}</span>
                     </template>
                     <template v-slot:item.actions="{ item }">
                         <div class="d-flex justify-end">
                             <v-btn
                                 variant="plain" color="primary" size="small"
-                                @click="onCopyToDeploymentsClicked(item.raw)"
-                                :loading="item.raw.isLoadingCopyToDeploymentsBtn"
+                                @click="onCopyToDeploymentsClicked(item)"
+                                :loading="item.isLoadingCopyToDeploymentsBtn"
                             >
                                 <v-icon>fa fa-copy</v-icon>
                                 <v-tooltip activator="parent" location="bottom">Copy to deployments</v-tooltip>
                             </v-btn>
                             <v-btn
                                 variant="plain" color="primary" size="small"
-                                @click="onEditRowClicked(item.raw)">
+                                @click="onEditRowClicked(item)">
                                 <v-icon>fa fa-pen</v-icon>
                                 <v-tooltip activator="parent" location="bottom">Edit</v-tooltip>
                             </v-btn>
                             <v-btn
                                 variant="plain"
                                 color="red" size="small"
-                                @click="onDeleteRowClicked(item.raw)">
+                                @click="onDeleteRowClicked(item)">
                                 <v-icon>fa fa-trash</v-icon>
                                 <v-tooltip activator="parent" location="bottom">Delete</v-tooltip>
                             </v-btn>
@@ -231,7 +231,6 @@ function onCloseBtnClicked() {
                         <v-divider/>
                         <v-card-actions>
                             <v-btn
-                                text
                                 variant="tonal"
                                 prepend-icon="fa fa-circle-xmark"
                                 color="grey"
@@ -240,7 +239,6 @@ function onCloseBtnClicked() {
                             </v-btn>
                             <v-spacer/>
                             <v-btn
-                                text
                                 variant="tonal"
                                 color="red"
                                 @click="onCopyToDeploymentsConfirmed(copyToDeploymentsDialog_Row!, true)">

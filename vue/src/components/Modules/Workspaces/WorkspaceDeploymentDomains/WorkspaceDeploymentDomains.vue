@@ -37,6 +37,7 @@ onUnmounted(() => {
 
 function setup() {
     rows.value = props.workspace.deployments
+        ?.filter(deployment => deployment.deployment_specification?.enable_ingress ?? false)
         ?.map(deployment => {
             return {
                 deployment: deployment,
@@ -46,7 +47,7 @@ function setup() {
 
     rows.value.sort((a, b) => a.url.localeCompare(b.url));
 
-    text.value = rows.value.length > 0 ? rows.value[0].url : '-';
+    text.value = rows.value.length > 0 ? rows.value[0].url : '';
 
     render();
 }

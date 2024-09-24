@@ -3,7 +3,7 @@ import {computed, defineComponent, onMounted, reactive, ref, watch} from 'vue'
 import {Deployment, DeploymentSpecification} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
-import {DeploymentStatusTypes} from "@/constants";
+import {DeploymentSpecificationTypes, DeploymentStatusTypes} from "@/constants";
 
 const props = defineProps<{
     deployment: Deployment
@@ -36,6 +36,9 @@ const isUpdateEnvironmentVariablesEnabled = ref(false);
 const showUpdateVolumes = ref(false);
 const isUpdateVolumesEnabled = ref(false);
 
+const showUpdateCustomResource = ref(false);
+const isUpdateCustomResourceEnabled = ref(false);
+
 onMounted(() => {
     isLoading.value = true;
     Api.deploymentSpecifications().getById(props.deployment.deployment_specification_id!)
@@ -46,10 +49,10 @@ onMounted(() => {
 });
 
 function render() {
-    showUpdateVersion.value = true;
+    showUpdateVersion.value = spec.value?.type == DeploymentSpecificationTypes.Deployment;
     isUpdateVersionEnabled.value = true;
 
-    showUpdateEnvironment.value = true;
+    showUpdateEnvironment.value = spec.value?.type == DeploymentSpecificationTypes.Deployment;
     isUpdateEnvironmentEnabled.value = true;
 
     showUpdateDatabaseService.value = spec.value?.enable_database ?? false;
@@ -58,17 +61,20 @@ function render() {
     showUpdateIngress.value = spec.value?.enable_ingress ?? false;
     isUpdateIngressEnabled.value = true;
 
-    showUpdateResourceManagement.value = true;
+    showUpdateResourceManagement.value = spec.value?.type == DeploymentSpecificationTypes.Deployment;
     isUpdateResourceManagementEnabled.value = true;
 
-    showUpdateUpdateManagement.value = true;
+    showUpdateUpdateManagement.value = spec.value?.type == DeploymentSpecificationTypes.Deployment;
     isUpdateUpdateManagementEnabled.value = true;
 
-    showUpdateEnvironmentVariables.value = true;
+    showUpdateEnvironmentVariables.value = spec.value?.type == DeploymentSpecificationTypes.Deployment;
     isUpdateEnvironmentVariablesEnabled.value = true;
 
     showUpdateVolumes.value = spec.value?.enable_volumes ?? false;
     isUpdateVolumesEnabled.value = true;
+
+    showUpdateCustomResource.value = spec.value?.type == DeploymentSpecificationTypes.Custom;
+    isUpdateCustomResourceEnabled.value = true;
 
     isLoading.value = false;
 }
@@ -117,6 +123,12 @@ function onUpdateEnvironmentVariablesClicked() {
 
 function onUpdateVolumesClicked() {
     bus.emit('deploymentUpdateVolumes', {
+        deployment: props.deployment
+    });
+}
+
+function onUpdateCustomResourceClicked() {
+    bus.emit('deploymentUpdateCustomResource', {
         deployment: props.deployment
     });
 }
@@ -223,6 +235,16 @@ function onUpdateVolumesClicked() {
                     <v-list-item-title>
                         <v-icon size="small" class="my-auto ml-2">fa fa-hard-drive</v-icon>
                         <span class="ml-2">Volumes</span>
+                    </v-list-item-title>
+                </v-list-item>
+                <v-list-item
+                    v-if="showUpdateCustomResource"
+                    :disabled="!isUpdateCustomResourceEnabled"
+                    dense
+                    @click="onUpdateCustomResourceClicked">
+                    <v-list-item-title>
+                        <v-icon size="small" class="my-auto ml-2">fa fa-file-lines</v-icon>
+                        <span class="ml-2">Custom Resource</span>
                     </v-list-item-title>
                 </v-list-item>
             </v-list>

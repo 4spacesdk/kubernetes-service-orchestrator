@@ -13,8 +13,10 @@ export class DeploymentSpecification extends DeploymentSpecificationDefinition {
         super(json);
     }
 
-    public static Create(): DeploymentSpecification {
+    public static Create(type: string): DeploymentSpecification {
         const item = new DeploymentSpecification();
+        item.type = type;
+        item.custom_resource = '';
         item.database_migration_verification_type = MigrationVerificationTypes.EndsWith;
         item.database_migration_verification_value = 'Done migrations.';
         return item;

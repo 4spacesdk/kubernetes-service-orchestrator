@@ -2471,6 +2471,32 @@ export class DeploymentsUpdateDeploymentVolumesPutById extends BaseApi<Deploymen
     }
 }
 
+export class DeploymentsUpdateCustomResourcePutById extends BaseApi<Deployment> {
+
+    public topic = 'Resources.Deployments';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/deployments/${id}/custom-resource`;
+    }
+
+    protected convertToResource(data: any): Deployment {
+        return new Deployment(data);
+    }
+
+    public content(value: string): DeploymentsUpdateCustomResourcePutById {
+        this.addQueryParameter('content', value);
+        return this;
+    }
+
+    public save(data: any, next?: (value: Deployment) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
 export class DeploymentsGetStatusGetById extends BaseApi<Deployment> {
 
     public topic = 'Resources.Deployments';
@@ -2590,6 +2616,10 @@ class Deployments {
 
     public updateDeploymentVolumesPutById(id: number): DeploymentsUpdateDeploymentVolumesPutById {
         return new DeploymentsUpdateDeploymentVolumesPutById(id);
+    }
+
+    public updateCustomResourcePutById(id: number): DeploymentsUpdateCustomResourcePutById {
+        return new DeploymentsUpdateCustomResourcePutById(id);
     }
 
     public getStatusGetById(id: number): DeploymentsGetStatusGetById {

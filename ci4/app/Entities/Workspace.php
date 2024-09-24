@@ -140,30 +140,35 @@ class Workspace extends Entity {
 
         $deployment = $this->prepareDeploymentFromSpecification($deploymentSpecification);
 
-        if (strlen($deploymentPackageDeploymentSpecification->default_version)) {
-            $deployment->version = $deploymentPackageDeploymentSpecification->default_version;
-        } else {
-            // Find newest version
-            if (!$deploymentSpecification->container_image->exists()) {
-                $deploymentSpecification->container_image->find();
-            }
-            $registry = new GoogleCloudArtifactRegistry($deploymentSpecification->container_image->url);
-            $tags = $registry->getTags();
-            $tags = array_filter($tags, fn($tag) => !str_contains($tag, 'latest'));
-            $deployment->version = end($tags);
+        switch ($deploymentSpecification->type) {
+            case \DeploymentSpecificationTypes::Deployment:
+                if (strlen($deploymentPackageDeploymentSpecification->default_version)) {
+                    $deployment->version = $deploymentPackageDeploymentSpecification->default_version;
+                } else {
+                    // Find newest version
+                    if (!$deploymentSpecification->container_image->exists()) {
+                        $deploymentSpecification->container_image->find();
+                    }
+                    $registry = new GoogleCloudArtifactRegistry($deploymentSpecification->container_image->url);
+                    $tags = $registry->getTags();
+                    $tags = array_filter($tags, fn($tag) => !str_contains($tag, 'latest'));
+                    $deployment->version = end($tags);
+                }
+                $deployment->auto_update_enabled = $deploymentPackageDeploymentSpecification->default_auto_update_enabled;
+                $deployment->auto_update_tag_regex = $deploymentPackageDeploymentSpecification->default_auto_update_tag_regex;
+                $deployment->auto_update_require_approval = $deploymentPackageDeploymentSpecification->default_auto_update_require_approval;
+                $deployment->environment = $deploymentPackageDeploymentSpecification->default_environment;
+                $deployment->enable_podio_notification = $deploymentPackageDeploymentSpecification->default_enable_podio_notification;
+
+                $deployment->cpu_request = $deploymentPackageDeploymentSpecification->default_cpu_request;
+                $deployment->cpu_limit = $deploymentPackageDeploymentSpecification->default_cpu_limit;
+                $deployment->memory_request = $deploymentPackageDeploymentSpecification->default_memory_request;
+                $deployment->memory_limit = $deploymentPackageDeploymentSpecification->default_memory_limit;
+                $deployment->replicas = $deploymentPackageDeploymentSpecification->default_replicas;
+                break;
+            case \DeploymentSpecificationTypes::Custom:
+                break;
         }
-
-        $deployment->auto_update_enabled = $deploymentPackageDeploymentSpecification->default_auto_update_enabled;
-        $deployment->auto_update_tag_regex = $deploymentPackageDeploymentSpecification->default_auto_update_tag_regex;
-        $deployment->auto_update_require_approval = $deploymentPackageDeploymentSpecification->default_auto_update_require_approval;
-        $deployment->environment = $deploymentPackageDeploymentSpecification->default_environment;
-        $deployment->enable_podio_notification = $deploymentPackageDeploymentSpecification->default_enable_podio_notification;
-
-        $deployment->cpu_request = $deploymentPackageDeploymentSpecification->default_cpu_request;
-        $deployment->cpu_limit = $deploymentPackageDeploymentSpecification->default_cpu_limit;
-        $deployment->memory_request = $deploymentPackageDeploymentSpecification->default_memory_request;
-        $deployment->memory_limit = $deploymentPackageDeploymentSpecification->default_memory_limit;
-        $deployment->replicas = $deploymentPackageDeploymentSpecification->default_replicas;
 
         $deployment->save();
 

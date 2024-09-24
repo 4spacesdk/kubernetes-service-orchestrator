@@ -6,6 +6,7 @@ use App\Libraries\DeploymentSteps\BaseDeploymentStep;
 use App\Libraries\DeploymentSteps\ClusterRoleBindingStep;
 use App\Libraries\DeploymentSteps\ClusterRoleStep;
 use App\Libraries\DeploymentSteps\CronjobStep;
+use App\Libraries\DeploymentSteps\CustomResourceStep;
 use App\Libraries\DeploymentSteps\DatabaseStep;
 use App\Libraries\DeploymentSteps\DeploymentStep;
 use App\Libraries\DeploymentSteps\IngressStep;
@@ -20,59 +21,63 @@ use App\Models\DeploymentModel;
 
 class DeploymentStepHelper {
 
-    const
+    const string
         DatabaseStatus_NotPerformed = 'not-performed',
         DatabaseStatus_Failed = 'failed',
         DatabaseStatus_Success = 'success';
 
-    const
+    const string
         Namespace_NotFound = 'not-found',
         Namespace_Found = 'found';
 
-    const
+    const string
         ClusterRole_NotFound = 'not-found',
         ClusterRole_Found = 'found';
 
-    const
+    const string
         ServiceAccount_NotFound = 'not-found',
         ServiceAccount_Found = 'found';
 
-    const
+    const string
         ClusterRoleBinding_NotFound = 'not-found',
         ClusterRoleBinding_Found = 'found';
 
-    const
+    const string
         Deployment_NotFound = 'not-found',
         Deployment_Found = 'found';
 
-    const
+    const string
+        CustomResource_NotFound = 'not-found',
+        CustomResource_Found = 'found';
+
+    const string
         Service_NotFound = 'not-found',
         Service_Found = 'found';
 
-    const
+    const string
         Ingress_NotFound = 'not-found',
         Ingress_Found = 'found';
 
-    const
+    const string
         Redirects_NotFound = 'not-found',
         Redirects_NotFoundNotExpected = 'not-found-not-expected',
         Redirects_FoundNotExpected = 'found-not-expected',
         Redirects_Found = 'found';
 
-    const
+    const string
         Cronjob_NotFound = 'not-found',
         Cronjob_Found = 'found';
 
-    const
+    const string
         MigrationJob_NotFound = 'not-found',
         MigrationJob_Completed = 'completed',
         MigrationJob_Running = 'running';
 
-    const
+    const string
         PersistentVolume_NotFound = 'not-found',
         PersistentVolume_Found = 'found';
 
-    const
+    const string
         PersistentVolumeClaim_NotFound = 'not-found',
         PersistentVolumeClaim_Found = 'found';
 
@@ -88,6 +93,7 @@ class DeploymentStepHelper {
             DeploymentSteps::PersistentVolume => new PersistentVolumeStep(),
             DeploymentSteps::PersistentVolumeClaim => new PersistentVolumeClaimStep(),
             DeploymentSteps::Cronjob => new CronjobStep(),
+            DeploymentSteps::CustomResource => new CustomResourceStep(),
             DeploymentSteps::Deployment => new DeploymentStep(),
             DeploymentSteps::Service => new ServiceStep(),
             DeploymentSteps::Ingress => new IngressStep(),

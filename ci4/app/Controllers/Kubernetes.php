@@ -5,6 +5,7 @@ use App\Libraries\Kubernetes\KubeHelper;
 use App\Libraries\Kubernetes\KubeLog;
 use DebugTool\Data;
 use PHPUnit\Exception;
+use RenokiCo\PhpK8s\Exceptions\KubernetesAPIException;
 use RenokiCo\PhpK8s\Kinds\K8sNode;
 use RenokiCo\PhpK8s\Kinds\K8sPod;
 use RenokiCo\PhpK8s\ResourcesList;
@@ -187,6 +188,13 @@ class Kubernetes extends \App\Core\BaseController {
                 'status' => 'success',
                 'message' => '',
                 'nodes' => array_map(fn(K8sNode $node) => $node->getInfo(), $nodes->all()),
+            ]);
+        } catch (KubernetesAPIException $e) {
+            Data::set('resource', [
+                'status' => 'error',
+                'message' => $e->getMessage(),
+                'details' => $e->getPayload(),
+                'nodes' => [],
             ]);
         } catch (\Exception $e) {
             Data::set('resource', [

@@ -7,6 +7,7 @@ import debounce from "lodash.debounce";
 import DeploymentEditButton from "@/components/Modules/Setup/Deployments/EditButton/DeploymentEditButton.vue";
 import DeploymentSpecificationEditButton
     from "@/components/Modules/Setup/DeploymentSpecifications/EditButton/DeploymentSpecificationEditButton.vue";
+import {DeploymentSpecificationTypes} from "@/constants";
 
 const emit = defineEmits<{
     (e: 'onItemEditClicked', item: DeploymentSpecification): void
@@ -16,6 +17,7 @@ const itemCount = ref(0);
 const rows = ref<DeploymentSpecification[]>([]);
 const headers = ref([
     {title: 'Name', key: 'name', sortable: false},
+    {title: 'Type', key: 'type', sortable: false},
     {title: 'Database', key: 'enable_database', sortable: false},
     {title: 'Ingress', key: 'ingress', sortable: false},
     {title: 'RBAC', key: 'enable_rbac', sortable: false},
@@ -25,6 +27,18 @@ const isLoading = ref(true);
 const options = ref({});
 
 const searchValue = ref('');
+
+const showCreateMenu = ref(false);
+const createItems = ref([
+    {
+        value: DeploymentSpecificationTypes.Deployment,
+        name: 'Deployment'
+    },
+    {
+        value: DeploymentSpecificationTypes.Custom,
+        name: 'Custom'
+    },
+]);
 
 onMounted(() => {
     bus.on('deploymentSpecificationSaved', onItemSaved);
@@ -81,9 +95,9 @@ function getItems(doItems = true, doCount = false) {
 
 // <editor-fold desc="View functions">
 
-function createItem() {
+function createItem(type: string) {
     bus.emit('deploymentSpecificationEdit', {
-        deploymentSpecification: DeploymentSpecification.Create(),
+        deploymentSpecification: DeploymentSpecification.Create(type),
     });
 }
 
@@ -133,11 +147,35 @@ function onEditItemBtnClicked(item: DeploymentSpecification) {
             />
 
             <v-spacer></v-spacer>
-            <v-btn small class="" @click="createItem()"
-                   prepend-icon="fa fa-plus"
-            >
-                Create
-            </v-btn>
+
+            <v-menu
+                v-model="showCreateMenu"
+                :close-on-content-click="false"
+                left
+                min-width="250"
+                offset-y>
+                <template v-slot:activator="{ props }">
+                    <v-btn
+                        v-bind="props"
+                        small
+                        prepend-icon="fa fa-plus">
+                        Create
+                    </v-btn>
+                </template>
+
+                <v-list
+                    class="list-items">
+                    <v-list-item
+                        v-for="(type, i) in createItems" :key="i"
+                        dense
+                        @click="createItem(type.value)">
+                        <v-list-item-title>
+                            <v-icon size="small" class="my-auto">fa fa-window-maximize fa</v-icon>
+                            <span class="ml-2">{{ type.name }}</span>
+                        </v-list-item-title>
+                    </v-list-item>
+                </v-list>
+            </v-menu>
         </v-toolbar>
 
         <v-data-table-server
@@ -150,19 +188,20 @@ function onEditItemBtnClicked(item: DeploymentSpecification) {
             density="compact"
             @update:options="options = $event; getItems()">
             <template v-slot:item.enable_database="{ item }">
-                <v-icon v-if="item.raw.enable_database">fa fa-check</v-icon>
+                <v-icon v-if="item.enable_database">fa fa-check</v-icon>
             </template>
             <template v-slot:item.ingress="{ item }">
-                <span>{{ item.raw.domain_tls }}://{{ item.raw.domain_prefix }}?{{ item.raw.domain_suffix}}</span>
+                <span v-if="item.domain_tls">{{ item.domain_tls }}://{{ item.domain_prefix }}?{{ item.domain_suffix}}</span>
             </template>
             <template v-slot:item.enable_rbac="{ item }">
-                <v-icon v-if="item.raw.enable_rbac">fa fa-check</v-icon>
+                <v-icon v-if="item.enable_rbac">fa fa-check</v-icon>
             </template>
 
             <template v-slot:item.actions="{ item }">
                 <div class="d-flex justify-end gap-1">
 
                     <v-menu
+                        v-if="item.type == DeploymentSpecificationTypes.Deployment"
                         min-width="250">
                         <template v-slot:activator="{ props }">
                             <v-btn
@@ -173,19 +212,19 @@ function onEditItemBtnClicked(item: DeploymentSpecification) {
                             </v-btn>
                         </template>
                         <deployment-specification-edit-button
-                            :deployment-specification="item.raw"/>
+                            :deployment-specification="item"/>
                     </v-menu>
 
                     <v-btn
                         variant="plain" color="primary" size="small" icon
-                           @click="onEditItemBtnClicked(item.raw)">
+                           @click="onEditItemBtnClicked(item)">
                         <v-icon>fa fa-pen</v-icon>
                         <v-tooltip activator="parent" location="bottom">Edit</v-tooltip>
                     </v-btn>
 
                     <v-btn
                         variant="plain" color="red" size="small" icon
-                           @click="onDeleteItemBtnClicked(item.raw)">
+                           @click="onDeleteItemBtnClicked(item)">
                         <v-icon>fa fa-trash</v-icon>
                         <v-tooltip activator="parent" location="bottom">Delete</v-tooltip>
                     </v-btn>

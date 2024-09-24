@@ -4,7 +4,9 @@ import {ContainerImage, DeploymentSpecification} from "@/core/services/Deploy/mo
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
-import {ContainerImageTagPolicies, MigrationVerificationTypes} from "@/constants";
+import {ContainerImageTagPolicies, DeploymentSpecificationTypes, MigrationVerificationTypes} from "@/constants";
+import CodeEditor from 'simple-code-editor';
+import VariableBtn from "@/components/Modules/Common/VariableBtn.vue";
 
 export interface DeploymentSpecificationEditDialog_Input {
     deploymentSpecification: DeploymentSpecification;
@@ -99,8 +101,9 @@ function close() {
 // <editor-fold desc="View Binding Functions">
 
 function onSaveBtnClicked() {
-    if (!isCustomMigrationImage) {
+    if (!isCustomMigrationImage.value) {
         item.value.database_migration_container_image_id = 0;
+        item.value.database_migration_container_image = undefined;
     }
 
     const api = item.value!.exists() ? Api.deploymentSpecifications().patchById(item.value!.id!) : Api.deploymentSpecifications().post();
@@ -115,6 +118,13 @@ function onSaveBtnClicked() {
 
 function onCloseBtnClicked() {
     close();
+}
+
+function onVariableClicked(text: string) {
+    navigator.clipboard.writeText(text);
+    bus.emit('toast', {
+        text: `Variables copied to clipboard`
+    });
 }
 
 // </editor-fold>
@@ -137,7 +147,49 @@ function onCloseBtnClicked() {
                 class="mb-4"
             >
                 <v-row
-                    dense>
+                    dense
+                >
+
+                    <v-col cols="12">
+                        <v-text-field
+                            variant="outlined"
+                            v-model="item.name"
+                            :rules="[
+                                v => /^[a-z0-9-]{1,50}$/.test(v) || 'Invalid format'
+                            ]"
+                            label="Name"/>
+
+                        <div
+                            style="position: relative"
+                        >
+                            <CodeEditor
+                                v-if="item.type == DeploymentSpecificationTypes.Custom"
+                                v-model="item.custom_resource"
+                                :languages="[['yaml']]"
+                                class="w-100"
+                                height="500px"
+                                theme="atom-one-dark"
+                                font-size="13px"
+                                :line-nums="true"
+                            />
+
+                            <div
+                                style="position: absolute; top: -2px; right: 40px;"
+                            >
+                                <variable-btn
+                                    color="grey"
+                                    @add-variable="newText => onVariableClicked(newText)"
+                                />
+                            </div>
+                        </div>
+                    </v-col>
+
+                </v-row>
+
+                <v-row
+                    v-if="item.type == DeploymentSpecificationTypes.Deployment"
+                    dense
+                >
                     <v-col cols="6">
                         <v-select
                             v-model="item.container_image_id"
@@ -154,16 +206,6 @@ function onCloseBtnClicked() {
                             variant="outlined"
                             v-model="item.git_repo"
                             label="Git Repository Name"/>
-                    </v-col>
-
-                    <v-col cols="12">
-                        <v-text-field
-                            variant="outlined"
-                            v-model="item.name"
-                            :rules="[
-                                v => /^[a-z0-9-]{1,50}$/.test(v) || 'Invalid format'
-                            ]"
-                            label="Name"/>
                     </v-col>
 
                     <v-col cols="12">
@@ -429,5 +471,8 @@ function onCloseBtnClicked() {
 </template>
 
 <style scoped>
-
+.code-editor {
+    letter-spacing: 0 !important;
+    line-height: 0 !important;
+}
 </style>

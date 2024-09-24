@@ -84,6 +84,9 @@ bus.on('deploymentUpdateVolumes', async input => {
 bus.on('deploymentUpdateVolume', async input => {
     addComponent((await import('@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateVolumeDialog.vue')).default, input);
 });
+bus.on('deploymentUpdateCustomResource', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateCustomResourceDialog.vue')).default, input);
+});
 bus.on('deploymentResourceList', async input => {
     addComponent((await import('@/components/Dialogs/Setup/Deployments/DeploymentResourceListDialog.vue')).default, input);
 });

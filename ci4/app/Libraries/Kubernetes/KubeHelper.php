@@ -29,6 +29,7 @@ class KubeHelper {
 
     private static function PrintKubernetesAPIException(KubernetesAPIException $e): string {
         $content = $e->getPayload();
+        Data::debug($e->getMessage());
         Data::debug($content);
         return json_encode($content);
     }

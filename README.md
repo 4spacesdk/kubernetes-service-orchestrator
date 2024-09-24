@@ -13,6 +13,7 @@ This service enables interaction with the Kubernetes API and facilitates the eff
 For a complete set of options see [link](https://github.com/4spacesdk/helm-charts/blob/master/charts/kubernetes-service-orchestrator/values.yaml)
 ```
 ingress:
+  className: nginx
   enabled: true
   hosts:
     - host: chart-example.local

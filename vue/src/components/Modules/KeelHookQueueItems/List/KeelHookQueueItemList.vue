@@ -19,7 +19,12 @@ const used = ref(false);
 const showDialog = ref(false);
 const itemCount = ref(0);
 const rows = ref<KeelHookQueueItem[]>([]);
-const headers = ref([
+const headers = ref<{
+    readonly key?: string,
+    readonly title?: string | undefined,
+    readonly sortable?: boolean | undefined,
+    readonly align?: "end" | "center" | "start" | undefined,
+}[]>([
     {title: 'Status', key: 'status', sortable: false, align: "center"},
     {title: 'Type', key: 'type', sortable: false},
     {title: 'Deployment', key: 'deployment', sortable: false},
@@ -168,38 +173,38 @@ function onShowLogsBtnClicked(row: KeelHookQueueItem) {
 
             <template v-slot:item.status="{ item }">
                 <KeelHookQueueItemStatus
-                    :keel-hook-queue-item="item.raw"/>
+                    :keel-hook-queue-item="item"/>
             </template>
 
             <template v-slot:item.type="{ item }">
-                {{ item.raw.payload.name }}
+                {{ item.payload.name }}
             </template>
 
             <template v-slot:item.deployment="{ item }">
-                <v-chip>{{ item.raw.payload.metadata.name }}.{{ item.raw.payload.metadata.namespace }}</v-chip>
+                <v-chip>{{ item.payload.metadata.name }}.{{ item.payload.metadata.namespace }}</v-chip>
             </template>
 
             <template v-slot:item.created="{ item }">
-                <DateView :date-string="item.raw.created"/>
+                <DateView :date-string="item.created"/>
             </template>
 
             <template v-slot:item.actions="{ item }">
                 <div class="d-flex justify-end gap-1">
                     <v-btn
                         variant="plain" color="primary" size="small" icon
-                        @click="onRerunBtnClicked(item.raw)">
+                        @click="onRerunBtnClicked(item)">
                         <v-icon>fa fa-play</v-icon>
                         <v-tooltip activator="parent" location="bottom">Rerun</v-tooltip>
                     </v-btn>
                     <v-btn
                         variant="plain" color="primary" size="small" icon
-                        @click="onShowPayloadBtnClicked(item.raw)">
+                        @click="onShowPayloadBtnClicked(item)">
                         <v-icon>fa fa-rectangle-list</v-icon>
                         <v-tooltip activator="parent" location="bottom">Payload</v-tooltip>
                     </v-btn>
                     <v-btn
                         variant="plain" color="primary" size="small" icon
-                        @click="onShowLogsBtnClicked(item.raw)">
+                        @click="onShowLogsBtnClicked(item)">
                         <v-icon>fa fa-rectangle-list</v-icon>
                         <v-tooltip activator="parent" location="bottom">Log</v-tooltip>
                     </v-btn>

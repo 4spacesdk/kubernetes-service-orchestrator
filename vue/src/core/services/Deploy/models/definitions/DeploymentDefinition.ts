@@ -24,6 +24,7 @@ export class DeploymentDefinition extends BaseModel {
     environment?: string;
     status?: string;
     last_updated?: string;
+    custom_resource?: string;
     database_service_id?: number;
     database_service?: DatabaseService;
     database_user?: string;
@@ -77,6 +78,7 @@ export class DeploymentDefinition extends BaseModel {
             delete this.environment;
             delete this.status;
             delete this.last_updated;
+            delete this.custom_resource;
             delete this.database_service_id;
             delete this.database_service;
             delete this.database_user;
@@ -146,6 +148,9 @@ export class DeploymentDefinition extends BaseModel {
         }
         if (data.last_updated != null) {
             this.last_updated = data.last_updated;
+        }
+        if (data.custom_resource != null) {
+            this.custom_resource = data.custom_resource;
         }
         if (data.database_service_id != null) {
             this.database_service_id = data.database_service_id;

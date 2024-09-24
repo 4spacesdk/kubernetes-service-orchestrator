@@ -149,7 +149,7 @@ function deleteItem(item: User) {
                     class="d-flex gap-1"
                 >
                     <v-chip
-                        v-for="role in item.raw.rbac_roles"
+                        v-for="role in item.rbac_roles"
                         size="small"
                     >
                         {{ role.name }}
@@ -160,11 +160,11 @@ function deleteItem(item: User) {
 
             <template v-slot:item.actions="{ item }">
                 <div class="d-flex justify-end gap-1">
-                    <v-btn variant="plain" color="primary" size="small" @click="editItem(item.raw)">
+                    <v-btn variant="plain" color="primary" size="small" @click="editItem(item)">
                         <v-icon>fa fa-pen</v-icon>
                         <v-tooltip activator="parent" location="bottom">Edit</v-tooltip>
                     </v-btn>
-                    <v-btn variant="plain" color="red" size="small" @click="deleteItem(item.raw)">
+                    <v-btn variant="plain" color="red" size="small" @click="deleteItem(item)">
                         <v-icon>fa fa-trash</v-icon>
                         <v-tooltip activator="parent" location="bottom">Delete</v-tooltip>
                     </v-btn>

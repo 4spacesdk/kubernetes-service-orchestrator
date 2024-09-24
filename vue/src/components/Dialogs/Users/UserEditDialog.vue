@@ -20,6 +20,7 @@ const password = ref('');
 const passwordConfirm = ref('');
 
 const roles = ref<RbacRole[]>([]);
+const roleProps = ref<{title: string, subtitle: string}[]>([]);
 const isLoadingRoles = ref(false);
 const selectedRoles = ref<number[]>([]);
 
@@ -41,6 +42,12 @@ function render() {
     Api.rbacRoles().get()
         .find(rbacRoles => {
             roles.value = rbacRoles;
+            roleProps.value = rbacRoles.map(role => {
+                return {
+                    title: role.name ?? '',
+                    subtitle: role.description ?? '',
+                }
+            });
             isLoadingRoles.value = false;
         })
 
@@ -164,17 +171,16 @@ function onCloseBtnClicked() {
                             item-title="name"
                             item-value="id"
                             variant="outlined"
-                            :multiple="true"
-                        >
+                            :multiple="true">
                             <template v-slot:item="{ props, item }">
                                 <v-list-item
                                     v-bind="props"
-                                    :title="item.raw.name"
                                     :subtitle="item.raw.description"
                                 />
                             </template>
                         </v-select>
                     </v-col>
+
                 </v-row>
             </v-card-text>
             <v-divider/>

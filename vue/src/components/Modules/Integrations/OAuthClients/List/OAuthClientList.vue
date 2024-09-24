@@ -147,21 +147,21 @@ function deleteItem(item: OAuthClient) {
             density="compact"
             @update:options="options = $event; getItems()">
             <template v-slot:item.name="{ item }">
-                <span v-if="item.raw.user">{{ item.raw.user.name }}</span>
+                <span v-if="item.user">{{ item.user.name }}</span>
             </template>
             <template v-slot:item.actions="{ item }">
                 <div class="d-flex justify-end gap-1">
 
                     <v-btn
                         variant="plain" color="primary" size="small" icon
-                        @click="onEditItemBtnClicked(item.raw)">
+                        @click="onEditItemBtnClicked(item)">
                         <v-icon>fa fa-pen</v-icon>
                         <v-tooltip activator="parent" location="bottom">Edit</v-tooltip>
                     </v-btn>
 
                     <v-btn
                         variant="plain" color="red" size="small" icon
-                        @click="deleteItem(item.raw)">
+                        @click="deleteItem(item)">
                         <v-icon>fa fa-trash</v-icon>
                         <v-tooltip activator="parent" location="bottom">Delete</v-tooltip>
                     </v-btn>
