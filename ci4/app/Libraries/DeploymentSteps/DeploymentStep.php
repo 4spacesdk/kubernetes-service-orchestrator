@@ -176,8 +176,21 @@ class DeploymentStep extends BaseDeploymentStep {
         return null;
     }
 
-    public function startDeployCommand(Deployment $deployment): void {
+    public function startDeployCommand(Deployment $deployment, ?string $reason = null): void {
         $resource = $this->getResource($deployment, true);
+
+        if ($reason) {
+            $annotations = $resource->getAnnotations();
+            $annotations['kubernetes.io/change-cause'] = $reason;
+            $resource->setAnnotations($annotations);
+        }
+
+        $template = $resource->getTemplate();
+        $annotations = $template->getAnnotations();
+        $annotations['4spaces.kso/update-time'] = date('Y-m-d H:i:s');
+        $template->setAnnotations($annotations);
+        $resource->setTemplate($template);
+
         $resource->createOrUpdate();
     }
 

@@ -53,8 +53,16 @@ class Events {
         return Events::Generate("workspace.deleted");
     }
 
+    public static function AutoUpdate_Created(): string {
+        return Events::Generate("auto-update-created");
+    }
+
     public static function AutoUpdate_Approved(): string {
         return Events::Generate("auto-update-approved");
+    }
+
+    public static function AutoUpdate_RolledOut(): string {
+        return Events::Generate("auto-update-rolled-out");
     }
 
 }

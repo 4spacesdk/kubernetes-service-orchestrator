@@ -37,8 +37,6 @@ export class DeploymentDefinition extends BaseModel {
     auto_update_enabled?: boolean;
     auto_update_tag_regex?: string;
     auto_update_require_approval?: boolean;
-    keel_policy?: string;
-    keel_auto_update?: boolean;
     enable_podio_notification?: boolean;
     cpu_limit?: number;
     cpu_request?: number;
@@ -91,8 +89,6 @@ export class DeploymentDefinition extends BaseModel {
             delete this.auto_update_enabled;
             delete this.auto_update_tag_regex;
             delete this.auto_update_require_approval;
-            delete this.keel_policy;
-            delete this.keel_auto_update;
             delete this.enable_podio_notification;
             delete this.cpu_limit;
             delete this.cpu_request;
@@ -187,12 +183,6 @@ export class DeploymentDefinition extends BaseModel {
         }
         if (data.auto_update_require_approval != null) {
             this.auto_update_require_approval = data.auto_update_require_approval;
-        }
-        if (data.keel_policy != null) {
-            this.keel_policy = data.keel_policy;
-        }
-        if (data.keel_auto_update != null) {
-            this.keel_auto_update = data.keel_auto_update;
         }
         if (data.enable_podio_notification != null) {
             this.enable_podio_notification = data.enable_podio_notification;

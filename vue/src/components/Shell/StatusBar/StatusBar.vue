@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {computed, defineComponent, onMounted, reactive, ref} from 'vue'
+import {computed, defineComponent, onMounted, onUnmounted, reactive, ref} from 'vue'
 import {versions} from "@/versions";
 import {Api} from "@/core/services/Deploy/Api";
 import type {KubernetesNodeInfo} from "@/core/services/Deploy/Api";
@@ -11,11 +11,17 @@ const status = ref<string>('');
 const message = ref<string>('');
 const nodes = ref<KubernetesNodeInfo[]>([]);
 
+const statusInternal = ref<number>();
+
 onMounted(() => {
     getStatus();
-    setInterval(() => {
+    statusInternal.value = setInterval(() => {
         getStatus();
-    }, 5000);
+    }, 30000);
+});
+
+onUnmounted(() => {
+    clearInterval(statusInternal.value);
 });
 
 function getStatus() {

@@ -77,7 +77,7 @@ class DatabaseStep extends BaseDeploymentStep {
     /**
      * @throws \Exception
      */
-    public function startDeployCommand(Deployment $deployment): void {
+    public function startDeployCommand(Deployment $deployment, ?string $reason = null): void {
         if ($this->getStatus($deployment) == DeploymentStepHelper::DatabaseStatus_Success) {
             throw new \Exception('Database already created');
         }

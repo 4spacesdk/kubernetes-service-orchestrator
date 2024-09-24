@@ -95,7 +95,7 @@ class NamespaceStep extends BaseDeploymentStep {
         return null;
     }
 
-    public function startDeployCommand(Deployment $deployment): void {
+    public function startDeployCommand(Deployment $deployment, ?string $reason = null): void {
         $resource = $this->getResource($deployment, true);
         $resource->createOrUpdate();
     }

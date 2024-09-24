@@ -19,6 +19,8 @@ class AddContainerRegistries extends Migration {
             ->column('registry_subscribe', ColumnTypes::BOOL_0)
             ->column('registry_provider', ColumnTypes::VARCHAR_127)
             ->column('registry_provider_project', ColumnTypes::VARCHAR_511)
+            ->column('registry_provider_location', ColumnTypes::VARCHAR_511)
+            ->column('registry_provider_name', ColumnTypes::VARCHAR_511)
             ->column('registry_provider_credentials', ColumnTypes::TEXT);
 
         $job = new CronJob();

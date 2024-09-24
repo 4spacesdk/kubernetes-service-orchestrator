@@ -32,9 +32,6 @@ export interface DeploymentPackageDeploymentSpecification {
     deploymentSpecification?: DeploymentSpecification;
     defaultEnablePodioNotification?: boolean;
     defaultVersion?: string;
-    defaultAutoUpdateEnabled?: boolean;
-    defaultAutoUpdateTagRegex?: string;
-    defaultAutoUpdateRequireApproval?: boolean;
     defaultKeelPolicy?: string;
     defaultKeelAutoUpdate?: boolean;
     defaultEnvironment?: string;
@@ -43,6 +40,9 @@ export interface DeploymentPackageDeploymentSpecification {
     defaultMemoryRequest?: number;
     defaultMemoryLimit?: number;
     defaultReplicas?: number;
+    defaultAutoUpdateEnabled?: boolean;
+    defaultAutoUpdateTagRegex?: string;
+    defaultAutoUpdateRequireApproval?: boolean;
 }
 
 export interface DeploymentPackageDeploymentSpecificationList {

@@ -48,6 +48,11 @@ class AutoUpdate extends Entity {
                 $this->appendLog(KubeHelper::PrintException($e));
             }
         }
+
+        ZMQProxy::getInstance()->send(
+            Events::AutoUpdate_RolledOut(),
+            (new ChangeEvent(null, $this->toArray()))->toArray()
+        );
     }
 
     public function appendLog(string $log): void {

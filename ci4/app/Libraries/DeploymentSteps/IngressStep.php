@@ -129,7 +129,7 @@ class IngressStep extends BaseDeploymentStep {
         return null;
     }
 
-    public function startDeployCommand(Deployment $deployment): void {
+    public function startDeployCommand(Deployment $deployment, ?string $reason = null): void {
         $resources = $this->getResources($deployment, true);
         foreach ($resources as $resource) {
             $resource->createOrUpdate();

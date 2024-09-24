@@ -33,7 +33,7 @@ abstract class BaseDeploymentStep {
     /**
      * @throws \Exception
      */
-    abstract public function startDeployCommand(Deployment $deployment): void;
+    abstract public function startDeployCommand(Deployment $deployment, ?string $reason = null): void;
 
     /**
      * @throws \Exception
@@ -44,7 +44,7 @@ abstract class BaseDeploymentStep {
 
     abstract public function getKubernetesStatus(Deployment $deployment): array;
 
-    public function tryExecuteDeployCommand(Deployment $deployment): ?string {
+    public function tryExecuteDeployCommand(Deployment $deployment, ?string $reason = null): ?string {
         Data::debug($deployment->namespace, $deployment->name, 'tryExecuteDeployCommand', get_class($this));
         if (!$deployment->findDeploymentSpecification()->hasDeploymentStep($deployment, get_class($this))) {
             Data::debug('ignored cause of invalid deployment step for this spec');
@@ -56,7 +56,7 @@ abstract class BaseDeploymentStep {
             return $error;
         }
         try {
-            $this->startDeployCommand($deployment);
+            $this->startDeployCommand($deployment, $reason);
         } catch (\Exception $e) {
             return KubeHelper::PrintException($e);
         }

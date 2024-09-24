@@ -126,7 +126,7 @@ class RedirectsStep extends BaseDeploymentStep {
         return null;
     }
 
-    public function startDeployCommand(Deployment $deployment): void {
+    public function startDeployCommand(Deployment $deployment, ?string $reason = null): void {
         if (strlen($deployment->aliases) == 0) {
             $this->startTerminateCommand($deployment);
             return;

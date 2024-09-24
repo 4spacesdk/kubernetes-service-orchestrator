@@ -100,6 +100,8 @@ class Deployment extends Entity {
     }
 
     public function updateVersion(string $value, bool $applyToKubernetes = true): void {
+        $prevVersion = $this->version;
+
         $this->version = $value;
         $this->last_updated = date('Y-m-d H:i:s');
         $this->save();
@@ -108,7 +110,7 @@ class Deployment extends Entity {
             DeploymentStepHelper::ExecuteDeployCommand($this, [
                 DeploymentSteps::Deployment,
                 DeploymentSteps::Migration,
-            ]);
+            ], "4spacesdk/kubernetes-service-orchestrator, version {$prevVersion} -> {$this->version} [{$this->last_updated}]");
         }
     }
 

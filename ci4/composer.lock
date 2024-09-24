@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f53756e5959bc40316f365c224fd724e",
+    "content-hash": "cd32d56a1d93a55932ac1f62b69f86f5",
     "packages": [
         {
             "name": "4spacesdk/ci4authextension",
@@ -131,16 +131,16 @@
         },
         {
             "name": "4spacesdk/ci4restextension",
-            "version": "v1.0.6",
+            "version": "v1.0.9",
             "source": {
                 "type": "git",
                 "url": "https://github.com/4spacesdk/CI4RESTExtension.git",
-                "reference": "ea55fdf12d9e7d95d6b63037ad557e464200c5e3"
+                "reference": "661436cb3b7242bff6255789e7db73e636d700df"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/4spacesdk/CI4RESTExtension/zipball/ea55fdf12d9e7d95d6b63037ad557e464200c5e3",
-                "reference": "ea55fdf12d9e7d95d6b63037ad557e464200c5e3",
+                "url": "https://api.github.com/repos/4spacesdk/CI4RESTExtension/zipball/661436cb3b7242bff6255789e7db73e636d700df",
+                "reference": "661436cb3b7242bff6255789e7db73e636d700df",
                 "shasum": ""
             },
             "require": {
@@ -169,9 +169,9 @@
             "description": "REST Extension for CodeIgniter 4",
             "support": {
                 "issues": "https://github.com/4spacesdk/CI4RESTExtension/issues",
-                "source": "https://github.com/4spacesdk/CI4RESTExtension/tree/v1.0.6"
+                "source": "https://github.com/4spacesdk/CI4RESTExtension/tree/v1.0.9"
             },
-            "time": "2024-02-08T14:27:18+00:00"
+            "time": "2024-09-24T10:40:53+00:00"
         },
         {
             "name": "brick/math",

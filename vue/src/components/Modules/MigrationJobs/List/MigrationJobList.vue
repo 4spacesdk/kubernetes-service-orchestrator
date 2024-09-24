@@ -131,7 +131,7 @@ function onShowLogsBtnClicked(row: MigrationJob) {
     const code = row?.log
         ?.trim()
         ?.split('\n')
-        ?.map(line => `<span>${line}</span>`)
+        ?.map(line => `<span class="d-block">${line}</span>`)
         ?.join('') ?? '';
 
     bus.emit('info', {

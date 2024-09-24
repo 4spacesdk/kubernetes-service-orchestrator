@@ -3,7 +3,6 @@
 use App\Exceptions\ValidationException;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
-use App\Libraries\GoogleCloud\GoogleCloudArtifactRegistry;
 use App\Libraries\ZMQ\ChangeEvent;
 use App\Libraries\ZMQ\Events;
 use App\Libraries\ZMQ\ZMQProxy;
@@ -149,8 +148,7 @@ class Workspace extends Entity {
                     if (!$deploymentSpecification->container_image->exists()) {
                         $deploymentSpecification->container_image->find();
                     }
-                    $registry = new GoogleCloudArtifactRegistry($deploymentSpecification->container_image->url);
-                    $tags = $registry->getTags();
+                    $tags = $deploymentSpecification->container_image->getTags();
                     $tags = array_filter($tags, fn($tag) => !str_contains($tag, 'latest'));
                     $deployment->version = end($tags);
                 }

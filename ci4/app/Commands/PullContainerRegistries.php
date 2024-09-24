@@ -6,6 +6,9 @@ use App\Entities\CronJob;
 use App\Entities\Deployment;
 use App\Libraries\GoogleCloud\GoogleCloudPubSub;
 use App\Libraries\Kubernetes\KubeHelper;
+use App\Libraries\ZMQ\ChangeEvent;
+use App\Libraries\ZMQ\Events;
+use App\Libraries\ZMQ\ZMQProxy;
 use App\Models\ContainerImageModel;
 use App\Models\DeploymentModel;
 use CodeIgniter\CLI\BaseCommand;
@@ -37,6 +40,8 @@ class PullContainerRegistries extends BaseCommand {
             ->find();
         Data::debug('found', $containerImages->count(), 'container images with registry subscribe enabled');
 
+        $hasCreatedAutoUpdate = false;
+
         try {
             $acrProjects = [];
             foreach ($containerImages as $image) {
@@ -61,15 +66,30 @@ class PullContainerRegistries extends BaseCommand {
                     foreach ($messages as $message) {
                         Data::debug($message->data());
                         $data = json_decode($message->data(), true);
-                        [$image, $tag] = explode(':', $data['tag']);
-
-                        $this->emitNewTag($image, $tag);
+                        switch ($data['action']) {
+                            case 'DELETE':
+                                Data::debug('tag deleted, ignore');
+                                break;
+                            case 'INSERT':
+                                Data::debug('tag added, continue');
+                                [$image, $tag] = explode(':', $data['tag']);
+                                $this->emitNewTag($image, $tag);
+                                $hasCreatedAutoUpdate = true;
+                                break;
+                        }
                     }
                 }
             }
 
         } catch (\Exception $e) {
             \DebugTool\Data::debug($e->getMessage());
+        }
+
+        if ($hasCreatedAutoUpdate) {
+            ZMQProxy::getInstance()->send(
+                Events::AutoUpdate_Created(),
+                (new ChangeEvent(null, []))->toArray()
+            );
         }
 
         $job->last_log = json_encode(Data::getDebugger(), JSON_PRETTY_PRINT);

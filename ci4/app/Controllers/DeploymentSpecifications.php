@@ -10,7 +10,6 @@ use App\Entities\DeploymentSpecificationQuickCommand;
 use App\Entities\DeploymentSpecificationServiceAnnotation;
 use App\Entities\DeploymentSpecificationServicePort;
 use App\Entities\DeploymentSpecificationInitContainer;
-use App\Entities\InitContainer;
 use App\Interfaces\ClusterRoleRuleList;
 use App\Interfaces\EnvironmentVariableList;
 use App\Interfaces\IngressList;
@@ -19,11 +18,7 @@ use App\Interfaces\PostCommandList;
 use App\Interfaces\QuickCommandList;
 use App\Interfaces\ServiceAnnotationList;
 use App\Interfaces\ServicePortList;
-use App\Libraries\GoogleCloud\GoogleCloudArtifactRegistry;
-use App\Models\InitContainerModel;
 use DebugTool\Data;
-use Google\ApiCore\ApiException;
-use Google\ApiCore\ValidationException;
 
 class DeploymentSpecifications extends ResourceController {
 
@@ -40,15 +35,8 @@ class DeploymentSpecifications extends ResourceController {
         if ($item->exists()) {
             $item->container_image->find();
 
-            $registry = new GoogleCloudArtifactRegistry($item->container_image->url);
-            try {
-                $tags = $registry->getTags();
-            } catch (ApiException|ValidationException $e) {
-                Data::debug($e->getMessage());
-                $tags = [];
-            }
             Data::set('resource', [
-                'tags' => $tags,
+                'tags' => $item->container_image->getTags(),
             ]);
         }
         $this->success();

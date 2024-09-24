@@ -108,14 +108,14 @@ class DeploymentStepHelper {
      * @param string[] $stepIdentifiers
      * @return ?string
      */
-    public static function ExecuteDeployCommand(Deployment $deployment, array $stepIdentifiers): ?string {
+    public static function ExecuteDeployCommand(Deployment $deployment, array $stepIdentifiers, ?string $reason = null): ?string {
         $deployment->checkStatus();
         if ($deployment->status == \DeploymentStatusTypes::Draft) {
             return "Deployment still in draft mode";
         }
 
         foreach ($stepIdentifiers as $identifier) {
-            $error = self::GetStep($identifier)->tryExecuteDeployCommand($deployment);
+            $error = self::GetStep($identifier)->tryExecuteDeployCommand($deployment, $reason);
             if ($error) {
                 return $error;
             }
