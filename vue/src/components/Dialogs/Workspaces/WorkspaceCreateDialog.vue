@@ -122,7 +122,7 @@ function onCloseBtnClicked() {
                                 item-title="name"
                                 item-value="id"
                                 variant="outlined"
-                                label="Domains"/>
+                                label="Domain"/>
                         </v-col>
                         <v-col cols="12">
                             <v-text-field

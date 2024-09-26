@@ -3,6 +3,7 @@
 ## v0.1.18 ()
 
 ### Fixed bugs
+* Type [Issue #27](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/27)
 
 ### Enhancements
 * Added support for deploying custom resources
