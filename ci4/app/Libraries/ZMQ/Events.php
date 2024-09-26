@@ -45,6 +45,10 @@ class Events {
         return Events::Generate("auto-update-created");
     }
 
+    public static function AutoUpdate_Deleted(): string {
+        return Events::Generate("auto-update-deleted");
+    }
+
     public static function AutoUpdate_Approved(): string {
         return Events::Generate("auto-update-approved");
     }

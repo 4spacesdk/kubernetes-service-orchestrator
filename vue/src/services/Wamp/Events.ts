@@ -32,6 +32,10 @@ export class Events {
         return Events.Generate(`auto-update-created`);
     }
 
+    public static AutoUpdate_Deleted(): string {
+        return Events.Generate(`auto-update-deleted`);
+    }
+
     public static AutoUpdate_Approved(): string {
         return Events.Generate(`auto-update-approved`);
     }

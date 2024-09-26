@@ -87,6 +87,15 @@ class AutoUpdate extends Entity {
         Data::debug(get_class($this), $log);
     }
 
+    public function delete($related = null) {
+        parent::delete($related);
+
+        ZMQProxy::getInstance()->send(
+            Events::AutoUpdate_Deleted(),
+            (new ChangeEvent(null, $this->toArray()))->toArray()
+        );
+    }
+
     /**
      * @return \ArrayIterator|\OrmExtension\Extensions\Entity[]|\Traversable|AutoUpdate[]
      */

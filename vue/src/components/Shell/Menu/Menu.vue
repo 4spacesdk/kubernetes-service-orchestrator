@@ -1,8 +1,12 @@
 <script setup lang="ts">
-import {computed, defineComponent, onMounted, reactive, ref} from 'vue'
+import {computed, defineComponent, onMounted, onUnmounted, reactive, ref} from 'vue'
 import {useRouter} from "vue-router";
 import {RbacPermissions} from "@/constants";
 import AuthService from "@/services/AuthService";
+import {Api} from "@/core/services/Deploy/Api";
+import {WampSubscription} from "@/services/Wamp/WampSubscription";
+import WampService from "@/services/Wamp/WampService";
+import {Events} from "@/services/Wamp/Events";
 
 interface MenuCategory {
     identifier: string;
@@ -10,6 +14,7 @@ interface MenuCategory {
     icon: string;
     items: MenuItem[];
     active?: boolean;
+    badge?: number;
 }
 
 interface MenuItem {
@@ -17,6 +22,7 @@ interface MenuItem {
     url: string;
     active?: boolean;
     permissions: string[];
+    badge?: number;
 }
 
 const router = useRouter();
@@ -159,6 +165,10 @@ const categories = ref<MenuCategory[]>([
     }
 ]);
 
+const autoUpdatesBadgeWampSubscription1 = ref<WampSubscription>();
+const autoUpdatesBadgeWampSubscription2 = ref<WampSubscription>();
+const autoUpdatesBadgeWampSubscription3 = ref<WampSubscription>();
+
 function onLogoClicked(event: Event) {
     router.push({
         name: 'Dashboard',
@@ -181,7 +191,37 @@ onMounted(() => {
         });
         return category.items.length > 0;
     });
+
+    autoUpdatesBadgeWampSubscription1.value = WampService.subscribe(
+        Events.AutoUpdate_Created(),
+        data => countAutoUpdates()
+    );
+    autoUpdatesBadgeWampSubscription2.value = WampService.subscribe(
+        Events.AutoUpdate_Approved(),
+        data => countAutoUpdates()
+    );
+    autoUpdatesBadgeWampSubscription3.value = WampService.subscribe(
+        Events.AutoUpdate_Deleted(),
+        data => countAutoUpdates()
+    );
+    countAutoUpdates();
 });
+
+onUnmounted(() => {
+    autoUpdatesBadgeWampSubscription1.value?.unsubscribe();
+    autoUpdatesBadgeWampSubscription2.value?.unsubscribe();
+});
+
+function countAutoUpdates() {
+    Api.autoUpdates().get()
+        .where('is_approved', false)
+        .count(value => {
+            const menuItem = categories.value.find(category => category.identifier == 'auto-updates');
+            if (menuItem) {
+                menuItem.badge = value;
+            }
+        });
+}
 
 </script>
 
@@ -219,6 +259,15 @@ onMounted(() => {
                         <v-icon size="16">{{ category.icon }}</v-icon>
                     </template>
                     <v-list-item-title>{{ category.name }}</v-list-item-title>
+
+                    <template v-slot:append>
+                        <v-badge
+                            v-if="category.badge"
+                            inline
+                            color="secondary"
+                            :content="category.badge"
+                        />
+                    </template>
                 </v-list-item>
 
                 <v-list-group
@@ -239,6 +288,15 @@ onMounted(() => {
                         v-for="item in category.items" :key="item.title" class="category-item">
                         <v-list-item :to="item.url" link>
                             <v-list-item-title>{{ item.title }}</v-list-item-title>
+
+                            <template v-slot:append>
+                                <v-badge
+                                    v-if="item.badge"
+                                    inline
+                                    color="secondary"
+                                    :content="item.badge"
+                                />
+                            </template>
                         </v-list-item>
                     </div>
 
