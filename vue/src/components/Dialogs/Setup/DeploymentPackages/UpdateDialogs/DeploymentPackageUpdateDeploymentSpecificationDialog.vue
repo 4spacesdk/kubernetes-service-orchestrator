@@ -125,7 +125,7 @@ function loadVersionTags() {
 
 function onSaveBtnClicked() {
     props.input.settings.defaultEnablePodioNotification = defaultEnablePodioNotification.value;
-    props.input.settings.defaultVersion = defaultVersion.value;
+    props.input.settings.defaultVersion = specifyDefaultVersion.value ? defaultVersion.value : undefined;
     props.input.settings.defaultAutoUpdateEnabled = defaultAutoUpdateEnabled.value;
     props.input.settings.defaultAutoUpdateTagRegex = defaultAutoUpdateTagRegex.value;
     props.input.settings.defaultAutoUpdateRequireApproval = defaultAutoUpdateRequireApproval.value;
@@ -167,6 +167,7 @@ function onCloseBtnClicked() {
                                 v-model="defaultEnablePodioNotification"
                                 variant="outlined"
                                 label="Default Enable Podio Notification"
+                                hide-details
                             />
                         </v-col>
 

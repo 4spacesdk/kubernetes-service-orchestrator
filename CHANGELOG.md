@@ -3,7 +3,8 @@
 ## v0.1.18 ()
 
 ### Fixed bugs
-* Type [Issue #27](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/27)
+* Typo [Issue #27](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/27)
+* Cannot remove "default version" for deployment specification on workspace template [Issue #26](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/26)
 
 ### Enhancements
 * Added support for deploying custom resources
