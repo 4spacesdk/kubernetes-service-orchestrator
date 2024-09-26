@@ -216,7 +216,7 @@ function onAcceptSelectedBtnClicked() {
             dark
             class="pr-2"
         >
-            <v-toolbar-title>Auto Updates</v-toolbar-title>
+            <v-toolbar-title>Updates</v-toolbar-title>
 
             <v-text-field
                 v-model="searchValue"

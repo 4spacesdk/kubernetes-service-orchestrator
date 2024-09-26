@@ -2,7 +2,6 @@
 
 use App\Entities\ContainerImage;
 use App\Entities\Deployment;
-use App\Libraries\DeploymentSteps\DeploymentStep;
 use DebugTool\Data;
 use Podio;
 use PodioComment;
@@ -23,48 +22,10 @@ class PodioLib {
      */
     public function notify(Deployment $deployment, \Closure $logger): void {
         $logger("notifyPodio $deployment->name $deployment->namespace");
-        if (!$deployment->workspace->exists()) {
-            $deployment->workspace->find();
-        }
 
-        // Get pod
-        $pods = (new DeploymentStep())->getPods($deployment);
-        $logger('found ' . count($pods) . ' pods');
-        foreach ($pods as $pod) {
-            $logger("Pod found for $deployment->name with name {$pod->getName()}");
-        }
-        if (count($pods) == 0) {
-            $logger('ERROR no pods found');
-            return;
-        }
+        $shortSha = $this->containerImage->getCommitIdentification()->getCommitShortSha($deployment);
 
-        $env = [];
-
-        foreach ($pods as $pod) {
-            // Get environment variables
-            $messages = $pod->exec(['/bin/sh', '-c', "printenv"]);
-            $all = collect($messages)->where('channel', 'stdout')->all();
-            $lines = [];
-            foreach ($all as ['channel' => $channel, 'output' => $output]) {
-                $lines[] = $output;
-            }
-            $lines = explode("\n", implode("\n", $lines)); // K8s returning multiple vars in single line. This will fix that.
-            $logger('found ' . count($lines) . ' lines');
-            foreach ($lines as $line) {
-                $parts = explode('=', $line, 2);
-                $key = $parts[0];
-                if (count($parts) == 2) {
-                    $env[$key] = $parts[1];
-                } else if (count($parts) == 1) {
-                    $env[$key] = null;
-                }
-            }
-            $logger('found ' . count($env) . ' env vars');
-        }
-
-        if (isset($env[$this->containerImage->commit_identification_environment_variable_name])) {
-            $shortSha = $env[$this->containerImage->commit_identification_environment_variable_name];
-            $shortSha = str_replace("\r", '', $shortSha);
+        if (strlen($shortSha)) {
             $logger('SHORT_SHA: ' . $shortSha);
 
             // Ask vcs for commit message

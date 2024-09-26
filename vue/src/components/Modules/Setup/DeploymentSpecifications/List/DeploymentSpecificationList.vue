@@ -70,8 +70,7 @@ function getItems(doItems = true, doCount = false) {
 
     if (searchValue.value?.length) {
         api
-            .search('name', searchValue.value)
-            .search('git_repo', searchValue.value);
+            .search('name', searchValue.value);
     }
 
     if (doItems) {

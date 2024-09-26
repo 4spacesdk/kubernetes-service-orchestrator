@@ -6,7 +6,7 @@ export default ([
         name: 'AutoUpdates',
         component: AutoUpdateListPage,
         meta: {
-            title: 'Auto Updates',
+            title: 'Updates',
         }
     },
 ]);

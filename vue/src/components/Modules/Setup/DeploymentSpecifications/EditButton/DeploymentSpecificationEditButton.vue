@@ -17,6 +17,8 @@ const showUpdateClusterRoleRules = ref(false);
 const showUpdateServiceAnnotations = ref(false);
 const showUpdateQuickCommands = ref(false);
 const showUpdateInitContainers = ref(false);
+const showUpdatePostUpdateActions = ref(false);
+const isUpdatePostUpdateActionsEnabled = ref(false);
 
 onMounted(() => {
     render();
@@ -26,7 +28,7 @@ onMounted(() => {
 
 function render() {
     isVisible.value = props.deploymentSpecification.type == DeploymentSpecificationTypes.Deployment;
-    showUpdatePostCommands.value = true;
+    showUpdatePostCommands.value = props.deploymentSpecification.enable_database ?? false;
     showUpdateEnvironmentVariables.value = true;
     showUpdateServicePorts.value = true;
     showUpdateServiceAnnotations.value = true;
@@ -34,6 +36,8 @@ function render() {
     showUpdateClusterRoleRules.value = props.deploymentSpecification.enable_rbac ?? false;
     showUpdateQuickCommands.value = true;
     showUpdateInitContainers.value = true;
+    showUpdatePostUpdateActions.value = true;
+    isUpdatePostUpdateActionsEnabled.value = props.deploymentSpecification.container_image?.version_control_enabled ?? false;
 }
 
 function onUpdatePostCommandsClicked() {
@@ -84,6 +88,12 @@ function onUpdateInitContainersClicked() {
     });
 }
 
+function onUpdatePostUpdateActionsClicked() {
+    bus.emit('deploymentSpecificationUpdatePostUpdateActions', {
+        deploymentSpecification: props.deploymentSpecification
+    });
+}
+
 </script>
 
 <template>
@@ -101,7 +111,7 @@ function onUpdateInitContainersClicked() {
                     @click="onUpdatePostCommandsClicked">
                     <v-list-item-title>
                         <v-icon size="small" class="my-auto ml-2">fa fa-terminal</v-icon>
-                        <span class="ml-2">Post Commands</span>
+                        <span class="ml-2">Post Migration Commands</span>
                     </v-list-item-title>
                 </v-list-item>
                 <v-list-item
@@ -167,6 +177,27 @@ function onUpdateInitContainersClicked() {
                         <span class="ml-2">Init Containers</span>
                     </v-list-item-title>
                 </v-list-item>
+                <v-tooltip
+                    v-if="showUpdatePostUpdateActions"
+                    :disabled="isUpdatePostUpdateActionsEnabled"
+                    location="left">
+                    <template v-slot:activator="{ props }">
+                        <div
+                            v-bind="props">
+                            <v-list-item
+                                dense
+                                @click="onUpdatePostUpdateActionsClicked"
+                                :disabled="!isUpdatePostUpdateActionsEnabled"
+                            >
+                                <v-list-item-title>
+                                    <v-icon size="small" class="my-auto ml-2">fa fa-terminal</v-icon>
+                                    <span class="ml-2">Post Update Actions</span>
+                                </v-list-item-title>
+                            </v-list-item>
+                        </div>
+                    </template>
+                    Setup container image version control to enable post update actions
+                </v-tooltip>
             </v-list>
         </v-card>
     </div>

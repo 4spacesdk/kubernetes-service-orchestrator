@@ -11,6 +11,7 @@ import {DeploymentSpecificationClusterRoleRule} from '../DeploymentSpecification
 import {DeploymentSpecificationServiceAnnotation} from '../DeploymentSpecificationServiceAnnotation';
 import {DeploymentSpecificationQuickCommand} from '../DeploymentSpecificationQuickCommand';
 import {DeploymentSpecificationInitContainer} from '../DeploymentSpecificationInitContainer';
+import {DeploymentSpecificationPostUpdateAction} from '../DeploymentSpecificationPostUpdateAction';
 import {DeploymentStep} from '../DeploymentStep';
 import {User} from '../User';
 import {Deletion} from '../Deletion';
@@ -21,7 +22,6 @@ export class DeploymentSpecificationDefinition extends BaseModel {
     type?: string;
     container_image_id?: number;
     container_image?: ContainerImage;
-    git_repo?: string;
     enable_database?: boolean;
     enable_cronjob?: boolean;
     enable_ingress?: boolean;
@@ -49,6 +49,7 @@ export class DeploymentSpecificationDefinition extends BaseModel {
     deployment_specification_service_annotations?: DeploymentSpecificationServiceAnnotation[];
     deployment_specification_quick_commands?: DeploymentSpecificationQuickCommand[];
     deployment_specification_init_containers?: DeploymentSpecificationInitContainer[];
+    deployment_specification_post_update_actions?: DeploymentSpecificationPostUpdateAction[];
     deploymentSteps?: DeploymentStep[];
     id?: number;
     created?: string;
@@ -71,7 +72,6 @@ export class DeploymentSpecificationDefinition extends BaseModel {
             delete this.type;
             delete this.container_image_id;
             delete this.container_image;
-            delete this.git_repo;
             delete this.enable_database;
             delete this.enable_cronjob;
             delete this.enable_ingress;
@@ -99,6 +99,7 @@ export class DeploymentSpecificationDefinition extends BaseModel {
             delete this.deployment_specification_service_annotations;
             delete this.deployment_specification_quick_commands;
             delete this.deployment_specification_init_containers;
+            delete this.deployment_specification_post_update_actions;
             delete this.deploymentSteps;
             delete this.id;
             delete this.created;
@@ -123,9 +124,6 @@ export class DeploymentSpecificationDefinition extends BaseModel {
         }
         if (data.container_image != null) {
             this.container_image = new ContainerImage(data.container_image);
-        }
-        if (data.git_repo != null) {
-            this.git_repo = data.git_repo;
         }
         if (data.enable_database != null) {
             this.enable_database = data.enable_database;
@@ -207,6 +205,9 @@ export class DeploymentSpecificationDefinition extends BaseModel {
         }
         if (data.deployment_specification_init_containers != null) {
             this.deployment_specification_init_containers = data.deployment_specification_init_containers.map((i: any) => new DeploymentSpecificationInitContainer(i));
+        }
+        if (data.deployment_specification_post_update_actions != null) {
+            this.deployment_specification_post_update_actions = data.deployment_specification_post_update_actions.map((i: any) => new DeploymentSpecificationPostUpdateAction(i));
         }
         if (data.deploymentSteps != null) {
             this.deploymentSteps = data.deploymentSteps.map((i: any) => new DeploymentStep(i));

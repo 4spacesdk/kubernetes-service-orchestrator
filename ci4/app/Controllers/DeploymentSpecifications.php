@@ -6,6 +6,8 @@ use App\Entities\DeploymentSpecificationClusterRoleRule;
 use App\Entities\DeploymentSpecificationEnvironmentVariable;
 use App\Entities\DeploymentSpecificationIngress;
 use App\Entities\DeploymentSpecificationPostCommand;
+use App\Entities\DeploymentSpecificationPostUpdateAction;
+use App\Entities\PostUpdateAction;
 use App\Entities\DeploymentSpecificationQuickCommand;
 use App\Entities\DeploymentSpecificationServiceAnnotation;
 use App\Entities\DeploymentSpecificationServicePort;
@@ -18,6 +20,7 @@ use App\Interfaces\PostCommandList;
 use App\Interfaces\QuickCommandList;
 use App\Interfaces\ServiceAnnotationList;
 use App\Interfaces\ServicePortList;
+use App\Models\PostUpdateActionModel;
 use DebugTool\Data;
 
 class DeploymentSpecifications extends ResourceController {
@@ -266,6 +269,35 @@ class DeploymentSpecifications extends ResourceController {
             );
 
             $item->updateInitContainers($values);
+        }
+        $this->_setResource($item);
+        $this->success();
+    }
+
+    /**
+     * @route /deployment-specifications/{id}/post-update-actions
+     * @method put
+     * @custom true
+     * @param int $id
+     * @requestSchema IntArrayInterface
+     * @return void
+     */
+    public function updatePostUpdateActions(int $id): void {
+        $item = new DeploymentSpecification();
+        $item->find($id);
+        if ($item->exists()) {
+            /** @var IntArrayInterface $body */
+            $body = $this->request->getJSON();
+
+            $values = new DeploymentSpecificationPostUpdateAction();
+            $pos = 0;
+            $values->all = array_map(
+                fn($postUpdateActionId, $i) => DeploymentSpecificationPostUpdateAction::Create($postUpdateActionId, $pos + $i),
+                $body->values,
+                array_keys($body->values)
+            );
+
+            $item->updatePostUpdateActions($values);
         }
         $this->_setResource($item);
         $this->success();

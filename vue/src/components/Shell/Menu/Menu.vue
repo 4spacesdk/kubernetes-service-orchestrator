@@ -74,8 +74,8 @@ const categories = ref<MenuCategory[]>([
     },
     {
         identifier: 'auto-updates',
-        name: 'Auto Updates',
-        icon: 'fa fa-list-check',
+        name: 'Updates',
+        icon: 'fa fa-bell',
         items: [
             {
                 title: 'All',
@@ -157,6 +157,13 @@ const categories = ref<MenuCategory[]>([
             {
                 title: 'Webhooks',
                 url: '/integrations/webhooks',
+                permissions: [
+                    RbacPermissions.Developer,
+                ],
+            },
+            {
+                title: 'Podio Integrations',
+                url: '/integrations/podio-integrations',
                 permissions: [
                     RbacPermissions.Developer,
                 ],

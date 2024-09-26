@@ -1,5 +1,7 @@
 <?php namespace App\Entities;
 
+use App\Libraries\CommitIdentificationMethods\BaseCommitIdentificationMethod;
+use App\Libraries\CommitIdentificationMethods\EnvironmentVariableCommitIdentification;
 use App\Libraries\ContainerRegistries\AzureContainerRegistry;
 use App\Libraries\ContainerRegistries\BaseContainerRegistry;
 use App\Libraries\ContainerRegistries\GoogleCloudArtifactRegistry;
@@ -94,6 +96,14 @@ class ContainerImage extends Entity {
         switch ($this->version_control_provider) {
             case \VersionControlProviders::GitHub:
                 return new GithubVersionControl($this);
+        }
+        return null;
+    }
+
+    public function getCommitIdentification(): ?BaseCommitIdentificationMethod {
+        switch ($this->commit_identification_method) {
+            case \CommitIdentificationMethods::EnvironmentVariable:
+                return new EnvironmentVariableCommitIdentification($this);
         }
         return null;
     }

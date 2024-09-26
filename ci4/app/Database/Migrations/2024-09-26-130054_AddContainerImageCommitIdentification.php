@@ -47,11 +47,14 @@ class AddContainerImageCommitIdentification extends Migration {
             ->includeRelated(ContainerImageModel::class)
             ->find();
         foreach ($specs as $spec) {
-            if ($spec->container_image->exists()) {
+            if ($spec->container_image->exists() && strlen($spec->git_repo)) {
                 $spec->container_image->version_control_repository_name = $spec->git_repo;
                 $spec->container_image->save();
             }
         }
+
+        Table::init('deployment_specifications')
+            ->dropColumn('git_repo');
     }
 
     public function down() {

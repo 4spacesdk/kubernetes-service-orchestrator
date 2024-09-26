@@ -161,9 +161,9 @@ function onVariableClicked(text: string) {
 
                         <div
                             style="position: relative"
+                            v-if="item.type == DeploymentSpecificationTypes.Custom"
                         >
                             <CodeEditor
-                                v-if="item.type == DeploymentSpecificationTypes.Custom"
                                 v-model="item.custom_resource"
                                 :languages="[['yaml']]"
                                 class="w-100"
@@ -190,7 +190,7 @@ function onVariableClicked(text: string) {
                     v-if="item.type == DeploymentSpecificationTypes.Deployment"
                     dense
                 >
-                    <v-col cols="6">
+                    <v-col cols="12">
                         <v-select
                             v-model="item.container_image_id"
                             :loading="isLoadingContainerImageItems"
@@ -199,13 +199,6 @@ function onVariableClicked(text: string) {
                             item-value="id"
                             variant="outlined"
                             label="Container Image"/>
-                    </v-col>
-
-                    <v-col cols="6">
-                        <v-text-field
-                            variant="outlined"
-                            v-model="item.git_repo"
-                            label="Git Repository Name"/>
                     </v-col>
 
                     <v-col cols="12">

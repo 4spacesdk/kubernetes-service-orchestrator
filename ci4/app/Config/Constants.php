@@ -105,6 +105,19 @@ class VersionControlProviders {
         GitHub = 'github';
 }
 
+class PostUpdateActionTypes {
+    const string
+        Podio_AddComment = 'podio-add-comment',
+        Podio_FieldUpdate = 'podio-field-update'
+    ;
+}
+
+class PostUpdateActionConditionTypes {
+    const string
+        PodioFieldEquals = 'podio-field-equals'
+    ;
+}
+
 
 /*
  | --------------------------------------------------------------------

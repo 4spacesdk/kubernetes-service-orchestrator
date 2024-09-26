@@ -26,10 +26,11 @@ class DeploymentSpecificationModel extends Model implements ResourceModelInterfa
         DeploymentSpecificationServiceAnnotationModel::class,
         DeploymentSpecificationQuickCommandModel::class,
         DeploymentSpecificationInitContainerModel::class,
+        DeploymentSpecificationPostUpdateActionModel::class,
     ];
 
     public function preRestGet($queryParser, $id) {
-
+        $this->includeRelated(ContainerImageModel::class);
     }
 
     public function postRestGet($queryParser, $items) {

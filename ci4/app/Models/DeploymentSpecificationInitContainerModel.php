@@ -41,7 +41,7 @@ class DeploymentSpecificationInitContainerModel extends Model implements Resourc
 
     public function ignoredRestGetOnRelations() {
         return [
-            WorkspaceModel::class,
+
         ];
     }
 

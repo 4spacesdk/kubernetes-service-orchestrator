@@ -12,7 +12,7 @@ import {
     DatabaseService,
     Deployment, DeploymentPackage, DeploymentSpecification,
     Domain,
-    EmailService, InitContainer, OAuthClient,
+    EmailService, InitContainer, OAuthClient, PodioIntegration, PostUpdateAction,
     User, Webhook,
     Workspace
 } from "@/core/services/Deploy/models";
@@ -172,6 +172,21 @@ import type {
 import type {
     DeploymentUpdateCustomResourceDialog_Input
 } from "@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateCustomResourceDialog.vue";
+import type {
+    PodioIntegrationEditDialog_Input
+} from "@/components/Dialogs/Integrations/PodioIntegrations/PodioIntegrationEditDialog.vue";
+import type {
+    PostUpdateActionUpdateConditionDialog_Input
+} from "@/components/Dialogs/Setup/PostUpdateActions/UpdateDialogs/PostUpdateActionUpdateConditionDialog.vue";
+import type {
+    PostUpdateActionUpdateConditionsDialog_Input
+} from "@/components/Dialogs/Setup/PostUpdateActions/UpdateDialogs/PostUpdateActionUpdateConditionsDialog.vue";
+import type {
+    PostUpdateActionEditDialog_Input
+} from "@/components/Dialogs/Setup/PostUpdateActions/PostUpdateActionEditDialog.vue";
+import type {
+    DeploymentSpecificationUpdatePostUpdateActionsDialog_Input
+} from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdatePostUpdateActionsDialog.vue";
 
 export type Events = {
     confirm: ConfirmationDialog_Input;
@@ -257,6 +272,7 @@ export type Events = {
     deploymentSpecificationUpdateServiceAnnotations: DeploymentSpecificationUpdateServiceAnnotationsDialog_Input;
     deploymentSpecificationUpdateServiceAnnotation: DeploymentSpecificationUpdateServiceAnnotationDialog_Input;
     deploymentSpecificationUpdateInitContainers: DeploymentSpecificationUpdateInitContainersDialog_Input;
+    deploymentSpecificationUpdatePostUpdateActions: DeploymentSpecificationUpdatePostUpdateActionsDialog_Input;
 
     deploymentPackageSaved: DeploymentPackage | undefined;
     deploymentPackageEdit: DeploymentPackageCreateDialog_Input;
@@ -282,6 +298,17 @@ export type Events = {
     initContainerEditDialog_closed: InitContainer | undefined;
     initContainerUpdateEnvironmentVariables: InitContainerUpdateEnvironmentVariablesDialog_Input;
     initContainerUpdateEnvironmentVariable: InitContainerUpdateEnvironmentVariableDialog_Input;
+
+    podioIntegrationSaved: PodioIntegration | undefined;
+    podioIntegrationEdit: PodioIntegrationEditDialog_Input;
+    podioIntegrationEditDialog_closed: PodioIntegration | undefined;
+
+    postUpdateActionEdit: PostUpdateActionEditDialog_Input;
+    postUpdateActionSaved: PostUpdateAction | undefined;
+    postUpdateActionEditDialog_closed: PostUpdateAction | undefined;
+    postUpdateActionUpdateConditions: PostUpdateActionUpdateConditionsDialog_Input;
+    postUpdateActionUpdateCondition: PostUpdateActionUpdateConditionDialog_Input;
+
 }
 
 export const DeploymentStatusTypes = {
@@ -349,4 +376,13 @@ export const CommitIdentificationMethods = {
 
 export const VersionControlProviders = {
     GitHub: 'github',
+};
+
+export const PostUpdateActionTypes = {
+    Podio_AddComment: 'podio-add-comment',
+    Podio_FieldUpdate: 'podio-field-update',
+};
+
+export const PostUpdateActionConditionTypes = {
+    PodioFieldEquals: 'podio-field-equals',
 };

@@ -14,6 +14,7 @@ export {DeploymentSpecificationIngress as DeploymentSpecificationIngress} from "
 export {DeploymentSpecificationIngressRulePath as DeploymentSpecificationIngressRulePath} from "./DeploymentSpecificationIngressRulePath";
 export {DeploymentSpecificationInitContainer as DeploymentSpecificationInitContainer} from "./DeploymentSpecificationInitContainer";
 export {DeploymentSpecificationPostCommand as DeploymentSpecificationPostCommand} from "./DeploymentSpecificationPostCommand";
+export {DeploymentSpecificationPostUpdateAction as DeploymentSpecificationPostUpdateAction} from "./DeploymentSpecificationPostUpdateAction";
 export {DeploymentSpecificationQuickCommand as DeploymentSpecificationQuickCommand} from "./DeploymentSpecificationQuickCommand";
 export {DeploymentSpecificationServiceAnnotation as DeploymentSpecificationServiceAnnotation} from "./DeploymentSpecificationServiceAnnotation";
 export {DeploymentSpecificationServicePort as DeploymentSpecificationServicePort} from "./DeploymentSpecificationServicePort";
@@ -27,6 +28,10 @@ export {InitContainerEnvironmentVariable as InitContainerEnvironmentVariable} fr
 export {Label as Label} from "./Label";
 export {MigrationJob as MigrationJob} from "./MigrationJob";
 export {OAuthClient as OAuthClient} from "./OAuthClient";
+export {PodioFieldReference as PodioFieldReference} from "./PodioFieldReference";
+export {PodioIntegration as PodioIntegration} from "./PodioIntegration";
+export {PostUpdateAction as PostUpdateAction} from "./PostUpdateAction";
+export {PostUpdateActionCondition as PostUpdateActionCondition} from "./PostUpdateActionCondition";
 export {RbacPermission as RbacPermission} from "./RbacPermission";
 export {RbacRole as RbacRole} from "./RbacRole";
 export {System as System} from "./System";

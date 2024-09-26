@@ -205,6 +205,9 @@ bus.on('deploymentSpecificationUpdateServiceAnnotation', async input => {
 bus.on('deploymentSpecificationUpdateInitContainers', async input => {
     addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateInitContainersDialog.vue')).default, input);
 });
+bus.on('deploymentSpecificationUpdatePostUpdateActions', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdatePostUpdateActionsDialog.vue')).default, input);
+});
 
 
 bus.on('deploymentPackageEdit', async input => {
@@ -250,6 +253,20 @@ bus.on('initContainerUpdateEnvironmentVariables', async input => {
 });
 bus.on('initContainerUpdateEnvironmentVariable', async input => {
     addComponent((await import('@/components/Dialogs/Setup/InitContainers/UpdateDialogs/InitContainerUpdateEnvironmentVariableDialog.vue')).default, input);
+});
+
+bus.on('podioIntegrationEdit', async input => {
+    addComponent((await import('@/components/Dialogs/Integrations/PodioIntegrations/PodioIntegrationEditDialog.vue')).default, input);
+});
+
+bus.on('postUpdateActionEdit', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/PostUpdateActions/PostUpdateActionEditDialog.vue')).default, input);
+});
+bus.on('postUpdateActionUpdateConditions', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/PostUpdateActions/UpdateDialogs/PostUpdateActionUpdateConditionsDialog.vue')).default, input);
+});
+bus.on('postUpdateActionUpdateCondition', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/PostUpdateActions/UpdateDialogs/PostUpdateActionUpdateConditionDialog.vue')).default, input);
 });
 
 

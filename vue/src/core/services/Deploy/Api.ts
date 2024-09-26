@@ -10,6 +10,8 @@ import {Domain} from "./models";
 import {EmailService} from "./models";
 import {InitContainer} from "./models";
 import {OAuthClient} from "./models";
+import {PodioIntegration} from "./models";
+import {PostUpdateAction} from "./models";
 import {RbacPermission} from "./models";
 import {RbacRole} from "./models";
 import {User} from "./models";
@@ -205,6 +207,12 @@ export interface LabelList {
     values?: Label[];
 }
 
+export interface PodioIntegrationGetAppsResponse {
+    name?: string;
+    id?: string;
+    token?: string;
+}
+
 export interface PostCommand {
     name?: string;
     command?: string;
@@ -213,6 +221,17 @@ export interface PostCommand {
 
 export interface PostCommandList {
     values?: PostCommand[];
+}
+
+export interface PostUpdateActionCondition {
+    podio_integration_id?: number;
+    type?: string;
+    field_id?: string;
+    value?: string;
+}
+
+export interface PostUpdateActionList {
+    values?: PostUpdateActionCondition[];
 }
 
 export interface QuickCommand {
@@ -1815,6 +1834,27 @@ export class DeploymentSpecificationsUpdateInitContainersPutById extends BaseApi
     }
 }
 
+export class DeploymentSpecificationsUpdatePostUpdateActionsPutById extends BaseApi<DeploymentSpecification> {
+
+    public topic = 'Resources.DeploymentSpecifications';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/deployment-specifications/${id}/post-update-actions`;
+    }
+
+    protected convertToResource(data: any): DeploymentSpecification {
+        return new DeploymentSpecification(data);
+    }
+
+    public save(data: IntArrayInterface, next?: (value: DeploymentSpecification) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
 class DeploymentSpecifications {
 
     public get(): DeploymentSpecificationsGet {
@@ -1875,6 +1915,10 @@ class DeploymentSpecifications {
 
     public updateInitContainersPutById(id: number): DeploymentSpecificationsUpdateInitContainersPutById {
         return new DeploymentSpecificationsUpdateInitContainersPutById(id);
+    }
+
+    public updatePostUpdateActionsPutById(id: number): DeploymentSpecificationsUpdatePostUpdateActionsPutById {
+        return new DeploymentSpecificationsUpdatePostUpdateActionsPutById(id);
     }
 
 }
@@ -4354,6 +4398,529 @@ class OAuthClients {
 }
 
 
+export class PodioIntegrationsGet extends BaseApi<PodioIntegration> {
+
+    public topic = 'Resources.PodioIntegrations';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/podio_integrations`;
+    }
+
+    protected convertToResource(data: any): PodioIntegration {
+        return new PodioIntegration(data);
+    }
+
+    public where(name: string, value: any): PodioIntegrationsGet {
+        this.filter().where(name, value);
+        return this;
+    }
+
+    public whereEquals(name: string, value: any): PodioIntegrationsGet {
+        this.filter().whereEquals(name, value);
+        return this;
+    }
+
+    public whereIn(name: string, value: any[]): PodioIntegrationsGet {
+        this.filter().whereIn(name, value);
+        return this;
+    }
+
+    public whereInArray(name: string, value: any[]): PodioIntegrationsGet {
+        this.filter().whereInArray(name, value);
+        return this;
+    }
+
+    public whereNot(name: string, value: any): PodioIntegrationsGet {
+        this.filter().whereNot(name, value);
+        return this;
+    }
+
+    public whereNotIn(name: string, value: any[]): PodioIntegrationsGet {
+        this.filter().whereNotIn(name, value);
+        return this;
+    }
+
+    public whereGreaterThan(name: string, value: any): PodioIntegrationsGet {
+        this.filter().whereGreaterThan(name, value);
+        return this;
+    }
+
+    public whereGreaterThanOrEqual(name: string, value: any): PodioIntegrationsGet {
+        this.filter().whereGreaterThanOrEqual(name, value);
+        return this;
+    }
+
+    public whereLessThan(name: string, value: any): PodioIntegrationsGet {
+        this.filter().whereLessThan(name, value);
+        return this;
+    }
+
+    public whereLessThanOrEqual(name: string, value: any): PodioIntegrationsGet {
+        this.filter().whereLessThanOrEqual(name, value);
+        return this;
+    }
+
+    public search(name: string, value: any): PodioIntegrationsGet {
+        this.filter().search(name, value);
+        return this;
+    }
+
+    public include(name: string): PodioIntegrationsGet {
+        this.getInclude().include(name);
+        return this;
+    }
+
+    public orderBy(name: string, direction: string): PodioIntegrationsGet {
+        this.ordering().orderBy(name, direction);
+        return this;
+    }
+
+    public orderAsc(name: string): PodioIntegrationsGet {
+        this.ordering().orderAsc(name);
+        return this;
+    }
+
+    public orderDesc(name: string): PodioIntegrationsGet {
+        this.ordering().orderDesc(name);
+        return this;
+    }
+
+    public limit(value: number): PodioIntegrationsGet {
+        this.limitValue = value;
+        return this;
+    }
+
+    public offset(value: number): PodioIntegrationsGet {
+        this.offsetValue = value;
+        return this;
+    }
+
+    public count(next?: (value: number) => void) {
+        return this.executeCount(next);
+    }
+
+    public find(next?: (value: PodioIntegration[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class PodioIntegrationsGetById extends BaseApi<PodioIntegration> {
+
+    public topic = 'Resources.PodioIntegrations';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/podio_integrations/${id}`;
+    }
+
+    protected convertToResource(data: any): PodioIntegration {
+        return new PodioIntegration(data);
+    }
+
+    public include(name: string): PodioIntegrationsGetById {
+        this.getInclude().include(name);
+        return this;
+    }
+
+    public find(next?: (value: PodioIntegration[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class PodioIntegrationsPost extends BaseApi<PodioIntegration> {
+
+    public topic = 'Resources.PodioIntegrations';
+    protected method = 'post';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/podio_integrations`;
+    }
+
+    protected convertToResource(data: any): PodioIntegration {
+        return new PodioIntegration(data);
+    }
+
+    public save(data: PodioIntegration, next?: (value: PodioIntegration) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class PodioIntegrationsPatchById extends BaseApi<PodioIntegration> {
+
+    public topic = 'Resources.PodioIntegrations';
+    protected method = 'patch';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/podio_integrations/${id}`;
+    }
+
+    protected convertToResource(data: any): PodioIntegration {
+        return new PodioIntegration(data);
+    }
+
+    public save(data: PodioIntegration, next?: (value: PodioIntegration) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class PodioIntegrationsPatch extends BaseApi<PodioIntegration> {
+
+    public topic = 'Resources.PodioIntegrations';
+    protected method = 'patch';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/podio_integrations`;
+    }
+
+    protected convertToResource(data: any): PodioIntegration {
+        return new PodioIntegration(data);
+    }
+
+    public save(data: PodioIntegration, next?: (value: PodioIntegration) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class PodioIntegrationsDeleteById extends BaseApi<PodioIntegration> {
+
+    public topic = 'Resources.PodioIntegrations';
+    protected method = 'delete';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/podio_integrations/${id}`;
+    }
+
+    protected convertToResource(data: any): PodioIntegration {
+        return new PodioIntegration(data);
+    }
+
+    public delete(next?: (value: PodioIntegration) => void) {
+        return super.executeDelete(next);
+    }
+}
+
+class PodioIntegrations {
+
+    public get(): PodioIntegrationsGet {
+        return new PodioIntegrationsGet();
+    }
+
+    public getById(id: number): PodioIntegrationsGetById {
+        return new PodioIntegrationsGetById(id);
+    }
+
+    public post(): PodioIntegrationsPost {
+        return new PodioIntegrationsPost();
+    }
+
+    public patchById(id: number): PodioIntegrationsPatchById {
+        return new PodioIntegrationsPatchById(id);
+    }
+
+    public patch(): PodioIntegrationsPatch {
+        return new PodioIntegrationsPatch();
+    }
+
+    public deleteById(id: number): PodioIntegrationsDeleteById {
+        return new PodioIntegrationsDeleteById(id);
+    }
+
+}
+
+
+export class PostUpdateActionsGet extends BaseApi<PostUpdateAction> {
+
+    public topic = 'Resources.PostUpdateActions';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/post_update_actions`;
+    }
+
+    protected convertToResource(data: any): PostUpdateAction {
+        return new PostUpdateAction(data);
+    }
+
+    public where(name: string, value: any): PostUpdateActionsGet {
+        this.filter().where(name, value);
+        return this;
+    }
+
+    public whereEquals(name: string, value: any): PostUpdateActionsGet {
+        this.filter().whereEquals(name, value);
+        return this;
+    }
+
+    public whereIn(name: string, value: any[]): PostUpdateActionsGet {
+        this.filter().whereIn(name, value);
+        return this;
+    }
+
+    public whereInArray(name: string, value: any[]): PostUpdateActionsGet {
+        this.filter().whereInArray(name, value);
+        return this;
+    }
+
+    public whereNot(name: string, value: any): PostUpdateActionsGet {
+        this.filter().whereNot(name, value);
+        return this;
+    }
+
+    public whereNotIn(name: string, value: any[]): PostUpdateActionsGet {
+        this.filter().whereNotIn(name, value);
+        return this;
+    }
+
+    public whereGreaterThan(name: string, value: any): PostUpdateActionsGet {
+        this.filter().whereGreaterThan(name, value);
+        return this;
+    }
+
+    public whereGreaterThanOrEqual(name: string, value: any): PostUpdateActionsGet {
+        this.filter().whereGreaterThanOrEqual(name, value);
+        return this;
+    }
+
+    public whereLessThan(name: string, value: any): PostUpdateActionsGet {
+        this.filter().whereLessThan(name, value);
+        return this;
+    }
+
+    public whereLessThanOrEqual(name: string, value: any): PostUpdateActionsGet {
+        this.filter().whereLessThanOrEqual(name, value);
+        return this;
+    }
+
+    public search(name: string, value: any): PostUpdateActionsGet {
+        this.filter().search(name, value);
+        return this;
+    }
+
+    public include(name: string): PostUpdateActionsGet {
+        this.getInclude().include(name);
+        return this;
+    }
+
+    public orderBy(name: string, direction: string): PostUpdateActionsGet {
+        this.ordering().orderBy(name, direction);
+        return this;
+    }
+
+    public orderAsc(name: string): PostUpdateActionsGet {
+        this.ordering().orderAsc(name);
+        return this;
+    }
+
+    public orderDesc(name: string): PostUpdateActionsGet {
+        this.ordering().orderDesc(name);
+        return this;
+    }
+
+    public limit(value: number): PostUpdateActionsGet {
+        this.limitValue = value;
+        return this;
+    }
+
+    public offset(value: number): PostUpdateActionsGet {
+        this.offsetValue = value;
+        return this;
+    }
+
+    public count(next?: (value: number) => void) {
+        return this.executeCount(next);
+    }
+
+    public find(next?: (value: PostUpdateAction[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class PostUpdateActionsGetById extends BaseApi<PostUpdateAction> {
+
+    public topic = 'Resources.PostUpdateActions';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/post_update_actions/${id}`;
+    }
+
+    protected convertToResource(data: any): PostUpdateAction {
+        return new PostUpdateAction(data);
+    }
+
+    public include(name: string): PostUpdateActionsGetById {
+        this.getInclude().include(name);
+        return this;
+    }
+
+    public find(next?: (value: PostUpdateAction[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class PostUpdateActionsPost extends BaseApi<PostUpdateAction> {
+
+    public topic = 'Resources.PostUpdateActions';
+    protected method = 'post';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/post_update_actions`;
+    }
+
+    protected convertToResource(data: any): PostUpdateAction {
+        return new PostUpdateAction(data);
+    }
+
+    public save(data: PostUpdateAction, next?: (value: PostUpdateAction) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class PostUpdateActionsPatchById extends BaseApi<PostUpdateAction> {
+
+    public topic = 'Resources.PostUpdateActions';
+    protected method = 'patch';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/post_update_actions/${id}`;
+    }
+
+    protected convertToResource(data: any): PostUpdateAction {
+        return new PostUpdateAction(data);
+    }
+
+    public save(data: PostUpdateAction, next?: (value: PostUpdateAction) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class PostUpdateActionsPatch extends BaseApi<PostUpdateAction> {
+
+    public topic = 'Resources.PostUpdateActions';
+    protected method = 'patch';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/post_update_actions`;
+    }
+
+    protected convertToResource(data: any): PostUpdateAction {
+        return new PostUpdateAction(data);
+    }
+
+    public save(data: PostUpdateAction, next?: (value: PostUpdateAction) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class PostUpdateActionsDeleteById extends BaseApi<PostUpdateAction> {
+
+    public topic = 'Resources.PostUpdateActions';
+    protected method = 'delete';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/post_update_actions/${id}`;
+    }
+
+    protected convertToResource(data: any): PostUpdateAction {
+        return new PostUpdateAction(data);
+    }
+
+    public delete(next?: (value: PostUpdateAction) => void) {
+        return super.executeDelete(next);
+    }
+}
+
+export class PostUpdateActionsUpdateConditionsPutById extends BaseApi<PostUpdateAction> {
+
+    public topic = 'Resources.PostUpdateActions';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/post-update-actions/${id}/conditions`;
+    }
+
+    protected convertToResource(data: any): PostUpdateAction {
+        return new PostUpdateAction(data);
+    }
+
+    public save(data: PostUpdateActionList, next?: (value: PostUpdateAction) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+class PostUpdateActions {
+
+    public get(): PostUpdateActionsGet {
+        return new PostUpdateActionsGet();
+    }
+
+    public getById(id: number): PostUpdateActionsGetById {
+        return new PostUpdateActionsGetById(id);
+    }
+
+    public post(): PostUpdateActionsPost {
+        return new PostUpdateActionsPost();
+    }
+
+    public patchById(id: number): PostUpdateActionsPatchById {
+        return new PostUpdateActionsPatchById(id);
+    }
+
+    public patch(): PostUpdateActionsPatch {
+        return new PostUpdateActionsPatch();
+    }
+
+    public deleteById(id: number): PostUpdateActionsDeleteById {
+        return new PostUpdateActionsDeleteById(id);
+    }
+
+    public updateConditionsPutById(id: number): PostUpdateActionsUpdateConditionsPutById {
+        return new PostUpdateActionsUpdateConditionsPutById(id);
+    }
+
+}
+
+
 export class RbacPermissionsGet extends BaseApi<RbacPermission> {
 
     public topic = 'Resources.RbacPermissions';
@@ -5929,6 +6496,14 @@ export class Api {
 
     public static oAuthClients(): OAuthClients {
         return new OAuthClients();
+    }
+
+    public static podioIntegrations(): PodioIntegrations {
+        return new PodioIntegrations();
+    }
+
+    public static postUpdateActions(): PostUpdateActions {
+        return new PostUpdateActions();
     }
 
     public static rbacPermissions(): RbacPermissions {

@@ -32,7 +32,6 @@ use RestExtension\Core\Entity;
  * @property string $type
  * @property int $container_image_id
  * @property ContainerImage $container_image
- * @property string $git_repo
  *
  * # Enable features
  * @property bool $enable_database
@@ -72,6 +71,7 @@ use RestExtension\Core\Entity;
  * @property DeploymentSpecificationServiceAnnotation $deployment_specification_service_annotations
  * @property DeploymentSpecificationQuickCommand $deployment_specification_quick_commands
  * @property DeploymentSpecificationInitContainer $deployment_specification_init_containers
+ * @property DeploymentSpecificationPostUpdateAction $deployment_specification_post_update_actions
  *
  * @property DeploymentStep $deploymentSteps
  */
@@ -268,6 +268,12 @@ class DeploymentSpecification extends Entity {
         $this->deployment_specification_init_containers->find()->deleteAll();
         $this->save($values);
         $this->deployment_specification_init_containers = $values;
+    }
+
+    public function updatePostUpdateActions(DeploymentSpecificationPostUpdateAction $values): void {
+        $this->deployment_specification_post_update_actions->find()->deleteAll();
+        $this->save($values);
+        $this->deployment_specification_post_update_actions = $values;
     }
 
     // </editor-fold>
