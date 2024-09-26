@@ -17,6 +17,10 @@ import {Webhook} from "./models";
 import {WebhookDelivery} from "./models";
 import {Workspace} from "./models";
 
+export interface BoolInterface {
+    value?: boolean;
+}
+
 export interface ClusterRoleRule {
     apiGroup?: string;
     resource?: string;
@@ -984,6 +988,27 @@ export class DatabaseServicesDeleteById extends BaseApi<DatabaseService> {
     }
 }
 
+export class DatabaseServicesTestConnectionGetById extends BaseApi<BoolInterface> {
+
+    public topic = 'Resources.BoolInterfaces';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/database-services/${id}/test-connection`;
+    }
+
+    protected convertToResource(data: any): BoolInterface {
+        return data;
+    }
+
+    public find(next?: (value: BoolInterface[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
 class DatabaseServices {
 
     public get(): DatabaseServicesGet {
@@ -1008,6 +1033,10 @@ class DatabaseServices {
 
     public deleteById(id: number): DatabaseServicesDeleteById {
         return new DatabaseServicesDeleteById(id);
+    }
+
+    public testConnectionGetById(id: number): DatabaseServicesTestConnectionGetById {
+        return new DatabaseServicesTestConnectionGetById(id);
     }
 
 }

@@ -9,11 +9,17 @@ const emit = defineEmits<{
     (e: 'onItemEditClicked', item: DatabaseService): void
 }>();
 
+interface Row {
+    item: DatabaseService;
+    isLoadingTestConnection: boolean;
+    testConnectionResult?: boolean;
+}
+
 const itemCount = ref(0);
-const rows = ref<DatabaseService[]>([]);
+const rows = ref<Row[]>([]);
 const headers = ref([
-    {title: 'Name', key: 'name', sortable: false},
-    {title: 'Driver', key: 'driver', sortable: false},
+    {title: 'Name', key: 'item.name', sortable: false},
+    {title: 'Driver', key: 'item.driver', sortable: false},
     {title: '', key: 'actions', sortable: false},
 ]);
 const isLoading = ref(true);
@@ -65,7 +71,12 @@ function getItems(doItems = true, doCount = false) {
             .offset(tableOptions.itemsPerPage * (tableOptions.page - 1))
             .orderAsc('name')
             .find(items => {
-                rows.value = items;
+                rows.value = items.map(item => {
+                    return {
+                        item: item,
+                        isLoadingTestConnection: false,
+                    };
+                });
                 isLoading.value = false;
             });
     }
@@ -86,25 +97,39 @@ function onCreateItemBtnClicked() {
     });
 }
 
-function onEditItemBtnClicked(item: DatabaseService) {
+function onEditItemBtnClicked(row: Row) {
     bus.emit('databaseServiceEdit', {
-        databaseService: item
+        databaseService: row.item
     });
-    emit('onItemEditClicked', item);
+    emit('onItemEditClicked', row.item);
 }
 
-function onDeleteItemBtnClicked(item: DatabaseService) {
+function onDeleteItemBtnClicked(row: Row) {
     bus.emit('confirm', {
-        body: `Do you want to delete <strong>${item.name}</strong>?`,
+        body: `Do you want to delete <strong>${row.item.name}</strong>?`,
         confirmIcon: 'fa fa-trash',
         confirmColor: 'red',
 
         responseCallback: (confirmed: boolean) => {
             if (confirmed) {
-                Api.databaseServices().deleteById(item.id!).delete(() => bus.emit('databaseServiceSaved'));
+                Api.databaseServices().deleteById(row.item.id!).delete(() => bus.emit('databaseServiceSaved'));
             }
         }
     });
+}
+
+function onTestConnectionBtnClicked(row: Row) {
+    row.isLoadingTestConnection = true;
+    Api.databaseServices().testConnectionGetById(row.item.id!)
+        .find(value => {
+            bus.emit('info', {
+                title: value[0].value ? 'Success' : 'Failed',
+                body: value[0].value ? 'Connection confirmed' : 'Failed to connect',
+            });
+            row.testConnectionResult = value[0].value;
+            row.isLoadingTestConnection = false;
+        });
+
 }
 
 // </editor-fold>
@@ -150,7 +175,18 @@ function onDeleteItemBtnClicked(item: DatabaseService) {
             @update:options="options = $event; getItems()">
             <template v-slot:item.actions="{ item }">
                 <div class="d-flex justify-end gap-1">
-                    <v-btn variant="plain" color="primary" size="small" @click="onEditItemBtnClicked(item)"
+                    <v-btn
+                        variant="plain"
+                        :color="item.testConnectionResult !== undefined ? (item.testConnectionResult ? 'success' : 'warning') : 'primary'"
+                        size="small"
+                        @click="onTestConnectionBtnClicked(item)"
+                        :loading="item.isLoadingTestConnection"
+                    >
+                        <v-icon>fa fa-wifi</v-icon>
+                        <v-tooltip activator="parent" location="bottom">Test connection</v-tooltip>
+                    </v-btn>
+                    <v-btn
+                        variant="plain" color="primary" size="small" @click="onEditItemBtnClicked(item)"
                     >
                         <v-icon>fa fa-pen</v-icon>
                         <v-tooltip activator="parent" location="bottom">Edit</v-tooltip>

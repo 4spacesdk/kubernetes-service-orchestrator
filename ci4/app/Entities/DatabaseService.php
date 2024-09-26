@@ -1,5 +1,9 @@
 <?php namespace App\Entities;
 
+use CodeIgniter\Database\BaseConnection;
+use CodeIgniter\Database\Exceptions\DatabaseException;
+use Config\Database;
+use DebugTool\Data;
 use RestExtension\Core\Entity;
 
 /**
@@ -25,6 +29,43 @@ class DatabaseService extends Entity {
         } else {
             return $name;
         }
+    }
+
+    public function prepareConnection(): BaseConnection {
+        return Database::connect([
+            'DSN'      => '',
+            'hostname' => $this->host,
+            'username' => $this->user,
+            'password' => $this->pass,
+            'database' => '',
+            'DBDriver' => match ($this->driver) {
+                \DatabaseDrivers::MySQL => 'MySQLi',
+                \DatabaseDrivers::MSSQL => 'SQLSRV',
+            },
+            'DBPrefix' => '',
+            'pConnect' => false,
+            'DBDebug'  => (ENVIRONMENT !== 'production'),
+            'charset'  => 'utf8',
+            'DBCollat' => 'utf8_general_ci',
+            'swapPre'  => '',
+            'encrypt'  => false,
+            'compress' => false,
+            'strictOn' => false,
+            'failover' => [],
+            'port' => $this->port,
+        ]);
+    }
+
+    public function testConnection(): bool {
+        try {
+            $db = $this->prepareConnection();
+            $tables = $db->query('SELECT version()');
+            Data::debug($tables);
+            return true;
+        } catch (\Exception|DatabaseException $e) {
+            Data::debug($e->getMessage());
+        }
+        return false;
     }
 
     /**

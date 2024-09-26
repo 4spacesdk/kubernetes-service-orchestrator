@@ -108,28 +108,7 @@ class DatabaseStep extends BaseDeploymentStep {
         $databaseService = new DatabaseService();
         $databaseService->find($deployment->database_service_id);
 
-        $db = Database::connect([
-            'DSN'      => '',
-            'hostname' => $databaseService->host,
-            'username' => $databaseService->user,
-            'password' => $databaseService->pass,
-            'database' => '',
-            'DBDriver' => match ($databaseService->driver) {
-                \DatabaseDrivers::MySQL => 'MySQLi',
-                \DatabaseDrivers::MSSQL => 'SQLSRV',
-            },
-            'DBPrefix' => '',
-            'pConnect' => false,
-            'DBDebug'  => (ENVIRONMENT !== 'production'),
-            'charset'  => 'utf8',
-            'DBCollat' => 'utf8_general_ci',
-            'swapPre'  => '',
-            'encrypt'  => false,
-            'compress' => false,
-            'strictOn' => false,
-            'failover' => [],
-            'port' => $databaseService->port,
-        ]);
+        $db = $databaseService->prepareConnection();
 
         switch ($databaseService->driver) {
             case \DatabaseDrivers::MySQL:

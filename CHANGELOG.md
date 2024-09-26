@@ -15,6 +15,7 @@
 * Automated updates [Issue #19](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/19)
   * Integrates with Google Cloud Artifact Container Registry and Azure Container Registry
   * Optional approval step
+* Test database connection feature [Issue #23](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/23)
 
 ### Breaking changes
 * Google Artifact Registry integration credentials has been moved from environment variables to container image properties
