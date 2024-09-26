@@ -1,12 +1,10 @@
 <?php namespace App\Entities;
 
+use App\Libraries\ContainerRegistries\AzureContainerRegistry;
+use App\Libraries\ContainerRegistries\BaseContainerRegistry;
+use App\Libraries\ContainerRegistries\GoogleCloudArtifactRegistry;
 use App\Libraries\GoogleCloud\GoogleCloudPubSub;
 use App\Libraries\Kubernetes\KubeHelper;
-use DebugTool\Data;
-use Google\ApiCore\ApiException;
-use Google\ApiCore\ValidationException;
-use Google\Cloud\ArtifactRegistry\V1beta2\ArtifactRegistryClient;
-use Google\Cloud\ArtifactRegistry\V1beta2\Tag;
 use RestExtension\Core\Entity;
 
 /**
@@ -17,10 +15,14 @@ use RestExtension\Core\Entity;
  * @property string $pull_secret
  * @property bool $registry_subscribe
  * @property string $registry_provider
- * @property string $registry_provider_project
- * @property string $registry_provider_location
- * @property string $registry_provider_name
- * @property string $registry_provider_credentials
+ * @property string $registry_provider_gcloud_registry_name
+ * @property string $registry_provider_gcloud_project
+ * @property string $registry_provider_gcloud_location
+ * @property string $registry_provider_gcloud_credentials
+ * @property string $registry_provider_azure_registry_name
+ * @property string $registry_provider_azure_tenant
+ * @property string $registry_provider_azure_client_id
+ * @property string $registry_provider_azure_client_secret
  */
 class ContainerImage extends Entity {
 
@@ -43,7 +45,7 @@ class ContainerImage extends Entity {
             && $this->registry_subscribe && strlen($this->registry_provider)) {
             switch ($this->registry_provider) {
                 case \ContainerRegistries::ArtifactContainerRegistry:
-                    $googleCloudPubSub = new GoogleCloudPubSub($this->registry_provider_project, $this->registry_provider_credentials);
+                    $googleCloudPubSub = new GoogleCloudPubSub($this->registry_provider_gcloud_project, $this->registry_provider_gcloud_credentials);
                     $googleCloudPubSub->ensureTopic('gcr');
                     $googleCloudPubSub->ensureSubscription(
                         'gcr',
@@ -54,48 +56,22 @@ class ContainerImage extends Entity {
         }
     }
 
-    public function getTags(): array {
-        $items = [];
-
-        $repoParts = explode('/', $this->url);
-        $repo = end($repoParts);
-
-        if (strlen($this->registry_provider)) {
-            switch ($this->registry_provider) {
-                case \ContainerRegistries::ArtifactContainerRegistry:
-                    try {
-                        $artifactRegistryClient = new ArtifactRegistryClient([
-                            'credentials' => json_decode($this->registry_provider_credentials, true),
-                        ]);
-                        try {
-                            Data::debug(get_class($this), "projects/{$this->registry_provider_project}/locations/{$this->registry_provider_location}/repositories/{$this->registry_provider_name}/packages/{$repo}");
-                            // Iterate through all elements
-                            $pagedResponse = $artifactRegistryClient->listTags([
-                                'parent' => "projects/{$this->registry_provider_project}/locations/{$this->registry_provider_location}/repositories/{$this->registry_provider_name}/packages/{$repo}"
-                            ]);
-                            /** @var Tag $element */
-                            foreach ($pagedResponse->iterateAllElements() as $element) {
-                                $name = explode('/', $element->getName());
-                                $items[] = end($name);
-                            }
-
-                            Data::debug('found', count($items), 'tags');
-                        } catch (ApiException $e) {
-                            Data::debug(get_class($this), $e->getMessage());
-                        } finally {
-                            $artifactRegistryClient->close();
-                        }
-                    } catch (ValidationException $e) {
-                        Data::debug(get_class($this), $e->getMessage());
-                    }
-
-                    usort($items, fn($a, $b) => version_compare(str_replace('v', '', $a), str_replace('v', '', $b)));
-            }
-        } else {
-            Data::debug(get_class($this), $this->name, 'does not have registry provider');
+    public function getContainerRegistry(): ?BaseContainerRegistry {
+        switch ($this->registry_provider) {
+            case \ContainerRegistries::ArtifactContainerRegistry:
+                return new GoogleCloudArtifactRegistry($this);
+            case \ContainerRegistries::AzureContainerRegistry:
+                return new AzureContainerRegistry($this);
         }
+        return null;
+    }
 
-        return $items;
+    public function getTags(): array {
+        return $this->getContainerRegistry()->getTags();
+    }
+
+    public function getRepoName(): string {
+        return $this->getContainerRegistry()->getRepoName();
     }
 
     /**

@@ -49,9 +49,6 @@ const defaultReplicas = ref<number>();
 const isLoadingVersionTags = ref(false);
 const versionTagItems = ref<string[]>([]);
 
-const keelPolicyItems = ref<string[]>([]);
-const isLoadingKeelPolicies = ref(false);
-
 const environmentItems = ref<string[]>([]);
 const isLoadingEnvironments = ref(false);
 
@@ -95,13 +92,6 @@ function render() {
     defaultReplicas.value = props.input.settings.defaultReplicas;
 
     loadVersionTags();
-
-    isLoadingKeelPolicies.value = true;
-    Api.keelPolicies().getGet()
-        .find(response => {
-            keelPolicyItems.value = response.map(item => item.name!);
-            isLoadingKeelPolicies.value = false;
-        });
 
     isLoadingEnvironments.value = true;
     Api.environments().getGet()

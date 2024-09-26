@@ -299,13 +299,6 @@ export const MigrationJobStatusTypes = {
     Failed_PostCommands: 'failed-post-commands',
 };
 
-export const KeelHookStatusTypes = {
-    New: 'new',
-    Running: 'running',
-    Finished: 'finished',
-    Error: 'error',
-};
-
 export const ContainerImageTagPolicies = {
     MatchDeployment: 'match-deployment',
     Static: 'static',
@@ -347,4 +340,5 @@ export const DeploymentSpecificationTypes = {
 
 export const ContainerRegistries = {
     ArtifactContainerRegistry: 'artifact-container-registry',
+    AzureContainerRegistry: 'azure-container-registry',
 };

@@ -11,10 +11,14 @@ export class ContainerImageDefinition extends BaseModel {
     pull_secret?: string;
     registry_subscribe?: boolean;
     registry_provider?: string;
-    registry_provider_project?: string;
-    registry_provider_location?: string;
-    registry_provider_name?: string;
-    registry_provider_credentials?: string;
+    registry_provider_gcloud_registry_name?: string;
+    registry_provider_gcloud_project?: string;
+    registry_provider_gcloud_location?: string;
+    registry_provider_gcloud_credentials?: string;
+    registry_provider_azure_registry_name?: string;
+    registry_provider_azure_tenant?: string;
+    registry_provider_azure_client_id?: string;
+    registry_provider_azure_client_secret?: string;
     id?: number;
     created?: string;
     updated?: string;
@@ -37,10 +41,14 @@ export class ContainerImageDefinition extends BaseModel {
             delete this.pull_secret;
             delete this.registry_subscribe;
             delete this.registry_provider;
-            delete this.registry_provider_project;
-            delete this.registry_provider_location;
-            delete this.registry_provider_name;
-            delete this.registry_provider_credentials;
+            delete this.registry_provider_gcloud_registry_name;
+            delete this.registry_provider_gcloud_project;
+            delete this.registry_provider_gcloud_location;
+            delete this.registry_provider_gcloud_credentials;
+            delete this.registry_provider_azure_registry_name;
+            delete this.registry_provider_azure_tenant;
+            delete this.registry_provider_azure_client_id;
+            delete this.registry_provider_azure_client_secret;
             delete this.id;
             delete this.created;
             delete this.updated;
@@ -68,17 +76,29 @@ export class ContainerImageDefinition extends BaseModel {
         if (data.registry_provider != null) {
             this.registry_provider = data.registry_provider;
         }
-        if (data.registry_provider_project != null) {
-            this.registry_provider_project = data.registry_provider_project;
+        if (data.registry_provider_gcloud_registry_name != null) {
+            this.registry_provider_gcloud_registry_name = data.registry_provider_gcloud_registry_name;
         }
-        if (data.registry_provider_location != null) {
-            this.registry_provider_location = data.registry_provider_location;
+        if (data.registry_provider_gcloud_project != null) {
+            this.registry_provider_gcloud_project = data.registry_provider_gcloud_project;
         }
-        if (data.registry_provider_name != null) {
-            this.registry_provider_name = data.registry_provider_name;
+        if (data.registry_provider_gcloud_location != null) {
+            this.registry_provider_gcloud_location = data.registry_provider_gcloud_location;
         }
-        if (data.registry_provider_credentials != null) {
-            this.registry_provider_credentials = data.registry_provider_credentials;
+        if (data.registry_provider_gcloud_credentials != null) {
+            this.registry_provider_gcloud_credentials = data.registry_provider_gcloud_credentials;
+        }
+        if (data.registry_provider_azure_registry_name != null) {
+            this.registry_provider_azure_registry_name = data.registry_provider_azure_registry_name;
+        }
+        if (data.registry_provider_azure_tenant != null) {
+            this.registry_provider_azure_tenant = data.registry_provider_azure_tenant;
+        }
+        if (data.registry_provider_azure_client_id != null) {
+            this.registry_provider_azure_client_id = data.registry_provider_azure_client_id;
+        }
+        if (data.registry_provider_azure_client_secret != null) {
+            this.registry_provider_azure_client_secret = data.registry_provider_azure_client_secret;
         }
         if (data.id != null) {
             this.id = data.id;

@@ -8,9 +8,6 @@ use App\Controllers\EmailServices;
 use App\Controllers\Environments;
 use App\Controllers\Home;
 use App\Controllers\Jobby;
-use App\Controllers\KeelHookQueueItems;
-use App\Controllers\KeelHooks;
-use App\Controllers\KeelPolicies;
 use App\Controllers\Kubernetes;
 use App\Controllers\Login;
 use App\Controllers\MigrationJobs;
@@ -209,7 +206,6 @@ class Init extends Migration {
 
 
         ApiRoute::addResourceController(Users::class);
-        ApiRoute::addResourceControllerGet(KeelPolicies::class);
         ApiRoute::addResourceControllerGet(Environments::class);
         ApiRoute::addResourceController(Domains::class);
         ApiRoute::addResourceController(DatabaseServices::class);
@@ -217,7 +213,6 @@ class Init extends Migration {
         ApiRoute::addResourceController(Workspaces::class);
         ApiRoute::addResourceController(Deployments::class);
         ApiRoute::addResourceControllerGet(MigrationJobs::class);
-        ApiRoute::addResourceControllerGet(KeelHookQueueItems::class);
 
         ApiRoute::quick('users/me', Users::class, 'me');
         ApiRoute::quick('/systems/default_email_service_id', Systems::class, 'updateDefaultEmailService', 'put');
@@ -228,7 +223,6 @@ class Init extends Migration {
         ApiRoute::quick('/kubernetes/namespaces/(.*)/pods', Kubernetes::class, 'getPods/$1', 'get');
         ApiRoute::quick('/kubernetes/namespaces/(.*)/pods/(.*)/logs', Kubernetes::class, 'getLogs/$1/$2', 'get');
         ApiRoute::quick('/kubernetes/namespaces/(.*)/pods/(.*)/logs/watch', Kubernetes::class, 'watchLogs/$1/$2', 'put');
-        ApiRoute::quick('/keel-hook-queue-items/([0-9]+)/rerun', KeelHookQueueItems::class, 'rerun/$1', 'post');
         ApiRoute::quick('/workspaces/create', Workspaces::class, 'create', 'post');
         ApiRoute::quick('/deployments/([0-9]+)/migration-jobs', Deployments::class, 'getMigrationJobs/$1', 'get');
         ApiRoute::quick('/deployments/([0-9]+)/environment-variables', Deployments::class, 'updateEnvironmentVariables/$1', 'put');
@@ -258,7 +252,6 @@ class Init extends Migration {
 
         ApiRoute::public('/migration-jobs/([0-9]+)/started', MigrationJobs::class, 'setStarted/$1', 'put');
         ApiRoute::public('/migration-jobs/([0-9]+)/ended', MigrationJobs::class, 'setEnded/$1', 'put');
-        ApiRoute::public('/KeelHooks', KeelHooks::class, 'index', 'post');
         ApiRoute::public('/jobby', Jobby::class, 'index');
         ApiRoute::public('/jobby/run/([0-9]+)', Jobby::class, 'run/$1');
         ApiRoute::public('settings', Settings::class, 'index');

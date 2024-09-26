@@ -24,18 +24,6 @@ export class Events {
         return Events.Generate(`migration-job.${migrationJobId}.changed.status`);
     }
 
-    public static KeelHookQueueItem_Created(): string {
-        return Events.Generate(`keel-hook-queue-item.created`);
-    }
-
-    public static KeelHookQueueItem_Deleted(): string {
-        return Events.Generate(`keel-hook-queue-item.deleted`);
-    }
-
-    public static KeelHookQueueItem_Changed_Status(keelHookQueueItemId: number): string {
-        return Events.Generate(`keel-hook-queue-item.${keelHookQueueItemId}.changed.status`);
-    }
-
     public static KubernetesPod_Logs_Watch(pod: string): string {
         return Events.Generate(`kubernetes.pod.${pod}.logs.watch`);
     }

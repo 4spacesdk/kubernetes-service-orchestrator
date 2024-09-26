@@ -67,20 +67,6 @@ const categories = ref<MenuCategory[]>([
         ],
     },
     {
-        identifier: 'keel-hook-queue-items',
-        name: 'Keel Hook Queue Items',
-        icon: 'fa fa-list-check',
-        items: [
-            {
-                title: 'All',
-                url: '/keel-hook-queue-items',
-                permissions: [
-                    RbacPermissions.Developer,
-                ],
-            },
-        ],
-    },
-    {
         identifier: 'auto-updates',
         name: 'Auto Updates',
         icon: 'fa fa-list-check',

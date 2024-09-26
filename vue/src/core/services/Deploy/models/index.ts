@@ -24,7 +24,6 @@ export {EmailService as EmailService} from "./EmailService";
 export {EnvironmentVariable as EnvironmentVariable} from "./EnvironmentVariable";
 export {InitContainer as InitContainer} from "./InitContainer";
 export {InitContainerEnvironmentVariable as InitContainerEnvironmentVariable} from "./InitContainerEnvironmentVariable";
-export {KeelHookQueueItem as KeelHookQueueItem} from "./KeelHookQueueItem";
 export {Label as Label} from "./Label";
 export {MigrationJob as MigrationJob} from "./MigrationJob";
 export {OAuthClient as OAuthClient} from "./OAuthClient";

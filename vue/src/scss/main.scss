@@ -38,6 +38,11 @@ body,
 
 // Datatable
 .v-table {
+  background: transparent !important;
+  table, table > * {
+    background: transparent !important;
+  }
+
   table tr th span {
     font-weight: 600;
     color: rgba(var(--v-theme-on-surface),var(--v-medium-emphasis-opacity));
@@ -56,6 +61,8 @@ body,
 }
 
 .v-data-table-footer {
+  padding: 0 !important;
+
   .v-btn--icon.v-btn--size-default {
     font-size: 12px;
   }

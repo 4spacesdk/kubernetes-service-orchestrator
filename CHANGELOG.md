@@ -10,11 +10,18 @@
   * Vue 3.2.45 -> 3.4.34
   * Vuetify 3.1.0 -> 3.6.13
   * and many more...
+* Automated updates [Issue #19](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/19)
+  * Integrates with Google Cloud Artifact Container Registry and Azure Container Registry
+  * Optional approval step
+
+### Breaking changes
+* Google Artifact Registry integration credentials has been moved from environment variables to container image properties
+  * Update all your container images with these properties 
 
 ### Upgrade guide
 1. Deploy new image
 2. Migrate database. [(Guide)](https://github.com/4spacesdk/kubernetes-service-orchestrator?tab=readme-ov-file#migrate-database-helm)
-
+3. Check for breaking changes
 
 
 ## v0.1.17 (2024-06-10)

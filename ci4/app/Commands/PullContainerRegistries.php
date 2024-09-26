@@ -3,14 +3,12 @@
 use App\Entities\AutoUpdate;
 use App\Entities\ContainerImage;
 use App\Entities\CronJob;
-use App\Entities\Deployment;
 use App\Libraries\GoogleCloud\GoogleCloudPubSub;
 use App\Libraries\Kubernetes\KubeHelper;
 use App\Libraries\ZMQ\ChangeEvent;
 use App\Libraries\ZMQ\Events;
 use App\Libraries\ZMQ\ZMQProxy;
 use App\Models\ContainerImageModel;
-use App\Models\DeploymentModel;
 use CodeIgniter\CLI\BaseCommand;
 use DebugTool\Data;
 
@@ -47,7 +45,7 @@ class PullContainerRegistries extends BaseCommand {
             foreach ($containerImages as $image) {
                 switch ($image->registry_provider) {
                     case \ContainerRegistries::ArtifactContainerRegistry:
-                        $acrProjects[$image->registry_provider_project] = $image->registry_provider_credentials;
+                        $acrProjects[$image->registry_provider_gcloud_project] = $image->registry_provider_gcloud_credentials;
                         break;
                 }
             }
@@ -97,28 +95,7 @@ class PullContainerRegistries extends BaseCommand {
     }
 
     private function emitNewTag(string $image, string $tag): void {
-        /** @var Deployment $deployments */
-        $deployments = (new DeploymentModel())
-            ->where('auto_update_enabled', true)
-            ->where('image', $image)
-            ->find();
-
-        foreach ($deployments as $deployment) {
-            if (preg_match("/{$deployment->auto_update_tag_regex}$/", $tag)) {
-                Data::debug('update', $deployment->name, $deployment->namespace, 'with', $image, $tag);
-
-                $autoUpdate = new AutoUpdate();
-                $autoUpdate->deployment_id = $deployment->id;
-                $autoUpdate->image = $image;
-                $autoUpdate->previous_tag = $deployment->version;
-                $autoUpdate->next_tag = $tag;
-                $autoUpdate->save();
-
-                if (!$deployment->auto_update_require_approval) {
-                    $autoUpdate->approve();
-                }
-            }
-        }
+        AutoUpdate::CheckForUpdates($image, $tag);
     }
 
 }

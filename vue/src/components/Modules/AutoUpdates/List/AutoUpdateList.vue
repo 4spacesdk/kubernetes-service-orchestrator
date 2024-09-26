@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
-import {AutoUpdate, KeelHookQueueItem} from "@/core/services/Deploy/models";
+import {AutoUpdate} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import DateView from "@/components/Modules/Common/DateView.vue";
 import debounce from "lodash.debounce";
@@ -146,6 +146,20 @@ function onApproveBtnClicked(row: Row, onFinish?: () => void, onError?: () => vo
     });
 }
 
+function onDeleteBtnClicked(row: Row) {
+    bus.emit('confirm', {
+        body: `Do you want to delete this update?`,
+        confirmIcon: 'fa fa-trash',
+        confirmColor: 'red',
+
+        responseCallback: (confirmed: boolean) => {
+            if (confirmed) {
+                Api.autoUpdates().deleteById(row.item.id!).delete(() => getItems(true, true));
+            }
+        }
+    });
+}
+
 function onShowLogsBtnClicked(row: Row) {
     const code = row.item?.log
         ?.trim()
@@ -252,7 +266,11 @@ function onAcceptSelectedBtnClicked() {
             </template>
 
             <template v-slot:item.tag="{ item }">
-                {{ item.item.previous_tag }} -> {{ item.item.next_tag }}
+                <div class="d-flex align-center">
+                    <span>{{ item.item.previous_tag }}</span>
+                    <v-icon size="small" class="mx-1">fa fa-arrow-right</v-icon>
+                    <span>{{ item.item.next_tag }}</span>
+                </div>
             </template>
 
             <template v-slot:item.approved="{ item }">
@@ -287,6 +305,12 @@ function onAcceptSelectedBtnClicked() {
                         @click="onShowLogsBtnClicked(item)">
                         <v-icon>fa fa-rectangle-list</v-icon>
                         <v-tooltip activator="parent" location="bottom">Log</v-tooltip>
+                    </v-btn>
+                    <v-btn
+                        variant="plain" color="red" size="small" :icon="true"
+                        @click="onDeleteBtnClicked(item)">
+                        <v-icon>fa fa-trash</v-icon>
+                        <v-tooltip activator="parent" location="bottom">Delete</v-tooltip>
                     </v-btn>
                 </div>
             </template>

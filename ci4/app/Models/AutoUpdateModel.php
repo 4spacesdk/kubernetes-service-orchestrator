@@ -30,7 +30,7 @@ class AutoUpdateModel extends Model implements ResourceModelInterface {
     }
 
     public function isRestDeleteAllowed($item): bool {
-        return false;
+        return true;
     }
 
     public function appleRestGetManyRelations($items) {

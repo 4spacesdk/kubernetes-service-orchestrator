@@ -5,6 +5,7 @@ use App\Libraries\PodioLib;
 use App\Libraries\ZMQ\ChangeEvent;
 use App\Libraries\ZMQ\Events;
 use App\Libraries\ZMQ\ZMQProxy;
+use App\Models\DeploymentModel;
 use DebugTool\Data;
 use RestExtension\Core\Entity;
 
@@ -21,6 +22,31 @@ use RestExtension\Core\Entity;
  * @property string $log
  */
 class AutoUpdate extends Entity {
+
+    public static function CheckForUpdates(string $image, string $tag): void {
+        /** @var Deployment $deployments */
+        $deployments = (new DeploymentModel())
+            ->where('auto_update_enabled', true)
+            ->where('image', $image)
+            ->find();
+
+        foreach ($deployments as $deployment) {
+            if (preg_match("/{$deployment->auto_update_tag_regex}$/", $tag)) {
+                Data::debug('update', $deployment->name, $deployment->namespace, 'with', $image, $tag);
+
+                $autoUpdate = new AutoUpdate();
+                $autoUpdate->deployment_id = $deployment->id;
+                $autoUpdate->image = $image;
+                $autoUpdate->previous_tag = $deployment->version;
+                $autoUpdate->next_tag = $tag;
+                $autoUpdate->save();
+
+                if (!$deployment->auto_update_require_approval) {
+                    $autoUpdate->approve();
+                }
+            }
+        }
+    }
 
     public function approve(): void {
         $this->is_approved = true;

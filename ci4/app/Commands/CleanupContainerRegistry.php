@@ -2,20 +2,20 @@
 
 use App\Entities\ContainerImage;
 use App\Entities\CronJob;
-use App\Libraries\GoogleCloud\GoogleCloudArtifactRegistry;
+use App\Libraries\ContainerRegistries\GoogleCloudArtifactRegistry;
 use App\Models\ContainerImageModel;
 use CodeIgniter\CLI\BaseCommand;
 use DebugTool\Data;
 
 class CleanupContainerRegistry extends BaseCommand {
 
-    public $group           = 'app';
-    public $name            = 'app:cleanup_gcr';
-    public $description     = 'Delete old untagged images from Google Artifact Registry';
-    protected $arguments    = [
+    public $group = 'app';
+    public $name = 'app:cleanup_gcr';
+    public $description = 'Delete old untagged images from Google Artifact Registry';
+    protected $arguments = [
 
     ];
-    protected $options      = [
+    protected $options = [
 
     ];
 
@@ -27,22 +27,23 @@ class CleanupContainerRegistry extends BaseCommand {
         $job->last_run = date('Y-m-d H:i:s');
         $job->save();
 
-        // Validate configuration
-        if (strlen(getenv('GCLOUD_PROJECT_ID')) == 0 || strlen(getenv('GCLOUD_SERVICE_KEY_FILE'))) {
-            Data::debug(get_class($this), 'GCloud not setup. Skip');
-            return;
-        }
-
         /** @var ContainerImage $containerImages */
         $containerImages = (new ContainerImageModel())
             ->find();
 
         try {
-            foreach($containerImages as $image) {
-                $registry = new GoogleCloudArtifactRegistry($image->url);
-                $versions = $registry->getVersions();
-                foreach ($versions as $version) {
-                    $registry->deleteVersions($version);
+            foreach ($containerImages as $image) {
+                switch ($image->registry_provider) {
+                    case \ContainerRegistries::ArtifactContainerRegistry:
+                        $registry = new GoogleCloudArtifactRegistry($image);
+                        $versions = $registry->getVersions();
+                        foreach ($versions as $version) {
+                            $registry->deleteVersions($version);
+                        }
+                        break;
+                    case \ContainerRegistries::AzureContainerRegistry:
+                        // Azure will clean up automatically
+                        break;
                 }
             }
         } catch (\Exception $e) {

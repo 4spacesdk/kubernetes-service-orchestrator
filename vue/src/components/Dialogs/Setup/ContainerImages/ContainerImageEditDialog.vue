@@ -5,6 +5,7 @@ import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
 import {ContainerRegistries} from "@/constants";
+import ApiService from "../../../../services/ApiService";
 
 export interface ContainerImageEditDialog_Input {
     containerImage: ContainerImage;
@@ -23,6 +24,10 @@ const containerRegistries = ref([
     {
         identifier: ContainerRegistries.ArtifactContainerRegistry,
         name: "Artifact Container Registry",
+    },
+    {
+        identifier: ContainerRegistries.AzureContainerRegistry,
+        name: "Azure Container Registry",
     },
 ]);
 
@@ -192,25 +197,46 @@ function onCloseBtnClicked() {
                                             hide-details
                                         />
                                     </v-col>
+
                                     <v-col
                                         cols="12"
+                                        v-if="item.registry_provider == ContainerRegistries.ArtifactContainerRegistry"
+                                    >
+                                        <div class="border pa-2">
+                                            KSO integrates with Google Cloud Artifact Container Registry to perform following tasks
+                                            <ul class="ml-5">
+                                                <li>Fetch available image tags</li>
+                                                <li>Cleanup images without tags</li>
+                                                <li>Subscribe to new image tags</li>
+                                            </ul>
+                                            <br>
+                                            To enable these features, you need to provide a service account with following roles
+                                            <ul class="ml-5">
+                                                <li>Artifact Registry Administrator</li>
+                                                <li>Pub/Sub Editor</li>
+                                            </ul>
+                                        </div>
+                                    </v-col>
+                                    <v-col
+                                        cols="12"
+                                        v-if="item.registry_provider == ContainerRegistries.ArtifactContainerRegistry"
                                     >
                                         <v-text-field
                                             variant="outlined"
-                                            v-model="item.registry_provider_project"
-                                            label="Registry project"
-                                            hint="Eg. Google Cloud Project / Azure tenant"
-                                            persistent-hint
+                                            v-model="item.registry_provider_gcloud_project"
+                                            label="Google Cloud Project"
                                             density="compact"
+                                            hide-details
                                         />
                                     </v-col>
                                     <v-col
                                         cols="12"
+                                        v-if="item.registry_provider == ContainerRegistries.ArtifactContainerRegistry"
                                     >
                                         <v-text-field
                                             variant="outlined"
-                                            v-model="item.registry_provider_location"
-                                            label="Registry location"
+                                            v-model="item.registry_provider_gcloud_location"
+                                            label="Google Cloud Registry Location"
                                             hint="Eg. europe"
                                             persistent-hint
                                             density="compact"
@@ -218,10 +244,11 @@ function onCloseBtnClicked() {
                                     </v-col>
                                     <v-col
                                         cols="12"
+                                        v-if="item.registry_provider == ContainerRegistries.ArtifactContainerRegistry"
                                     >
                                         <v-text-field
                                             variant="outlined"
-                                            v-model="item.registry_provider_name"
+                                            v-model="item.registry_provider_gcloud_registry_name"
                                             label="Registry name"
                                             hint="Eg. Name of the registry"
                                             persistent-hint
@@ -230,16 +257,88 @@ function onCloseBtnClicked() {
                                     </v-col>
                                     <v-col
                                         cols="12"
+                                        v-if="item.registry_provider == ContainerRegistries.ArtifactContainerRegistry"
                                     >
                                         <v-textarea
                                             variant="outlined"
-                                            v-model="item.registry_provider_credentials"
+                                            v-model="item.registry_provider_gcloud_credentials"
                                             label="Credentials"
-                                            hint="Eg. Service account"
+                                            hint="Eg. Service account json key. Required roles: Artifact Registry Administrator & Pub/Sub Editor"
                                             persistent-hint
                                             density="compact"
                                         />
                                     </v-col>
+
+                                    <v-col
+                                        cols="12"
+                                        v-if="item.registry_provider == ContainerRegistries.AzureContainerRegistry"
+                                    >
+                                        <div class="border pa-2">
+                                            KSO integrates with Azure Container Registry to perform following tasks
+                                            <ul class="ml-5">
+                                                <li>Fetch available image tags</li>
+                                                <li>React on new image tags through registry webhooks</li>
+                                            </ul>
+                                            <br>
+                                            To enable these features, you need to provide a service principal and setup a webhook
+                                            <ul class="ml-5">
+                                                <li>Service URI: {{ ApiService.apiAxios!.defaults.baseURL + "/auto-updates/webhooks/azure-container-registry" }}</li>
+                                                <li>Custom headers: none</li>
+                                                <li>Actions: push</li>
+                                                <li>Scope: none</li>
+                                            </ul>
+                                        </div>
+                                    </v-col>
+                                    <v-col
+                                        cols="12"
+                                        v-if="item.registry_provider == ContainerRegistries.AzureContainerRegistry"
+                                    >
+                                        <v-text-field
+                                            variant="outlined"
+                                            v-model="item.registry_provider_azure_tenant"
+                                            label="Microsoft Entra ID Tenant"
+                                            density="compact"
+                                            hide-details
+                                        />
+                                    </v-col>
+                                    <v-col
+                                        cols="12"
+                                        v-if="item.registry_provider == ContainerRegistries.AzureContainerRegistry"
+                                    >
+                                        <v-text-field
+                                            variant="outlined"
+                                            v-model="item.registry_provider_azure_registry_name"
+                                            label="Registry name"
+                                            hint="Eg. Name of the registry"
+                                            persistent-hint
+                                            density="compact"
+                                        />
+                                    </v-col>
+                                    <v-col
+                                        cols="12"
+                                        v-if="item.registry_provider == ContainerRegistries.AzureContainerRegistry"
+                                    >
+                                        <v-text-field
+                                            variant="outlined"
+                                            v-model="item.registry_provider_azure_client_id"
+                                            label="Client ID (Application ID)"
+                                            density="compact"
+                                            hide-details
+                                        />
+                                    </v-col>
+                                    <v-col
+                                        cols="12"
+                                        v-if="item.registry_provider == ContainerRegistries.AzureContainerRegistry"
+                                    >
+                                        <v-text-field
+                                            variant="outlined"
+                                            v-model="item.registry_provider_azure_client_secret"
+                                            label="Client Secret (Application secret)"
+                                            density="compact"
+                                            hide-details
+                                        />
+                                    </v-col>
+
                                 </v-row>
                             </div>
                         </v-card>

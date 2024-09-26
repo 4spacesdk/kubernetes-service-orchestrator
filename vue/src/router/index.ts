@@ -6,7 +6,6 @@ import UserRoutes from '@/components/Pages/Users/routes';
 import WorkspaceRoutes from '@/components/Pages/Workspaces/routes';
 import SetupRoutes from '@/components/Pages/Setup/routes';
 import MigrationJobsRoutes from '@/components/Pages/MigrationJobs/routes';
-import KeelHookQueueItemsRoutes from '@/components/Pages/KeelHookQueueItems/routes';
 import IntegrationRoutes from '@/components/Pages/Integrations/routes';
 import AutoUpdatesRoutes from '@/components/Pages/AutoUpdates/routes';
 
@@ -27,7 +26,6 @@ const router = createRouter({
         ...SetupRoutes,
         ...IntegrationRoutes,
         ...MigrationJobsRoutes,
-        ...KeelHookQueueItemsRoutes,
         ...AutoUpdatesRoutes,
 
         {

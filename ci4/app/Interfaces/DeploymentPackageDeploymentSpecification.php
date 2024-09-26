@@ -5,8 +5,6 @@ use App\Entities\DeploymentSpecification;
  * @property DeploymentSpecification $deploymentSpecification
  * @property ?bool $defaultEnablePodioNotification
  * @property ?string $defaultVersion
- * @property ?string $defaultKeelPolicy
- * @property ?bool $defaultKeelAutoUpdate
  * @property ?string $defaultEnvironment
  * @property ?int $defaultCpuRequest
  * @property ?int $defaultCpuLimit

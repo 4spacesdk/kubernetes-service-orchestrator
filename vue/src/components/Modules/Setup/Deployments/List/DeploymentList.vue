@@ -251,7 +251,7 @@ function onShowMigrationJobsBtnClicked(item: Deployment) {
                 <div class="d-flex justify-end">
 
                     <v-menu
-                        width="500">
+                        width="550">
                         <template v-slot:activator="{ props }">
                             <v-btn
                                 v-bind="props"

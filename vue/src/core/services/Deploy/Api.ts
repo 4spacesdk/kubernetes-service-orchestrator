@@ -9,7 +9,6 @@ import {MigrationJob} from "./models";
 import {Domain} from "./models";
 import {EmailService} from "./models";
 import {InitContainer} from "./models";
-import {KeelHookQueueItem} from "./models";
 import {OAuthClient} from "./models";
 import {RbacPermission} from "./models";
 import {RbacRole} from "./models";
@@ -32,8 +31,6 @@ export interface DeploymentPackageDeploymentSpecification {
     deploymentSpecification?: DeploymentSpecification;
     defaultEnablePodioNotification?: boolean;
     defaultVersion?: string;
-    defaultKeelPolicy?: string;
-    defaultKeelAutoUpdate?: boolean;
     defaultEnvironment?: string;
     defaultCpuRequest?: number;
     defaultCpuLimit?: number;
@@ -148,10 +145,6 @@ export interface IngressRulePath {
 
 export interface IntArrayInterface {
     values?: number[];
-}
-
-export interface KeelPoliciesGetResponse {
-    name?: string;
 }
 
 export interface KubernetesExecResponse {
@@ -430,6 +423,27 @@ export class AutoUpdatesPost extends BaseApi<AutoUpdate> {
     }
 }
 
+export class AutoUpdatesDeleteById extends BaseApi<AutoUpdate> {
+
+    public topic = 'Resources.AutoUpdates';
+    protected method = 'delete';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/auto_updates/${id}`;
+    }
+
+    protected convertToResource(data: any): AutoUpdate {
+        return new AutoUpdate(data);
+    }
+
+    public delete(next?: (value: AutoUpdate) => void) {
+        return super.executeDelete(next);
+    }
+}
+
 export class AutoUpdatesApprovePutById extends BaseApi<AutoUpdate> {
 
     public topic = 'Resources.AutoUpdates';
@@ -440,6 +454,27 @@ export class AutoUpdatesApprovePutById extends BaseApi<AutoUpdate> {
     public constructor(id: number) {
         super();
         this.uri = `/auto-updates/${id}/approve`;
+    }
+
+    protected convertToResource(data: any): AutoUpdate {
+        return new AutoUpdate(data);
+    }
+
+    public save(data: any, next?: (value: AutoUpdate) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class AutoUpdatesWebhooksAzureContainerRegistryPost extends BaseApi<AutoUpdate> {
+
+    public topic = 'Resources.AutoUpdates';
+    protected method = 'post';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/auto-updates/webhooks/azure-container-registry`;
     }
 
     protected convertToResource(data: any): AutoUpdate {
@@ -465,8 +500,16 @@ class AutoUpdates {
         return new AutoUpdatesPost();
     }
 
+    public deleteById(id: number): AutoUpdatesDeleteById {
+        return new AutoUpdatesDeleteById(id);
+    }
+
     public approvePutById(id: number): AutoUpdatesApprovePutById {
         return new AutoUpdatesApprovePutById(id);
+    }
+
+    public webhooksAzureContainerRegistryPost(): AutoUpdatesWebhooksAzureContainerRegistryPost {
+        return new AutoUpdatesWebhooksAzureContainerRegistryPost();
     }
 
 }
@@ -3514,210 +3557,6 @@ class InitContainers {
 }
 
 
-export class KeelHookQueueItemsGet extends BaseApi<KeelHookQueueItem> {
-
-    public topic = 'Resources.KeelHookQueueItems';
-    protected method = 'get';
-    protected scope = '';
-    protected summary = '';
-
-    public constructor() {
-        super();
-        this.uri = `/keel_hook_queue_items`;
-    }
-
-    protected convertToResource(data: any): KeelHookQueueItem {
-        return new KeelHookQueueItem(data);
-    }
-
-    public where(name: string, value: any): KeelHookQueueItemsGet {
-        this.filter().where(name, value);
-        return this;
-    }
-
-    public whereEquals(name: string, value: any): KeelHookQueueItemsGet {
-        this.filter().whereEquals(name, value);
-        return this;
-    }
-
-    public whereIn(name: string, value: any[]): KeelHookQueueItemsGet {
-        this.filter().whereIn(name, value);
-        return this;
-    }
-
-    public whereInArray(name: string, value: any[]): KeelHookQueueItemsGet {
-        this.filter().whereInArray(name, value);
-        return this;
-    }
-
-    public whereNot(name: string, value: any): KeelHookQueueItemsGet {
-        this.filter().whereNot(name, value);
-        return this;
-    }
-
-    public whereNotIn(name: string, value: any[]): KeelHookQueueItemsGet {
-        this.filter().whereNotIn(name, value);
-        return this;
-    }
-
-    public whereGreaterThan(name: string, value: any): KeelHookQueueItemsGet {
-        this.filter().whereGreaterThan(name, value);
-        return this;
-    }
-
-    public whereGreaterThanOrEqual(name: string, value: any): KeelHookQueueItemsGet {
-        this.filter().whereGreaterThanOrEqual(name, value);
-        return this;
-    }
-
-    public whereLessThan(name: string, value: any): KeelHookQueueItemsGet {
-        this.filter().whereLessThan(name, value);
-        return this;
-    }
-
-    public whereLessThanOrEqual(name: string, value: any): KeelHookQueueItemsGet {
-        this.filter().whereLessThanOrEqual(name, value);
-        return this;
-    }
-
-    public search(name: string, value: any): KeelHookQueueItemsGet {
-        this.filter().search(name, value);
-        return this;
-    }
-
-    public include(name: string): KeelHookQueueItemsGet {
-        this.getInclude().include(name);
-        return this;
-    }
-
-    public orderBy(name: string, direction: string): KeelHookQueueItemsGet {
-        this.ordering().orderBy(name, direction);
-        return this;
-    }
-
-    public orderAsc(name: string): KeelHookQueueItemsGet {
-        this.ordering().orderAsc(name);
-        return this;
-    }
-
-    public orderDesc(name: string): KeelHookQueueItemsGet {
-        this.ordering().orderDesc(name);
-        return this;
-    }
-
-    public limit(value: number): KeelHookQueueItemsGet {
-        this.limitValue = value;
-        return this;
-    }
-
-    public offset(value: number): KeelHookQueueItemsGet {
-        this.offsetValue = value;
-        return this;
-    }
-
-    public count(next?: (value: number) => void) {
-        return this.executeCount(next);
-    }
-
-    public find(next?: (value: KeelHookQueueItem[]) => void) {
-        return super.executeFind(next);
-    }
-}
-
-export class KeelHookQueueItemsGetById extends BaseApi<KeelHookQueueItem> {
-
-    public topic = 'Resources.KeelHookQueueItems';
-    protected method = 'get';
-    protected scope = '';
-    protected summary = '';
-
-    public constructor(id: number) {
-        super();
-        this.uri = `/keel_hook_queue_items/${id}`;
-    }
-
-    protected convertToResource(data: any): KeelHookQueueItem {
-        return new KeelHookQueueItem(data);
-    }
-
-    public include(name: string): KeelHookQueueItemsGetById {
-        this.getInclude().include(name);
-        return this;
-    }
-
-    public find(next?: (value: KeelHookQueueItem[]) => void) {
-        return super.executeFind(next);
-    }
-}
-
-export class KeelHookQueueItemsRerunPostById extends BaseApi<KeelHookQueueItem> {
-
-    public topic = 'Resources.KeelHookQueueItems';
-    protected method = 'post';
-    protected scope = '';
-    protected summary = '';
-
-    public constructor(id: number) {
-        super();
-        this.uri = `/keel-hook-queue-items/${id}/rerun`;
-    }
-
-    protected convertToResource(data: any): KeelHookQueueItem {
-        return new KeelHookQueueItem(data);
-    }
-
-    public save(data: any, next?: (value: KeelHookQueueItem) => void) {
-        return super.executeSave(data, next);
-    }
-}
-
-class KeelHookQueueItems {
-
-    public get(): KeelHookQueueItemsGet {
-        return new KeelHookQueueItemsGet();
-    }
-
-    public getById(id: number): KeelHookQueueItemsGetById {
-        return new KeelHookQueueItemsGetById(id);
-    }
-
-    public rerunPostById(id: number): KeelHookQueueItemsRerunPostById {
-        return new KeelHookQueueItemsRerunPostById(id);
-    }
-
-}
-
-
-export class KeelPoliciesGetGet extends BaseApi<KeelPoliciesGetResponse> {
-
-    public topic = 'Resources.KeelPoliciesGetResponses';
-    protected method = 'get';
-    protected scope = '';
-    protected summary = '';
-
-    public constructor() {
-        super();
-        this.uri = `/keel_policies`;
-    }
-
-    protected convertToResource(data: any): KeelPoliciesGetResponse {
-        return data;
-    }
-
-    public find(next?: (value: KeelPoliciesGetResponse[]) => void) {
-        return super.executeFind(next);
-    }
-}
-
-class KeelPolicies {
-
-    public getGet(): KeelPoliciesGetGet {
-        return new KeelPoliciesGetGet();
-    }
-
-}
-
-
 export class KubernetesGetPodsGetByNamespace extends BaseApi<KubernetesPod> {
 
     public topic = 'Resources.KubernetesPods';
@@ -6049,14 +5888,6 @@ export class Api {
 
     public static initContainers(): InitContainers {
         return new InitContainers();
-    }
-
-    public static keelHookQueueItems(): KeelHookQueueItems {
-        return new KeelHookQueueItems();
-    }
-
-    public static keelPolicies(): KeelPolicies {
-        return new KeelPolicies();
     }
 
     public static kubernetes(): Kubernetes {

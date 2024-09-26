@@ -25,18 +25,6 @@ class Events {
         return Events::Generate("migration-job.$migrationJobId.changed.status");
     }
 
-    public static function KeelHookQueueItem_Created(): string {
-        return Events::Generate("keel-hook-queue-item.created");
-    }
-
-    public static function KeelHookQueueItem_Deleted(): string {
-        return Events::Generate("keel-hook-queue-item.deleted");
-    }
-
-    public static function KeelHookQueueItem_Changed_Status(int $keelHookQueueItemId): string {
-        return Events::Generate("keel-hook-queue-item.$keelHookQueueItemId.changed.status");
-    }
-
     public static function Workspace_Created(): string {
         return Events::Generate("workspace.created");
     }

@@ -18,10 +18,17 @@ class AddContainerRegistries extends Migration {
         Table::init('container_images')
             ->column('registry_subscribe', ColumnTypes::BOOL_0)
             ->column('registry_provider', ColumnTypes::VARCHAR_127)
-            ->column('registry_provider_project', ColumnTypes::VARCHAR_511)
-            ->column('registry_provider_location', ColumnTypes::VARCHAR_511)
-            ->column('registry_provider_name', ColumnTypes::VARCHAR_511)
-            ->column('registry_provider_credentials', ColumnTypes::TEXT);
+
+            ->column('registry_provider_gcloud_registry_name', ColumnTypes::VARCHAR_511)
+            ->column('registry_provider_gcloud_project', ColumnTypes::VARCHAR_511)
+            ->column('registry_provider_gcloud_location', ColumnTypes::VARCHAR_511)
+            ->column('registry_provider_gcloud_credentials', ColumnTypes::TEXT)
+
+            ->column('registry_provider_azure_registry_name', ColumnTypes::VARCHAR_511)
+            ->column('registry_provider_azure_tenant', ColumnTypes::VARCHAR_511)
+            ->column('registry_provider_azure_client_id', ColumnTypes::VARCHAR_511)
+            ->column('registry_provider_azure_client_secret', ColumnTypes::VARCHAR_511)
+        ;
 
         $job = new CronJob();
         $job->find(\CronJobIds::PullContainerRegistries);
@@ -39,7 +46,7 @@ class AddContainerRegistries extends Migration {
             ->find();
         foreach ($deployments as $deployment) {
             $deployment->auto_update_enabled = true;
-            if (strlen($deployment->keel_policy)) {
+            if (strlen($deployment->keel_policy)) { // Can be removed after release
                 $deployment->auto_update_tag_regex = str_replace('glob:', '', $deployment->keel_policy);
                 $deployment->auto_update_require_approval = !$deployment->keel_auto_update;
             }
@@ -58,7 +65,7 @@ class AddContainerRegistries extends Migration {
             ->find();
         foreach ($deploymentPackageDeploymentSpecifications as $deploymentPackageDeploymentSpecification) {
             $deploymentPackageDeploymentSpecification->default_auto_update_enabled = true;
-            if ($deploymentPackageDeploymentSpecification->default_keel_policy) {
+            if ($deploymentPackageDeploymentSpecification->default_keel_policy) { // Can be removed after release
                 $deploymentPackageDeploymentSpecification->default_auto_update_tag_regex = str_replace('glob:', '', $deploymentPackageDeploymentSpecification->default_keel_policy);
                 $deploymentPackageDeploymentSpecification->default_auto_update_require_approval = !$deploymentPackageDeploymentSpecification->default_keel_auto_update;
             }
@@ -81,7 +88,17 @@ class AddContainerRegistries extends Migration {
             ->timestamps();
 
         ApiRoute::addResourceControllerGet(AutoUpdates::class);
+        ApiRoute::addResourceControllerDelete(AutoUpdates::class);
         ApiRoute::quick('auto-updates/([0-9]+)/approve', AutoUpdates::class, 'approve/$1', 'put');
+        ApiRoute::public('auto-updates/webhooks/azure-container-registry', AutoUpdates::class, 'webhooksAzureContainerRegistry', 'post');
+
+        $job = new CronJob();
+        $job->find(\CronJobIds::RunKeelHooks);
+        if ($job->exists()) {
+            $job->delete();
+        }
+
+        Table::init('keel_hook_queue_items')->dropTable();
     }
 
     public function down() {

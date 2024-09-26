@@ -3,7 +3,7 @@
 class CronJobIds {
     const int
         CleanupGoogleContainerRegistry = 1,
-        RunKeelHooks = 2,
+        RunKeelHooks = 2, // Removed in v0.1.18
         PullContainerRegistries = 3
     ;
 }
@@ -18,39 +18,6 @@ class Environments {
         return [
             self::Development, self::Production,
         ];
-    }
-}
-
-class KeelPolicies {
-
-    public const string
-        Major = 'major',
-        Minor = 'minor',
-        LatestPatch = 'glob:latest-patch',
-        LatestMinor = 'glob:latest-minor',
-        Latest = 'glob:latest';
-
-    public static function All(): array {
-        return [
-            KeelPolicies::Major,
-            KeelPolicies::Minor,
-            KeelPolicies::LatestPatch,
-            KeelPolicies::LatestMinor,
-            KeelPolicies::Latest,
-        ];
-    }
-
-    public static function GetImagePullPolicy(string $keelPolicy): string {
-        switch ($keelPolicy) {
-            case self::Major:
-                return 'IfNotPresent';
-            case self::Minor:
-            case self::LatestPatch:
-            case self::LatestMinor:
-            case self::Latest:
-            default:
-                return 'Always';
-        }
     }
 }
 
@@ -124,7 +91,9 @@ class DeploymentSpecificationTypes {
 }
 
 class ContainerRegistries {
-    const string ArtifactContainerRegistry = 'artifact-container-registry';
+    const string
+        ArtifactContainerRegistry = 'artifact-container-registry',
+        AzureContainerRegistry = 'azure-container-registry';
 }
 
 
