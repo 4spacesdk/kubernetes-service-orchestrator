@@ -26,7 +26,7 @@ class AzureContainerRegistry extends BaseContainerRegistry {
                 "Authorization: Bearer {$registryAccessToken}",
             ]);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_URL, "https://{$this->image->registry_provider_azure_registry_name}/acr/v1/{$this->image->getRepoName()}/_tags");
+            curl_setopt($ch, CURLOPT_URL, "https://{$this->image->registry_provider_azure_registry_name}/acr/v1/{$this->image->getRegistryRepoName()}/_tags");
             $response = curl_exec($ch);
             curl_close($ch);
             $json = json_decode($response, true);
@@ -118,7 +118,7 @@ class AzureContainerRegistry extends BaseContainerRegistry {
             'refresh_token' => $registryRefreshToken,
             'service' => $this->image->registry_provider_azure_registry_name,
             'grant_type' => 'refresh_token',
-            'scope' => "repository:{$this->image->getRepoName()}:*",
+            'scope' => "repository:{$this->image->getRegistryRepoName()}:*",
         ]));
         $response = curl_exec($ch);
         curl_close($ch);

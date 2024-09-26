@@ -5,6 +5,8 @@ use App\Libraries\ContainerRegistries\BaseContainerRegistry;
 use App\Libraries\ContainerRegistries\GoogleCloudArtifactRegistry;
 use App\Libraries\GoogleCloud\GoogleCloudPubSub;
 use App\Libraries\Kubernetes\KubeHelper;
+use App\Libraries\VersionControlSystems\BaseVersionControlSystem;
+use App\Libraries\VersionControlSystems\GithubVersionControl;
 use RestExtension\Core\Entity;
 
 /**
@@ -13,6 +15,8 @@ use RestExtension\Core\Entity;
  * @property string $name
  * @property string $url
  * @property string $pull_secret
+ *
+ * # Registry Settings
  * @property bool $registry_subscribe
  * @property string $registry_provider
  * @property string $registry_provider_gcloud_registry_name
@@ -23,6 +27,18 @@ use RestExtension\Core\Entity;
  * @property string $registry_provider_azure_tenant
  * @property string $registry_provider_azure_client_id
  * @property string $registry_provider_azure_client_secret
+ *
+ *  # Version Control
+ * @property bool $version_control_enabled
+ * @property string $version_control_provider
+ * @property string $version_control_repository_name
+ * @property string $version_control_provider_github_auth_token
+ * @property string $version_control_provider_github_auth_user
+ *
+ * # Commit Identification
+ * @property bool $commit_identification_enabled
+ * @property string $commit_identification_method
+ * @property string $commit_identification_environment_variable_name
  */
 class ContainerImage extends Entity {
 
@@ -70,8 +86,16 @@ class ContainerImage extends Entity {
         return $this->getContainerRegistry()->getTags();
     }
 
-    public function getRepoName(): string {
+    public function getRegistryRepoName(): string {
         return $this->getContainerRegistry()->getRepoName();
+    }
+
+    public function getVersionControlSystem(): ?BaseVersionControlSystem {
+        switch ($this->version_control_provider) {
+            case \VersionControlProviders::GitHub:
+                return new GithubVersionControl($this);
+        }
+        return null;
     }
 
     /**

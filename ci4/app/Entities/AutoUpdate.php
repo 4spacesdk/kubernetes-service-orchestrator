@@ -67,8 +67,14 @@ class AutoUpdate extends Entity {
         $deployment->updateVersion($this->next_tag);
 
         if ($deployment->enable_podio_notification && $deployment->workspace_id) {
+            $spec = $this->deployment->findDeploymentSpecification();
+            if (!$spec->container_image->exists()) {
+                $spec->container_image->find();
+            }
+
             try {
-                PodioLib::Notify($deployment, fn($log) => $this->appendLog($log));
+                $podioLib = new PodioLib($spec->container_image);
+                $podioLib->notify($deployment, fn($log) => $this->appendLog($log));
             } catch (\Exception $e) {
                 $this->appendLog('Failed to notify podio');
                 $this->appendLog(KubeHelper::PrintException($e));

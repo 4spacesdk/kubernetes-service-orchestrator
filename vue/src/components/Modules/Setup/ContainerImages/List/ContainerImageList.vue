@@ -16,6 +16,7 @@ const headers = ref([
     {title: 'Url', key: 'url', sortable: false},
     {title: 'Pull secret', key: 'pull_secret', sortable: false},
     {title: 'Registry', key: 'registry_provider', sortable: false},
+    {title: 'VCS', key: 'version_control_provider', sortable: false},
     {title: '', key: 'actions', sortable: false},
 ]);
 const isLoading = ref(true);

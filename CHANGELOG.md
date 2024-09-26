@@ -16,10 +16,15 @@
   * Integrates with Google Cloud Artifact Container Registry and Azure Container Registry
   * Optional approval step
 * Test database connection feature [Issue #23](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/23)
+* Github integration credentials has been migrated from environment variables to container image properties [Issue #29](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/29)
 
 ### Breaking changes
 * Google Artifact Registry integration credentials has been moved from environment variables to container image properties
-  * Update all your container images with these properties 
+  * Update all your container images with these properties
+* The property `git_repo` for deployment specification has been moved to container image
+  * Migrations will handle this change
+* Github integration credentials has been moved from environment variables to container image properties
+  * Migrations will handle this change
 
 ### Upgrade guide
 1. Deploy new image

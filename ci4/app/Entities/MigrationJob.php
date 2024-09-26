@@ -87,7 +87,6 @@ class MigrationJob extends Entity {
 
 
         if ($isValid) {
-            // TODO Add type to post command (post-migration / post-deployment)
             $spec->deployment_specification_post_commands->find();
             if ($spec->deployment_specification_post_commands->exists()) {
 

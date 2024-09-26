@@ -342,3 +342,11 @@ export const ContainerRegistries = {
     ArtifactContainerRegistry: 'artifact-container-registry',
     AzureContainerRegistry: 'azure-container-registry',
 };
+
+export const CommitIdentificationMethods = {
+    EnvironmentVariable: 'environment-variable',
+};
+
+export const VersionControlProviders = {
+    GitHub: 'github',
+};

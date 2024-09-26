@@ -19,6 +19,14 @@ export class ContainerImageDefinition extends BaseModel {
     registry_provider_azure_tenant?: string;
     registry_provider_azure_client_id?: string;
     registry_provider_azure_client_secret?: string;
+    version_control_enabled?: boolean;
+    version_control_provider?: string;
+    version_control_repository_name?: string;
+    version_control_provider_github_auth_token?: string;
+    version_control_provider_github_auth_user?: string;
+    commit_identification_enabled?: boolean;
+    commit_identification_method?: string;
+    commit_identification_environment_variable_name?: string;
     id?: number;
     created?: string;
     updated?: string;
@@ -49,6 +57,14 @@ export class ContainerImageDefinition extends BaseModel {
             delete this.registry_provider_azure_tenant;
             delete this.registry_provider_azure_client_id;
             delete this.registry_provider_azure_client_secret;
+            delete this.version_control_enabled;
+            delete this.version_control_provider;
+            delete this.version_control_repository_name;
+            delete this.version_control_provider_github_auth_token;
+            delete this.version_control_provider_github_auth_user;
+            delete this.commit_identification_enabled;
+            delete this.commit_identification_method;
+            delete this.commit_identification_environment_variable_name;
             delete this.id;
             delete this.created;
             delete this.updated;
@@ -99,6 +115,30 @@ export class ContainerImageDefinition extends BaseModel {
         }
         if (data.registry_provider_azure_client_secret != null) {
             this.registry_provider_azure_client_secret = data.registry_provider_azure_client_secret;
+        }
+        if (data.version_control_enabled != null) {
+            this.version_control_enabled = data.version_control_enabled;
+        }
+        if (data.version_control_provider != null) {
+            this.version_control_provider = data.version_control_provider;
+        }
+        if (data.version_control_repository_name != null) {
+            this.version_control_repository_name = data.version_control_repository_name;
+        }
+        if (data.version_control_provider_github_auth_token != null) {
+            this.version_control_provider_github_auth_token = data.version_control_provider_github_auth_token;
+        }
+        if (data.version_control_provider_github_auth_user != null) {
+            this.version_control_provider_github_auth_user = data.version_control_provider_github_auth_user;
+        }
+        if (data.commit_identification_enabled != null) {
+            this.commit_identification_enabled = data.commit_identification_enabled;
+        }
+        if (data.commit_identification_method != null) {
+            this.commit_identification_method = data.commit_identification_method;
+        }
+        if (data.commit_identification_environment_variable_name != null) {
+            this.commit_identification_environment_variable_name = data.commit_identification_environment_variable_name;
         }
         if (data.id != null) {
             this.id = data.id;

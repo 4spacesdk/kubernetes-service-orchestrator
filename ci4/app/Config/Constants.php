@@ -4,8 +4,7 @@ class CronJobIds {
     const int
         CleanupGoogleContainerRegistry = 1,
         RunKeelHooks = 2, // Removed in v0.1.18
-        PullContainerRegistries = 3
-    ;
+        PullContainerRegistries = 3;
 }
 
 class Environments {
@@ -94,6 +93,16 @@ class ContainerRegistries {
     const string
         ArtifactContainerRegistry = 'artifact-container-registry',
         AzureContainerRegistry = 'azure-container-registry';
+}
+
+class CommitIdentificationMethods {
+    const string
+        EnvironmentVariable = 'environment-variable';
+}
+
+class VersionControlProviders {
+    const string
+        GitHub = 'github';
 }
 
 

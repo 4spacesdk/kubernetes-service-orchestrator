@@ -27,7 +27,7 @@ class GoogleCloudArtifactRegistry extends BaseContainerRegistry {
             try {
                 // Iterate through all elements
                 $pagedResponse = $artifactRegistryClient->listTags([
-                    'parent' => "projects/{$this->image->registry_provider_gcloud_project}/locations/{$this->image->registry_provider_gcloud_location}/repositories/{$this->image->registry_provider_gcloud_registry_name}/packages/{$this->image->getRepoName()}"
+                    'parent' => "projects/{$this->image->registry_provider_gcloud_project}/locations/{$this->image->registry_provider_gcloud_location}/repositories/{$this->image->registry_provider_gcloud_registry_name}/packages/{$this->image->getRegistryRepoName()}"
                 ]);
                 /** @var Tag $element */
                 foreach ($pagedResponse->iterateAllElements() as $element) {
@@ -65,7 +65,7 @@ class GoogleCloudArtifactRegistry extends BaseContainerRegistry {
             // Iterate through all elements
             $pagedResponse = $artifactRegistryClient->listVersions([
                 'view' => VersionView::FULL,
-                'parent' => "projects/{$this->image->registry_provider_gcloud_project}/locations/{$this->image->registry_provider_gcloud_location}/repositories/{$this->image->registry_provider_gcloud_registry_name}/packages/{$this->image->getRepoName()}"
+                'parent' => "projects/{$this->image->registry_provider_gcloud_project}/locations/{$this->image->registry_provider_gcloud_location}/repositories/{$this->image->registry_provider_gcloud_registry_name}/packages/{$this->image->getRegistryRepoName()}"
             ]);
             /** @var Version $element */
             foreach ($pagedResponse->iterateAllElements() as $element) {
@@ -93,7 +93,7 @@ class GoogleCloudArtifactRegistry extends BaseContainerRegistry {
         ]);
         try {
             $artifactRegistryClient->deleteVersion([
-                'name' => "projects/{$this->image->registry_provider_gcloud_project}/locations/{$this->image->registry_provider_gcloud_location}/repositories/{$this->image->registry_provider_gcloud_registry_name}/packages/{$this->image->getRepoName()}/versions/$version",
+                'name' => "projects/{$this->image->registry_provider_gcloud_project}/locations/{$this->image->registry_provider_gcloud_location}/repositories/{$this->image->registry_provider_gcloud_registry_name}/packages/{$this->image->getRegistryRepoName()}/versions/$version",
             ]);
         } finally {
             $artifactRegistryClient->close();

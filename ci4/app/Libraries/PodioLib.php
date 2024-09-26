@@ -1,5 +1,6 @@
 <?php namespace App\Libraries;
 
+use App\Entities\ContainerImage;
 use App\Entities\Deployment;
 use App\Libraries\DeploymentSteps\DeploymentStep;
 use DebugTool\Data;
@@ -10,15 +11,17 @@ use PodioItem;
 class PodioLib {
 
     private \PodioClient $client;
+    private ContainerImage $containerImage;
 
-    public function __construct() {
+    public function __construct(ContainerImage $containerImage) {
+        $this->containerImage = $containerImage;
         $this->client = new \PodioClient(getenv('PODIO_AUTH_CLIENT_ID'), getenv('PODIO_AUTH_CLIENT_SECRET'));
     }
 
     /**
      * @throws \Exception
      */
-    public static function Notify(Deployment $deployment, \Closure $logger): void {
+    public function notify(Deployment $deployment, \Closure $logger): void {
         $logger("notifyPodio $deployment->name $deployment->namespace");
         if (!$deployment->workspace->exists()) {
             $deployment->workspace->find();
@@ -59,14 +62,14 @@ class PodioLib {
             $logger('found ' . count($env) . ' env vars');
         }
 
-        if (isset($env['SHORT_SHA'])) {
-            $spec = $deployment->findDeploymentSpecification();
-            $shortSha = $env['SHORT_SHA'];
+        if (isset($env[$this->containerImage->commit_identification_environment_variable_name])) {
+            $shortSha = $env[$this->containerImage->commit_identification_environment_variable_name];
             $shortSha = str_replace("\r", '', $shortSha);
             $logger('SHORT_SHA: ' . $shortSha);
 
-            // Ask github for commit message
-            [$commitSha, $commitMessage] = GitHubLib::getCommitMessage($spec->git_repo, $shortSha, $logger);
+            // Ask vcs for commit message
+            $vcs = $this->containerImage->getVersionControlSystem();
+            [$commitSha, $commitMessage] = $vcs->getCommitMessage($shortSha);
             if (!$commitMessage) {
                 $logger('ERROR Could not find commit message');
             }
@@ -74,7 +77,7 @@ class PodioLib {
             $logger($commitMessage);
 
             // Find Podio url
-            $podioUrl = PodioLib::grabUrlFromText($commitMessage);
+            $podioUrl = $this->grabUrlFromText($commitMessage);
             if (!$podioUrl) {
                 $logger('Could not find Podio URL in commit message');
                 return;
@@ -82,28 +85,27 @@ class PodioLib {
             $logger($podioUrl);
 
             // Get Podio Item
-            $podioLib = new PodioLib();
-            $item = $podioLib->getItemFromUrl($podioUrl);
+            $item = $this->getItemFromUrl($podioUrl);
             if (!$item) {
                 $logger('ERROR', 'Could not find Podio Item based on URL');
             }
 
             // Move to phase test
-            if ($podioLib->shouldMoveToTest($item)) {
-                $podioLib->moveStoryToTest($item);
+            if ($this->shouldMoveToTest($item)) {
+                $this->moveStoryToTest($item);
             }
 
             // Add commit comment
-            $gitHubCommitUrl = GitHubLib::getCommitUrl($spec->git_repo, $commitSha);
+            $gitHubCommitUrl = $vcs->getCommitUrl($commitSha);
             $comment = "[GitHub]($gitHubCommitUrl)";
 
             $comment .= "\nWorkspace {$deployment->workspace->name_readable} updated";
 
-            $podioLib->addCommitComment($item, $comment);
+            $this->addCommitComment($item, $comment);
         }
     }
 
-    public function getItemFromUrl(string $url): ?PodioItem {
+    private function getItemFromUrl(string $url): ?PodioItem {
         [$_, $storyId] = explode('items/', $url);
         try {
             $this->client->authenticate_with_app(getenv('PODIO_APP_ID'), getenv('PODIO_APP_TOKEN'));
@@ -114,7 +116,7 @@ class PodioLib {
         return null;
     }
 
-    public function shouldMoveToTest(PodioItem $item): bool {
+    private function shouldMoveToTest(PodioItem $item): bool {
         $isComplete = false;
         $isPhaseDevelopment = false;
         foreach ($item->fields as &$field) {
@@ -132,18 +134,18 @@ class PodioLib {
         return $isComplete && $isPhaseDevelopment;
     }
 
-    public function moveStoryToTest(PodioItem $item): void {
+    private function moveStoryToTest(PodioItem $item): void {
         PodioItem::update_values($this->client, $item->item_id, [
             getenv('PODIO_APP_PHASE_FIELD_ID') => (int)getenv('PODIO_APP_PHASE_NEW_VALUE'),
             getenv('PODIO_APP_PROGRESS_FIELD_ID') => (int)getenv('PODIO_APP_PROGRESS_NEW_VALUE'),
         ]);
     }
 
-    public function addCommitComment(PodioItem $item, string $comment): void {
+    private function addCommitComment(PodioItem $item, string $comment): void {
         PodioComment::create($this->client, 'item', $item->item_id, ['value' => $comment, 'created_by' => 'Robot']);
     }
 
-    public static function grabUrlFromText(string $text): ?string {
+    private function grabUrlFromText(string $text): ?string {
         if (str_contains($text, 'ignore')) {
             return null;
         }

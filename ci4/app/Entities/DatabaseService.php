@@ -3,6 +3,7 @@
 use CodeIgniter\Database\BaseConnection;
 use CodeIgniter\Database\Exceptions\DatabaseException;
 use Config\Database;
+use DatabaseDrivers;
 use DebugTool\Data;
 use RestExtension\Core\Entity;
 
@@ -59,8 +60,16 @@ class DatabaseService extends Entity {
     public function testConnection(): bool {
         try {
             $db = $this->prepareConnection();
-            $tables = $db->query('SELECT version()');
-            Data::debug($tables);
+            switch ($this->driver) {
+                case DatabaseDrivers::MySQL:
+                    $test = $db->query('SELECT version()');
+                    Data::debug($test);
+                    break;
+                case DatabaseDrivers::MSSQL:
+                    $test = $db->query('SELECT 1');
+                    Data::debug($test);
+                    break;
+            }
             return true;
         } catch (\Exception|DatabaseException $e) {
             Data::debug($e->getMessage());
