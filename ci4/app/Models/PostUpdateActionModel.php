@@ -6,7 +6,6 @@ use RestExtension\ResourceModelInterface;
 class PostUpdateActionModel extends Model implements ResourceModelInterface {
 
     public $hasOne = [
-        DeletionModel::class,
         'podio_add_comment_integration' => [
             'class' => PodioIntegrationModel::class,
             'otherField' => 'post_update_action_podio_add_comment_integration',

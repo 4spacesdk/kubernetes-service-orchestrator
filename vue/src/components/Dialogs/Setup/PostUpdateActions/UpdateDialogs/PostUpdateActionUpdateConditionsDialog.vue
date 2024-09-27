@@ -1,20 +1,12 @@
 <script setup lang="ts">
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
-import {PostUpdateAction} from "@/core/services/Deploy/models";
+import {PostUpdateAction, PostUpdateActionCondition} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
 
 export interface PostUpdateActionUpdateConditionsDialog_Input {
     postUpdateAction: PostUpdateAction;
-}
-
-interface Row {
-    type: string;
-    integrationId: number,
-    appId: string;
-    appToken: string;
-    fieldId: string;
 }
 
 const props = defineProps<{ input: PostUpdateActionUpdateConditionsDialog_Input, events: DialogEventsInterface }>();
@@ -24,7 +16,7 @@ const showDialog = ref(false);
 
 const isLoading = ref(false);
 const itemCount = ref(0);
-const rows = ref<Row[]>([]);
+const rows = ref<PostUpdateActionCondition[]>([]);
 const headers = ref([
     {title: 'Type', key: 'type', sortable: false},
     {title: 'Value', key: 'value', sortable: false},
@@ -51,18 +43,9 @@ function render() {
     isLoading.value = true;
     Api.postUpdateActions().get()
         .where('id', props.input.postUpdateAction.id!)
-        .include(`post_update_action_condition?include=${encodeURIComponent(`podio_field_reference?include=podio_app_reference`)}`)
+        .include(`post_update_action_condition?include=${encodeURIComponent(`podio_field_reference`)}`)
         .find(value => {
-            rows.value = value[0].post_update_action_conditions
-                ?.map(condition => {
-                    return {
-                        type: condition.type ?? '',
-                        integrationId: condition.podio_field_reference?.podio_app_reference?.podio_integration_id ?? 0,
-                        appId: condition.podio_field_reference?.podio_app_reference?.app_id ?? '',
-                        appToken: condition.podio_field_reference?.podio_app_reference?.app_token ?? '',
-                        fieldId: condition.podio_field_reference?.field_id ?? '',
-                    }
-                }) ?? [];
+            rows.value = value[0].post_update_action_conditions ?? [];
             itemCount.value = rows.value.length;
             isLoading.value = false;
         });
@@ -78,20 +61,14 @@ function close() {
 // <editor-fold desc="View Binding Functions">
 
 function onCreateBtnClicked() {
-    const newItem = {
-        type: '',
-        integrationId: 0,
-        appId: '',
-        appToken: '',
-        fieldId: '',
-    };
+    const newItem = PostUpdateActionCondition.CreateDefault();
     bus.emit('postUpdateActionUpdateCondition', {
         condition: newItem,
         onSaveCallback: () => rows.value.push(newItem),
     });
 }
 
-function onEditRowClicked(row: Row) {
+function onEditRowClicked(row: PostUpdateActionCondition) {
     bus.emit('postUpdateActionUpdateCondition', {
         condition: row,
         onSaveCallback: () => {
@@ -100,7 +77,7 @@ function onEditRowClicked(row: Row) {
     });
 }
 
-function onDeleteRowClicked(row: Row) {
+function onDeleteRowClicked(row: PostUpdateActionCondition) {
     rows.value.splice(rows.value.indexOf(row), 1);
 }
 

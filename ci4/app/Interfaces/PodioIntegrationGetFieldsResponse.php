@@ -1,12 +1,12 @@
 <?php namespace App\Interfaces;
 
 /**
- * Interface PodioIntegrationGetAppsResponse
+ * Interface PodioIntegrationGetFieldsResponse
  * @package App\Interfaces
  * @property string $name
  * @property string $id
- * @property string $token
+ * @property string $type
  */
-interface PodioIntegrationGetAppsResponse {
+interface PodioIntegrationGetFieldsResponse {
 
 }

@@ -30,6 +30,8 @@ class AddPostUpdateActions extends Migration {
         ApiRoute::addResourceControllerPost(PodioIntegrations::class);
         ApiRoute::addResourceControllerPatch(PodioIntegrations::class);
         ApiRoute::addResourceControllerDelete(PodioIntegrations::class);
+        ApiRoute::quick('/podio-integrations/([0-9]+)/fields', PodioIntegrations::class, 'getFields/$1', 'get');
+        ApiRoute::quick('/podio-integrations/([0-9]+)/fields/(.*)/details', PodioIntegrations::class, 'getFieldDetails/$1/$2', 'get');
 
         Table::init('post_update_actions')
             ->create()

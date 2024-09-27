@@ -4,7 +4,7 @@ use App\Core\ResourceController;
 use App\Entities\PodioFieldReference;
 use App\Entities\PostUpdateAction;
 use App\Entities\PostUpdateActionCondition;
-use App\Interfaces\PostUpdateActionList;
+use App\Interfaces\PostUpdateActionConditionList;
 
 class PostUpdateActions extends ResourceController {
 
@@ -13,14 +13,14 @@ class PostUpdateActions extends ResourceController {
      * @method put
      * @custom true
      * @param int $id
-     * @requestSchema PostUpdateActionList
+     * @requestSchema PostUpdateActionConditionList
      * @return void
      */
     public function updateConditions(int $id): void {
         $item = new PostUpdateAction();
         $item->find($id);
         if ($item->exists()) {
-            /** @var PostUpdateActionList $body */
+            /** @var PostUpdateActionConditionList $body */
             $body = $this->request->getJSON();
 
             $values = new PostUpdateActionCondition();
@@ -28,10 +28,10 @@ class PostUpdateActions extends ResourceController {
                 $condition = new PostUpdateActionCondition();
                 $condition->type = $value->type;
                 $condition->value = $value->value;
-                if ($value->podio_integration_id && $value->field_id) {
+                if ($value->podio_field_reference) {
                     $condition->podio_field_reference_id = PodioFieldReference::Create(
-                        $value->podio_integration_id,
-                        $value->field_id
+                        $value->podio_field_reference->podio_integration_id,
+                        $value->podio_field_reference->field_id
                     )->id;
                 }
                 $condition->save();

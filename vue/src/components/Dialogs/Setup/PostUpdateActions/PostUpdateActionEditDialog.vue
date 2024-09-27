@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
-import {PostUpdateAction} from "@/core/services/Deploy/models";
+import {PodioFieldReference, PostUpdateAction} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
 import {PostUpdateActionTypes} from "@/constants";
 import {VTextField} from "vuetify/components/VTextField";
-import PodioAppReferenceSelect from "@/components/Modules/Integrations/PodioIntegrations/PodioAppReferenceSelect.vue";
+import PodioIntegrationSelect from "@/components/Modules/Integrations/PodioIntegrations/PodioIntegrationSelect.vue";
+import PodioFieldReferenceSelect
+    from "@/components/Modules/Integrations/PodioIntegrations/PodioFieldReferenceSelect.vue";
+import PodioFieldValueInput from "@/components/Modules/Integrations/PodioIntegrations/PodioFieldValueInput.vue";
 
 export interface PostUpdateActionEditDialog_Input {
     postUpdateAction: PostUpdateAction;
@@ -14,8 +17,9 @@ export interface PostUpdateActionEditDialog_Input {
     onSaveCallback?: (item: PostUpdateAction) => void;
 }
 
-interface Argument {
-    value: string;
+interface Variable {
+    name: string;
+    code: string;
 }
 
 const props = defineProps<{ input: PostUpdateActionEditDialog_Input, events: DialogEventsInterface }>();
@@ -37,6 +41,18 @@ const types = ref([
     },
 ]);
 
+const showVariablesMenu = ref(false);
+const variables = ref<Variable[]>([
+    {
+        name: "Workspace Name",
+        code: "${workspace.name}"
+    },
+    {
+        name: "Commit URL",
+        code: "${commit.url}"
+    },
+]);
+
 // <editor-fold desc="Functions">
 
 onMounted(() => {
@@ -44,27 +60,34 @@ onMounted(() => {
         return;
     }
     used.value = true;
-    render();
+    load();
 });
 
 onUnmounted(() => {
 });
 
-function render() {
+function load() {
     if (props.input.postUpdateAction.exists()) {
         isLoading.value = true;
-        showDialog.value = true;
         Api.postUpdateActions().getById(props.input.postUpdateAction.id!).find(items => {
             if (!items || items.length == 0) {
                 return;
             }
             item.value = items[0];
             isLoading.value = false;
+            render();
         });
     } else {
         item.value = props.input.postUpdateAction;
-        showDialog.value = true;
+        render();
     }
+}
+
+function render() {
+    if (!item.value.podio_field_update_field_reference) {
+        item.value.podio_field_update_field_reference = new PodioFieldReference();
+    }
+    showDialog.value = true;
 }
 
 function close() {
@@ -78,6 +101,13 @@ function close() {
 // <editor-fold desc="View Binding Functions">
 
 function onSaveBtnClicked() {
+    if (!item.value.podio_field_update_field_reference?.podio_integration_id) {
+        item.value.podio_field_update_field_reference = undefined;
+    }
+    if (!item.value.podio_add_comment_integration?.app_id) {
+        item.value.podio_add_comment_integration = undefined;
+    }
+
     const api = item.value!.exists() ? Api.postUpdateActions().patchById(item.value!.id!) : Api.postUpdateActions().post();
 
     api.save(item.value!, newItem => {
@@ -94,6 +124,11 @@ function onSaveBtnClicked() {
 
 function onCloseBtnClicked() {
     close();
+}
+
+function onVariableClicked(variable: Variable) {
+    item.value.podio_add_comment_value += variable.code;
+    showVariablesMenu.value = false;
 }
 
 // </editor-fold>
@@ -118,9 +153,6 @@ function onCloseBtnClicked() {
                         <v-text-field
                             variant="outlined"
                             v-model="item.name"
-                            :rules="[
-                                v => /^[a-z0-9-]{1,50}$/.test(v) || 'Invalid format'
-                            ]"
                             label="Name"
                             density="compact"
                             hide-details
@@ -143,14 +175,83 @@ function onCloseBtnClicked() {
                         v-if="item.type == PostUpdateActionTypes.Podio_AddComment"
                         cols="12"
                     >
-                        <div>
-                            <label>App Reference</label>
-                            <podio-app-reference-select
-                                v-model="item.podio_add_comment_integration_id"
-                                class="mt-1"
-                                label="Podio Integration"
+                        <podio-integration-select
+                            v-model="item.podio_add_comment_integration_id"
+                            class="mt-1"
+                            label="Podio Integration"
+                        />
+                    </v-col>
+
+                    <v-col
+                        v-if="item.type == PostUpdateActionTypes.Podio_AddComment"
+                        cols="12"
+                    >
+                        <div
+                            class="d-flex"
+                        >
+                            <v-textarea
+                                v-model="item.podio_add_comment_value"
+                                variant="outlined"
+                                label="Value"
+                                spellcheck="false"
+                                density="compact"
+                                hide-details
                             />
+
+                            <v-menu
+                                v-model="showVariablesMenu"
+                                :close-on-content-click="false"
+                                left
+                                min-width="250"
+                                offset-y>
+                                <template v-slot:activator="{ props }">
+                                    <v-btn
+                                        v-bind="props"
+                                        :icon="true"
+                                        variant="plain"
+                                        color="primary"
+                                        size="small">
+                                        <v-icon>fa fa-plus</v-icon>
+                                        <v-tooltip activator="parent" location="bottom">Insert variable</v-tooltip>
+                                    </v-btn>
+                                </template>
+
+                                <v-list
+                                    class="list-items">
+                                    <v-list-item
+                                        v-for="(variable, i) in variables" :key="i"
+                                        dense
+                                        @click="onVariableClicked(variable)">
+                                        <v-list-item-title>
+                                            <v-icon size="small" class="my-auto">fa fa-window-maximize fa</v-icon>
+                                            <span class="ml-2">{{ variable.name }}</span>
+                                        </v-list-item-title>
+                                    </v-list-item>
+                                </v-list>
+                            </v-menu>
                         </div>
+                    </v-col>
+
+                    <v-col
+                        v-if="item.type == PostUpdateActionTypes.Podio_FieldUpdate"
+                        cols="12"
+                    >
+                        <podio-field-reference-select
+                            v-model="item.podio_field_update_field_reference"
+                            class="mt-1"
+                            label="Podio Field"
+                        />
+                    </v-col>
+                    <v-col
+                        v-if="item.type == PostUpdateActionTypes.Podio_FieldUpdate && item.podio_field_update_field_reference"
+                        cols="12"
+                    >
+                        <podio-field-value-input
+                            v-model="item.podio_field_update_value"
+                            class="mt-1"
+                            label="New Value"
+                            :field="item.podio_field_update_field_reference"
+                        />
                     </v-col>
                 </v-row>
             </v-card-text>

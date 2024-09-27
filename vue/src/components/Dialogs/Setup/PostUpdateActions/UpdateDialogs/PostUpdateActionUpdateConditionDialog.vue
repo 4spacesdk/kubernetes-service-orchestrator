@@ -2,15 +2,13 @@
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
 import {PostUpdateActionConditionTypes} from "@/constants";
+import PodioFieldReferenceSelect
+    from "@/components/Modules/Integrations/PodioIntegrations/PodioFieldReferenceSelect.vue";
+import PodioFieldValueInput from "@/components/Modules/Integrations/PodioIntegrations/PodioFieldValueInput.vue";
+import {PodioFieldReference, PostUpdateActionCondition} from "@/core/services/Deploy/models";
 
 export interface PostUpdateActionUpdateConditionDialog_Input {
-    condition: {
-        type: string;
-        integrationId: number,
-        appId: string;
-        appToken: string;
-        fieldId: string;
-    };
+    condition: PostUpdateActionCondition;
 
     onSaveCallback: () => void;
 }
@@ -23,10 +21,8 @@ const props = defineProps<{
 const used = ref(false);
 const showDialog = ref(false);
 const type = ref('');
-const integrationId = ref(0);
-const appId = ref('');
-const appToken = ref('');
-const fieldId = ref('');
+const podioFieldReference = ref<PodioFieldReference>();
+const value = ref<string>();
 
 const types = ref([
     {
@@ -50,10 +46,8 @@ onUnmounted(() => {
 
 function render() {
     type.value = props.input.condition.type ?? '';
-    integrationId.value = props.input.condition.integrationId ?? 0;
-    appId.value = props.input.condition.appId ?? '';
-    appToken.value = props.input.condition.appToken ?? '';
-    fieldId.value = props.input.condition.fieldId ?? '';
+    podioFieldReference.value = props.input.condition.podio_field_reference ?? new PodioFieldReference();
+    value.value = props.input.condition.value ?? '';
     showDialog.value = true;
 }
 
@@ -68,10 +62,8 @@ function close() {
 
 function onSaveBtnClicked() {
     props.input.condition.type = type.value;
-    props.input.condition.integrationId = integrationId.value;
-    props.input.condition.appId = appId.value;
-    props.input.condition.appToken = appToken.value;
-    props.input.condition.fieldId = fieldId.value;
+    props.input.condition.podio_field_reference = podioFieldReference.value;
+    props.input.condition.value = value.value;
     props.input.onSaveCallback();
     close();
 }
@@ -105,6 +97,28 @@ function onCloseBtnClicked() {
                             label="Type"
                             density="compact"
                             hide-details
+                        />
+                    </v-col>
+
+                    <v-col
+                        v-if="type == PostUpdateActionConditionTypes.PodioFieldEquals"
+                        cols="12"
+                    >
+                        <podio-field-reference-select
+                            v-model="podioFieldReference"
+                            class="mt-1"
+                            label="Podio Field"
+                        />
+                    </v-col>
+                    <v-col
+                        v-if="type == PostUpdateActionConditionTypes.PodioFieldEquals && podioFieldReference"
+                        cols="12"
+                    >
+                        <podio-field-value-input
+                            v-model="value"
+                            class="mt-1"
+                            label="Value"
+                            :field="podioFieldReference"
                         />
                     </v-col>
                 </v-row>

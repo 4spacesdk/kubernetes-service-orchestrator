@@ -17,6 +17,14 @@
   * Optional approval step
 * Test database connection feature [Issue #23](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/23)
 * Github integration credentials has been migrated from environment variables to container image properties [Issue #29](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/29)
+* Podio integration has been moved from environment variables to its own object [Issue #28](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/28)
+  * You can now create podio integrations directly in the web ui
+* Post Update Actions
+  * Before this release, KSO could update a Podio item, based on url found in commit message
+  * Now you can create post update actions to accomplice the same and much more!
+    * Features: 
+      * Add Comment with url to GitHub commit
+      * Update fields based on conditions. For example change status from "development" to "test"
 
 ### Breaking changes
 * Google Artifact Registry integration credentials has been moved from environment variables to container image properties
@@ -25,6 +33,8 @@
   * Migrations will handle this change
 * Github integration credentials has been moved from environment variables to container image properties
   * Migrations will handle this change
+* Podio integration has been moved from environment variables to post update actions
+  * You will have to create podio integration manually in the web ui after release and create post update actions
 
 ### Upgrade guide
 1. Deploy new image

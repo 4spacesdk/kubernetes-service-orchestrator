@@ -207,10 +207,23 @@ export interface LabelList {
     values?: Label[];
 }
 
-export interface PodioIntegrationGetAppsResponse {
+export interface PodioIntegrationGetFieldDetailsResponse {
     name?: string;
     id?: string;
-    token?: string;
+    type?: string;
+    options?: PodioIntegrationGetFieldDetailsResponseOption[];
+}
+
+export interface PodioIntegrationGetFieldDetailsResponseOption {
+    color?: string;
+    id?: string;
+    text?: string;
+}
+
+export interface PodioIntegrationGetFieldsResponse {
+    name?: string;
+    id?: string;
+    type?: string;
 }
 
 export interface PostCommand {
@@ -4618,6 +4631,48 @@ export class PodioIntegrationsDeleteById extends BaseApi<PodioIntegration> {
     }
 }
 
+export class PodioIntegrationsGetFieldsGetById extends BaseApi<PodioIntegrationGetFieldsResponse> {
+
+    public topic = 'Resources.PodioIntegrationGetFieldsResponses';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/podio-integrations/${id}/fields`;
+    }
+
+    protected convertToResource(data: any): PodioIntegrationGetFieldsResponse {
+        return data;
+    }
+
+    public find(next?: (value: PodioIntegrationGetFieldsResponse[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class PodioIntegrationsGetFieldDetailsGetByIdByFieldId extends BaseApi<PodioIntegrationGetFieldDetailsResponse> {
+
+    public topic = 'Resources.PodioIntegrationGetFieldDetailsResponses';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number, fieldId: string) {
+        super();
+        this.uri = `/podio-integrations/${id}/fields/${fieldId}/details`;
+    }
+
+    protected convertToResource(data: any): PodioIntegrationGetFieldDetailsResponse {
+        return data;
+    }
+
+    public find(next?: (value: PodioIntegrationGetFieldDetailsResponse[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
 class PodioIntegrations {
 
     public get(): PodioIntegrationsGet {
@@ -4642,6 +4697,14 @@ class PodioIntegrations {
 
     public deleteById(id: number): PodioIntegrationsDeleteById {
         return new PodioIntegrationsDeleteById(id);
+    }
+
+    public getFieldsGetById(id: number): PodioIntegrationsGetFieldsGetById {
+        return new PodioIntegrationsGetFieldsGetById(id);
+    }
+
+    public getFieldDetailsGetByIdByFieldId(id: number, fieldId: string): PodioIntegrationsGetFieldDetailsGetByIdByFieldId {
+        return new PodioIntegrationsGetFieldDetailsGetByIdByFieldId(id, fieldId);
     }
 
 }

@@ -40,7 +40,7 @@ function onUpdateConditionsClicked() {
                     dense
                     @click="onUpdateConditionsClicked">
                     <v-list-item-title>
-                        <v-icon size="small" class="my-auto ml-2">fa fa-key</v-icon>
+                        <v-icon size="small" class="my-auto ml-2">fa fa-gears</v-icon>
                         <span class="ml-2">Conditions</span>
                     </v-list-item-title>
                 </v-list-item>

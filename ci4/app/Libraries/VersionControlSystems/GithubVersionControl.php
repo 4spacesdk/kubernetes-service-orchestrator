@@ -1,6 +1,7 @@
 <?php namespace App\Libraries\VersionControlSystems;
 
 use App\Entities\ContainerImage;
+use DebugTool\Data;
 use Github\Api\Repo;
 use Github\AuthMethod;
 use Github\Client;
@@ -26,7 +27,7 @@ class GithubVersionControl extends BaseVersionControlSystem {
             $shortSha
         );
 
-        if ($commit && isset($commit['message'])) {
+        if ($commit && isset($commit['commit']['message'])) {
             return $commit['commit']['message'];
         } else {
             return '';

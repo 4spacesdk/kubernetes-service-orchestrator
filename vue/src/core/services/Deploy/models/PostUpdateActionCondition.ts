@@ -11,4 +11,9 @@ export class PostUpdateActionCondition extends PostUpdateActionConditionDefiniti
         super(json);
     }
 
+    public static CreateDefault(): PostUpdateActionCondition {
+        const item = new PostUpdateActionCondition();
+        return item;
+    }
+
 }

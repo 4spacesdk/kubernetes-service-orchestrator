@@ -193,6 +193,15 @@ function onSortChanged(event: CustomEvent) {
                     v-sortableDataTable
                     @sorted="onSortChanged"
                     density="compact">
+
+                    <template v-slot:top>
+                        <span class="px-2 font-weight-light" style="font-size: small;">
+                            These actions relate to the task/issue that triggered the auto update.
+                            <br>
+                            The task/issue is found in the commit message. See container image for settings.
+                        </span>
+                    </template>
+
                     <template v-slot:item.handle="{ item }">
                         <v-icon class="grabbable">fa fa-grip-vertical</v-icon>
                     </template>
