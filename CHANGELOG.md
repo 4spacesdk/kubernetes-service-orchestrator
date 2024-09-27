@@ -146,7 +146,7 @@
 
 ### Upgrade guide
 1. Deploy new image
-    1. No database migration required
+2. No database migration required
 
 
 
