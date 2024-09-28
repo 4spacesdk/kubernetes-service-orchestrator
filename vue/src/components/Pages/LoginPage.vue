@@ -6,14 +6,28 @@ import {useRoute} from "vue-router";
 
 onMounted(() => {
     const route = useRoute();
+
+    // Check for code
+    if (route.query.code) {
+        AuthService.exchangeCodeForAccessToken(route.query.code as string, () => {
+            checkLoggedIn();
+        });
+        return;
+    }
+
+    // Check for access token
     AuthService.checkForAccessTokenInUrl(route.hash);
 
+    checkLoggedIn();
+});
+
+function checkLoggedIn() {
     if (AuthService.isLoggedIn()) {
         window.location.href = "/app/";
     } else {
         login();
     }
-});
+}
 
 function login() {
     AuthService.handleLogin();

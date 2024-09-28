@@ -35,7 +35,7 @@ const router = createRouter({
             meta: {
                 public: true,
                 onlyWhenLoggedOut: true
-            }
+            },
         }
     ]
 })

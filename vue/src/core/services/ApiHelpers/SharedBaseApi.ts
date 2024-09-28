@@ -119,7 +119,8 @@ export class SharedBaseApi<T = any> {
     }
 
     protected get(next?: (value: T[]) => void): ApiRequest {
-        return ApiService.get(this.getAxios(), this.uri!, this.getParams(), (response: any) => {
+        const request = new ApiRequest();
+        return ApiService.get(request, this.getAxios(), this.uri!, this.getParams(), (response: any) => {
             if (next) {
                 if (response.resources) {
                     next(
@@ -142,9 +143,10 @@ export class SharedBaseApi<T = any> {
     }
 
     protected executeCount(next?: (value: number) => void): ApiRequest {
+        const request = new ApiRequest();
         const params = this.getParams();
         params["count"] = 1;
-        return ApiService.get(this.getAxios(), this.uri!, params, (response: any) => {
+        return ApiService.get(request, this.getAxios(), this.uri!, params, (response: any) => {
             if (next) {
                 if (response.count) {
                     next(response.count);
@@ -161,7 +163,8 @@ export class SharedBaseApi<T = any> {
     }
 
     private post(data: any, next?: (value: T) => void): ApiRequest {
-        return ApiService.post(this.getAxios(), this.uri!, data, this.getParams(), (response: any) => {
+        const request = new ApiRequest();
+        return ApiService.post(request, this.getAxios(), this.uri!, data, this.getParams(), (response: any) => {
             if (next) {
                 if (response.resources) {
                     next(
@@ -184,7 +187,8 @@ export class SharedBaseApi<T = any> {
     }
 
     private put(data: any, next?: (value: T) => void): ApiRequest {
-        return ApiService.put(this.getAxios(), this.uri!, data, this.getParams(), (response: any) => {
+        const request = new ApiRequest();
+        return ApiService.put(request, this.getAxios(), this.uri!, data, this.getParams(), (response: any) => {
             if (next) {
                 if (response.resources) {
                     next(
@@ -207,7 +211,8 @@ export class SharedBaseApi<T = any> {
     }
 
     private patch(data: any, next?: (value: T) => void): ApiRequest {
-        return ApiService.patch(this.getAxios(), this.uri!, data, this.getParams(), (response: any) => {
+        const request = new ApiRequest();
+        return ApiService.patch(request, this.getAxios(), this.uri!, data, this.getParams(), (response: any) => {
             if (next) {
                 if (response.resources) {
                     next(
@@ -230,7 +235,8 @@ export class SharedBaseApi<T = any> {
     }
 
     protected executeDelete(next?: (value: T) => void): ApiRequest {
-        return ApiService.delete(this.getAxios(), this.uri!, this.getParams(), (response: any) => {
+        const request = new ApiRequest();
+        return ApiService.delete(request, this.getAxios(), this.uri!, this.getParams(), (response: any) => {
             if (next) {
                 if (response.resources) {
                     next(
@@ -268,7 +274,8 @@ export class SharedBaseApi<T = any> {
     }
 
     public download(fileName: string, next?: (data: any) => void): ApiRequest {
-        return ApiService.download(this.getAxios(), this.uri!, this.getParams(), fileName, (response: any) => {
+        const request = new ApiRequest();
+        return ApiService.download(request, this.getAxios(), this.uri!, this.getParams(), fileName, (response: any) => {
             if (response.error) {
                 if (this.errorHandler) {
                     if (!this.errorHandler(response)) {
@@ -282,7 +289,8 @@ export class SharedBaseApi<T = any> {
     }
 
     public upload(data: any, next?: (data: any) => void) {
-        ApiService.upload(this.getAxios(), this.uri!, data, this.getParams(), (response: any) => {
+        const request = new ApiRequest();
+        ApiService.upload(request, this.getAxios(), this.uri!, data, this.getParams(), (response: any) => {
             if (response.error) {
                 if (this.errorHandler) {
                     if (!this.errorHandler(response)) {

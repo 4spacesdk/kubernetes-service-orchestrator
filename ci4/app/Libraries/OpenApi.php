@@ -24,7 +24,7 @@ class OpenApi {
             'version' => '1.0.0',
             'openapi' => '3.0.0',
             'info' => [
-                'title' => 'Deploy'
+                'title' => '4 Spaces | Kubernetes Service Orchestrator'
             ],
             'security' => [
                 [
@@ -36,9 +36,12 @@ class OpenApi {
                 'securitySchemes' => [
                     'OAuth2' => [
                         'type' => 'oauth2',
+                        'description' => 'OAuth2 with PKCE',
                         'flows' => [
-                            'implicit' => [
+                            'authorizationCode' => [
                                 'authorizationUrl' => base_url('/authorize'),
+                                'tokenUrl' => base_url('/token'),
+                                'refreshUrl' => base_url('/token'),
                                 'scopes' => [],
                                 'client_id' => 'swagger'
                             ]

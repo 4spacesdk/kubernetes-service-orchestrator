@@ -1,6 +1,6 @@
 <?php
 /** @var string $scope */
-/** @var \RestExtension\Entities\OAuthScope $scopes */
+/** @var \AuthExtension\Entities\OAuthScope $scopes */
 ?>
 
 <!DOCTYPE html>
@@ -8,14 +8,14 @@
 <head>
     <meta charset="UTF-8">
     <title>Swagger</title>
-    <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@3.12.1/swagger-ui.css">
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui.css">
 </head>
 <body style="margin:0;">
 
 <div id="swagger-ui"></div>
 
-<script src="https://unpkg.com/swagger-ui-dist@3.23.0/swagger-ui-standalone-preset.js"></script>
-<script src="https://unpkg.com/swagger-ui-dist@3.23.0/swagger-ui-bundle.js"></script>
+<script src="https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui-standalone-preset.js"></script>
+<script src="https://unpkg.com/swagger-ui-dist@5.17.14/swagger-ui-bundle.js"></script>
 <script>
     window.onload = function() {
         // Build a system
@@ -43,6 +43,8 @@
         });
         ui.initOAuth({
             clientId: "swagger",
+            clientSecret: "",
+            usePkceWithAuthorizationCodeGrant: true,
         });
 
         window.ui = ui
