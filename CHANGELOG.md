@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.1.18 ()
+## v1.0.0 (2024-09-28)
 
 ### Fixed bugs
 * Typo [Issue #27](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/27)
@@ -25,7 +25,7 @@
     * Features: 
       * Add Comment with url to GitHub commit
       * Update fields based on conditions. For example change status from "development" to "test"
-* Authenticated flow is changed from implicit to authorization flow with PKCE [Issue 30](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/30)
+* Authorization flow is changed from implicit to authorization flow with PKCE [Issue 30](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/30)
 
 ### Breaking changes
 * Google Artifact Registry integration credentials has been moved from environment variables to container image properties
