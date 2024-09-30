@@ -1,6 +1,9 @@
 <?php namespace App\Database\Migrations;
 
 use App\Controllers\OAuthAgent;
+use App\Entities\DeploymentSpecification;
+use App\Models\ContainerImageModel;
+use App\Models\DeploymentSpecificationModel;
 use AuthExtension\Entities\OAuthClient;
 use AuthExtension\Entities\OAuthPublicKey;
 use AuthExtension\Entities\OAuthScope;
@@ -9,6 +12,7 @@ use AuthExtension\Models\OAuthClientModel;
 use AuthExtension\Models\OAuthScopeModel;
 use CodeIgniter\Database\Migration;
 use Config\Database;
+use OrmExtension\Migration\Table;
 use RestExtension\Entities\ApiRoute;
 
 class UpdateAuthExtension extends Migration {
@@ -71,6 +75,22 @@ class UpdateAuthExtension extends Migration {
 
         ApiRoute::public('oauth-agent/token', OAuthAgent::class, 'token', 'post');
         ApiRoute::public('oauth-agent/refresh', OAuthAgent::class, 'refresh', 'post');
+
+
+        // Remove after release
+        /** @var DeploymentSpecification $specs */
+        $specs = (new DeploymentSpecificationModel())
+            ->includeRelated(ContainerImageModel::class)
+            ->find();
+        foreach ($specs as $spec) {
+            if ($spec->container_image->exists() && strlen($spec->git_repo)) {
+                $spec->container_image->version_control_repository_name = $spec->git_repo;
+                $spec->container_image->save();
+            }
+        }
+
+        Table::init('deployment_specifications')
+            ->dropColumn('git_repo');
     }
 
     public function down() {

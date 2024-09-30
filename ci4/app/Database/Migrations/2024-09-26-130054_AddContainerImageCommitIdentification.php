@@ -1,8 +1,5 @@
 <?php namespace App\Database\Migrations;
 
-use App\Entities\DeploymentSpecification;
-use App\Models\ContainerImageModel;
-use App\Models\DeploymentSpecificationModel;
 use CodeIgniter\Database\Migration;
 use Config\Database;
 use OrmExtension\Migration\ColumnTypes;
@@ -40,21 +37,6 @@ class AddContainerImageCommitIdentification extends Migration {
                 ->set('version_control_provider_github_auth_user', getenv('GITHUB_AUTH_USER'))
                 ->update();
         }
-
-        // Remove after release
-        /** @var DeploymentSpecification $specs */
-        $specs = (new DeploymentSpecificationModel())
-            ->includeRelated(ContainerImageModel::class)
-            ->find();
-        foreach ($specs as $spec) {
-            if ($spec->container_image->exists() && strlen($spec->git_repo)) {
-                $spec->container_image->version_control_repository_name = $spec->git_repo;
-                $spec->container_image->save();
-            }
-        }
-
-        Table::init('deployment_specifications')
-            ->dropColumn('git_repo');
     }
 
     public function down() {
