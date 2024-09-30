@@ -3,6 +3,7 @@
 namespace Config;
 
 use CodeIgniter\Config\BaseConfig;
+use DebugTool\Data;
 
 class App extends BaseConfig
 {

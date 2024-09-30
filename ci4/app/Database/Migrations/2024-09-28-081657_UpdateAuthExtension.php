@@ -36,7 +36,7 @@ class UpdateAuthExtension extends Migration {
             ->where('client_id', 'webclient')
             ->find();
         $oauthClient->client_id = 'webclient';
-        $oauthClient->redirect_uri = getFrontendUrl() . '/app/login';
+        $oauthClient->redirect_uri = getFrontendUrl('app/login');
         $oauthClient->grant_types = 'authorization_code refresh_token';
         $oauthClient->scope = 'openid offline_access';
         $oauthClient->insert();

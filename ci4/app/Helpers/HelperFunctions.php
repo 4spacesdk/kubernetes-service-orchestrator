@@ -111,12 +111,22 @@ if (!function_exists('datetimezone')) {
 
 if (!function_exists('getFrontendUrl')) {
 
-    function getFrontendUrl(): string {
+    function getFrontendUrl(?string $path = null): string {
         if (str_contains(base_url(), 'localhost')) {
-            return 'http://localhost:8951';
+            $url = 'http://localhost:8951';
         } else {
-            return str_replace('/api', '', base_url());
+            $url = str_replace('/api', '', base_url());
         }
+
+        if (str_ends_with($url, '/')) {
+            $url = substr($url, 0, -1);
+        }
+
+        if ($path && strlen($path) > 0) {
+            $url .= str_starts_with($path, '/') ? $path : ('/' . $path);
+        }
+
+        return $url;
     }
 
 }

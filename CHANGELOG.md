@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.0.2 (2024-09-30)
+
+### Fixed bugs
+* Added missing PKCE fields
+
+### Enhancements
+
+### Upgrade guide
+1. Deploy new image
+2. Migrate database [(Guide)](https://github.com/4spacesdk/kubernetes-service-orchestrator?tab=readme-ov-file#migrate-database-helm)
+
+
 ## v1.0.1 (2024-09-30)
 
 ### Fixed bugs

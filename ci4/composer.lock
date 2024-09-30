@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d5a30311220861edceda877f941927cb",
+    "content-hash": "bbdf1f10579cfcdbc9657378b13f7ca2",
     "packages": [
         {
             "name": "4spacesdk/ci4authextension",
-            "version": "v1.1.0",
+            "version": "v1.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/4spacesdk/CI4AuthExtension.git",
-                "reference": "2ef31c3dba8061629e4463b144e9354151086277"
+                "reference": "fd433e159bfd8f44691f1c218dc7be1eb8c06f6a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/4spacesdk/CI4AuthExtension/zipball/2ef31c3dba8061629e4463b144e9354151086277",
-                "reference": "2ef31c3dba8061629e4463b144e9354151086277",
+                "url": "https://api.github.com/repos/4spacesdk/CI4AuthExtension/zipball/fd433e159bfd8f44691f1c218dc7be1eb8c06f6a",
+                "reference": "fd433e159bfd8f44691f1c218dc7be1eb8c06f6a",
                 "shasum": ""
             },
             "require": {
@@ -45,9 +45,9 @@
             "description": "Easy OAuth2 integration with CodeIgniter 4",
             "support": {
                 "issues": "https://github.com/4spacesdk/CI4AuthExtension/issues",
-                "source": "https://github.com/4spacesdk/CI4AuthExtension/tree/v1.1.0"
+                "source": "https://github.com/4spacesdk/CI4AuthExtension/tree/v1.1.1"
             },
-            "time": "2024-09-28T13:31:24+00:00"
+            "time": "2024-09-30T06:16:32+00:00"
         },
         {
             "name": "4spacesdk/ci4debugtool",
