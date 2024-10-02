@@ -1,6 +1,6 @@
 # Changelog
 
-## v1.0.3 (2024-10-01)
+## v1.0.3 (2024-10-02)
 
 ### Fixed bugs
 
@@ -8,10 +8,11 @@
 * Updated composer dependencies
   * `4spacesdk/ci4ormextension`
   * `4spacesdk/ci4authextension`
+* Updated alpine from v3.19 to v3.20
+* Updated php from v8.3.8 to v8.3.12
 
 ### Upgrade guide
 1. Deploy new image
-2. Migrate database [(Guide)](https://github.com/4spacesdk/kubernetes-service-orchestrator?tab=readme-ov-file#migrate-database-helm)
 
 
 

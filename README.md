@@ -1,5 +1,5 @@
 # Kubernetes Service Orchestrator
-The Kubernetes Service Orchestrator (KSO) is a powerful service deployment solution developed using PHP and Vue. 
+The Kubernetes Service Orchestrator (KSO) is a powerful service deployment solution. 
 This service enables interaction with the Kubernetes API and facilitates the effortless deployment of other services within a Kubernetes cluster.
 
 ## Features

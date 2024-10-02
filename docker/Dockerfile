@@ -16,7 +16,7 @@ RUN npm run build
 
 
 # PHP DeploymentSpecs can be found at https://hub.docker.com/_/php/
-FROM php:8.3.8-alpine3.19
+FROM php:8.3.12-alpine3.20
 
 # Install OS dependencies
 RUN apk add --update  \
