@@ -4,9 +4,9 @@
 ### Setup local environment variables
 * Copy `.env.example` and paste as `.env`. These variables are used by docker-compose.
 * Copy `ci4/env` and paste as `ci4/.env`. These variables are used by CodeIgniter.
-### Look for script in the root `package.json` file
+### Look for scripts in the root `package.json` file
 ### Build Docker and run it
-* `Setup: docker-composer up`, this will take a couple of minutes
+* `Setup: docker composer up`, this will take a couple of minutes
 ### Install backend & frontend dependencies
 * `Setup: install composer dependencies`
 * `Setup: install npm dependencies`

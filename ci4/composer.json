@@ -10,17 +10,20 @@
     "ext-zmq": "*",
     "ext-sqlsrv": "*",
     "ext-openssl": "*",
+    "ext-sockets": "*",
+    "ext-pcntl": "*",
+
     "hellogerard/jobby": "v3.5.0",
     "codeigniter4/framework": "v4.4.5",
     "4spacesdk/ci4debugtool": "1.0.8",
-    "4spacesdk/ci4ormextension": "v1.0.9",
+    "4spacesdk/ci4ormextension": "v1.1.0",
     "4spacesdk/ci4restextension": "v1.0.9",
+    "4spacesdk/ci4authextension": "v1.1.2",
     "renoki-co/php-k8s": "3.8.1",
     "google/cloud-artifact-registry": "^0.3.7",
     "google/cloud-pubsub": "^2.0",
     "podio-community/podio-php": "7.0.2",
-    "knplabs/github-api": "^v3.9.0",
-    "4spacesdk/ci4authextension": "v1.1.1"
+    "knplabs/github-api": "^v3.9.0"
   },
   "require-dev": {
     "phpunit/phpunit": "^9.1"

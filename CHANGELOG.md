@@ -1,5 +1,20 @@
 # Changelog
 
+## v1.0.3 (2024-10-01)
+
+### Fixed bugs
+
+### Enhancements
+* Updated composer dependencies
+  * `4spacesdk/ci4ormextension`
+  * `4spacesdk/ci4authextension`
+
+### Upgrade guide
+1. Deploy new image
+2. Migrate database [(Guide)](https://github.com/4spacesdk/kubernetes-service-orchestrator?tab=readme-ov-file#migrate-database-helm)
+
+
+
 ## v1.0.2 (2024-09-30)
 
 ### Fixed bugs
@@ -10,6 +25,7 @@
 ### Upgrade guide
 1. Deploy new image
 2. Migrate database [(Guide)](https://github.com/4spacesdk/kubernetes-service-orchestrator?tab=readme-ov-file#migrate-database-helm)
+
 
 
 ## v1.0.1 (2024-09-30)

@@ -23,9 +23,6 @@ class EnvironmentVariableCommitIdentification extends BaseCommitIdentificationMe
         try {
             $pods = (new DeploymentStep())->getPods($deployment);
             Data::debug('found ' . count($pods) . ' pods');
-            foreach ($pods as $pod) {
-                Data::debug("Pod found for $deployment->name with name {$pod->getName()}");
-            }
             if (count($pods) == 0) {
                 Data::debug('ERROR no pods found');
                 return "";
@@ -33,7 +30,11 @@ class EnvironmentVariableCommitIdentification extends BaseCommitIdentificationMe
 
             foreach ($pods as $pod) {
                 // Get environment variables
-                $messages = $pod->exec(['/bin/sh', '-c', "printenv"]);
+                try {
+                    $messages = $pod->exec(['/bin/sh', '-c', "printenv"]);
+                } catch (\RenokiCo\PhpK8s\Exceptions\KubernetesExecException|\RenokiCo\PhpK8s\Exceptions\KubernetesAPIException $e) {
+                    Data::debug($e->getMessage());
+                }
                 $all = collect($messages)->where('channel', 'stdout')->all();
                 $lines = [];
                 foreach ($all as ['channel' => $channel, 'output' => $output]) {

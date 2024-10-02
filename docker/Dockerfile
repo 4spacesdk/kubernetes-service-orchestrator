@@ -1,5 +1,5 @@
 # Build Vue app
-FROM node:16.13.1-alpine as build-stage
+FROM node:16.13.1-alpine AS build-stage
 WORKDIR /vue
 COPY vue/package*.json ./
 RUN npm install
@@ -16,7 +16,7 @@ RUN npm run build
 
 
 # PHP DeploymentSpecs can be found at https://hub.docker.com/_/php/
-FROM php:8.3-alpine3.19
+FROM php:8.3.8-alpine3.19
 
 # Install OS dependencies
 RUN apk add --update  \
