@@ -12,6 +12,7 @@ import {DeploymentSpecificationServiceAnnotation} from '../DeploymentSpecificati
 import {DeploymentSpecificationQuickCommand} from '../DeploymentSpecificationQuickCommand';
 import {DeploymentSpecificationInitContainer} from '../DeploymentSpecificationInitContainer';
 import {DeploymentSpecificationPostUpdateAction} from '../DeploymentSpecificationPostUpdateAction';
+import {Label} from '../Label';
 import {DeploymentStep} from '../DeploymentStep';
 import {User} from '../User';
 import {Deletion} from '../Deletion';
@@ -50,6 +51,7 @@ export class DeploymentSpecificationDefinition extends BaseModel {
     deployment_specification_quick_commands?: DeploymentSpecificationQuickCommand[];
     deployment_specification_init_containers?: DeploymentSpecificationInitContainer[];
     deployment_specification_post_update_actions?: DeploymentSpecificationPostUpdateAction[];
+    labels?: Label[];
     deploymentSteps?: DeploymentStep[];
     id?: number;
     created?: string;
@@ -100,6 +102,7 @@ export class DeploymentSpecificationDefinition extends BaseModel {
             delete this.deployment_specification_quick_commands;
             delete this.deployment_specification_init_containers;
             delete this.deployment_specification_post_update_actions;
+            delete this.labels;
             delete this.deploymentSteps;
             delete this.id;
             delete this.created;
@@ -208,6 +211,9 @@ export class DeploymentSpecificationDefinition extends BaseModel {
         }
         if (data.deployment_specification_post_update_actions != null) {
             this.deployment_specification_post_update_actions = data.deployment_specification_post_update_actions.map((i: any) => new DeploymentSpecificationPostUpdateAction(i));
+        }
+        if (data.labels != null) {
+            this.labels = data.labels.map((i: any) => new Label(i));
         }
         if (data.deploymentSteps != null) {
             this.deploymentSteps = data.deploymentSteps.map((i: any) => new DeploymentStep(i));

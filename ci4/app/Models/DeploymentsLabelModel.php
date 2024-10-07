@@ -1,20 +1,16 @@
 <?php namespace App\Models;
 
-use RestExtension\Core\Model;
 use RestExtension\ResourceModelInterface;
 
-class LabelModel extends Model implements ResourceModelInterface {
+class DeploymentsLabelModel extends \RestExtension\Models\UserModel implements ResourceModelInterface {
 
     public $hasOne = [
-
+        DeploymentModel::class,
+        LabelModel::class,
     ];
 
     public $hasMany = [
-        WorkspaceModel::class,
-        DeploymentPackageModel::class,
-        DeploymentModel::class,
-        DeploymentsLabelModel::class,
-        DeploymentSpecificationModel::class,
+
     ];
 
     public function preRestGet($queryParser, $id) {
@@ -39,12 +35,6 @@ class LabelModel extends Model implements ResourceModelInterface {
 
     public function appleRestGetManyRelations($items) {
 
-    }
-
-    public function ignoredRestGetOnRelations(): array {
-        return [
-            WorkspaceModel::class,
-        ];
     }
 
 }

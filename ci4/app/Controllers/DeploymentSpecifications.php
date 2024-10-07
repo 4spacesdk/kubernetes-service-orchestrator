@@ -7,7 +7,7 @@ use App\Entities\DeploymentSpecificationEnvironmentVariable;
 use App\Entities\DeploymentSpecificationIngress;
 use App\Entities\DeploymentSpecificationPostCommand;
 use App\Entities\DeploymentSpecificationPostUpdateAction;
-use App\Entities\PostUpdateAction;
+use App\Entities\Label;
 use App\Entities\DeploymentSpecificationQuickCommand;
 use App\Entities\DeploymentSpecificationServiceAnnotation;
 use App\Entities\DeploymentSpecificationServicePort;
@@ -16,11 +16,11 @@ use App\Interfaces\ClusterRoleRuleList;
 use App\Interfaces\EnvironmentVariableList;
 use App\Interfaces\IngressList;
 use App\Interfaces\IntArrayInterface;
+use App\Interfaces\LabelList;
 use App\Interfaces\PostCommandList;
 use App\Interfaces\QuickCommandList;
 use App\Interfaces\ServiceAnnotationList;
 use App\Interfaces\ServicePortList;
-use App\Models\PostUpdateActionModel;
 use DebugTool\Data;
 
 class DeploymentSpecifications extends ResourceController {
@@ -298,6 +298,31 @@ class DeploymentSpecifications extends ResourceController {
             );
 
             $item->updatePostUpdateActions($values);
+        }
+        $this->_setResource($item);
+        $this->success();
+    }
+
+    /**
+     * @route /deployment-specifications/{id}/labels
+     * @method put
+     * @custom true
+     * @param int $id
+     * @requestSchema LabelList
+     * @return void
+     */
+    public function updateLabels(int $id): void {
+        $item = new DeploymentSpecification();
+        $item->find($id);
+        if ($item->exists()) {
+            /** @var LabelList $body */
+            $body = $this->request->getJSON();
+            $values = new Label();
+            $values->all = array_map(
+                fn($data) => Label::Create($data->name, $data->value),
+                $body->values
+            );
+            $item->updateLabels($values);
         }
         $this->_setResource($item);
         $this->success();

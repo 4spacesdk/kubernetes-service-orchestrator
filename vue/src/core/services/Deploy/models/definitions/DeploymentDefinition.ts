@@ -8,6 +8,7 @@ import {Domain} from '../Domain';
 import {MigrationJob} from '../MigrationJob';
 import {EnvironmentVariable} from '../EnvironmentVariable';
 import {DeploymentVolume} from '../DeploymentVolume';
+import {Label} from '../Label';
 import {User} from '../User';
 import {Deletion} from '../Deletion';
 import {BaseModel} from '../BaseModel';
@@ -48,6 +49,7 @@ export class DeploymentDefinition extends BaseModel {
     environment_variables?: EnvironmentVariable[];
     deployment_volumes?: DeploymentVolume[];
     last_migration_jobs?: MigrationJob[];
+    labels?: Label[];
     id?: number;
     created?: string;
     updated?: string;
@@ -100,6 +102,7 @@ export class DeploymentDefinition extends BaseModel {
             delete this.environment_variables;
             delete this.deployment_volumes;
             delete this.last_migration_jobs;
+            delete this.labels;
             delete this.id;
             delete this.created;
             delete this.updated;
@@ -216,6 +219,9 @@ export class DeploymentDefinition extends BaseModel {
         }
         if (data.last_migration_jobs != null) {
             this.last_migration_jobs = data.last_migration_jobs.map((i: any) => new MigrationJob(i));
+        }
+        if (data.labels != null) {
+            this.labels = data.labels.map((i: any) => new Label(i));
         }
         if (data.id != null) {
             this.id = data.id;

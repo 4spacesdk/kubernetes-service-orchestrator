@@ -18,6 +18,7 @@ import {User} from "./models";
 import {Webhook} from "./models";
 import {WebhookDelivery} from "./models";
 import {Workspace} from "./models";
+import {PostUpdateActionCondition} from "./models";
 
 export interface BoolInterface {
     value?: boolean;
@@ -236,14 +237,7 @@ export interface PostCommandList {
     values?: PostCommand[];
 }
 
-export interface PostUpdateActionCondition {
-    podio_integration_id?: number;
-    type?: string;
-    field_id?: string;
-    value?: string;
-}
-
-export interface PostUpdateActionList {
+export interface PostUpdateActionConditionList {
     values?: PostUpdateActionCondition[];
 }
 
@@ -1868,6 +1862,27 @@ export class DeploymentSpecificationsUpdatePostUpdateActionsPutById extends Base
     }
 }
 
+export class DeploymentSpecificationsUpdateLabelsPutById extends BaseApi<DeploymentSpecification> {
+
+    public topic = 'Resources.DeploymentSpecifications';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/deployment-specifications/${id}/labels`;
+    }
+
+    protected convertToResource(data: any): DeploymentSpecification {
+        return new DeploymentSpecification(data);
+    }
+
+    public save(data: LabelList, next?: (value: DeploymentSpecification) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
 class DeploymentSpecifications {
 
     public get(): DeploymentSpecificationsGet {
@@ -1932,6 +1947,10 @@ class DeploymentSpecifications {
 
     public updatePostUpdateActionsPutById(id: number): DeploymentSpecificationsUpdatePostUpdateActionsPutById {
         return new DeploymentSpecificationsUpdatePostUpdateActionsPutById(id);
+    }
+
+    public updateLabelsPutById(id: number): DeploymentSpecificationsUpdateLabelsPutById {
+        return new DeploymentSpecificationsUpdateLabelsPutById(id);
     }
 
 }
@@ -2689,6 +2708,27 @@ export class DeploymentsGetDeploymentSpecificationGetById extends BaseApi<Deploy
     }
 }
 
+export class DeploymentsUpdateLabelsPutById extends BaseApi<Deployment> {
+
+    public topic = 'Resources.Deployments';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/deployments/${id}/labels`;
+    }
+
+    protected convertToResource(data: any): Deployment {
+        return new Deployment(data);
+    }
+
+    public save(data: LabelList, next?: (value: Deployment) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
 class Deployments {
 
     public get(): DeploymentsGet {
@@ -2761,6 +2801,10 @@ class Deployments {
 
     public getDeploymentSpecificationGetById(id: number): DeploymentsGetDeploymentSpecificationGetById {
         return new DeploymentsGetDeploymentSpecificationGetById(id);
+    }
+
+    public updateLabelsPutById(id: number): DeploymentsUpdateLabelsPutById {
+        return new DeploymentsUpdateLabelsPutById(id);
     }
 
 }
@@ -4946,7 +4990,7 @@ export class PostUpdateActionsUpdateConditionsPutById extends BaseApi<PostUpdate
         return new PostUpdateAction(data);
     }
 
-    public save(data: PostUpdateActionList, next?: (value: PostUpdateAction) => void) {
+    public save(data: PostUpdateActionConditionList, next?: (value: PostUpdateAction) => void) {
         return super.executeSave(data, next);
     }
 }

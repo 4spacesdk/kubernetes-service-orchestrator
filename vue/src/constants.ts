@@ -187,6 +187,18 @@ import type {
 import type {
     DeploymentSpecificationUpdatePostUpdateActionsDialog_Input
 } from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdatePostUpdateActionsDialog.vue";
+import type {
+    DeploymentSpecificationUpdateLabelsDialog_Input
+} from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateLabelsDialog.vue";
+import type {
+    DeploymentSpecificationUpdateLabelDialog_Input
+} from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateLabelDialog.vue";
+import type {
+    DeploymentUpdateLabelsDialog_Input
+} from "@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateLabelsDialog.vue";
+import type {
+    DeploymentUpdateLabelDialog_Input
+} from "@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateLabelDialog.vue";
 
 export type Events = {
     confirm: ConfirmationDialog_Input;
@@ -219,6 +231,8 @@ export type Events = {
         step: DeploymentStep
     };
     deploymentLogs: DeploymentLogsDialog_Input;
+    deploymentUpdateLabels: DeploymentUpdateLabelsDialog_Input;
+    deploymentUpdateLabel: DeploymentUpdateLabelDialog_Input;
 
     domainCreate: DomainCreateDialog_Input;
     domainSaved: Domain | undefined;
@@ -273,6 +287,8 @@ export type Events = {
     deploymentSpecificationUpdateServiceAnnotation: DeploymentSpecificationUpdateServiceAnnotationDialog_Input;
     deploymentSpecificationUpdateInitContainers: DeploymentSpecificationUpdateInitContainersDialog_Input;
     deploymentSpecificationUpdatePostUpdateActions: DeploymentSpecificationUpdatePostUpdateActionsDialog_Input;
+    deploymentSpecificationUpdateLabels: DeploymentSpecificationUpdateLabelsDialog_Input;
+    deploymentSpecificationUpdateLabel: DeploymentSpecificationUpdateLabelDialog_Input;
 
     deploymentPackageSaved: DeploymentPackage | undefined;
     deploymentPackageEdit: DeploymentPackageCreateDialog_Input;

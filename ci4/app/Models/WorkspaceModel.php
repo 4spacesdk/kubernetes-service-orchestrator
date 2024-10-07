@@ -1,6 +1,7 @@
 <?php namespace App\Models;
 
 use App\Entities\Deployment;
+use App\Entities\DeploymentsLabel;
 use App\Entities\Workspace;
 use DebugTool\Data;
 use RestExtension\Core\Model;
@@ -62,6 +63,18 @@ class WorkspaceModel extends Model implements ResourceModelInterface {
             foreach ($deployments as $deployment) {
                 $items->getById($deployment->workspace_id)->deployments->add($deployment);
             }
+
+            if ($deployments->exists()) {
+                /** @var DeploymentsLabel $deploymentsLabels */
+                $deploymentsLabels = (new DeploymentsLabelModel())
+                    ->includeRelated(LabelModel::class)
+                    ->whereIn('deployment_id', array_map(fn(Deployment $deployment) => $deployment->id, $deployments->all))
+                    ->find();
+                foreach ($deploymentsLabels as $deploymentsLabel) {
+                    $deployments->getById($deploymentsLabel->deployment_id)->labels->add($deploymentsLabel->label);
+                }
+            }
+
         }
     }
 

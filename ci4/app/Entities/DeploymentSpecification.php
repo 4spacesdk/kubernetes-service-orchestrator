@@ -72,6 +72,7 @@ use RestExtension\Core\Entity;
  * @property DeploymentSpecificationQuickCommand $deployment_specification_quick_commands
  * @property DeploymentSpecificationInitContainer $deployment_specification_init_containers
  * @property DeploymentSpecificationPostUpdateAction $deployment_specification_post_update_actions
+ * @property Label $labels
  *
  * @property DeploymentStep $deploymentSteps
  */
@@ -274,6 +275,12 @@ class DeploymentSpecification extends Entity {
         $this->deployment_specification_post_update_actions->find()->deleteAll();
         $this->save($values);
         $this->deployment_specification_post_update_actions = $values;
+    }
+
+    public function updateLabels(Label $values): void {
+        $this->labels->find()->deleteAll();
+        $this->save($values);
+        $this->labels = $values;
     }
 
     // </editor-fold>

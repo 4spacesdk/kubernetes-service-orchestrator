@@ -3,7 +3,7 @@ import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch}
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
 import {VTextField} from "vuetify/components/VTextField";
 
-export interface WorkspaceUpdateLabelDialog_Input {
+export interface DeploymentSpecificationUpdateLabelDialog_Input {
     label: {
         name: string;
         value: string;
@@ -13,7 +13,7 @@ export interface WorkspaceUpdateLabelDialog_Input {
 }
 
 const props = defineProps<{
-    input: WorkspaceUpdateLabelDialog_Input,
+    input: DeploymentSpecificationUpdateLabelDialog_Input,
     events: DialogEventsInterface
 }>();
 

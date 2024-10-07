@@ -5,9 +5,11 @@ use App\Entities\Deployment;
 use App\Entities\DeploymentSpecification;
 use App\Entities\DeploymentVolume;
 use App\Entities\EnvironmentVariable;
+use App\Entities\Label;
 use App\Exceptions\ValidationException;
 use App\Interfaces\DeploymentVolumeList;
 use App\Interfaces\EnvironmentVariableList;
+use App\Interfaces\LabelList;
 use App\Libraries\DeploymentSteps\BaseDeploymentStep;
 use App\Models\MigrationJobModel;
 use DebugTool\Data;
@@ -322,6 +324,31 @@ class Deployments extends ResourceController {
         $result['deploymentSteps'] = array_map(fn (BaseDeploymentStep $step) => $step->toArray(), $spec->getDeploymentSteps($item));
 
         Data::set('resource', $result);
+        $this->success();
+    }
+
+    /**
+     * @route /deployments/{id}/labels
+     * @method put
+     * @custom true
+     * @param int $id
+     * @requestSchema LabelList
+     * @return void
+     */
+    public function updateLabels(int $id): void {
+        $item = new Deployment();
+        $item->find($id);
+        if ($item->exists()) {
+            /** @var LabelList $body */
+            $body = $this->request->getJSON();
+            $values = new Label();
+            $values->all = array_map(
+                fn($data) => Label::Create($data->name, $data->value),
+                $body->values
+            );
+            $item->updateLabels($values);
+        }
+        $this->_setResource($item);
         $this->success();
     }
 

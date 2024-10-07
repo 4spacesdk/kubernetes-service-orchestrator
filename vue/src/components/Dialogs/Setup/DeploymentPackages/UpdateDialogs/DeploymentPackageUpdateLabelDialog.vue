@@ -12,11 +12,6 @@ export interface DeploymentPackageUpdateLabelDialog_Input {
     onSaveCallback: () => void;
 }
 
-interface Variable {
-    name: string;
-    code: string;
-}
-
 const props = defineProps<{
     input: DeploymentPackageUpdateLabelDialog_Input,
     events: DialogEventsInterface

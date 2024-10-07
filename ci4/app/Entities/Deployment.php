@@ -60,6 +60,7 @@ use RestExtension\Core\Entity;
  * @property EnvironmentVariable $environment_variables
  * @property DeploymentVolume $deployment_volumes
  * @property MigrationJob $last_migration_jobs
+ * @property Label $labels
  */
 class Deployment extends Entity {
 
@@ -249,6 +250,12 @@ class Deployment extends Entity {
         }
     }
 
+    public function updateLabels(Label $values): void {
+        $this->labels->find()->deleteAll();
+        $this->save($values);
+        $this->labels = $values;
+    }
+
     public function getInternalUrl(): string {
         if (!$this->domain->exists()) {
             $this->domain->find();
@@ -349,6 +356,14 @@ class Deployment extends Entity {
      */
     public function getIterator(): \ArrayIterator {
         return parent::getIterator();
+    }
+
+    /**
+     * @param $id
+     * @return null|Deployment
+     */
+    public function getById($id) {
+        return parent::getById($id);
     }
 
 }

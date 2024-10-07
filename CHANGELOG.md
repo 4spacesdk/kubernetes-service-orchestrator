@@ -1,13 +1,26 @@
 # Changelog
 
+## v1.1.0 (2024-10-07)
+
+### Fixed bugs
+
+### Enhancements
+* Added labels to deployments and deployment specifications [Issue #31](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/31)
+
+### Upgrade guide
+1. Deploy new image
+2. Migrate database [(Guide)](https://github.com/4spacesdk/kubernetes-service-orchestrator?tab=readme-ov-file#migrate-database-helm) 
+ 
+
+
 ## v1.0.3 (2024-10-02)
 
 ### Fixed bugs
 
 ### Enhancements
 * Updated composer dependencies
-  * `4spacesdk/ci4ormextension`
-  * `4spacesdk/ci4authextension`
+    * `4spacesdk/ci4ormextension`
+    * `4spacesdk/ci4authextension`
 * Updated alpine from v3.19 to v3.20
 * Updated php from v8.3.8 to v8.3.12
 

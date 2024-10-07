@@ -20,6 +20,9 @@ const showUpdateInitContainers = ref(false);
 const showUpdatePostUpdateActions = ref(false);
 const isUpdatePostUpdateActionsEnabled = ref(false);
 
+const showUpdateLabels = ref(false);
+const isUpdateLabelsEnabled = ref(false);
+
 onMounted(() => {
     render();
 
@@ -38,6 +41,9 @@ function render() {
     showUpdateInitContainers.value = true;
     showUpdatePostUpdateActions.value = true;
     isUpdatePostUpdateActionsEnabled.value = props.deploymentSpecification.container_image?.version_control_enabled ?? false;
+
+    showUpdateLabels.value = true;
+    isUpdateLabelsEnabled.value = true;
 }
 
 function onUpdatePostCommandsClicked() {
@@ -90,6 +96,12 @@ function onUpdateInitContainersClicked() {
 
 function onUpdatePostUpdateActionsClicked() {
     bus.emit('deploymentSpecificationUpdatePostUpdateActions', {
+        deploymentSpecification: props.deploymentSpecification
+    });
+}
+
+function onUpdateLabelsClicked() {
+    bus.emit('deploymentSpecificationUpdateLabels', {
         deploymentSpecification: props.deploymentSpecification
     });
 }
@@ -175,6 +187,16 @@ function onUpdatePostUpdateActionsClicked() {
                     <v-list-item-title>
                         <v-icon size="small" class="my-auto ml-2">fa fa-box</v-icon>
                         <span class="ml-2">Init Containers</span>
+                    </v-list-item-title>
+                </v-list-item>
+                <v-list-item
+                    v-if="showUpdateLabels"
+                    :disabled="!isUpdateLabelsEnabled"
+                    dense
+                    @click="onUpdateLabelsClicked">
+                    <v-list-item-title>
+                        <v-icon size="small" class="my-auto ml-2">fa fa-tags</v-icon>
+                        <span class="ml-2">Labels</span>
                     </v-list-item-title>
                 </v-list-item>
                 <v-tooltip

@@ -96,6 +96,12 @@ bus.on('deploymentResourcePreview', async input => {
 bus.on('deploymentLogs', async input => {
     addComponent((await import('@/components/Dialogs/Setup/Deployments/DeploymentLogsDialog.vue')).default, input);
 });
+bus.on('deploymentUpdateLabel', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateLabelDialog.vue')).default, input);
+});
+bus.on('deploymentUpdateLabels', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateLabelsDialog.vue')).default, input);
+});
 
 
 bus.on('migrationJobList', async input => {
@@ -207,6 +213,12 @@ bus.on('deploymentSpecificationUpdateInitContainers', async input => {
 });
 bus.on('deploymentSpecificationUpdatePostUpdateActions', async input => {
     addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdatePostUpdateActionsDialog.vue')).default, input);
+});
+bus.on('deploymentSpecificationUpdateLabel', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateLabelDialog.vue')).default, input);
+});
+bus.on('deploymentSpecificationUpdateLabels', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateLabelsDialog.vue')).default, input);
 });
 
 

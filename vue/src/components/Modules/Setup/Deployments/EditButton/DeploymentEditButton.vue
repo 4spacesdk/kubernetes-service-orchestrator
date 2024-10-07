@@ -39,6 +39,9 @@ const isUpdateVolumesEnabled = ref(false);
 const showUpdateCustomResource = ref(false);
 const isUpdateCustomResourceEnabled = ref(false);
 
+const showUpdateLabels = ref(false);
+const isUpdateLabelsEnabled = ref(false);
+
 onMounted(() => {
     isLoading.value = true;
     Api.deploymentSpecifications().getById(props.deployment.deployment_specification_id!)
@@ -75,6 +78,9 @@ function render() {
 
     showUpdateCustomResource.value = spec.value?.type == DeploymentSpecificationTypes.Custom;
     isUpdateCustomResourceEnabled.value = true;
+
+    showUpdateLabels.value = true;
+    isUpdateLabelsEnabled.value = true;
 
     isLoading.value = false;
 }
@@ -129,6 +135,12 @@ function onUpdateVolumesClicked() {
 
 function onUpdateCustomResourceClicked() {
     bus.emit('deploymentUpdateCustomResource', {
+        deployment: props.deployment
+    });
+}
+
+function onUpdateLabelsClicked() {
+    bus.emit('deploymentUpdateLabels', {
         deployment: props.deployment
     });
 }
@@ -245,6 +257,16 @@ function onUpdateCustomResourceClicked() {
                     <v-list-item-title>
                         <v-icon size="small" class="my-auto ml-2">fa fa-file-lines</v-icon>
                         <span class="ml-2">Custom Resource</span>
+                    </v-list-item-title>
+                </v-list-item>
+                <v-list-item
+                    v-if="showUpdateLabels"
+                    :disabled="!isUpdateLabelsEnabled"
+                    dense
+                    @click="onUpdateLabelsClicked">
+                    <v-list-item-title>
+                        <v-icon size="small" class="my-auto ml-2">fa fa-tags</v-icon>
+                        <span class="ml-2">Labels</span>
                     </v-list-item-title>
                 </v-list-item>
             </v-list>

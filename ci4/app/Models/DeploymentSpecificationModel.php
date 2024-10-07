@@ -27,10 +27,29 @@ class DeploymentSpecificationModel extends Model implements ResourceModelInterfa
         DeploymentSpecificationQuickCommandModel::class,
         DeploymentSpecificationInitContainerModel::class,
         DeploymentSpecificationPostUpdateActionModel::class,
+        LabelModel::class,
     ];
 
     public function preRestGet($queryParser, $id) {
         $this->includeRelated(ContainerImageModel::class);
+
+        if ($queryParser->hasFilter('label')) {
+            $queryParser->getFilter('label')[0]->ignoreAuto = true;
+            $selectors = explode(',', $queryParser->getFilter('label')[0]->value);
+
+            foreach ($selectors as $selector) {
+                [$name, $value] = explode('=', $selector);
+
+                $labelSubQuery = (new LabelModel())
+                    ->select('COUNT(*) as count', true, false)
+                    ->whereRelated(DeploymentSpecificationModel::class, 'id', '${parent}.id', false)
+                    ->where('name', $name)
+                    ->where('value', $value)
+                    ->having('count >', 0, true, false);
+
+                $this->whereSubQuery($labelSubQuery, '', null, false);
+            }
+        }
     }
 
     public function postRestGet($queryParser, $items) {

@@ -21,6 +21,8 @@ class DeploymentModel extends \RestExtension\Models\UserModel implements Resourc
         MigrationJobModel::class,
         DeploymentVolumeModel::class,
         AutoUpdateModel::class,
+        LabelModel::class,
+        DeploymentsLabelModel::class,
     ];
 
     public function preRestGet($queryParser, $id) {
@@ -28,6 +30,24 @@ class DeploymentModel extends \RestExtension\Models\UserModel implements Resourc
             ->includeRelated(DeploymentSpecificationModel::class)
             ->includeRelated([DeploymentSpecificationModel::class, ContainerImageModel::class])
             ->includeRelated('last_migration_job');
+
+        if ($queryParser->hasFilter('label')) {
+            $queryParser->getFilter('label')[0]->ignoreAuto = true;
+            $selectors = explode(',', $queryParser->getFilter('label')[0]->value);
+
+            foreach ($selectors as $selector) {
+                [$name, $value] = explode('=', $selector);
+
+                $labelSubQuery = (new LabelModel())
+                    ->select('COUNT(*) as count', true, false)
+                    ->whereRelated(DeploymentModel::class, 'id', '${parent}.id', false)
+                    ->where('name', $name)
+                    ->where('value', $value)
+                    ->having('count >', 0, true, false);
+
+                $this->whereSubQuery($labelSubQuery, '', null, false);
+            }
+        }
     }
 
     /**

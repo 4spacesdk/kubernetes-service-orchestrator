@@ -185,6 +185,13 @@ class Workspace extends Entity {
         );
         $deployment->save($values);
 
+        // Create labels
+        $deploymentSpecification->labels->find();
+        foreach ($deploymentSpecification->labels as $label) {
+            $newLabel = Label::Create($label->name, $label->value);
+            $newLabel->save($deployment);
+        }
+
         return $deployment;
     }
 
