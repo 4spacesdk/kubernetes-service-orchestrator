@@ -3,7 +3,7 @@
 use App\Models\EnvironmentVariableModel;
 use App\Models\InitContainerEnvironmentVariableModel;
 use RenokiCo\PhpK8s\Instances\Container;
-use RestExtension\Core\Entity;
+use App\Core\Entity;
 
 /**
  * Class InitContainer

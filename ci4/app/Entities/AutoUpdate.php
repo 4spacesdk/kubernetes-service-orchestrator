@@ -6,7 +6,7 @@ use App\Libraries\ZMQ\Events;
 use App\Libraries\ZMQ\ZMQProxy;
 use App\Models\DeploymentModel;
 use DebugTool\Data;
-use RestExtension\Core\Entity;
+use App\Core\Entity;
 
 /**
  * Class AutoUpdate

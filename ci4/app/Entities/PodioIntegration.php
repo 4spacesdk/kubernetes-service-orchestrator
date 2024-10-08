@@ -2,7 +2,7 @@
 
 use App\Interfaces\PodioIntegrationGetFieldsResponse;
 use DebugTool\Data;
-use RestExtension\Core\Entity;
+use App\Core\Entity;
 
 /**
  * Class PodioIntegration

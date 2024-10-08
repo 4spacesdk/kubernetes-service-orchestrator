@@ -1,7 +1,6 @@
 <?php namespace App\Controllers;
 
 use App\Core\ResourceController;
-use App\Entities\Deployment;
 use App\Entities\DeploymentPackage;
 use App\Entities\DeploymentPackageDeploymentSpecification;
 use App\Entities\DeploymentSpecification;
@@ -9,10 +8,7 @@ use App\Entities\Label;
 use App\Entities\Workspace;
 use App\Exceptions\ValidationException;
 use App\Interfaces\LabelList;
-use App\Models\DeploymentModel;
 use App\Models\DeploymentPackageDeploymentSpecificationModel;
-use App\Models\DeploymentPackageModel;
-use App\Models\DomainModel;
 use App\Models\MigrationJobModel;
 use Google\ApiCore\ApiException;
 

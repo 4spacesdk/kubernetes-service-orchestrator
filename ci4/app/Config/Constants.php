@@ -47,13 +47,21 @@ class WebHookTypes {
     const string
         Workspace_Created = 'workspace-created',
         Workspace_Updated = 'workspace-updated',
-        Workspace_Deleted = 'workspace-deleted';
+        Workspace_Deleted = 'workspace-deleted',
+        Workspace_Deployed = 'workspace-deployed',
+        Workspace_Terminated = 'workspace-terminated',
+        Deployment_Deployed = 'deployment-deployed',
+        Deployment_Terminated = 'deployment-terminated';
 
     public static function All(): array {
         return [
             self::Workspace_Created,
             self::Workspace_Updated,
             self::Workspace_Deleted,
+            self::Workspace_Deployed,
+            self::Workspace_Terminated,
+            self::Deployment_Deployed,
+            self::Deployment_Terminated,
         ];
     }
 }

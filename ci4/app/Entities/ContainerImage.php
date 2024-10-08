@@ -9,7 +9,7 @@ use App\Libraries\GoogleCloud\GoogleCloudPubSub;
 use App\Libraries\Kubernetes\KubeHelper;
 use App\Libraries\VersionControlSystems\BaseVersionControlSystem;
 use App\Libraries\VersionControlSystems\GithubVersionControl;
-use RestExtension\Core\Entity;
+use App\Core\Entity;
 
 /**
  * Class ContainerImage

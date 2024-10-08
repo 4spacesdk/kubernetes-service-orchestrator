@@ -21,7 +21,7 @@ use App\Models\DeploymentSpecificationIngressRulePathModel;
 use App\Models\DeploymentSpecificationServiceAnnotationModel;
 use App\Models\DeploymentSpecificationServicePortModel;
 use App\Models\DeploymentVolumeModel;
-use RestExtension\Core\Entity;
+use App\Core\Entity;
 
 /**
  * Class DeploymentSpecification

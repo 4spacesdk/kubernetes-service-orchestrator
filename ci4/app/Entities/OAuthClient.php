@@ -1,7 +1,7 @@
 <?php namespace App\Entities;
 
 use App\Models\OAuthClientModel;
-use RestExtension\Core\Entity;
+use App\Core\Entity;
 
 /**
  * Class OAuthClient

@@ -5,7 +5,7 @@ use App\Libraries\ZMQ\ChangeEvent;
 use App\Libraries\ZMQ\Events;
 use App\Libraries\ZMQ\ZMQProxy;
 use DebugTool\Data;
-use RestExtension\Core\Entity;
+use App\Core\Entity;
 use \App\Libraries\DeploymentSteps\DeploymentStep;
 
 /**

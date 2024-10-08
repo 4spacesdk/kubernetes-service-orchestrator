@@ -94,6 +94,42 @@ class ZMQ extends Controller {
         Data::debug('OK');
     }
 
+    public function workspaceDeployed(): void {
+        $changeEvent = ChangeEvent::Parse(json_decode($this->event->data, true));
+        WebhookHelper::Deliver(
+            \WebHookTypes::Workspace_Deployed,
+            json_encode($changeEvent->next)
+        );
+        Data::debug('OK');
+    }
+
+    public function workspaceTerminated(): void {
+        $changeEvent = ChangeEvent::Parse(json_decode($this->event->data, true));
+        WebhookHelper::Deliver(
+            \WebHookTypes::Workspace_Terminated,
+            json_encode($changeEvent->next)
+        );
+        Data::debug('OK');
+    }
+
+    public function deploymentDeployed(): void {
+        $changeEvent = ChangeEvent::Parse(json_decode($this->event->data, true));
+        WebhookHelper::Deliver(
+            \WebHookTypes::Deployment_Deployed,
+            json_encode($changeEvent->next)
+        );
+        Data::debug('OK');
+    }
+
+    public function deploymentTerminated(): void {
+        $changeEvent = ChangeEvent::Parse(json_decode($this->event->data, true));
+        WebhookHelper::Deliver(
+            \WebHookTypes::Deployment_Terminated,
+            json_encode($changeEvent->next)
+        );
+        Data::debug('OK');
+    }
+
     public function autoUpdateApproved(): void {
         $changeEvent = ChangeEvent::Parse(json_decode($this->event->data, true));
 

@@ -2,7 +2,7 @@
 
 use App\Models\PostUpdateActionConditionModel;
 use DebugTool\Data;
-use RestExtension\Core\Entity;
+use App\Core\Entity;
 
 /**
  * Class PostUpdateAction

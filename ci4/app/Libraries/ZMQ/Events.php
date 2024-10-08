@@ -41,6 +41,22 @@ class Events {
         return Events::Generate("workspace.deleted");
     }
 
+    public static function Workspace_Deployed(): string {
+        return Events::Generate("workspace.deployed");
+    }
+
+    public static function Workspace_Terminated(): string {
+        return Events::Generate("workspace.terminated");
+    }
+
+    public static function Deployment_Deployed(): string {
+        return Events::Generate("deployment.deployed");
+    }
+
+    public static function Deployment_Terminated(): string {
+        return Events::Generate("deployment.terminated");
+    }
+
     public static function AutoUpdate_Created(): string {
         return Events::Generate("auto-update-created");
     }

@@ -105,9 +105,9 @@ function onRetryItemBtnClicked(item: Row) {
 }
 
 function onRequestPayloadBtnClicked(item: Row) {
-    bus.emit('info', {
+    bus.emit('json', {
         title: 'Request payload',
-        body: item.item.payload ?? ''
+        body: JSON.parse(item.item.payload ?? '{}'),
     });
 }
 

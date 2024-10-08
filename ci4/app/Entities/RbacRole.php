@@ -3,7 +3,7 @@
 use App\Models\RbacPermissionModel;
 use App\Models\RbacRoleModel;
 use DebugTool\Data;
-use RestExtension\Core\Entity;
+use App\Core\Entity;
 
 /**
  * Class RbacRole

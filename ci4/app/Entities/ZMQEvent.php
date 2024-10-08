@@ -1,6 +1,6 @@
 <?php namespace App\Entities;
 
-use RestExtension\Core\Entity;
+use App\Core\Entity;
 
 /**
  * Class ZMQEvent

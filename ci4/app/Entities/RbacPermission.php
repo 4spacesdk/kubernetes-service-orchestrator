@@ -1,7 +1,7 @@
 <?php namespace App\Entities;
 
 use App\Models\RbacPermissionModel;
-use RestExtension\Core\Entity;
+use App\Core\Entity;
 
 /**
  * Class RbacPermission

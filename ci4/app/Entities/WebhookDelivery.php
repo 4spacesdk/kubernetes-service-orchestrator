@@ -1,7 +1,7 @@
 <?php namespace App\Entities;
 
 use DebugTool\Data;
-use RestExtension\Core\Entity;
+use App\Core\Entity;
 
 /**
  * Class WebhookDelivery

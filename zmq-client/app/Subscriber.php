@@ -49,6 +49,34 @@ class Subscriber {
             log_($result);
         });
 
+        $client->subscribe(Events::Workspace_Deployed(), function ($payload) {
+            log_('Workspace_Deployed');
+            [$identifier, $event, $data] = self::ParsePayload($payload);
+            $result = php("ZMQ workspaceDeployed --identifier $identifier --event $event --data $data");
+            log_($result);
+        });
+
+        $client->subscribe(Events::Workspace_Terminated(), function ($payload) {
+            log_('Workspace_Terminated');
+            [$identifier, $event, $data] = self::ParsePayload($payload);
+            $result = php("ZMQ workspaceTerminated --identifier $identifier --event $event --data $data");
+            log_($result);
+        });
+
+        $client->subscribe(Events::Deployment_Deployed(), function ($payload) {
+            log_('Deployment_Deployed');
+            [$identifier, $event, $data] = self::ParsePayload($payload);
+            $result = php("ZMQ deploymentDeployed --identifier $identifier --event $event --data $data");
+            log_($result);
+        });
+
+        $client->subscribe(Events::Deployment_Terminated(), function ($payload) {
+            log_('Deployment_Terminated');
+            [$identifier, $event, $data] = self::ParsePayload($payload);
+            $result = php("ZMQ deploymentTerminated --identifier $identifier --event $event --data $data");
+            log_($result);
+        });
+
         $client->subscribe(Events::AutoUpdate_Approved(), function ($payload) {
             log_('AutoUpdate_Approved');
             [$identifier, $event, $data] = self::ParsePayload($payload);

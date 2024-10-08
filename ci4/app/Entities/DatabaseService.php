@@ -5,7 +5,7 @@ use CodeIgniter\Database\Exceptions\DatabaseException;
 use Config\Database;
 use DatabaseDrivers;
 use DebugTool\Data;
-use RestExtension\Core\Entity;
+use App\Core\Entity;
 
 /**
  * Class DatabaseService

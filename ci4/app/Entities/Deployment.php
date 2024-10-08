@@ -1,5 +1,6 @@
 <?php namespace App\Entities;
 
+use App\Core\Entity;
 use App\Exceptions\ValidationException;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
@@ -10,7 +11,6 @@ use App\Models\DeploymentModel;
 use App\Models\EnvironmentVariableModel;
 use App\Models\WorkspaceModel;
 use DebugTool\Data;
-use RestExtension\Core\Entity;
 
 /**
  * Class Deployment
@@ -317,6 +317,12 @@ class Deployment extends Entity {
             }
         }
         $this->checkStatus();
+
+        ZMQProxy::getInstance()->send(
+            Events::Deployment_Deployed(),
+            (new ChangeEvent(null, $this->getClone()->toArray()))->toArray()
+        );
+
         return count($allErrors) ? implode("\n", $allErrors) : null;
     }
 
@@ -330,6 +336,12 @@ class Deployment extends Entity {
             }
         }
         $this->checkStatus();
+
+        ZMQProxy::getInstance()->send(
+            Events::Deployment_Terminated(),
+            (new ChangeEvent(null, $this->getClone()->toArray()))->toArray()
+        );
+
         return count($allErrors) ? implode("\n", $allErrors) : null;
     }
 

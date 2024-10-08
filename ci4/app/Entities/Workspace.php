@@ -12,7 +12,7 @@ use App\Models\DeploymentPackageEnvironmentVariableModel;
 use App\Models\WorkspaceModel;
 use DebugTool\Data;
 use Google\ApiCore\ApiException;
-use RestExtension\Core\Entity;
+use App\Core\Entity;
 
 /**
  * Class Workspace
@@ -303,6 +303,12 @@ class Workspace extends Entity {
             }
         }
         $this->deployments = $deployments;
+
+        ZMQProxy::getInstance()->send(
+            Events::Workspace_Deployed(),
+            (new ChangeEvent(null, $this->getClone()->toArray()))->toArray()
+        );
+
         return count($allErrors) ? implode("\n", $allErrors) : null;
     }
 
@@ -320,6 +326,12 @@ class Workspace extends Entity {
             }
         }
         $this->deployments = $deployments;
+
+        ZMQProxy::getInstance()->send(
+            Events::Workspace_Terminated(),
+            (new ChangeEvent(null, $this->getClone()->toArray()))->toArray()
+        );
+
         return count($allErrors) ? implode("\n", $allErrors) : null;
     }
 

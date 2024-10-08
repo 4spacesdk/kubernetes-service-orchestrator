@@ -2,7 +2,7 @@
 
 use App\Interfaces\IngressRulePath;
 use App\Models\DeploymentSpecificationIngressRulePathModel;
-use RestExtension\Core\Entity;
+use App\Core\Entity;
 
 /**
  * Class DeploymentSpecificationIngress

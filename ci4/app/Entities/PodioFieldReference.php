@@ -2,7 +2,7 @@
 
 use App\Models\PodioFieldReferenceModel;
 use DebugTool\Data;
-use RestExtension\Core\Entity;
+use App\Core\Entity;
 
 /**
  * Class PodioFieldReference
