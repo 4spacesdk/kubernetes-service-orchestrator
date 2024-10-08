@@ -71,6 +71,7 @@ resources:
 ```
 ### Install
 ```
+helm repo add 4spacesdk https://4spacesdk.github.io/helm-charts
 helm upgrade --install kso 4spacesdk/kso --values=values.yaml --namespace kso --create-namespace
 ```
 
