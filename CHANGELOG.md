@@ -1,5 +1,17 @@
 # Changelog
 
+## v1.2.1 (2024-10-12)
+
+### Fixed bugs
+
+
+### Enhancements
+* Improved 2FA secret name in authenticator apps
+
+### Upgrade guide
+1. Deploy new image
+
+
 ## v1.2.0 (2024-10-12)
 
 ### Fixed bugs
