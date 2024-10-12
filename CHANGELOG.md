@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.1.2 (2024-10-12)
+
+### Fixed bugs
+* Client did not log out after failed token refresh
+
+### Enhancements
+
+
+### Upgrade guide
+1. Deploy new image
+
+
+
 ## v1.1.1 (2024-10-08)
 
 ### Fixed bugs

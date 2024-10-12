@@ -449,8 +449,7 @@ class ApiService {
                 case 401:
                     if (error.response.data.error) {
                         if (error.response.data.error == 'RestExtension\\Exceptions\\UnauthorizedException') {
-                            console.warn('would go to logout')
-                            // AuthService.handleLogout();
+                            AuthService.handleLogout();
                         } else {
                             // bus.$emit('toast', error.response.data.error, 'red');
                         }
