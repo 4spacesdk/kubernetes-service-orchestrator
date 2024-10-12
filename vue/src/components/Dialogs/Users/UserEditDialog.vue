@@ -4,25 +4,40 @@ import {RbacRole, User} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
+import AuthService from "@/services/AuthService";
 
 export interface UserEditDialog_Input {
     user: User;
 }
 
-const props = defineProps<{input: UserEditDialog_Input, events: DialogEventsInterface}>();
+const props = defineProps<{ input: UserEditDialog_Input, events: DialogEventsInterface }>();
 
 const used = ref(false);
 const showDialog = ref(false);
 const isLoading = ref(false);
 
 const item = ref<User>(new User());
+const isMe = ref<boolean>(false);
 const password = ref('');
 const passwordConfirm = ref('');
 
 const roles = ref<RbacRole[]>([]);
-const roleProps = ref<{title: string, subtitle: string}[]>([]);
+const roleProps = ref<{ title: string, subtitle: string }[]>([]);
 const isLoadingRoles = ref(false);
 const selectedRoles = ref<number[]>([]);
+
+const isMFAEnabled = ref<boolean>(false);
+const isMFASetup = ref<boolean>(false);
+const isMFASetupLoading = ref<boolean>(false);
+const mfaQRImageDataUri = ref<string>();
+const mfaSetupCode = ref<string>();
+const mfaSetupVerificationCode = ref<string>();
+const isMFASetupVerificationCodeBtnLoading = ref<boolean>(false);
+watch(mfaSetupVerificationCode, newCode => {
+    if (newCode !== undefined && newCode.length == 6) {
+        onMFAVerificationCodeSaveBtnClicked();
+    }
+});
 
 // <editor-fold desc="Functions">
 
@@ -57,10 +72,14 @@ function render() {
         Api.users().getById(props.input.user.id!).find(items => {
             item.value = items[0];
             selectedRoles.value = item.value.rbac_roles?.map(role => role.id!) ?? [];
+            isMFAEnabled.value = props.input.user.has_mfa_secret_hash;
+            isMe.value = props.input.user.id == AuthService.currentAuthUser?.id;
             isLoading.value = false;
         });
     } else {
         item.value = props.input.user;
+        isMFAEnabled.value = props.input.user.has_mfa_secret_hash;
+        isMe.value = false;
         showDialog.value = true;
     }
 }
@@ -94,6 +113,46 @@ function onSaveBtnClicked() {
 
 function onCloseBtnClicked() {
     close();
+}
+
+function onEnableMFAToggleChanged() {
+    if (isMFAEnabled.value) {
+        isMFASetupLoading.value = true;
+        const api = Api.users().mfaSetupPrepareGet();
+        api.setWithCredentials(true);
+        api.find(result => {
+            mfaQRImageDataUri.value = result[0].qrCodeDataUri;
+            mfaSetupCode.value = result[0].setupCode;
+            isMFASetupLoading.value = false;
+            isMFASetup.value = true;
+        });
+    } else {
+        onMFARemoveBtnClicked();
+    }
+}
+
+function onMFAVerificationCodeSaveBtnClicked() {
+    isMFASetupVerificationCodeBtnLoading.value = true;
+    const api = Api.users().mfaSetupVerifyPut().code(mfaSetupVerificationCode.value);
+    api.setWithCredentials(true);
+    api.save(null, result => {
+        isMFASetupVerificationCodeBtnLoading.value = false;
+
+        bus.emit('toast', {
+            text: result.value ? 'Two-factor authenticated saved' : 'Failed to verify code, try again',
+        });
+
+        if (result.value) {
+            isMFASetup.value = false;
+            isMFAEnabled.value = true;
+        }
+    });
+}
+
+function onMFARemoveBtnClicked() {
+    Api.users().mfaSetupRemovePut().save(null);
+    isMFASetup.value = false;
+    isMFAEnabled.value = false;
 }
 
 // </editor-fold>
@@ -181,6 +240,85 @@ function onCloseBtnClicked() {
                         </v-select>
                     </v-col>
 
+                    <v-col
+                        cols="12 mb-6"
+                    >
+                        <v-card
+                            class="px-4"
+                            :loading="isMFASetupLoading"
+                        >
+                            <v-switch
+                                v-model="isMFAEnabled"
+                                density="compact"
+                                label="Two-factor authentication"
+                                color="primary"
+                                @change="onEnableMFAToggleChanged"
+                                :disabled="!isMe"
+                            />
+                            <v-row
+                                v-if="isMe && isMFAEnabled && isMFASetup"
+                            >
+                                <v-col cols="12">
+                                    <span class="d-block">Authenticator apps and browser extensions like <a
+                                        href="https://support.1password.com/one-time-passwords/" target="_blank">1Password</a>, <a
+                                        href="https://www.microsoft.com/en-us/security/mobile-authenticator-app"
+                                        target="_blank">Microsoft Authenticator</a>, etc. generate one-time passwords that are used as a second factor to verify your identity when prompted during sign-in.</span>
+                                    <span class="d-block mt-1 font-weight-bold">Scan the QR code</span>
+                                    <span class="d-block">Use an authenticator app or browser extension to scan.</span>
+                                </v-col>
+                                <v-col cols="12">
+                                    <v-img
+                                        height="200px"
+                                        weight="200px"
+                                        :src="mfaQRImageDataUri"
+                                    />
+                                </v-col>
+                                <v-col cols="12">
+                                    <span class="d-block">You can also use the setup key to manually configure your authenticator app: <strong>{{
+                                            mfaSetupCode
+                                        }}</strong></span>
+                                </v-col>
+                                <v-col cols="12">
+                                    <div class="d-flex">
+                                        <v-text-field
+                                            v-model="mfaSetupVerificationCode"
+                                            density="compact" hide-details
+                                            variant="outlined"
+                                            label="Verify the code form the app"
+                                            placeholder="XXXXXX"
+                                            style="max-width: 300px;"
+                                        />
+                                        <v-btn
+                                            variant="outlined"
+                                            :loading="isMFASetupVerificationCodeBtnLoading"
+                                            class="my-auto ml-auto"
+                                            @click="onMFAVerificationCodeSaveBtnClicked"
+                                        >
+                                            Save
+                                        </v-btn>
+                                    </div>
+                                </v-col>
+                            </v-row>
+                            <v-row
+                                v-if="isMFAEnabled && !isMFASetupLoading && !isMFASetup"
+                            >
+                                <v-col cols="12">
+                                    <span class="font-weight-bold">Two-factor is enabled</span>
+                                </v-col>
+                                <v-col
+                                    v-if="isMe"
+                                    cols="12">
+                                    <v-btn
+                                        @click="onMFARemoveBtnClicked"
+                                        variant="outlined"
+                                        color="warning"
+                                    >
+                                        Remove
+                                    </v-btn>
+                                </v-col>
+                            </v-row>
+                        </v-card>
+                    </v-col>
                 </v-row>
             </v-card-text>
             <v-divider/>

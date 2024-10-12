@@ -16,6 +16,7 @@ const headers = ref([
     {title: 'Name', key: 'name', sortable: false},
     {title: 'E-mail', key: 'username', sortable: false},
     {title: 'Roles', key: 'roles', sortable: false},
+    {title: '2FA', key: 'mfa', sortable: false},
     {title: '', key: 'actions', sortable: false},
 ]);
 const isLoading = ref(true);
@@ -156,6 +157,12 @@ function deleteItem(item: User) {
                         <v-tooltip activator="parent" location="bottom">{{ role.description }}</v-tooltip>
                     </v-chip>
                 </div>
+            </template>
+
+            <template v-slot:item.mfa="{ item }">
+                <v-icon v-if="item.has_mfa_secret_hash" color="success">
+                    fa fa-check
+                </v-icon>
             </template>
 
             <template v-slot:item.actions="{ item }">

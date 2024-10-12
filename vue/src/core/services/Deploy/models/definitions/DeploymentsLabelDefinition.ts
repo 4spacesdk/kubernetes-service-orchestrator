@@ -1,22 +1,17 @@
 /**
  * Created by ModelParser
  */
-import {RbacRole} from '../RbacRole';
+import {Deployment} from '../Deployment';
+import {Label} from '../Label';
 import {User} from '../User';
 import {Deletion} from '../Deletion';
 import {BaseModel} from '../BaseModel';
 
-export class UserDefinition extends BaseModel {
-    username?: string;
-    first_name?: string;
-    last_name?: string;
-    password?: string;
-    scope?: string;
-    type?: string;
-    renew_password?: boolean;
-    mfa_secret_hash?: string;
-    rbac_roles?: RbacRole[];
-    has_mfa_secret_hash?: boolean;
+export class DeploymentsLabelDefinition extends BaseModel {
+    deployment_id?: number;
+    deployment?: Deployment;
+    label_id?: number;
+    label?: Label;
     id?: number;
     created?: string;
     updated?: string;
@@ -34,16 +29,10 @@ export class UserDefinition extends BaseModel {
 
     public populate(data?: any, patch = false) {
         if (!patch) {
-            delete this.username;
-            delete this.first_name;
-            delete this.last_name;
-            delete this.password;
-            delete this.scope;
-            delete this.type;
-            delete this.renew_password;
-            delete this.mfa_secret_hash;
-            delete this.rbac_roles;
-            delete this.has_mfa_secret_hash;
+            delete this.deployment_id;
+            delete this.deployment;
+            delete this.label_id;
+            delete this.label;
             delete this.id;
             delete this.created;
             delete this.updated;
@@ -56,35 +45,17 @@ export class UserDefinition extends BaseModel {
         }
 
         if (!data) return;
-        if (data.username != null) {
-            this.username = data.username;
+        if (data.deployment_id != null) {
+            this.deployment_id = data.deployment_id;
         }
-        if (data.first_name != null) {
-            this.first_name = data.first_name;
+        if (data.deployment != null) {
+            this.deployment = new Deployment(data.deployment);
         }
-        if (data.last_name != null) {
-            this.last_name = data.last_name;
+        if (data.label_id != null) {
+            this.label_id = data.label_id;
         }
-        if (data.password != null) {
-            this.password = data.password;
-        }
-        if (data.scope != null) {
-            this.scope = data.scope;
-        }
-        if (data.type != null) {
-            this.type = data.type;
-        }
-        if (data.renew_password != null) {
-            this.renew_password = data.renew_password;
-        }
-        if (data.mfa_secret_hash != null) {
-            this.mfa_secret_hash = data.mfa_secret_hash;
-        }
-        if (data.rbac_roles != null) {
-            this.rbac_roles = data.rbac_roles.map((i: any) => new RbacRole(i));
-        }
-        if (data.has_mfa_secret_hash != null) {
-            this.has_mfa_secret_hash = data.has_mfa_secret_hash;
+        if (data.label != null) {
+            this.label = new Label(data.label);
         }
         if (data.id != null) {
             this.id = data.id;

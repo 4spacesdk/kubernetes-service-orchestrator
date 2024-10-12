@@ -291,6 +291,12 @@ export interface StringInterface {
     value?: string;
 }
 
+export interface UsersMFASetupPrepareResponse {
+    hasMFA?: boolean;
+    qrCodeDataUri?: string;
+    setupCode?: string;
+}
+
 export interface WebhookTypesGetResponse {
     name?: string;
 }
@@ -5609,6 +5615,74 @@ export class UsersMeGet extends BaseApi<User> {
     }
 }
 
+export class UsersMfaSetupPrepareGet extends BaseApi<UsersMFASetupPrepareResponse> {
+
+    public topic = 'Resources.UsersMFASetupPrepareResponses';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/users/mfa/setup/prepare`;
+    }
+
+    protected convertToResource(data: any): UsersMFASetupPrepareResponse {
+        return data;
+    }
+
+    public find(next?: (value: UsersMFASetupPrepareResponse[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class UsersMfaSetupVerifyPut extends BaseApi<BoolInterface> {
+
+    public topic = 'Resources.BoolInterfaces';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/users/mfa/setup/verify`;
+    }
+
+    protected convertToResource(data: any): BoolInterface {
+        return data;
+    }
+
+    public code(value: string): UsersMfaSetupVerifyPut {
+        this.addQueryParameter('code', value);
+        return this;
+    }
+
+    public save(data: any, next?: (value: BoolInterface) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class UsersMfaSetupRemovePut extends BaseApi<User> {
+
+    public topic = 'Resources.Users';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/users/mfa/setup/remove`;
+    }
+
+    protected convertToResource(data: any): User {
+        return new User(data);
+    }
+
+    public save(data: any, next?: (value: User) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
 class Users {
 
     public get(): UsersGet {
@@ -5645,6 +5719,18 @@ class Users {
 
     public meGet(): UsersMeGet {
         return new UsersMeGet();
+    }
+
+    public mfaSetupPrepareGet(): UsersMfaSetupPrepareGet {
+        return new UsersMfaSetupPrepareGet();
+    }
+
+    public mfaSetupVerifyPut(): UsersMfaSetupVerifyPut {
+        return new UsersMfaSetupVerifyPut();
+    }
+
+    public mfaSetupRemovePut(): UsersMfaSetupRemovePut {
+        return new UsersMfaSetupRemovePut();
     }
 
 }

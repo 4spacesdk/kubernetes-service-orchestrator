@@ -187,11 +187,12 @@ class ApiService {
             });
     }
 
-    public get(request: ApiRequest, axios: AxiosInstance, url: string, params: any, callback: (data: any) => void, retry: number = 1): ApiRequest {
+    public get(request: ApiRequest, axios: AxiosInstance, url: string, params: any, callback: (data: any) => void, retry: number = 1, withCredentials: boolean): ApiRequest {
         axios
             .get(url, {
                 params: Object.assign({}, params),
-                cancelToken: request.getCancelToken()
+                cancelToken: request.getCancelToken(),
+                withCredentials: withCredentials,
             })
             .then((response: any) => {
                 callback(response.data);
@@ -208,7 +209,7 @@ class ApiService {
                 if (retry > 0) {
                     this.checkForRetry(error, shouldRetry => {
                         if (shouldRetry) {
-                            this.get(request, axios, url, params, callback, retry--);
+                            this.get(request, axios, url, params, callback, retry--, withCredentials);
                         } else {
                             checkError();
                         }
@@ -220,11 +221,12 @@ class ApiService {
         return request;
     }
 
-    public post(request: ApiRequest, axios: AxiosInstance, url: string, data: any, params: string[][], callback: (data: any) => void, retry: number = 1): ApiRequest {
+    public post(request: ApiRequest, axios: AxiosInstance, url: string, data: any, params: string[][], callback: (data: any) => void, retry: number = 1, withCredentials: boolean): ApiRequest {
         axios
             .post(url, data, {
                 params: Object.assign({}, params),
-                cancelToken: request.getCancelToken()
+                cancelToken: request.getCancelToken(),
+                withCredentials: withCredentials,
             })
             .then((response: any) => {
                 callback(response.data);
@@ -241,7 +243,7 @@ class ApiService {
                 if (retry > 0) {
                     this.checkForRetry(error, shouldRetry => {
                         if (shouldRetry) {
-                            this.post(request, axios, url, data, params, callback, retry--);
+                            this.post(request, axios, url, data, params, callback, retry--, withCredentials);
                         } else {
                             checkError();
                         }
@@ -253,11 +255,12 @@ class ApiService {
         return request;
     }
 
-    public put(request: ApiRequest, axios: AxiosInstance, url: string, data: any, params: string[][], callback: (data: any) => void, retry: number = 1): ApiRequest {
+    public put(request: ApiRequest, axios: AxiosInstance, url: string, data: any, params: string[][], callback: (data: any) => void, retry: number = 1, withCredentials: boolean): ApiRequest {
         axios
             .put(url, data, {
                 params: Object.assign({}, params),
-                cancelToken: request.getCancelToken()
+                cancelToken: request.getCancelToken(),
+                withCredentials: withCredentials,
             })
             .then((response: any) => {
                 callback(response.data);
@@ -274,7 +277,7 @@ class ApiService {
                 if (retry > 0) {
                     this.checkForRetry(error, shouldRetry => {
                         if (shouldRetry) {
-                            this.put(request, axios, url, data, params, callback, retry--);
+                            this.put(request, axios, url, data, params, callback, retry--, withCredentials);
                         } else {
                             checkError();
                         }
@@ -286,11 +289,12 @@ class ApiService {
         return request;
     }
 
-    public patch(request: ApiRequest, axios: AxiosInstance, url: string, data: any, params: string[][], callback: (data: any) => void, retry: number = 1): ApiRequest {
+    public patch(request: ApiRequest, axios: AxiosInstance, url: string, data: any, params: string[][], callback: (data: any) => void, retry: number = 1, withCredentials: boolean): ApiRequest {
         axios
             .patch(url, data, {
                 params: Object.assign({}, params),
-                cancelToken: request.getCancelToken()
+                cancelToken: request.getCancelToken(),
+                withCredentials: withCredentials,
             })
             .then((response: any) => {
                 callback(response.data);
@@ -307,7 +311,7 @@ class ApiService {
                 if (retry > 0) {
                     this.checkForRetry(error, shouldRetry => {
                         if (shouldRetry) {
-                            this.patch(request, axios, url, data, params, callback, retry--);
+                            this.patch(request, axios, url, data, params, callback, retry--, withCredentials);
                         } else {
                             checkError();
                         }
@@ -319,11 +323,12 @@ class ApiService {
         return request;
     }
 
-    public delete(request: ApiRequest, axios: AxiosInstance, url: string, params: string[][], callback: (data: any) => void, retry: number = 1): ApiRequest {
+    public delete(request: ApiRequest, axios: AxiosInstance, url: string, params: string[][], callback: (data: any) => void, retry: number = 1, withCredentials: boolean): ApiRequest {
         axios
             .delete(url, {
                 params: Object.assign({}, params),
-                cancelToken: request.getCancelToken()
+                cancelToken: request.getCancelToken(),
+                withCredentials: withCredentials,
             })
             .then((response: any) => {
                 callback(response.data);
@@ -340,7 +345,7 @@ class ApiService {
                 if (retry > 0) {
                     this.checkForRetry(error, shouldRetry => {
                         if (shouldRetry) {
-                            this.delete(request, axios, url, params, callback, retry--);
+                            this.delete(request, axios, url, params, callback, retry--, withCredentials);
                         } else {
                             checkError();
                         }

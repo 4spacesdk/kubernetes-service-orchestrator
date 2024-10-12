@@ -18,6 +18,12 @@ export class SharedBaseApi<T = any> {
     private apiOrdering = new ApiOrdering();
     private apiQueryParams: any[] = [];
     public errorHandler?: (response: any) => boolean;
+    public withCredentials = false;
+
+    public setWithCredentials(value: boolean): SharedBaseApi<T> {
+        this.withCredentials = value;
+        return this;
+    }
 
     public setErrorHandler(handler: (response: any) => boolean): SharedBaseApi<T> {
         this.errorHandler = handler;
@@ -139,7 +145,7 @@ export class SharedBaseApi<T = any> {
                     next([]);
                 }
             }
-        });
+        }, 1, this.withCredentials);
     }
 
     protected executeCount(next?: (value: number) => void): ApiRequest {
@@ -159,7 +165,7 @@ export class SharedBaseApi<T = any> {
                     next(0);
                 }
             }
-        });
+        }, 1, this.withCredentials);
     }
 
     private post(data: any, next?: (value: T) => void): ApiRequest {
@@ -183,7 +189,7 @@ export class SharedBaseApi<T = any> {
                     next(null!);
                 }
             }
-        });
+        }, 1, this.withCredentials);
     }
 
     private put(data: any, next?: (value: T) => void): ApiRequest {
@@ -207,7 +213,7 @@ export class SharedBaseApi<T = any> {
                     next(null!);
                 }
             }
-        });
+        }, 1, this.withCredentials);
     }
 
     private patch(data: any, next?: (value: T) => void): ApiRequest {
@@ -231,7 +237,7 @@ export class SharedBaseApi<T = any> {
                     next(null!);
                 }
             }
-        });
+        }, 1, this.withCredentials);
     }
 
     protected executeDelete(next?: (value: T) => void): ApiRequest {
@@ -255,7 +261,7 @@ export class SharedBaseApi<T = any> {
                     next(null!);
                 }
             }
-        });
+        }, 1, this.withCredentials);
     }
 
     public getUri(): string {

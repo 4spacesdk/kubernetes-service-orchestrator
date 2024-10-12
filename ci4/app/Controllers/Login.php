@@ -2,6 +2,7 @@
 
 use App\Entities\User;
 use App\Helpers\Client;
+use App\Libraries\MFALib;
 use AuthExtension\AuthExtension;
 use AuthExtension\Config\LoginResponse;
 use AuthExtension\Models\UserModel;
@@ -30,21 +31,45 @@ class Login extends \App\Core\BaseController {
         session()->setFlashdata('requestUrl', $requestUrl);
         $data['requestUrl'] = $requestUrl;
 
+        if ($this->request->getPostGet('error_message')) {
+            $data['loginResponse'] = $this->request->getPostGet('error_message');
+        }
+
         if ($_POST) {
 
             // Check credentials
             $username = $this->request->getPost('username');
             $password = $this->request->getPost('password');
 
-            $loginResponse = AuthExtension::login($username, $password, $scopes);
+            $loginResponse = AuthExtension::checkLoginWithUsernamePassword($username, $password, $scopes);
             $data['loginResponse'] = $loginResponse;
             switch ($loginResponse) {
                 case LoginResponse::Success:
-                    $this->response->redirect($data['requestUrl']);
+                    /** @var User $user */
+                    $user = (new UserModel())
+                        ->where('username', $username)
+                        ->find();
+                    if ($user->hasMFASecret()) {
+                        session()->set('2fa_in_progress', $username);
+                        $this->response->redirect(base_url('login/twoFactor'));
+                    } else {
+                        AuthExtension::saveUserSession($user->id);
+                        $this->response->redirect($data['requestUrl']);
+                    }
                     break;
 
                 case LoginResponse::RenewPassword:
-                    $this->response->redirect(base_url('login/renewPassword'));
+                    /** @var User $user */
+                    $user = (new UserModel())
+                        ->where('username', $username)
+                        ->find();
+                    if ($user->hasMFASecret()) {
+                        session()->set('2fa_in_progress', $username);
+                        $this->response->redirect(base_url('login/twoFactor'));
+                    } else {
+                        AuthExtension::saveUserSession($user->id);
+                        $this->response->redirect(base_url('login/renewPassword'));
+                    }
                     break;
 
                 case LoginResponse::WrongPassword:
@@ -63,6 +88,57 @@ class Login extends \App\Core\BaseController {
         }
 
         return view('Login/Login', $data);
+    }
+
+    public function twoFactor(): string {
+        /** @var string $requestUrl */
+        $requestUrl = session()->getFlashdata('request_url');
+        if (!$requestUrl) {
+            $requestUrl = getFrontendUrl();
+        }
+
+        $username = session()->get('2fa_in_progress');
+        if (!$username) {
+            $this->response->redirect(base_url('login') . '?error_message=Two factor authentication not initialized.');
+            $this->response->send();
+            exit;
+        }
+
+        /** @var User $user */
+        $user = (new UserModel())
+            ->where('username', $username)
+            ->find();
+        if (!$user->exists()) {
+            $this->response->redirect(base_url('login') . "?error_message=Unknown username ({$username}).");
+            $this->response->send();
+            exit;
+        }
+
+
+        $data = [
+
+        ];
+
+        if ($_POST) {
+
+            $code = $this->request->getPost('code');
+            $mfaLib = new MFALib();
+            $verify = $mfaLib->verifyCode($user->getMFASSecret(), $code);
+            if ($verify) {
+                unset($_SESSION[ '2fa_in_progress' ]);
+                AuthExtension::saveUserSession($user->id);
+                if ($user->renew_password) {
+                    $this->response->redirect(base_url('login/renewPassword'));
+                } else {
+                    $this->response->redirect($requestUrl);
+                }
+            } else {
+                $data['error'] = 'Failed to verify code. Try again.';
+            }
+        }
+
+        session()->setFlashdata('request_url', $requestUrl);
+        return view('Login/MFA', $data);
     }
 
     public function success(): void {

@@ -1,5 +1,21 @@
 # Changelog
 
+## v1.2.0 (2024-10-12)
+
+### Fixed bugs
+
+
+### Enhancements
+* Updated composer dependency `4spacesdk/ci4authextension` to v1.2.0
+* Two-factor authentication [Issue #33](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/33)
+
+
+### Upgrade guide
+1. Deploy new image
+2. Migrate database [(Guide)](https://github.com/4spacesdk/kubernetes-service-orchestrator?tab=readme-ov-file#migrate-database-helm)
+
+
+
 ## v1.1.2 (2024-10-12)
 
 ### Fixed bugs

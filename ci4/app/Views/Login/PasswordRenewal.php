@@ -284,26 +284,6 @@
             right: 24px;
         }
 
-        .logo-header {
-            font-size: 20px;
-            color: #ffffff;
-            float: left;
-            text-transform: uppercase;
-            content: ' ';
-            background: url(/admin_assets/img/logo-header-blue.svg);
-
-            background-repeat: no-repeat;
-            background-size: auto 100%;
-            /* background-position: 103px 0px; */
-            width: 100%;
-            height: 60px;
-            display: block;
-            opacity: 1;
-            margin: 0 !important;
-            background-position: center center;
-            background-size: contain;
-        }
-
         .btn-secondary a, .btn-secondary a:hover {
             color: white;
         }

@@ -1,5 +1,7 @@
 <?php
-/** @var string $loginResponse */
+/**
+ * @var string $error
+ */
 
 use DebugTool\Data; ?>
 
@@ -33,9 +35,10 @@ use DebugTool\Data; ?>
             position: relative;
         }
 
-        a.btn.btn-lg{
-            color: #fff!important;
+        a.btn.btn-lg {
+            color: #fff !important;
         }
+
         .has-float-label label,
         .has-float-label > span {
             color: grey;
@@ -295,6 +298,17 @@ use DebugTool\Data; ?>
         }
 
     </style>
+
+    <script>
+        $(function() {
+            $('input[name=code]').on('input', function() {
+                var input = $(this).val();
+                if (input && input.length === 6) {
+                    $('button[type=submit]').click();
+                }
+            });
+        });
+    </script>
 </head>
 
 <body>
@@ -307,22 +321,29 @@ use DebugTool\Data; ?>
 
                     <form class="form-signin" method="post">
 
-                        <div class="-form-label-group mb-2">
-                            <input type="email" id="inputEmail" name="username" class="form-control"
-                                   placeholder="E-mail" required autofocus="autofocus">
-                        </div>
-
-                        <?php if (Data::get('message')) { ?>
+                        <?php if (isset($error)) { ?>
                         <div class="alert alert-warning mt-4" role="alert">
-                            <?=Data::get('message')?>
+                            <?= $error ?>
                         </div>
                         <?php } ?>
 
-                        <button class="btn btn-lg btn-primary btn-block text-uppercase mt-4" type="submit">Send</button>
+                        <div class="-form-label-group mb-2">
+                            <label
+                                style="width: 100%"
+                            >Authentication Code
+                                <input
+                                    style="margin-top: 5px;"
+                                    type="text" name="code" class="form-control"
+                                    placeholder="XXXXXX" required autofocus="autofocus">
+                            </label>
+                        </div>
 
-                        <a href="<?=base_url('/login')?>" class="mt-2 w-100 text-center d-block text-secondary">
-                            Login
-                        </a>
+                        <span>
+                                Open your two-factor authenticator (TOTP) app or browser extension to view your authentication code.
+                            </span>
+
+                        <button class="btn btn-lg btn-primary btn-block text-uppercase mt-4" type="submit">Verify
+                        </button>
 
                         <div class="text-muted small text-center copyright">Copyright © 2018-<?= date('Y') ?> ·
                             <a href="https://4spaces.dk" target="_blank"> 4 Spaces ApS</a>

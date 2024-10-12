@@ -20,6 +20,7 @@ export {DeploymentSpecificationServiceAnnotation as DeploymentSpecificationServi
 export {DeploymentSpecificationServicePort as DeploymentSpecificationServicePort} from "./DeploymentSpecificationServicePort";
 export {DeploymentStep as DeploymentStep} from "./DeploymentStep";
 export {DeploymentVolume as DeploymentVolume} from "./DeploymentVolume";
+export {DeploymentsLabel as DeploymentsLabel} from "./DeploymentsLabel";
 export {Domain as Domain} from "./Domain";
 export {EmailService as EmailService} from "./EmailService";
 export {EnvironmentVariable as EnvironmentVariable} from "./EnvironmentVariable";
