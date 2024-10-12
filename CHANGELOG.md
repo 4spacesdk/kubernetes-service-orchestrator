@@ -8,6 +8,8 @@
 ### Enhancements
 * Updated composer dependency `4spacesdk/ci4authextension` to v1.2.0
 * Two-factor authentication [Issue #33](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/33)
+* Updated zeromq fra v4.1.4 to v4.1.8
+* Migrated from archive.org to github downloads
 
 
 ### Upgrade guide

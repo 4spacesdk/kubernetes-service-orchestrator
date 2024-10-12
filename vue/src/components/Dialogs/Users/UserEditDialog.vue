@@ -72,13 +72,13 @@ function render() {
         Api.users().getById(props.input.user.id!).find(items => {
             item.value = items[0];
             selectedRoles.value = item.value.rbac_roles?.map(role => role.id!) ?? [];
-            isMFAEnabled.value = props.input.user.has_mfa_secret_hash;
+            isMFAEnabled.value = props.input.user.has_mfa_secret_hash ?? false;
             isMe.value = props.input.user.id == AuthService.currentAuthUser?.id;
             isLoading.value = false;
         });
     } else {
         item.value = props.input.user;
-        isMFAEnabled.value = props.input.user.has_mfa_secret_hash;
+        isMFAEnabled.value = props.input.user.has_mfa_secret_hash ?? false;
         isMe.value = false;
         showDialog.value = true;
     }
@@ -133,7 +133,7 @@ function onEnableMFAToggleChanged() {
 
 function onMFAVerificationCodeSaveBtnClicked() {
     isMFASetupVerificationCodeBtnLoading.value = true;
-    const api = Api.users().mfaSetupVerifyPut().code(mfaSetupVerificationCode.value);
+    const api = Api.users().mfaSetupVerifyPut().code(mfaSetupVerificationCode.value ?? '');
     api.setWithCredentials(true);
     api.save(null, result => {
         isMFASetupVerificationCodeBtnLoading.value = false;

@@ -93,15 +93,15 @@ RUN cp /usr/local/lib/php/extensions/no-debug-non-zts-20230831/sqlsrv.so /usr/li
 RUN cp /usr/local/lib/php/extensions/no-debug-non-zts-20230831/pdo_sqlsrv.so /usr/lib/php83/modules/pdo_sqlsrv.so
 
 # ZMQ Server
-RUN wget https://archive.org/download/zeromq_4.1.4/zeromq-4.1.4.tar.gz \
-     && tar -xvzf zeromq-4.1.4.tar.gz \
-     && cd zeromq-4.1.4 \
+RUN wget https://github.com/zeromq/zeromq4-1/releases/download/v4.1.8/zeromq-4.1.8.tar.gz \
+     && tar -xvzf zeromq-4.1.8.tar.gz \
+     && cd zeromq-4.1.8 \
      && ./configure \
      && make \
      && make install \
      && ldconfig / \
      && cd .. \
-     && rm -fr zeromq-4.1.4.tar.gz zeromq-4.1.4/
+     && rm -fr zeromq-4.1.4.tar.gz zeromq-4.1.8/
 
 # ZMQ PHP Extension
 RUN git clone https://github.com/zeromq/php-zmq.git \
