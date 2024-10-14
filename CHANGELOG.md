@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.2.2 (2024-10-14)
+
+### Fixed bugs
+* Fixed missing 2FA when opening user edit from profile button
+
+### Enhancements
+
+
+### Upgrade guide
+1. Deploy new image
+
+
+
 ## v1.2.1 (2024-10-12)
 
 ### Fixed bugs
@@ -12,6 +25,7 @@
 1. Deploy new image
 
 
+
 ## v1.2.0 (2024-10-12)
 
 ### Fixed bugs
@@ -21,7 +35,7 @@
 * Updated composer dependency `4spacesdk/ci4authextension` to v1.2.0
 * Two-factor authentication [Issue #33](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/33)
 * Updated zeromq fra v4.1.4 to v4.1.8
-* Migrated from archive.org to github downloads
+* Migrated from archive.org to GitHub downloads
 
 
 ### Upgrade guide

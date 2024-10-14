@@ -72,8 +72,8 @@ function render() {
         Api.users().getById(props.input.user.id!).find(items => {
             item.value = items[0];
             selectedRoles.value = item.value.rbac_roles?.map(role => role.id!) ?? [];
-            isMFAEnabled.value = props.input.user.has_mfa_secret_hash ?? false;
-            isMe.value = props.input.user.id == AuthService.currentAuthUser?.id;
+            isMFAEnabled.value = item.value.has_mfa_secret_hash ?? false;
+            isMe.value = item.value.id == AuthService.currentAuthUser?.id;
             isLoading.value = false;
         });
     } else {
