@@ -67,7 +67,7 @@ class ContainerImage extends Entity {
                     $googleCloudPubSub->ensureTopic('gcr');
                     $googleCloudPubSub->ensureSubscription(
                         'gcr',
-                        'kso-' . KubeHelper::GetMyHostname() . '.' . KubeHelper::GetMyNamespace()
+                        getenv('PROJECT_NAME') . 'kso-' . KubeHelper::GetMyHostname() . '.' . KubeHelper::GetMyNamespace()
                     );
                     break;
             }

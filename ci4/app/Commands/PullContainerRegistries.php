@@ -57,7 +57,7 @@ class PullContainerRegistries extends BaseCommand {
                     $googleCloudPubSub = new GoogleCloudPubSub($project, $credentials);
                     $messages = $googleCloudPubSub->pull(
                         'gcr',
-                        'kso-' . KubeHelper::GetMyHostname() . '.' . KubeHelper::GetMyNamespace()
+                        getenv('PROJECT_NAME') . 'kso-' . KubeHelper::GetMyHostname() . '.' . KubeHelper::GetMyNamespace()
                     );
                     Data::debug(count($messages), 'for', $project);
 

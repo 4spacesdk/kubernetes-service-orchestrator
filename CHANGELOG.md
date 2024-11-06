@@ -1,5 +1,19 @@
 # Changelog
 
+## v1.2.4 (2024-11-06)
+
+### Fixed bugs
+* 
+
+### Enhancements
+* Include project name in Google Cloud Pub/Sub subscription name, to allow for multiple kso instances using the same Pub/Sub
+
+### Upgrade guide
+1. Deploy new image
+2. Resave all container images that rely on artifact registry to trigger new subscription
+
+
+
 ## v1.2.3 (2024-11-06)
 
 ### Fixed bugs
