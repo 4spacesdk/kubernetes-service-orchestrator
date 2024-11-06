@@ -12,7 +12,7 @@ import WorkspaceDeploymentDomains
     from "@/components/Modules/Workspaces/WorkspaceDeploymentDomains/WorkspaceDeploymentDomains.vue";
 import {it} from "vuetify/locale";
 import AuthService from "@/services/AuthService";
-import {RbacPermissions} from "@/constants";
+import {DeploymentStatusTypes, RbacPermissions} from "@/constants";
 
 interface Row {
     workspace: Workspace;
@@ -35,6 +35,29 @@ const showCreateMenu = ref(false);
 const deploymentPackages = ref<DeploymentPackage[]>([]);
 
 const searchValue = ref('');
+const statusOptions = ref([
+    {
+        value: DeploymentStatusTypes.Draft,
+        title: 'Draft',
+    },
+    {
+        value: DeploymentStatusTypes.Deploying,
+        title: 'Deploying',
+    },
+    {
+        value: DeploymentStatusTypes.Active,
+        title: 'Active',
+    },
+    {
+        value: DeploymentStatusTypes.Error,
+        title: 'Error',
+    },
+]);
+const selectedStatus = ref([
+    DeploymentStatusTypes.Deploying,
+    DeploymentStatusTypes.Active,
+    DeploymentStatusTypes.Error,
+])
 
 const rbacDeveloper = ref(false);
 const rbacWorkspaceCreate = ref(false);
@@ -64,6 +87,9 @@ onUnmounted(() => {
 watch(searchValue, debounce(() => {
     getItems(true, true);
 }, 500));
+watch(selectedStatus, debounce(() => {
+    getItems(true, true);
+}, 500));
 
 function onItemSaved() {
     getItems(true, true);
@@ -87,6 +113,8 @@ function getItems(doItems = true, doCount = false) {
             .search('namespace', searchValue.value)
             .search('subdomain', searchValue.value);
     }
+
+    api.whereIn('status', selectedStatus.value);
 
     if (doItems) {
         api
@@ -247,49 +275,82 @@ function onShowLogsBtnClicked(item: Workspace) {
             flat
             color="blue-grey lighten-5"
             dark
+            height="120"
         >
-            <v-toolbar-title>Workspaces</v-toolbar-title>
+            <div
+                class="d-flex flex-column w-100 py-2 px-4 gap-1"
+            >
+                <div class="d-flex">
 
-            <v-text-field
-                v-model="searchValue"
-                density="compact"
-                variant="outlined"
-                hide-details
-                placeholder="Search"
-                clearable
-            />
+                    <v-toolbar-title
+                        class="my-auto"
+                    >Workspaces</v-toolbar-title>
 
-            <v-spacer></v-spacer>
+                    <v-spacer></v-spacer>
 
-            <v-menu
-                v-if="rbacWorkspaceCreate"
-                v-model="showCreateMenu"
-                :close-on-content-click="false"
-                left
-                min-width="250"
-                offset-y>
-                <template v-slot:activator="{ props }">
-                    <v-btn
-                        v-bind="props"
-                        small
-                        prepend-icon="fa fa-plus">
-                        Create
-                    </v-btn>
-                </template>
+                    <v-menu
+                        v-if="rbacWorkspaceCreate"
+                        v-model="showCreateMenu"
+                        :close-on-content-click="false"
+                        left
+                        min-width="250"
+                        offset-y>
+                        <template v-slot:activator="{ props }">
+                            <v-btn
+                                v-bind="props"
+                                small
+                                prepend-icon="fa fa-plus"
+                                class="pr-0"
+                            >
+                                Create
+                            </v-btn>
+                        </template>
 
-                <v-list
-                    class="list-items">
-                    <v-list-item
-                        v-for="(type, i) in deploymentPackages" :key="i"
-                        dense
-                        @click="onCreateItemBtnClicked(type)">
-                        <v-list-item-title>
-                            <v-icon size="small" class="my-auto">fa fa-window-maximize fa</v-icon>
-                            <span class="ml-2">{{ type.name }}</span>
-                        </v-list-item-title>
-                    </v-list-item>
-                </v-list>
-            </v-menu>
+                        <v-list
+                            class="list-items">
+                            <v-list-item
+                                v-for="(type, i) in deploymentPackages" :key="i"
+                                dense
+                                @click="onCreateItemBtnClicked(type)">
+                                <v-list-item-title>
+                                    <v-icon size="small" class="my-auto">fa fa-window-maximize fa</v-icon>
+                                    <span class="ml-2">{{ type.name }}</span>
+                                </v-list-item-title>
+                            </v-list-item>
+                        </v-list>
+                    </v-menu>
+                </div>
+
+                <div
+                    class="d-flex gap-1"
+                >
+
+                    <v-text-field
+                        v-model="searchValue"
+                        variant="outlined"
+                        hide-details
+                        placeholder="Search"
+                        clearable
+                        width="250"
+                        max-width="250"
+                    />
+
+                    <v-select
+                        v-model="selectedStatus"
+                        :items="statusOptions"
+                        label="Status"
+                        variant="outlined"
+                        multiple
+                        item-value="value"
+                        item-title="title"
+                        hide-details
+                        chips
+                        closable-chips
+                        clearable
+                    />
+
+                </div>
+            </div>
         </v-toolbar>
 
         <v-data-table-server

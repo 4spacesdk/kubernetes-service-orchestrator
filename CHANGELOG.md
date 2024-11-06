@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.2.3 (2024-11-06)
+
+### Fixed bugs
+* Workspaces in draft mode no longer receives auto updates
+
+### Enhancements
+* Improved workspace filter in UI
+
+### Upgrade guide
+1. Deploy new image
+
+
+
 ## v1.2.2 (2024-10-14)
 
 ### Fixed bugs

@@ -4,9 +4,11 @@ use App\Libraries\PostUpdateActions\PostUpdateActionHelper;
 use App\Libraries\ZMQ\ChangeEvent;
 use App\Libraries\ZMQ\Events;
 use App\Libraries\ZMQ\ZMQProxy;
+use App\Models\AutoUpdateModel;
 use App\Models\DeploymentModel;
 use DebugTool\Data;
 use App\Core\Entity;
+use DeploymentStatusTypes;
 
 /**
  * Class AutoUpdate
@@ -27,13 +29,23 @@ class AutoUpdate extends Entity {
         $deployments = (new DeploymentModel())
             ->where('auto_update_enabled', true)
             ->where('image', $image)
+            ->whereIn('status', [
+                DeploymentStatusTypes::Deploying,
+                DeploymentStatusTypes::Active,
+                DeploymentStatusTypes::Error,
+            ])
             ->find();
 
         foreach ($deployments as $deployment) {
             if (preg_match("/{$deployment->auto_update_tag_regex}$/", $tag)) {
                 Data::debug('update', $deployment->name, $deployment->namespace, 'with', $image, $tag);
 
-                $autoUpdate = new AutoUpdate();
+                /** @var AutoUpdate $autoUpdate */
+                $autoUpdate = (new AutoUpdateModel())
+                    ->where('deployment_id', $deployment->id)
+                    ->where('is_approved', false)
+                    ->orderBy('id', 'desc')
+                    ->find();
                 $autoUpdate->deployment_id = $deployment->id;
                 $autoUpdate->image = $image;
                 $autoUpdate->previous_tag = $deployment->version;

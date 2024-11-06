@@ -45,6 +45,24 @@ class WorkspaceModel extends Model implements ResourceModelInterface {
                 $this->whereSubQuery($labelSubQuery, '', null, false);
             }
         }
+
+        if ($queryParser->hasFilter('status')) {
+            $queryParser->getFilter('status')[0]->ignoreAuto = true;
+            $statuses = $queryParser->getFilter('status')[0]->value;
+            if (is_array($statuses) && count($statuses) > 0 && $statuses[0] !== '') {
+                $this->groupStart();
+                foreach ($statuses as $status) {
+                    $deploymentStatusSubQuery = (new DeploymentModel())
+                        ->select('COUNT(*) as count', true, false)
+                        ->whereRelated(WorkspaceModel::class, 'id', '${parent}.id', false)
+                        ->where('status', $status)
+                        ->having('count >', 0, true, false);
+
+                    $this->orWhereSubQuery($deploymentStatusSubQuery, '', null, false);
+                }
+                $this->groupEnd();
+            }
+        }
     }
 
     /**
