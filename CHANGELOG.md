@@ -1,9 +1,22 @@
 # Changelog
 
+## v1.2.5 (?)
+
+### Fixed bugs
+*
+
+### Enhancements
+* New logo
+
+### Upgrade guide
+1. Deploy new image
+
+
+
 ## v1.2.4 (2024-11-06)
 
 ### Fixed bugs
-* 
+*
 
 ### Enhancements
 * Include project name in Google Cloud Pub/Sub subscription name, to allow for multiple kso instances using the same Pub/Sub

@@ -12,6 +12,7 @@ use DebugTool\Data; ?>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
           integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+    <link rel="icon" href="/api/logo-blue.svg">
 
     <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.5.0/css/all.css"
           media="print" onload="this.media='all'"

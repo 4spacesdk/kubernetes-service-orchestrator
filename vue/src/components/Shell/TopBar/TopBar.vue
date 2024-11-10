@@ -8,8 +8,14 @@ import TopBarMenu from '@/components/Shell/TopBar/TopBar-Menu.vue';
                   class="px-2"
                   height="65">
 
-        <div class="d-flex h-100 align-start flex-column">
-            <div class="logo"></div>
+        <div
+            class="d-flex h-100 align-start flex-column ml-1"
+        >
+            <v-img
+                src="/logo-white.svg"
+                min-height="50"
+                min-width="50"
+            />
         </div>
 
         <v-spacer></v-spacer>
@@ -23,14 +29,5 @@ import TopBarMenu from '@/components/Shell/TopBar/TopBar-Menu.vue';
 </template>
 
 <style scoped>
-.logo{
-    background: url("/logo.svg");
-    background-repeat: no-repeat;
-    aspect-ratio: auto;
-    display: flex;
-    width: 120px;
-    height: 45px;
-    margin-top: .25rem;
-}
 
 </style>
