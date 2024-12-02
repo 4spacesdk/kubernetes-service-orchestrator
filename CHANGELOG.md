@@ -1,12 +1,14 @@
 # Changelog
 
-## v1.2.5 (?)
+## v1.2.5 (2024-12-02)
 
 ### Fixed bugs
 *
 
 ### Enhancements
 * New logo
+* Updated composer dependencies
+  * 4spacesdk/ci4authextension:v1.2.0 -> 4spacesdk/ci4authextension:v1.2.1
 
 ### Upgrade guide
 1. Deploy new image
