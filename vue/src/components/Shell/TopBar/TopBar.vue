@@ -12,7 +12,7 @@ import TopBarMenu from '@/components/Shell/TopBar/TopBar-Menu.vue';
             class="d-flex h-100 align-start flex-column ml-1"
         >
             <v-img
-                src="/logo-white.svg"
+                src="/app/logo-white.svg"
                 min-height="50"
                 min-width="50"
             />
