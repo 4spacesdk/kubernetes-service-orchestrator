@@ -328,6 +328,8 @@ function onCloseBtnClicked() {
                                                     <li>Actions: push</li>
                                                     <li>Scope: none</li>
                                                 </ul>
+                                                <br>
+                                                And give the service principal Read permission to the registry.
                                             </div>
                                         </v-col>
                                         <v-col
