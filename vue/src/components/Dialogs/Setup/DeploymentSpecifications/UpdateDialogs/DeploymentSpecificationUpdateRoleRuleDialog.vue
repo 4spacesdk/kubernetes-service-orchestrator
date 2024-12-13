@@ -4,8 +4,8 @@ import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInter
 import {Api} from "@/core/services/Deploy/Api";
 import type {KubernetesRbacRule} from "@/core/services/Deploy/Api";
 
-export interface DeploymentSpecificationUpdateClusterRoleRuleDialog_Input {
-    clusterRoleRule: {
+export interface DeploymentSpecificationUpdateRoleRuleDialog_Input {
+    roleRule: {
         apiGroup: string;
         resource: string;
         verbs: string;
@@ -15,7 +15,7 @@ export interface DeploymentSpecificationUpdateClusterRoleRuleDialog_Input {
 }
 
 const props = defineProps<{
-    input: DeploymentSpecificationUpdateClusterRoleRuleDialog_Input,
+    input: DeploymentSpecificationUpdateRoleRuleDialog_Input,
     events: DialogEventsInterface
 }>();
 
@@ -74,9 +74,9 @@ onUnmounted(() => {
 });
 
 function render() {
-    apiGroup.value = props.input.clusterRoleRule.apiGroup ?? '';
-    resource.value = props.input.clusterRoleRule.resource ?? '';
-    verbs.value = props.input.clusterRoleRule.verbs.split(',');
+    apiGroup.value = props.input.roleRule.apiGroup ?? '';
+    resource.value = props.input.roleRule.resource ?? '';
+    verbs.value = props.input.roleRule.verbs.split(',');
     showDialog.value = true;
 }
 
@@ -110,9 +110,9 @@ function onResourceChanged() {
 }
 
 function onSaveBtnClicked() {
-    props.input.clusterRoleRule.apiGroup = apiGroup.value;
-    props.input.clusterRoleRule.resource = resource.value;
-    props.input.clusterRoleRule.verbs = verbs.value.join(',');
+    props.input.roleRule.apiGroup = apiGroup.value;
+    props.input.roleRule.resource = resource.value;
+    props.input.roleRule.verbs = verbs.value.join(',');
     props.input.onSaveCallback();
     close();
 }
@@ -138,7 +138,7 @@ function onCloseBtnClicked() {
                 :loading="isLoading"
                 :disabled="isLoading"
             >
-                <v-card-title>Cluster Role Rule</v-card-title>
+                <v-card-title>Role Rule</v-card-title>
                 <v-divider/>
                 <v-card-text>
                     <v-row>

@@ -1,25 +1,15 @@
 <?php namespace App\Libraries\DeploymentSteps;
 
 use App\Entities\Deployment;
+use App\Entities\DeploymentSpecificationClusterRoleRule;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
 use App\Libraries\Kubernetes\KubeAuth;
+use App\Models\DeploymentSpecificationClusterRoleRuleModel;
 use DebugTool\Data;
 use RenokiCo\PhpK8s\Exceptions\KubernetesAPIException;
 use RenokiCo\PhpK8s\Instances\Rule;
 use RenokiCo\PhpK8s\Kinds\K8sClusterRole;
-use RenokiCo\PhpK8s\Kinds\K8sClusterRoleBinding;
-use RenokiCo\PhpK8s\Kinds\K8sCronJob;
-use RenokiCo\PhpK8s\Kinds\K8sDeployment;
-use RenokiCo\PhpK8s\Kinds\K8sEvent;
-use RenokiCo\PhpK8s\Kinds\K8sIngress;
-use RenokiCo\PhpK8s\Kinds\K8sJob;
-use RenokiCo\PhpK8s\Kinds\K8sNamespace;
-use RenokiCo\PhpK8s\Kinds\K8sPersistentVolume;
-use RenokiCo\PhpK8s\Kinds\K8sPersistentVolumeClaim;
-use RenokiCo\PhpK8s\Kinds\K8sPod;
-use RenokiCo\PhpK8s\Kinds\K8sService;
-use RenokiCo\PhpK8s\Kinds\K8sServiceAccount;
 
 class ClusterRoleStep extends BaseDeploymentStep {
 
@@ -56,7 +46,16 @@ class ClusterRoleStep extends BaseDeploymentStep {
     }
 
     public function getSuccessStatus(Deployment $deployment): string {
-        return DeploymentStepHelper::ClusterRole_Found;
+        $spec = $deployment->findDeploymentSpecification();
+        /** @var DeploymentSpecificationClusterRoleRule $hasClusterRoleRules */
+        $hasClusterRoleRules = (new DeploymentSpecificationClusterRoleRuleModel())
+            ->where('deployment_specification_id', $spec->id)
+            ->find();
+        $expectResource = $hasClusterRoleRules->exists();
+
+        return $expectResource
+            ? DeploymentStepHelper::ClusterRole_Found
+            : DeploymentStepHelper::ClusterRole_NotFoundNotExpected;
     }
 
     /**
@@ -88,10 +87,23 @@ class ClusterRoleStep extends BaseDeploymentStep {
      */
     public function getStatus(Deployment $deployment): string {
         $resource = $this->getResource($deployment, true);
-        if ($resource->exists()) {
-            return DeploymentStepHelper::ClusterRole_Found;
+
+        $spec = $deployment->findDeploymentSpecification();
+        /** @var DeploymentSpecificationClusterRoleRule $hasClusterRoleRules */
+        $hasClusterRoleRules = (new DeploymentSpecificationClusterRoleRuleModel())
+            ->where('deployment_specification_id', $spec->id)
+            ->find();
+        $expectResource = $hasClusterRoleRules->exists();
+
+        $hasAlias = $resource->exists();
+        if ($hasAlias) {
+            return $expectResource
+                ? DeploymentStepHelper::ClusterRole_Found
+                : DeploymentStepHelper::ClusterRole_FoundNotExpected;
         } else {
-            return DeploymentStepHelper::ClusterRole_NotFound;
+            return $expectResource
+                ? DeploymentStepHelper::ClusterRole_NotFound
+                : DeploymentStepHelper::ClusterRole_NotFoundNotExpected;
         }
     }
 
@@ -129,7 +141,8 @@ class ClusterRoleStep extends BaseDeploymentStep {
         $spec = $deployment->findDeploymentSpecification();
 
         $resource = new K8sClusterRole();
-        $resource->setName($deployment->name);
+        $resource
+            ->setName("{$deployment->name}.{$deployment->namespace}");
 
         $rules = [];
         $spec->deployment_specification_cluster_role_rules->find();

@@ -1,5 +1,20 @@
 # Changelog
 
+## v1.3.0 (?)
+
+### Fixed bugs
+*
+
+### Enhancements
+* Cluster role now has unique names to avoid collision between deployments [Issue35](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/35)
+* Role and RoleBinding is now part of deployment RBAC 
+
+### Upgrade guide
+1. Deploy new image
+2. Migrate database [(Guide)](https://github.com/4spacesdk/kubernetes-service-orchestrator?tab=readme-ov-file#migrate-database-helm)
+
+
+
 ## v1.2.5 (2024-12-02)
 
 ### Fixed bugs
@@ -8,7 +23,7 @@
 ### Enhancements
 * New logo
 * Updated composer dependencies
-  * 4spacesdk/ci4authextension:v1.2.0 -> 4spacesdk/ci4authextension:v1.2.1
+    * 4spacesdk/ci4authextension:v1.2.0 -> 4spacesdk/ci4authextension:v1.2.1
 
 ### Upgrade guide
 1. Deploy new image

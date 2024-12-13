@@ -270,16 +270,16 @@ function onBatchTerminateBtnClicked() {
             if (confirmed) {
                 isLoadingBatchTerminate.value = true;
 
-                let index = 0;
+                let index = selectedRows.value.length - 1;
                 const onError = () => {
                     isLoadingBatchTerminate.value = false;
                 };
                 const onContinue = () => {
-                    if (selectedRows.value.length == index) {
+                    if (index < 0) {
                         isLoadingBatchTerminate.value = false;
                         return;
                     }
-                    runRow(selectedRows.value[index++]);
+                    runRow(selectedRows.value[index--]);
                 };
                 const runRow = (row: Row) => {
                     doTerminateRow(
@@ -310,7 +310,7 @@ function onCloseBtnClicked() {
     <v-dialog
         persistent
         width="60vw"
-        height="60vh"
+        height="65vh"
         v-model="showDialog">
         <v-card
             class="w-100 h-100"

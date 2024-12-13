@@ -13,6 +13,8 @@ use App\Libraries\DeploymentSteps\NamespaceStep;
 use App\Libraries\DeploymentSteps\PersistentVolumeClaimStep;
 use App\Libraries\DeploymentSteps\PersistentVolumeStep;
 use App\Libraries\DeploymentSteps\RedirectsStep;
+use App\Libraries\DeploymentSteps\RoleBindingStep;
+use App\Libraries\DeploymentSteps\RoleStep;
 use App\Libraries\DeploymentSteps\ServiceAccountStep;
 use App\Libraries\DeploymentSteps\ServiceStep;
 use App\Models\DeploymentSpecificationEnvironmentVariableModel;
@@ -68,6 +70,7 @@ use App\Core\Entity;
  * @property DeploymentSpecificationServicePort $deployment_specification_service_ports
  * @property DeploymentSpecificationIngress $deployment_specification_ingresses
  * @property DeploymentSpecificationClusterRoleRule $deployment_specification_cluster_role_rules
+ * @property DeploymentSpecificationRoleRule $deployment_specification_role_rules
  * @property DeploymentSpecificationServiceAnnotation $deployment_specification_service_annotations
  * @property DeploymentSpecificationQuickCommand $deployment_specification_quick_commands
  * @property DeploymentSpecificationInitContainer $deployment_specification_init_containers
@@ -87,8 +90,10 @@ class DeploymentSpecification extends Entity {
             DatabaseStep::class,
             NamespaceStep::class,
             ClusterRoleStep::class,
+            RoleStep::class,
             ServiceAccountStep::class,
             ClusterRoleBindingStep::class,
+            RoleBindingStep::class,
             PersistentVolumeStep::class,
             PersistentVolumeClaimStep::class,
             CustomResourceStep::class,
@@ -120,8 +125,10 @@ class DeploymentSpecification extends Entity {
         }
         if ($this->enable_rbac) {
             $steps[] = new ClusterRoleStep();
+            $steps[] = new RoleStep();
             $steps[] = new ServiceAccountStep();
             $steps[] = new ClusterRoleBindingStep();
+            $steps[] = new RoleBindingStep();
         }
         if ($this->enable_ingress) {
             $steps[] = new IngressStep();
@@ -257,6 +264,12 @@ class DeploymentSpecification extends Entity {
         $this->deployment_specification_cluster_role_rules->find()->deleteAll();
         $this->save($values);
         $this->deployment_specification_cluster_role_rules = $values;
+    }
+
+    public function updateRoleRules(DeploymentSpecificationRoleRule $values): void {
+        $this->deployment_specification_role_rules->find()->deleteAll();
+        $this->save($values);
+        $this->deployment_specification_role_rules = $values;
     }
 
     public function updateServiceAnnotations(DeploymentSpecificationServiceAnnotation $values): void {

@@ -7,6 +7,7 @@ use App\Entities\DeploymentSpecificationEnvironmentVariable;
 use App\Entities\DeploymentSpecificationIngress;
 use App\Entities\DeploymentSpecificationPostCommand;
 use App\Entities\DeploymentSpecificationPostUpdateAction;
+use App\Entities\DeploymentSpecificationRoleRule;
 use App\Entities\Label;
 use App\Entities\DeploymentSpecificationQuickCommand;
 use App\Entities\DeploymentSpecificationServiceAnnotation;
@@ -19,6 +20,7 @@ use App\Interfaces\IntArrayInterface;
 use App\Interfaces\LabelList;
 use App\Interfaces\PostCommandList;
 use App\Interfaces\QuickCommandList;
+use App\Interfaces\RoleRuleList;
 use App\Interfaces\ServiceAnnotationList;
 use App\Interfaces\ServicePortList;
 use DebugTool\Data;
@@ -215,6 +217,35 @@ class DeploymentSpecifications extends ResourceController {
                 $body->values
             );
             $item->updateClusterRoleRules($values);
+        }
+        $this->_setResource($item);
+        $this->success();
+    }
+
+    /**
+     * @route /deployment-specifications/{id}/role-rules
+     * @method put
+     * @custom true
+     * @param int $id
+     * @requestSchema ClusterRoleRuleList
+     * @return void
+     */
+    public function updateRoleRules(int $id): void {
+        $item = new DeploymentSpecification();
+        $item->find($id);
+        if ($item->exists()) {
+            /** @var RoleRuleList $body */
+            $body = $this->request->getJSON();
+            $values = new DeploymentSpecificationRoleRule();
+            $values->all = array_map(
+                fn($data) => DeploymentSpecificationRoleRule::Create(
+                    $data->apiGroup,
+                    $data->resource,
+                    $data->verbs
+                ),
+                $body->values
+            );
+            $item->updateRoleRules($values);
         }
         $this->_setResource($item);
         $this->success();

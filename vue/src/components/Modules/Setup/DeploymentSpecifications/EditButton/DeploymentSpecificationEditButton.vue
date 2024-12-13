@@ -14,6 +14,7 @@ const showUpdateEnvironmentVariables = ref(false);
 const showUpdateServicePorts = ref(false);
 const showUpdateIngresses = ref(false);
 const showUpdateClusterRoleRules = ref(false);
+const showUpdateRoleRules = ref(false);
 const showUpdateServiceAnnotations = ref(false);
 const showUpdateQuickCommands = ref(false);
 const showUpdateInitContainers = ref(false);
@@ -37,6 +38,7 @@ function render() {
     showUpdateServiceAnnotations.value = true;
     showUpdateIngresses.value = props.deploymentSpecification.enable_ingress ?? false;
     showUpdateClusterRoleRules.value = props.deploymentSpecification.enable_rbac ?? false;
+    showUpdateRoleRules.value = props.deploymentSpecification.enable_rbac ?? false;
     showUpdateQuickCommands.value = true;
     showUpdateInitContainers.value = true;
     showUpdatePostUpdateActions.value = true;
@@ -72,6 +74,12 @@ function onUpdateIngressesClicked() {
 
 function onUpdateClusterRoleRulesClicked() {
     bus.emit('deploymentSpecificationUpdateClusterRoleRules', {
+        deploymentSpecification: props.deploymentSpecification
+    });
+}
+
+function onUpdateRoleRulesClicked() {
+    bus.emit('deploymentSpecificationUpdateRoleRules', {
         deploymentSpecification: props.deploymentSpecification
     });
 }
@@ -169,6 +177,15 @@ function onUpdateLabelsClicked() {
                     <v-list-item-title>
                         <v-icon size="small" class="my-auto ml-2">fa fa-shield</v-icon>
                         <span class="ml-2">Cluster Role Rules</span>
+                    </v-list-item-title>
+                </v-list-item>
+                <v-list-item
+                    v-if="showUpdateRoleRules"
+                    dense
+                    @click="onUpdateRoleRulesClicked">
+                    <v-list-item-title>
+                        <v-icon size="small" class="my-auto ml-2">fa fa-shield</v-icon>
+                        <span class="ml-2">Role Rules</span>
                     </v-list-item-title>
                 </v-list-item>
                 <v-list-item

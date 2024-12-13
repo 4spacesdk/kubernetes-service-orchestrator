@@ -8,6 +8,7 @@ import {DeploymentSpecificationEnvironmentVariable} from '../DeploymentSpecifica
 import {DeploymentSpecificationServicePort} from '../DeploymentSpecificationServicePort';
 import {DeploymentSpecificationIngress} from '../DeploymentSpecificationIngress';
 import {DeploymentSpecificationClusterRoleRule} from '../DeploymentSpecificationClusterRoleRule';
+import {DeploymentSpecificationRoleRule} from '../DeploymentSpecificationRoleRule';
 import {DeploymentSpecificationServiceAnnotation} from '../DeploymentSpecificationServiceAnnotation';
 import {DeploymentSpecificationQuickCommand} from '../DeploymentSpecificationQuickCommand';
 import {DeploymentSpecificationInitContainer} from '../DeploymentSpecificationInitContainer';
@@ -47,6 +48,7 @@ export class DeploymentSpecificationDefinition extends BaseModel {
     deployment_specification_service_ports?: DeploymentSpecificationServicePort[];
     deployment_specification_ingresses?: DeploymentSpecificationIngress[];
     deployment_specification_cluster_role_rules?: DeploymentSpecificationClusterRoleRule[];
+    deployment_specification_role_rules?: DeploymentSpecificationRoleRule[];
     deployment_specification_service_annotations?: DeploymentSpecificationServiceAnnotation[];
     deployment_specification_quick_commands?: DeploymentSpecificationQuickCommand[];
     deployment_specification_init_containers?: DeploymentSpecificationInitContainer[];
@@ -98,6 +100,7 @@ export class DeploymentSpecificationDefinition extends BaseModel {
             delete this.deployment_specification_service_ports;
             delete this.deployment_specification_ingresses;
             delete this.deployment_specification_cluster_role_rules;
+            delete this.deployment_specification_role_rules;
             delete this.deployment_specification_service_annotations;
             delete this.deployment_specification_quick_commands;
             delete this.deployment_specification_init_containers;
@@ -199,6 +202,9 @@ export class DeploymentSpecificationDefinition extends BaseModel {
         }
         if (data.deployment_specification_cluster_role_rules != null) {
             this.deployment_specification_cluster_role_rules = data.deployment_specification_cluster_role_rules.map((i: any) => new DeploymentSpecificationClusterRoleRule(i));
+        }
+        if (data.deployment_specification_role_rules != null) {
+            this.deployment_specification_role_rules = data.deployment_specification_role_rules.map((i: any) => new DeploymentSpecificationRoleRule(i));
         }
         if (data.deployment_specification_service_annotations != null) {
             this.deployment_specification_service_annotations = data.deployment_specification_service_annotations.map((i: any) => new DeploymentSpecificationServiceAnnotation(i));

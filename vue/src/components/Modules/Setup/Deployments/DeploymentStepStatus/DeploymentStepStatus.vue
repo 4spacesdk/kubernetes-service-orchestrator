@@ -92,7 +92,7 @@ function onRefreshBtnClicked() {
 </script>
 
 <template>
-    <div class="d-flex justify-start align-center"
+    <div class="d-flex justify-start align-center text-pre"
          @mouseover="isHovering = true"
          @mouseleave="isHovering = false"
     >
@@ -105,7 +105,6 @@ function onRefreshBtnClicked() {
         >
             <v-icon :color="color" class="me-1">fa {{ icon }}</v-icon>
             <v-tooltip activator="parent" location="bottom" v-if="text">{{ text }}</v-tooltip>
-
         </v-btn>
 
         <v-btn

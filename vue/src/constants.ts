@@ -199,6 +199,12 @@ import type {
 import type {
     DeploymentUpdateLabelDialog_Input
 } from "@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateLabelDialog.vue";
+import type {
+    DeploymentSpecificationUpdateRoleRulesDialog_Input
+} from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateRoleRulesDialog.vue";
+import type {
+    DeploymentSpecificationUpdateRoleRuleDialog_Input
+} from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateRoleRuleDialog.vue";
 
 export type Events = {
     confirm: ConfirmationDialog_Input;
@@ -283,6 +289,8 @@ export type Events = {
     deploymentSpecificationUpdateIngressRulePath: DeploymentSpecificationUpdateIngressRulePathDialog_Input;
     deploymentSpecificationUpdateClusterRoleRules: DeploymentSpecificationUpdateClusterRoleRulesDialog_Input;
     deploymentSpecificationUpdateClusterRoleRule: DeploymentSpecificationUpdateClusterRoleRuleDialog_Input;
+    deploymentSpecificationUpdateRoleRules: DeploymentSpecificationUpdateRoleRulesDialog_Input;
+    deploymentSpecificationUpdateRoleRule: DeploymentSpecificationUpdateRoleRuleDialog_Input;
     deploymentSpecificationUpdateServiceAnnotations: DeploymentSpecificationUpdateServiceAnnotationsDialog_Input;
     deploymentSpecificationUpdateServiceAnnotation: DeploymentSpecificationUpdateServiceAnnotationDialog_Input;
     deploymentSpecificationUpdateInitContainers: DeploymentSpecificationUpdateInitContainersDialog_Input;

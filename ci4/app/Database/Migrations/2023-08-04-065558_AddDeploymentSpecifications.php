@@ -63,7 +63,6 @@ class AddDeploymentSpecifications extends Migration {
         Table::init('deployment_specification_cluster_role_rules')
             ->create()
             ->column('deployment_specification_id', ColumnTypes::INT)->addIndex('deployment_specification_id')
-            ->column('workspace_type', ColumnTypes::VARCHAR_127)
             ->column('api_group', ColumnTypes::VARCHAR_511)
             ->column('resource', ColumnTypes::VARCHAR_511)
             ->column('verbs', ColumnTypes::VARCHAR_1023);

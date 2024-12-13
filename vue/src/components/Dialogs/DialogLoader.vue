@@ -202,6 +202,12 @@ bus.on('deploymentSpecificationUpdateClusterRoleRules', async input => {
 bus.on('deploymentSpecificationUpdateClusterRoleRule', async input => {
     addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateClusterRoleRuleDialog.vue')).default, input);
 });
+bus.on('deploymentSpecificationUpdateRoleRules', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateRoleRulesDialog.vue')).default, input);
+});
+bus.on('deploymentSpecificationUpdateRoleRule', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateRoleRuleDialog.vue')).default, input);
+});
 bus.on('deploymentSpecificationUpdateServiceAnnotations', async input => {
     addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateServiceAnnotationsDialog.vue')).default, input);
 });

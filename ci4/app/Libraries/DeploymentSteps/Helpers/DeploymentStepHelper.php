@@ -15,6 +15,8 @@ use App\Libraries\DeploymentSteps\NamespaceStep;
 use App\Libraries\DeploymentSteps\PersistentVolumeClaimStep;
 use App\Libraries\DeploymentSteps\PersistentVolumeStep;
 use App\Libraries\DeploymentSteps\RedirectsStep;
+use App\Libraries\DeploymentSteps\RoleBindingStep;
+use App\Libraries\DeploymentSteps\RoleStep;
 use App\Libraries\DeploymentSteps\ServiceAccountStep;
 use App\Libraries\DeploymentSteps\ServiceStep;
 use App\Models\DeploymentModel;
@@ -32,7 +34,15 @@ class DeploymentStepHelper {
 
     const string
         ClusterRole_NotFound = 'not-found',
-        ClusterRole_Found = 'found';
+        ClusterRole_Found = 'found',
+        ClusterRole_NotFoundNotExpected = 'not-found-not-expected',
+        ClusterRole_FoundNotExpected = 'found-not-expected';
+
+    const string
+        Role_NotFound = 'not-found',
+        Role_Found = 'found',
+        Role_NotFoundNotExpected = 'not-found-not-expected',
+        Role_FoundNotExpected = 'found-not-expected';
 
     const string
         ServiceAccount_NotFound = 'not-found',
@@ -40,7 +50,15 @@ class DeploymentStepHelper {
 
     const string
         ClusterRoleBinding_NotFound = 'not-found',
-        ClusterRoleBinding_Found = 'found';
+        ClusterRoleBinding_Found = 'found',
+        ClusterRoleBinding_NotFoundNotExpected = 'not-found-not-expected',
+        ClusterRoleBinding_FoundNotExpected = 'found-not-expected';
+
+    const string
+        RoleBinding_NotFound = 'not-found',
+        RoleBinding_Found = 'found',
+        RoleBinding_NotFoundNotExpected = 'not-found-not-expected',
+        RoleBinding_FoundNotExpected = 'found-not-expected';
 
     const string
         Deployment_NotFound = 'not-found',
@@ -88,8 +106,10 @@ class DeploymentStepHelper {
             DeploymentSteps::Database => new DatabaseStep(),
             DeploymentSteps::Namespace => new NamespaceStep(),
             DeploymentSteps::ClusterRole => new ClusterRoleStep(),
+            DeploymentSteps::Role => new RoleStep(),
             DeploymentSteps::ServiceAccount => new ServiceAccountStep(),
             DeploymentSteps::ClusterRoleBinding => new ClusterRoleBindingStep(),
+            DeploymentSteps::RoleBinding => new RoleBindingStep(),
             DeploymentSteps::PersistentVolume => new PersistentVolumeStep(),
             DeploymentSteps::PersistentVolumeClaim => new PersistentVolumeClaimStep(),
             DeploymentSteps::Cronjob => new CronjobStep(),

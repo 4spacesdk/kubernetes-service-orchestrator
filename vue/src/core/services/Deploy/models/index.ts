@@ -16,6 +16,7 @@ export {DeploymentSpecificationInitContainer as DeploymentSpecificationInitConta
 export {DeploymentSpecificationPostCommand as DeploymentSpecificationPostCommand} from "./DeploymentSpecificationPostCommand";
 export {DeploymentSpecificationPostUpdateAction as DeploymentSpecificationPostUpdateAction} from "./DeploymentSpecificationPostUpdateAction";
 export {DeploymentSpecificationQuickCommand as DeploymentSpecificationQuickCommand} from "./DeploymentSpecificationQuickCommand";
+export {DeploymentSpecificationRoleRule as DeploymentSpecificationRoleRule} from "./DeploymentSpecificationRoleRule";
 export {DeploymentSpecificationServiceAnnotation as DeploymentSpecificationServiceAnnotation} from "./DeploymentSpecificationServiceAnnotation";
 export {DeploymentSpecificationServicePort as DeploymentSpecificationServicePort} from "./DeploymentSpecificationServicePort";
 export {DeploymentStep as DeploymentStep} from "./DeploymentStep";

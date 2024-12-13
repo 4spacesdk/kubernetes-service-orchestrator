@@ -263,6 +263,16 @@ export interface ResourceManagementProfileList {
     values?: ResourceManagementProfile[];
 }
 
+export interface RoleRule {
+    apiGroup?: string;
+    resource?: string;
+    verbs?: string;
+}
+
+export interface RoleRuleList {
+    values?: RoleRule[];
+}
+
 export interface ServiceAnnotation {
     name?: string;
     value?: string;
@@ -1805,6 +1815,27 @@ export class DeploymentSpecificationsUpdateClusterRoleRulesPutById extends BaseA
     }
 }
 
+export class DeploymentSpecificationsUpdateRoleRulesPutById extends BaseApi<DeploymentSpecification> {
+
+    public topic = 'Resources.DeploymentSpecifications';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/deployment-specifications/${id}/role-rules`;
+    }
+
+    protected convertToResource(data: any): DeploymentSpecification {
+        return new DeploymentSpecification(data);
+    }
+
+    public save(data: ClusterRoleRuleList, next?: (value: DeploymentSpecification) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
 export class DeploymentSpecificationsUpdateServiceAnnotationsPutById extends BaseApi<DeploymentSpecification> {
 
     public topic = 'Resources.DeploymentSpecifications';
@@ -1941,6 +1972,10 @@ class DeploymentSpecifications {
 
     public updateClusterRoleRulesPutById(id: number): DeploymentSpecificationsUpdateClusterRoleRulesPutById {
         return new DeploymentSpecificationsUpdateClusterRoleRulesPutById(id);
+    }
+
+    public updateRoleRulesPutById(id: number): DeploymentSpecificationsUpdateRoleRulesPutById {
+        return new DeploymentSpecificationsUpdateRoleRulesPutById(id);
     }
 
     public updateServiceAnnotationsPutById(id: number): DeploymentSpecificationsUpdateServiceAnnotationsPutById {

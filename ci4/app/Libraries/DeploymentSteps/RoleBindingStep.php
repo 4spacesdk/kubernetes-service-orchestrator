@@ -1,24 +1,24 @@
 <?php namespace App\Libraries\DeploymentSteps;
 
 use App\Entities\Deployment;
-use App\Entities\DeploymentSpecificationClusterRoleRule;
+use App\Entities\DeploymentSpecificationRoleRule;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
 use App\Libraries\Kubernetes\KubeAuth;
-use App\Models\DeploymentSpecificationClusterRoleRuleModel;
+use App\Models\DeploymentSpecificationRoleRuleModel;
 use RenokiCo\PhpK8s\Exceptions\KubernetesAPIException;
 use RenokiCo\PhpK8s\Instances\Subject;
-use RenokiCo\PhpK8s\Kinds\K8sClusterRole;
-use RenokiCo\PhpK8s\Kinds\K8sClusterRoleBinding;
+use RenokiCo\PhpK8s\Kinds\K8sRole;
+use RenokiCo\PhpK8s\Kinds\K8sRoleBinding;
 
-class ClusterRoleBindingStep extends BaseDeploymentStep {
+class RoleBindingStep extends BaseDeploymentStep {
 
     public function getIdentifier(): string {
-        return DeploymentSteps::ClusterRoleBinding;
+        return DeploymentSteps::RoleBinding;
     }
 
     public function getName(): string {
-        return 'Cluster Role Binding';
+        return 'Role Binding';
     }
 
     public function hasPreviewCommand(): bool {
@@ -47,15 +47,15 @@ class ClusterRoleBindingStep extends BaseDeploymentStep {
 
     public function getSuccessStatus(Deployment $deployment): string {
         $spec = $deployment->findDeploymentSpecification();
-        /** @var DeploymentSpecificationClusterRoleRule $hasClusterRoleRules */
-        $hasClusterRoleRules = (new DeploymentSpecificationClusterRoleRuleModel())
+        /** @var DeploymentSpecificationRoleRule $hasRoleRules */
+        $hasRoleRules = (new DeploymentSpecificationRoleRuleModel())
             ->where('deployment_specification_id', $spec->id)
             ->find();
-        $expectResource = $hasClusterRoleRules->exists();
+        $expectResource = $hasRoleRules->exists();
 
         return $expectResource
-            ? DeploymentStepHelper::ClusterRoleBinding_Found
-            : DeploymentStepHelper::ClusterRoleBinding_NotFoundNotExpected;
+            ? DeploymentStepHelper::RoleBinding_Found
+            : DeploymentStepHelper::RoleBinding_NotFoundNotExpected;
     }
 
     /**
@@ -89,21 +89,21 @@ class ClusterRoleBindingStep extends BaseDeploymentStep {
         $resource = $this->getResource($deployment, true);
 
         $spec = $deployment->findDeploymentSpecification();
-        /** @var DeploymentSpecificationClusterRoleRule $hasClusterRoleRules */
-        $hasClusterRoleRules = (new DeploymentSpecificationClusterRoleRuleModel())
+        /** @var DeploymentSpecificationRoleRule $hasRoleRules */
+        $hasRoleRules = (new DeploymentSpecificationRoleRuleModel())
             ->where('deployment_specification_id', $spec->id)
             ->find();
-        $expectResource = $hasClusterRoleRules->exists();
+        $expectResource = $hasRoleRules->exists();
 
         $hasAlias = $resource->exists();
         if ($hasAlias) {
             return $expectResource
-                ? DeploymentStepHelper::ClusterRoleBinding_Found
-                : DeploymentStepHelper::ClusterRoleBinding_FoundNotExpected;
+                ? DeploymentStepHelper::RoleBinding_Found
+                : DeploymentStepHelper::RoleBinding_FoundNotExpected;
         } else {
             return $expectResource
-                ? DeploymentStepHelper::ClusterRoleBinding_NotFound
-                : DeploymentStepHelper::ClusterRoleBinding_NotFoundNotExpected;
+                ? DeploymentStepHelper::RoleBinding_NotFound
+                : DeploymentStepHelper::RoleBinding_NotFoundNotExpected;
         }
     }
 
@@ -119,9 +119,9 @@ class ClusterRoleBindingStep extends BaseDeploymentStep {
         if ($namespaceStep->getStatus($deployment) != DeploymentStepHelper::Namespace_Found) {
             return 'Missing Namespace';
         }
-        $clusterRoleStep = new ClusterRoleStep();
-        if ($clusterRoleStep->getStatus($deployment) != $clusterRoleStep->getSuccessStatus($deployment)) {
-            return 'Missing Cluster Role';
+        $clusterRoleStep = new RoleStep();
+        if ($clusterRoleStep->getStatus($deployment) != DeploymentStepHelper::Role_Found) {
+            return 'Missing Role';
         }
         $serviceAccount = new ServiceAccountStep();
         if ($serviceAccount->getStatus($deployment) != DeploymentStepHelper::ServiceAccount_Found) {
@@ -152,10 +152,11 @@ class ClusterRoleBindingStep extends BaseDeploymentStep {
     /**
      * @throws \Exception
      */
-    private function getResource(Deployment $deployment, bool $auth = false): K8sClusterRoleBinding {
-        $resource = new K8sClusterRoleBinding();
+    private function getResource(Deployment $deployment, bool $auth = false): K8sRoleBinding {
+        $resource = new K8sRoleBinding();
         $resource
-            ->setName("{$deployment->name}.{$deployment->namespace}")
+            ->setName($deployment->name)
+            ->setNamespace($deployment->namespace)
             ->addSubject(
                 (new Subject())
                     ->setAttribute('kind', 'ServiceAccount')
@@ -163,8 +164,8 @@ class ClusterRoleBindingStep extends BaseDeploymentStep {
                     ->setAttribute('namespace', $deployment->namespace)
             )
             ->setRole(
-                (new K8sClusterRole())
-                    ->setName("{$deployment->name}.{$deployment->namespace}")
+                (new K8sRole())
+                    ->setName($deployment->name)
             );
 
         if ($auth) {
