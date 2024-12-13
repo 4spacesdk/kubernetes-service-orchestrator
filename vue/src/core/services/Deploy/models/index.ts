@@ -9,8 +9,10 @@ export {DeploymentPackageDeploymentSpecification as DeploymentPackageDeploymentS
 export {DeploymentPackageEnvironmentVariable as DeploymentPackageEnvironmentVariable} from "./DeploymentPackageEnvironmentVariable";
 export {DeploymentSpecification as DeploymentSpecification} from "./DeploymentSpecification";
 export {DeploymentSpecificationClusterRoleRule as DeploymentSpecificationClusterRoleRule} from "./DeploymentSpecificationClusterRoleRule";
+export {DeploymentSpecificationDeploymentAnnotation as DeploymentSpecificationDeploymentAnnotation} from "./DeploymentSpecificationDeploymentAnnotation";
 export {DeploymentSpecificationEnvironmentVariable as DeploymentSpecificationEnvironmentVariable} from "./DeploymentSpecificationEnvironmentVariable";
 export {DeploymentSpecificationIngress as DeploymentSpecificationIngress} from "./DeploymentSpecificationIngress";
+export {DeploymentSpecificationIngressAnnotation as DeploymentSpecificationIngressAnnotation} from "./DeploymentSpecificationIngressAnnotation";
 export {DeploymentSpecificationIngressRulePath as DeploymentSpecificationIngressRulePath} from "./DeploymentSpecificationIngressRulePath";
 export {DeploymentSpecificationInitContainer as DeploymentSpecificationInitContainer} from "./DeploymentSpecificationInitContainer";
 export {DeploymentSpecificationPostCommand as DeploymentSpecificationPostCommand} from "./DeploymentSpecificationPostCommand";

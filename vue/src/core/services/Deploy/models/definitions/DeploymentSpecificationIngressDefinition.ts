@@ -3,6 +3,7 @@
  */
 import {DeploymentSpecification} from '../DeploymentSpecification';
 import {DeploymentSpecificationIngressRulePath} from '../DeploymentSpecificationIngressRulePath';
+import {DeploymentSpecificationIngressAnnotation} from '../DeploymentSpecificationIngressAnnotation';
 import {User} from '../User';
 import {Deletion} from '../Deletion';
 import {BaseModel} from '../BaseModel';
@@ -18,6 +19,7 @@ export class DeploymentSpecificationIngressDefinition extends BaseModel {
     ssl_redirect?: boolean;
     enable_tls?: boolean;
     deployment_specification_ingress_rule_paths?: DeploymentSpecificationIngressRulePath[];
+    deployment_specification_ingress_annotations?: DeploymentSpecificationIngressAnnotation[];
     id?: number;
     created?: string;
     updated?: string;
@@ -45,6 +47,7 @@ export class DeploymentSpecificationIngressDefinition extends BaseModel {
             delete this.ssl_redirect;
             delete this.enable_tls;
             delete this.deployment_specification_ingress_rule_paths;
+            delete this.deployment_specification_ingress_annotations;
             delete this.id;
             delete this.created;
             delete this.updated;
@@ -86,6 +89,9 @@ export class DeploymentSpecificationIngressDefinition extends BaseModel {
         }
         if (data.deployment_specification_ingress_rule_paths != null) {
             this.deployment_specification_ingress_rule_paths = data.deployment_specification_ingress_rule_paths.map((i: any) => new DeploymentSpecificationIngressRulePath(i));
+        }
+        if (data.deployment_specification_ingress_annotations != null) {
+            this.deployment_specification_ingress_annotations = data.deployment_specification_ingress_annotations.map((i: any) => new DeploymentSpecificationIngressAnnotation(i));
         }
         if (data.id != null) {
             this.id = data.id;

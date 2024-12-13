@@ -16,6 +16,7 @@ const showUpdateIngresses = ref(false);
 const showUpdateClusterRoleRules = ref(false);
 const showUpdateRoleRules = ref(false);
 const showUpdateServiceAnnotations = ref(false);
+const showUpdateDeploymentAnnotations = ref(false);
 const showUpdateQuickCommands = ref(false);
 const showUpdateInitContainers = ref(false);
 const showUpdatePostUpdateActions = ref(false);
@@ -36,6 +37,7 @@ function render() {
     showUpdateEnvironmentVariables.value = true;
     showUpdateServicePorts.value = true;
     showUpdateServiceAnnotations.value = true;
+    showUpdateDeploymentAnnotations.value = true;
     showUpdateIngresses.value = props.deploymentSpecification.enable_ingress ?? false;
     showUpdateClusterRoleRules.value = props.deploymentSpecification.enable_rbac ?? false;
     showUpdateRoleRules.value = props.deploymentSpecification.enable_rbac ?? false;
@@ -90,6 +92,12 @@ function onUpdateServiceAnnotationsClicked() {
     });
 }
 
+function onUpdateDeploymentAnnotationsClicked() {
+    bus.emit('deploymentSpecificationUpdateDeploymentAnnotations', {
+        deploymentSpecification: props.deploymentSpecification
+    });
+}
+
 function onUpdateQuickCommandsClicked() {
     bus.emit('deploymentSpecificationUpdateQuickCommands', {
         deploymentSpecification: props.deploymentSpecification
@@ -126,6 +134,15 @@ function onUpdateLabelsClicked() {
             <v-list
                 class="list-items">
                 <v-list-item
+                    v-if="showUpdateDeploymentAnnotations"
+                    dense
+                    @click="onUpdateDeploymentAnnotationsClicked">
+                    <v-list-item-title>
+                        <v-icon size="small" class="my-auto ml-2">fa fa-tags</v-icon>
+                        <span class="ml-2">Deployment Annotations</span>
+                    </v-list-item-title>
+                </v-list-item>
+                <v-list-item
                     v-if="showUpdatePostCommands"
                     dense
                     @click="onUpdatePostCommandsClicked">
@@ -148,7 +165,7 @@ function onUpdateLabelsClicked() {
                     dense
                     @click="onUpdateServiceAnnotationsClicked">
                     <v-list-item-title>
-                        <v-icon size="small" class="my-auto ml-2">fa fa-hashtag</v-icon>
+                        <v-icon size="small" class="my-auto ml-2">fa fa-tags</v-icon>
                         <span class="ml-2">Service Annotations</span>
                     </v-list-item-title>
                 </v-list-item>

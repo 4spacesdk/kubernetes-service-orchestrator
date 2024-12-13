@@ -8,6 +8,7 @@
  * @property bool $sslRedirect
  * @property bool $enableTls
  * @property IngressRulePath[] $paths
+ * @property IngressAnnotation[] $annotations
  */
 interface Ingress {
 

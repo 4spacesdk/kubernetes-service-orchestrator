@@ -5,7 +5,7 @@ import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
 
-export interface DeploymentSpecificationUpdateServiceAnnotationsDialog_Input {
+export interface DeploymentSpecificationUpdateDeploymentAnnotationsDialog_Input {
     deploymentSpecification: DeploymentSpecification;
 }
 
@@ -14,7 +14,7 @@ interface Row {
     value: string;
 }
 
-const props = defineProps<{ input: DeploymentSpecificationUpdateServiceAnnotationsDialog_Input, events: DialogEventsInterface }>();
+const props = defineProps<{ input: DeploymentSpecificationUpdateDeploymentAnnotationsDialog_Input, events: DialogEventsInterface }>();
 
 const used = ref(false);
 const showDialog = ref(false);
@@ -48,13 +48,13 @@ function render() {
     isLoading.value = true;
     Api.deploymentSpecifications().get()
         .where('id', props.input.deploymentSpecification.id!)
-        .include('deployment_specification_service_annotation')
+        .include('deployment_specification_deployment_annotation')
         .find(value => {
-            rows.value = value[0].deployment_specification_service_annotations
-                ?.map(serviceAnnotation => {
+            rows.value = value[0].deployment_specification_deployment_annotations
+                ?.map(deploymentAnnotation => {
                     return {
-                        name: serviceAnnotation.name ?? '',
-                        value: serviceAnnotation.value ?? '',
+                        name: deploymentAnnotation.name ?? '',
+                        value: deploymentAnnotation.value ?? '',
                     }
                 }) ?? [];
             itemCount.value = rows.value.length;
@@ -76,15 +76,15 @@ function onCreateBtnClicked() {
         name: '',
         value: '',
     };
-    bus.emit('deploymentSpecificationUpdateServiceAnnotation', {
-        serviceAnnotation: newItem,
+    bus.emit('deploymentSpecificationUpdateDeploymentAnnotation', {
+        deploymentAnnotation: newItem,
         onSaveCallback: () => rows.value.push(newItem),
     });
 }
 
 function onEditRowClicked(row: Row) {
-    bus.emit('deploymentSpecificationUpdateServiceAnnotation', {
-        serviceAnnotation: row,
+    bus.emit('deploymentSpecificationUpdateDeploymentAnnotation', {
+        deploymentAnnotation: row,
         onSaveCallback: () => {
 
         }
@@ -97,7 +97,7 @@ function onDeleteRowClicked(row: Row) {
 
 function onSaveBtnClicked() {
     isSaving.value = true;
-    const api = Api.deploymentSpecifications().updateServiceAnnotationsPutById(props.input.deploymentSpecification.id!);
+    const api = Api.deploymentSpecifications().updateDeploymentAnnotationsPutById(props.input.deploymentSpecification.id!);
     api.setErrorHandler(response => {
         if (response.error) {
             bus.emit('toast', {
@@ -135,7 +135,7 @@ function onCloseBtnClicked() {
             class="w-100 h-100">
             <v-card-title>
                 <div class="d-flex w-100">
-                    <span class="my-auto">Service Annotations</span>
+                    <span class="my-auto">Deployment Annotations</span>
                     <v-chip class="my-auto mx-auto">{{ props.input.deploymentSpecification.name }}</v-chip>
 
                     <div class="my-auto ml-auto d-flex justify-end gap-1">

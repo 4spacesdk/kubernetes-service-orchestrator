@@ -211,6 +211,7 @@ class IngressStep extends BaseDeploymentStep {
                     'nginx.ingress.kubernetes.io/proxy-read-timeout' => (string)$ingress->proxy_read_timeout,
                     'nginx.ingress.kubernetes.io/proxy-send-timeout' => (string)$ingress->proxy_send_timeout,
                     'nginx.ingress.kubernetes.io/ssl-redirect' => $ingress->ssl_redirect ? 'true' : 'false',
+                    ...$ingress->getIngressAnnotations(),
                 ])
                 ->setSpec('ingressClassName', $ingress->ingress_class)
                 ->setRules($ingress->getIngressRules($deployment));

@@ -214,6 +214,18 @@ bus.on('deploymentSpecificationUpdateServiceAnnotations', async input => {
 bus.on('deploymentSpecificationUpdateServiceAnnotation', async input => {
     addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateServiceAnnotationDialog.vue')).default, input);
 });
+bus.on('deploymentSpecificationUpdateDeploymentAnnotations', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateDeploymentAnnotationsDialog.vue')).default, input);
+});
+bus.on('deploymentSpecificationUpdateDeploymentAnnotation', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateDeploymentAnnotationDialog.vue')).default, input);
+});
+bus.on('deploymentSpecificationUpdateIngressAnnotations', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateIngressAnnotationsDialog.vue')).default, input);
+});
+bus.on('deploymentSpecificationUpdateIngressAnnotation', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateIngressAnnotationDialog.vue')).default, input);
+});
 bus.on('deploymentSpecificationUpdateInitContainers', async input => {
     addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateInitContainersDialog.vue')).default, input);
 });

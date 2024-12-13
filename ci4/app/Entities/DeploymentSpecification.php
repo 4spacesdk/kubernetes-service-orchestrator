@@ -72,6 +72,8 @@ use App\Core\Entity;
  * @property DeploymentSpecificationClusterRoleRule $deployment_specification_cluster_role_rules
  * @property DeploymentSpecificationRoleRule $deployment_specification_role_rules
  * @property DeploymentSpecificationServiceAnnotation $deployment_specification_service_annotations
+ * @property DeploymentSpecificationDeploymentAnnotation $deployment_specification_deployment_annotations
+ * @property DeploymentSpecificationIngressAnnotation $deployment_specification_ingress_annotations
  * @property DeploymentSpecificationQuickCommand $deployment_specification_quick_commands
  * @property DeploymentSpecificationInitContainer $deployment_specification_init_containers
  * @property DeploymentSpecificationPostUpdateAction $deployment_specification_post_update_actions
@@ -276,6 +278,12 @@ class DeploymentSpecification extends Entity {
         $this->deployment_specification_service_annotations->find()->deleteAll();
         $this->save($values);
         $this->deployment_specification_service_annotations = $values;
+    }
+
+    public function updateDeploymentAnnotations(DeploymentSpecificationDeploymentAnnotation $values): void {
+        $this->deployment_specification_deployment_annotations->find()->deleteAll();
+        $this->save($values);
+        $this->deployment_specification_deployment_annotations = $values;
     }
 
     public function updateInitContainers(DeploymentSpecificationInitContainer $values): void {

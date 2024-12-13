@@ -1,12 +1,17 @@
 <script setup lang="ts">
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
-import {DeploymentSpecification} from "@/core/services/Deploy/models";
-import {Api} from "@/core/services/Deploy/Api";
+import {
+    DeploymentSpecification,
+    DeploymentSpecificationIngressAnnotation,
+} from "@/core/services/Deploy/models";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
 
-export interface DeploymentSpecificationUpdateServiceAnnotationsDialog_Input {
+export interface DeploymentSpecificationUpdateIngressAnnotationsDialog_Input {
     deploymentSpecification: DeploymentSpecification;
+    items: DeploymentSpecificationIngressAnnotation[];
+
+    onSaveCallback: (items: DeploymentSpecificationIngressAnnotation[]) => void;
 }
 
 interface Row {
@@ -14,7 +19,7 @@ interface Row {
     value: string;
 }
 
-const props = defineProps<{ input: DeploymentSpecificationUpdateServiceAnnotationsDialog_Input, events: DialogEventsInterface }>();
+const props = defineProps<{ input: DeploymentSpecificationUpdateIngressAnnotationsDialog_Input, events: DialogEventsInterface }>();
 
 const used = ref(false);
 const showDialog = ref(false);
@@ -46,20 +51,15 @@ function render() {
     showDialog.value = true;
 
     isLoading.value = true;
-    Api.deploymentSpecifications().get()
-        .where('id', props.input.deploymentSpecification.id!)
-        .include('deployment_specification_service_annotation')
-        .find(value => {
-            rows.value = value[0].deployment_specification_service_annotations
-                ?.map(serviceAnnotation => {
-                    return {
-                        name: serviceAnnotation.name ?? '',
-                        value: serviceAnnotation.value ?? '',
-                    }
-                }) ?? [];
-            itemCount.value = rows.value.length;
-            isLoading.value = false;
-        });
+
+    rows.value = props.input.items?.map(item => {
+        return {
+            name: item.name ?? '',
+            value: item.value ?? '',
+        }
+    }) ?? [];
+    itemCount.value = rows.value.length;
+    isLoading.value = false;
 }
 
 function close() {
@@ -76,15 +76,15 @@ function onCreateBtnClicked() {
         name: '',
         value: '',
     };
-    bus.emit('deploymentSpecificationUpdateServiceAnnotation', {
-        serviceAnnotation: newItem,
+    bus.emit('deploymentSpecificationUpdateIngressAnnotation', {
+        ingressAnnotation: newItem,
         onSaveCallback: () => rows.value.push(newItem),
     });
 }
 
 function onEditRowClicked(row: Row) {
-    bus.emit('deploymentSpecificationUpdateServiceAnnotation', {
-        serviceAnnotation: row,
+    bus.emit('deploymentSpecificationUpdateIngressAnnotation', {
+        ingressAnnotation: row,
         onSaveCallback: () => {
 
         }
@@ -97,23 +97,14 @@ function onDeleteRowClicked(row: Row) {
 
 function onSaveBtnClicked() {
     isSaving.value = true;
-    const api = Api.deploymentSpecifications().updateServiceAnnotationsPutById(props.input.deploymentSpecification.id!);
-    api.setErrorHandler(response => {
-        if (response.error) {
-            bus.emit('toast', {
-                text: response.error
-            });
-        }
-        isSaving.value = false;
-        return false;
-    });
-    api.save({
-        values: rows.value
-    }, newItem => {
-        bus.emit('deploymentSpecificationSaved', newItem);
-        isSaving.value = false;
-        close();
-    });
+    props.input.onSaveCallback(rows.value.map(row => {
+        const annotation = new DeploymentSpecificationIngressAnnotation();
+        annotation.name = row.name;
+        annotation.value = row.value;
+        return annotation;
+    }));
+    isSaving.value = false;
+    close();
 }
 
 function onCloseBtnClicked() {
@@ -135,7 +126,7 @@ function onCloseBtnClicked() {
             class="w-100 h-100">
             <v-card-title>
                 <div class="d-flex w-100">
-                    <span class="my-auto">Service Annotations</span>
+                    <span class="my-auto">Ingress Annotations</span>
                     <v-chip class="my-auto mx-auto">{{ props.input.deploymentSpecification.name }}</v-chip>
 
                     <div class="my-auto ml-auto d-flex justify-end gap-1">

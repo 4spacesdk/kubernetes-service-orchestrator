@@ -10,6 +10,8 @@ import {DeploymentSpecificationIngress} from '../DeploymentSpecificationIngress'
 import {DeploymentSpecificationClusterRoleRule} from '../DeploymentSpecificationClusterRoleRule';
 import {DeploymentSpecificationRoleRule} from '../DeploymentSpecificationRoleRule';
 import {DeploymentSpecificationServiceAnnotation} from '../DeploymentSpecificationServiceAnnotation';
+import {DeploymentSpecificationDeploymentAnnotation} from '../DeploymentSpecificationDeploymentAnnotation';
+import {DeploymentSpecificationIngressAnnotation} from '../DeploymentSpecificationIngressAnnotation';
 import {DeploymentSpecificationQuickCommand} from '../DeploymentSpecificationQuickCommand';
 import {DeploymentSpecificationInitContainer} from '../DeploymentSpecificationInitContainer';
 import {DeploymentSpecificationPostUpdateAction} from '../DeploymentSpecificationPostUpdateAction';
@@ -50,6 +52,8 @@ export class DeploymentSpecificationDefinition extends BaseModel {
     deployment_specification_cluster_role_rules?: DeploymentSpecificationClusterRoleRule[];
     deployment_specification_role_rules?: DeploymentSpecificationRoleRule[];
     deployment_specification_service_annotations?: DeploymentSpecificationServiceAnnotation[];
+    deployment_specification_deployment_annotations?: DeploymentSpecificationDeploymentAnnotation[];
+    deployment_specification_ingress_annotations?: DeploymentSpecificationIngressAnnotation[];
     deployment_specification_quick_commands?: DeploymentSpecificationQuickCommand[];
     deployment_specification_init_containers?: DeploymentSpecificationInitContainer[];
     deployment_specification_post_update_actions?: DeploymentSpecificationPostUpdateAction[];
@@ -102,6 +106,8 @@ export class DeploymentSpecificationDefinition extends BaseModel {
             delete this.deployment_specification_cluster_role_rules;
             delete this.deployment_specification_role_rules;
             delete this.deployment_specification_service_annotations;
+            delete this.deployment_specification_deployment_annotations;
+            delete this.deployment_specification_ingress_annotations;
             delete this.deployment_specification_quick_commands;
             delete this.deployment_specification_init_containers;
             delete this.deployment_specification_post_update_actions;
@@ -208,6 +214,12 @@ export class DeploymentSpecificationDefinition extends BaseModel {
         }
         if (data.deployment_specification_service_annotations != null) {
             this.deployment_specification_service_annotations = data.deployment_specification_service_annotations.map((i: any) => new DeploymentSpecificationServiceAnnotation(i));
+        }
+        if (data.deployment_specification_deployment_annotations != null) {
+            this.deployment_specification_deployment_annotations = data.deployment_specification_deployment_annotations.map((i: any) => new DeploymentSpecificationDeploymentAnnotation(i));
+        }
+        if (data.deployment_specification_ingress_annotations != null) {
+            this.deployment_specification_ingress_annotations = data.deployment_specification_ingress_annotations.map((i: any) => new DeploymentSpecificationIngressAnnotation(i));
         }
         if (data.deployment_specification_quick_commands != null) {
             this.deployment_specification_quick_commands = data.deployment_specification_quick_commands.map((i: any) => new DeploymentSpecificationQuickCommand(i));

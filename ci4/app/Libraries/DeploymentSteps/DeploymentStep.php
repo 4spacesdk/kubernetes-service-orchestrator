@@ -2,6 +2,7 @@
 
 use App\Entities\DatabaseService;
 use App\Entities\Deployment;
+use App\Entities\DeploymentSpecificationDeploymentAnnotation;
 use App\Entities\DeploymentSpecificationInitContainer;
 use App\Entities\DeploymentVolume;
 use App\Entities\Domain;
@@ -11,6 +12,7 @@ use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
 use App\Libraries\Kubernetes\KubeAuth;
 use App\Models\ContainerImageModel;
+use App\Models\DeploymentSpecificationDeploymentAnnotationModel;
 use App\Models\DeploymentSpecificationInitContainerModel;
 use App\Models\DeploymentSpecificationModel;
 use App\Models\DeploymentVolumeModel;
@@ -407,6 +409,14 @@ class DeploymentStep extends BaseDeploymentStep {
 
         ];
 
+        /** @var DeploymentSpecificationDeploymentAnnotation $deploymentAnnotation */
+        $deploymentAnnotations = (new DeploymentSpecificationDeploymentAnnotationModel())
+            ->where('deployment_specification_id', $spec->id)
+            ->find();
+        foreach ($deploymentAnnotations as $deploymentAnnotation) {
+            $annotations[$deploymentAnnotation->name] = $deploymentAnnotation->value;
+        }
+
         $resource = new K8sDeployment();
         $resource
             ->setName($deployment->name)
@@ -421,7 +431,6 @@ class DeploymentStep extends BaseDeploymentStep {
             ->setSpec('replicas', $deployment->replicas)
             ->setTemplate($template)
             ->setReplicas($deployment->replicas ?? 1);
-
 
         if ($auth) {
             $auth = new KubeAuth();

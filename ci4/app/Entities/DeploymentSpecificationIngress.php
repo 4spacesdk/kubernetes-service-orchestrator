@@ -1,6 +1,8 @@
 <?php namespace App\Entities;
 
+use App\Interfaces\IngressAnnotation;
 use App\Interfaces\IngressRulePath;
+use App\Models\DeploymentSpecificationIngressAnnotationModel;
 use App\Models\DeploymentSpecificationIngressRulePathModel;
 use App\Core\Entity;
 
@@ -19,13 +21,14 @@ use App\Core\Entity;
  *
  * Many
  * @property DeploymentSpecificationIngressRulePath $deployment_specification_ingress_rule_paths
+ * @property DeploymentSpecificationIngressAnnotation $deployment_specification_ingress_annotations
  */
 class DeploymentSpecificationIngress extends Entity {
 
     public static function Create(string $ingressClass, int $proxyBodySize,
                                   int $proxyConnectTimeout, int $proxyReadTimeout,
                                   int $proxySendTimeout, bool $sslRedirect, bool $enableTls,
-                                  array $paths): DeploymentSpecificationIngress {
+                                  array $paths, array $annotations): DeploymentSpecificationIngress {
         $item = new DeploymentSpecificationIngress();
         $item->ingress_class = $ingressClass;
         $item->proxy_body_size = $proxyBodySize;
@@ -37,7 +40,6 @@ class DeploymentSpecificationIngress extends Entity {
         $item->save();
 
         /** @var IngressRulePath[] $paths */
-
         $rulePaths = new DeploymentSpecificationIngressRulePath();
         $rulePaths->all = array_map(
             fn($data) => DeploymentSpecificationIngressRulePath::Create(
@@ -47,8 +49,18 @@ class DeploymentSpecificationIngress extends Entity {
             ),
             $paths
         );
-
         $item->save($rulePaths);
+
+        /** @var IngressAnnotation[] $annotations */
+        $ingressAnnotations = new DeploymentSpecificationIngressAnnotation();
+        $ingressAnnotations->all = array_map(
+            fn($data) => DeploymentSpecificationIngressAnnotation::Create(
+                $data->name,
+                $data->value
+            ),
+            $annotations
+        );
+        $item->save($ingressAnnotations);
 
         return $item;
     }
@@ -82,6 +94,18 @@ class DeploymentSpecificationIngress extends Entity {
                 ],
             ]
         ];
+    }
+
+    public function getIngressAnnotations(): array {
+        $annotations = [];
+        /** @var DeploymentSpecificationIngressAnnotation $ingressAnnotations */
+        $ingressAnnotations = (new DeploymentSpecificationIngressAnnotationModel())
+            ->where('deployment_specification_ingress_id', $this->id)
+            ->find();
+        foreach ($ingressAnnotations as $ingressAnnotation) {
+            $annotations[$ingressAnnotation->name] = $ingressAnnotation->value;
+        }
+        return $annotations;
     }
 
     /**

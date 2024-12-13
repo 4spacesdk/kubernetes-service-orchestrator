@@ -34,6 +34,15 @@ export interface ClusterRoleRuleList {
     values?: ClusterRoleRule[];
 }
 
+export interface DeploymentAnnotation {
+    name?: string;
+    value?: string;
+}
+
+export interface DeploymentAnnotationList {
+    values?: DeploymentAnnotation[];
+}
+
 export interface DeploymentPackageDeploymentSpecification {
     deploymentSpecification?: DeploymentSpecification;
     defaultEnablePodioNotification?: boolean;
@@ -138,6 +147,12 @@ export interface Ingress {
     sslRedirect?: boolean;
     enableTls?: boolean;
     paths?: IngressRulePath[];
+    annotations?: IngressAnnotation[];
+}
+
+export interface IngressAnnotation {
+    name?: string;
+    value?: string;
 }
 
 export interface IngressList {
@@ -1857,6 +1872,27 @@ export class DeploymentSpecificationsUpdateServiceAnnotationsPutById extends Bas
     }
 }
 
+export class DeploymentSpecificationsUpdateDeploymentAnnotationsPutById extends BaseApi<DeploymentSpecification> {
+
+    public topic = 'Resources.DeploymentSpecifications';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/deployment-specifications/${id}/deployment-annotations`;
+    }
+
+    protected convertToResource(data: any): DeploymentSpecification {
+        return new DeploymentSpecification(data);
+    }
+
+    public save(data: DeploymentAnnotationList, next?: (value: DeploymentSpecification) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
 export class DeploymentSpecificationsUpdateInitContainersPutById extends BaseApi<DeploymentSpecification> {
 
     public topic = 'Resources.DeploymentSpecifications';
@@ -1980,6 +2016,10 @@ class DeploymentSpecifications {
 
     public updateServiceAnnotationsPutById(id: number): DeploymentSpecificationsUpdateServiceAnnotationsPutById {
         return new DeploymentSpecificationsUpdateServiceAnnotationsPutById(id);
+    }
+
+    public updateDeploymentAnnotationsPutById(id: number): DeploymentSpecificationsUpdateDeploymentAnnotationsPutById {
+        return new DeploymentSpecificationsUpdateDeploymentAnnotationsPutById(id);
     }
 
     public updateInitContainersPutById(id: number): DeploymentSpecificationsUpdateInitContainersPutById {

@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
-import {DeploymentSpecification, DeploymentSpecificationIngressRulePath} from "@/core/services/Deploy/models";
+import {
+    DeploymentSpecification,
+    DeploymentSpecificationIngressAnnotation,
+    DeploymentSpecificationIngressRulePath
+} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
@@ -22,6 +26,11 @@ interface Row {
         path?: string;
         pathType?: string;
         backendServicePortName?: string;
+    }[];
+
+    annotations?: {
+        name?: string;
+        value?: string;
     }[];
 }
 
@@ -65,7 +74,7 @@ function render() {
     isLoading.value = true;
     Api.deploymentSpecifications().get()
         .where('id', props.input.deploymentSpecification.id!)
-        .include('deployment_specification_ingress?include=deployment_specification_ingress_rule_path')
+        .include(`deployment_specification_ingress?include=${encodeURIComponent('deployment_specification_ingress_rule_path,deployment_specification_ingress_annotation')}`)
         .find(value => {
             rows.value = value[0].deployment_specification_ingresses
                 ?.map(ingress => {
@@ -82,6 +91,12 @@ function render() {
                                 path: path.path,
                                 pathType: path.path_type,
                                 backendServicePortName: path.backend_service_port_name,
+                            }
+                        }) ?? [],
+                        annotations: ingress.deployment_specification_ingress_annotations?.map((annotation: DeploymentSpecificationIngressAnnotation) => {
+                            return {
+                                name: annotation.name,
+                                value: annotation.value,
                             }
                         }) ?? [],
                     }
@@ -141,6 +156,26 @@ function onRulePathsBtnClicked(row: Row) {
     });
 }
 
+function onAnnotationsBtnClicked(row: Row) {
+    bus.emit('deploymentSpecificationUpdateIngressAnnotations', {
+        deploymentSpecification: props.input.deploymentSpecification,
+        items: row.annotations?.map(annotation => {
+            const item = new DeploymentSpecificationIngressAnnotation();
+            item.name = annotation.name;
+            item.value = annotation.value;
+            return item;
+        }) ?? [],
+        onSaveCallback: (items: DeploymentSpecificationIngressAnnotation[]) => {
+            row.annotations = items?.map((annotation: DeploymentSpecificationIngressAnnotation) => {
+                return {
+                    name: annotation.name,
+                    value: annotation.value,
+                }
+            }) ?? [];
+        }
+    });
+}
+
 function onDeleteRowClicked(row: Row) {
     rows.value.splice(rows.value.indexOf(row), 1);
 }
@@ -178,7 +213,7 @@ function onCloseBtnClicked() {
 <template>
     <v-dialog
         persistent
-        width="60vw"
+        width="80vw"
         v-model="showDialog">
         <v-card
             :loading="isLoading"
@@ -227,6 +262,12 @@ function onCloseBtnClicked() {
                                 @click="onRulePathsBtnClicked(item)">
                                 <v-icon>fa fa-link</v-icon>
                                 <v-tooltip activator="parent" location="bottom">Rule paths</v-tooltip>
+                            </v-btn>
+                            <v-btn
+                                variant="plain" color="primary" size="small"
+                                @click="onAnnotationsBtnClicked(item)">
+                                <v-icon>fa fa-tags</v-icon>
+                                <v-tooltip activator="parent" location="bottom">Annotations</v-tooltip>
                             </v-btn>
                             <v-btn
                                 variant="plain" color="primary" size="small"

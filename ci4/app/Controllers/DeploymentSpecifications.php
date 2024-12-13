@@ -3,6 +3,7 @@
 use App\Core\ResourceController;
 use App\Entities\DeploymentSpecification;
 use App\Entities\DeploymentSpecificationClusterRoleRule;
+use App\Entities\DeploymentSpecificationDeploymentAnnotation;
 use App\Entities\DeploymentSpecificationEnvironmentVariable;
 use App\Entities\DeploymentSpecificationIngress;
 use App\Entities\DeploymentSpecificationPostCommand;
@@ -14,6 +15,7 @@ use App\Entities\DeploymentSpecificationServiceAnnotation;
 use App\Entities\DeploymentSpecificationServicePort;
 use App\Entities\DeploymentSpecificationInitContainer;
 use App\Interfaces\ClusterRoleRuleList;
+use App\Interfaces\DeploymentAnnotationList;
 use App\Interfaces\EnvironmentVariableList;
 use App\Interfaces\IngressList;
 use App\Interfaces\IntArrayInterface;
@@ -183,7 +185,8 @@ class DeploymentSpecifications extends ResourceController {
                     $data->proxySendTimeout,
                     $data->sslRedirect,
                     $data->enableTls,
-                    $data->paths
+                    $data->paths,
+                    $data->annotations
                 ),
                 $body->values
             );
@@ -271,6 +274,31 @@ class DeploymentSpecifications extends ResourceController {
                 $body->values
             );
             $item->updateServiceAnnotations($values);
+        }
+        $this->_setResource($item);
+        $this->success();
+    }
+
+    /**
+     * @route /deployment-specifications/{id}/deployment-annotations
+     * @method put
+     * @custom true
+     * @param int $id
+     * @requestSchema DeploymentAnnotationList
+     * @return void
+     */
+    public function updateDeploymentAnnotations(int $id): void {
+        $item = new DeploymentSpecification();
+        $item->find($id);
+        if ($item->exists()) {
+            /** @var DeploymentAnnotationList $body */
+            $body = $this->request->getJSON();
+            $values = new DeploymentSpecificationDeploymentAnnotation();
+            $values->all = array_map(
+                fn($data) => DeploymentSpecificationDeploymentAnnotation::Create($data->name, $data->value),
+                $body->values
+            );
+            $item->updateDeploymentAnnotations($values);
         }
         $this->_setResource($item);
         $this->success();

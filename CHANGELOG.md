@@ -6,8 +6,9 @@
 *
 
 ### Enhancements
-* Cluster role now has unique names to avoid collision between deployments [Issue35](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/35)
+* Cluster role now has unique names to avoid collision between deployments [Issue #35](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/35)
 * Role and RoleBinding is now part of deployment RBAC 
+* Deployment Specification can now include annotations for ingresses and deployment [Issue #36](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/36)
 
 ### Upgrade guide
 1. Deploy new image
