@@ -205,14 +205,18 @@ import type {
 import type {
     DeploymentSpecificationUpdateRoleRuleDialog_Input
 } from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateRoleRuleDialog.vue";
-import type DeploymentSpecificationUpdateDeploymentAnnotationsDialog
-    from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateDeploymentAnnotationsDialog.vue";
-import type DeploymentSpecificationUpdateDeploymentAnnotationDialog
-    from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateDeploymentAnnotationDialog.vue";
-import type DeploymentSpecificationUpdateIngressAnnotationsDialog
-    from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateIngressAnnotationsDialog.vue";
-import type DeploymentSpecificationUpdateIngressAnnotationDialog
-    from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateIngressAnnotationDialog.vue";
+import type {
+    DeploymentSpecificationUpdateDeploymentAnnotationsDialog_Input
+} from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateDeploymentAnnotationsDialog.vue";
+import type {
+    DeploymentSpecificationUpdateIngressAnnotationsDialog_Input
+} from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateIngressAnnotationsDialog.vue";
+import type {
+    DeploymentSpecificationUpdateIngressAnnotationDialog_Input
+} from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateIngressAnnotationDialog.vue";
+import type {
+    DeploymentSpecificationUpdateDeploymentAnnotationDialog_Input
+} from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateDeploymentAnnotationDialog.vue";
 
 export type Events = {
     confirm: ConfirmationDialog_Input;
@@ -301,10 +305,10 @@ export type Events = {
     deploymentSpecificationUpdateRoleRule: DeploymentSpecificationUpdateRoleRuleDialog_Input;
     deploymentSpecificationUpdateServiceAnnotations: DeploymentSpecificationUpdateServiceAnnotationsDialog_Input;
     deploymentSpecificationUpdateServiceAnnotation: DeploymentSpecificationUpdateServiceAnnotationDialog_Input;
-    deploymentSpecificationUpdateDeploymentAnnotations: DeploymentSpecificationUpdateDeploymentAnnotationsDialog;
-    deploymentSpecificationUpdateDeploymentAnnotation: DeploymentSpecificationUpdateDeploymentAnnotationDialog;
-    deploymentSpecificationUpdateIngressAnnotations: DeploymentSpecificationUpdateIngressAnnotationsDialog;
-    deploymentSpecificationUpdateIngressAnnotation: DeploymentSpecificationUpdateIngressAnnotationDialog;
+    deploymentSpecificationUpdateDeploymentAnnotations: DeploymentSpecificationUpdateDeploymentAnnotationsDialog_Input;
+    deploymentSpecificationUpdateDeploymentAnnotation: DeploymentSpecificationUpdateDeploymentAnnotationDialog_Input;
+    deploymentSpecificationUpdateIngressAnnotations: DeploymentSpecificationUpdateIngressAnnotationsDialog_Input;
+    deploymentSpecificationUpdateIngressAnnotation: DeploymentSpecificationUpdateIngressAnnotationDialog_Input;
     deploymentSpecificationUpdateInitContainers: DeploymentSpecificationUpdateInitContainersDialog_Input;
     deploymentSpecificationUpdatePostUpdateActions: DeploymentSpecificationUpdatePostUpdateActionsDialog_Input;
     deploymentSpecificationUpdateLabels: DeploymentSpecificationUpdateLabelsDialog_Input;
