@@ -257,6 +257,19 @@ class CronjobStep extends BaseDeploymentStep {
 
             $container->addEnvs($envVars);
 
+            if ($cronJob->cpu_request) {
+                $container->minCpu($cronJob->cpu_request.'m');
+            }
+            if ($cronJob->cpu_limit) {
+                $container->maxCpu($cronJob->cpu_limit.'m');
+            }
+            if ($cronJob->memory_request) {
+                $container->minMemory($cronJob->memory_request, 'Mi');
+            }
+            if ($cronJob->memory_limit) {
+                $container->maxMemory($cronJob->memory_limit, 'Mi');
+            }
+
             $resource = new K8sCronJob();
             $resource
                 ->setName($cronJob->name)
@@ -269,6 +282,13 @@ class CronjobStep extends BaseDeploymentStep {
                         ->setSpec('restartPolicy', $cronJob->restart_policy)
                     )
                 );
+
+            if (is_numeric($cronJob->successful_jobs_history_limit)) {
+                $resource->setSpec('successfulJobsHistoryLimit', (int)$cronJob->successful_jobs_history_limit);
+            }
+            if (is_numeric($cronJob->failed_jobs_history_limit)) {
+                $resource->setSpec('failedJobsHistoryLimit', (int)$cronJob->failed_jobs_history_limit);
+            }
 
             $resources[] = $resource;
         }
