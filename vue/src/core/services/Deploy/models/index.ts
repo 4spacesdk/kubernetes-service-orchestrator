@@ -9,6 +9,7 @@ export {DeploymentPackageDeploymentSpecification as DeploymentPackageDeploymentS
 export {DeploymentPackageEnvironmentVariable as DeploymentPackageEnvironmentVariable} from "./DeploymentPackageEnvironmentVariable";
 export {DeploymentSpecification as DeploymentSpecification} from "./DeploymentSpecification";
 export {DeploymentSpecificationClusterRoleRule as DeploymentSpecificationClusterRoleRule} from "./DeploymentSpecificationClusterRoleRule";
+export {DeploymentSpecificationCronJob as DeploymentSpecificationCronJob} from "./DeploymentSpecificationCronJob";
 export {DeploymentSpecificationDeploymentAnnotation as DeploymentSpecificationDeploymentAnnotation} from "./DeploymentSpecificationDeploymentAnnotation";
 export {DeploymentSpecificationEnvironmentVariable as DeploymentSpecificationEnvironmentVariable} from "./DeploymentSpecificationEnvironmentVariable";
 export {DeploymentSpecificationIngress as DeploymentSpecificationIngress} from "./DeploymentSpecificationIngress";
@@ -29,6 +30,7 @@ export {EmailService as EmailService} from "./EmailService";
 export {EnvironmentVariable as EnvironmentVariable} from "./EnvironmentVariable";
 export {InitContainer as InitContainer} from "./InitContainer";
 export {InitContainerEnvironmentVariable as InitContainerEnvironmentVariable} from "./InitContainerEnvironmentVariable";
+export {K8sCronJob as K8sCronJob} from "./K8sCronJob";
 export {Label as Label} from "./Label";
 export {MigrationJob as MigrationJob} from "./MigrationJob";
 export {OAuthClient as OAuthClient} from "./OAuthClient";

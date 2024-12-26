@@ -238,6 +238,9 @@ bus.on('deploymentSpecificationUpdateLabel', async input => {
 bus.on('deploymentSpecificationUpdateLabels', async input => {
     addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateLabelsDialog.vue')).default, input);
 });
+bus.on('deploymentSpecificationUpdateCronJobs', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateCronJobsDialog.vue')).default, input);
+});
 
 
 bus.on('deploymentPackageEdit', async input => {
@@ -297,6 +300,10 @@ bus.on('postUpdateActionUpdateConditions', async input => {
 });
 bus.on('postUpdateActionUpdateCondition', async input => {
     addComponent((await import('@/components/Dialogs/Setup/PostUpdateActions/UpdateDialogs/PostUpdateActionUpdateConditionDialog.vue')).default, input);
+});
+
+bus.on('cronJobEdit', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/CronJobs/CronJobEditDialog.vue')).default, input);
 });
 
 

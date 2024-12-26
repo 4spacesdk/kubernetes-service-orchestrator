@@ -26,7 +26,7 @@ abstract class BaseDeploymentStep {
 
     abstract public function getPreview(Deployment $deployment): string;
 
-    abstract public function getStatus(Deployment $deployment): string;
+    abstract public function getStatus(Deployment $deployment): string | array;
 
     abstract public function validateDeployCommand(Deployment $deployment): ?string;
 

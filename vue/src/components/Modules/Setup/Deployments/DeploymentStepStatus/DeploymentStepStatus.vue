@@ -11,6 +11,7 @@ const props = defineProps<{
 }>();
 
 const text = ref('');
+const textAll = ref<string[]>([]);
 const icon = ref('fa-circle-dashed');
 const color = ref('grey');
 const isLoading = ref(false);
@@ -44,39 +45,58 @@ function reload() {
         isLoading.value = false;
         return false;
     });
-    api.find(value => {
-        text.value = value[0].value ?? '';
-        switch (value[0].value) {
-            case 'not-found':
-            case 'not-performed':
-            case 'running':
-                icon.value = 'fa-circle-exclamation';
-                color.value = 'warning';
-                break;
+    api.find(response => {
+        textAll.value = response[0].values ?? [];
 
-            case 'failed':
-                icon.value = 'fa-circle-xmark';
-                color.value = 'red';
-                break;
+        let hasFailed = false;
+        let hasWarning = false;
+        let hasSuccess = false;
+        let hasUnknown = false;
 
-            case 'found-not-expected':
-                icon.value = 'fa-circle-xmark';
-                color.value = 'red';
-                break;
+        textAll.value.forEach(value => {
+            switch (value) {
+                case 'not-found':
+                case 'not-performed':
+                case 'running':
+                    hasWarning = true;
+                    break;
 
-            case 'found':
-            case 'success':
-            case 'completed':
-            case 'not-found-not-expected':
-                icon.value = 'fa-circle-check';
-                color.value = 'green';
-                break;
+                case 'failed':
+                    hasFailed = true;
+                    break;
+                case 'found-not-expected':
+                    hasFailed = true;
+                    break;
 
-            default:
-                icon.value = 'fa-circle';
-                color.value = 'grey';
-                break;
+                case 'found':
+                case 'success':
+                case 'completed':
+                case 'not-found-not-expected':
+                    hasSuccess = true;
+                    break;
+
+                default:
+                    hasUnknown = true;
+                    break;
+            }
+        });
+
+        if (hasFailed) {
+            icon.value = 'fa-circle-xmark';
+            color.value = 'red';
+        } else if (hasUnknown) {
+            icon.value = 'fa-circle';
+            color.value = 'grey';
+        } else if (hasWarning) {
+            icon.value = 'fa-circle-exclamation';
+            color.value = 'warning';
+        } else if (hasSuccess) {
+            icon.value = 'fa-circle-check';
+            color.value = 'green';
         }
+
+        text.value = textAll.value.join('\n');
+
         isLoading.value = false;
     });
 }
@@ -116,7 +136,12 @@ function onRefreshBtnClicked() {
             <v-tooltip activator="parent" location="bottom">Refresh</v-tooltip>
         </v-btn>
 
-        <span>{{ text }}</span>
+        <div class="d-flex flex-column align-start">
+            <span
+                v-for="(value, i) in textAll" :key="i"
+                class=""
+            >{{ value }}</span>
+        </div>
 
     </div>
 </template>

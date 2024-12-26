@@ -38,6 +38,10 @@ const containerImageTagPolicies = ref([
         identifier: ContainerImageTagPolicies.Static,
         name: "Static",
     },
+    {
+        identifier: ContainerImageTagPolicies.Default,
+        name: "Default",
+    },
 ]);
 const imagePullPolicies = ref([
     {

@@ -9,6 +9,7 @@ import {MigrationJob} from "./models";
 import {Domain} from "./models";
 import {EmailService} from "./models";
 import {InitContainer} from "./models";
+import {K8sCronJob} from "./models";
 import {OAuthClient} from "./models";
 import {PodioIntegration} from "./models";
 import {PostUpdateAction} from "./models";
@@ -1956,6 +1957,27 @@ export class DeploymentSpecificationsUpdateLabelsPutById extends BaseApi<Deploym
     }
 }
 
+export class DeploymentSpecificationsUpdateCronJobsPutById extends BaseApi<DeploymentSpecification> {
+
+    public topic = 'Resources.DeploymentSpecifications';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/deployment-specifications/${id}/cron-jobs`;
+    }
+
+    protected convertToResource(data: any): DeploymentSpecification {
+        return new DeploymentSpecification(data);
+    }
+
+    public save(data: IntArrayInterface, next?: (value: DeploymentSpecification) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
 class DeploymentSpecifications {
 
     public get(): DeploymentSpecificationsGet {
@@ -2034,12 +2056,16 @@ class DeploymentSpecifications {
         return new DeploymentSpecificationsUpdateLabelsPutById(id);
     }
 
+    public updateCronJobsPutById(id: number): DeploymentSpecificationsUpdateCronJobsPutById {
+        return new DeploymentSpecificationsUpdateCronJobsPutById(id);
+    }
+
 }
 
 
-export class DeploymentStepsGetStatusGetByIdentifier extends BaseApi<StringInterface> {
+export class DeploymentStepsGetStatusGetByIdentifier extends BaseApi<StringArrayInterface> {
 
-    public topic = 'Resources.StringInterfaces';
+    public topic = 'Resources.StringArrayInterfaces';
     protected method = 'get';
     protected scope = '';
     protected summary = '';
@@ -2049,7 +2075,7 @@ export class DeploymentStepsGetStatusGetByIdentifier extends BaseApi<StringInter
         this.uri = `/deployment-steps/${identifier}/status`;
     }
 
-    protected convertToResource(data: any): StringInterface {
+    protected convertToResource(data: any): StringArrayInterface {
         return data;
     }
 
@@ -2058,7 +2084,7 @@ export class DeploymentStepsGetStatusGetByIdentifier extends BaseApi<StringInter
         return this;
     }
 
-    public find(next?: (value: StringInterface[]) => void) {
+    public find(next?: (value: StringArrayInterface[]) => void) {
         return super.executeFind(next);
     }
 }
@@ -3763,6 +3789,255 @@ class InitContainers {
 
     public updateEnvironmentVariablesPutById(id: number): InitContainersUpdateEnvironmentVariablesPutById {
         return new InitContainersUpdateEnvironmentVariablesPutById(id);
+    }
+
+}
+
+
+export class K8sCronJobsGet extends BaseApi<K8sCronJob> {
+
+    public topic = 'Resources.K8sCronJobs';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/k8s_cron_jobs`;
+    }
+
+    protected convertToResource(data: any): K8sCronJob {
+        return new K8sCronJob(data);
+    }
+
+    public where(name: string, value: any): K8sCronJobsGet {
+        this.filter().where(name, value);
+        return this;
+    }
+
+    public whereEquals(name: string, value: any): K8sCronJobsGet {
+        this.filter().whereEquals(name, value);
+        return this;
+    }
+
+    public whereIn(name: string, value: any[]): K8sCronJobsGet {
+        this.filter().whereIn(name, value);
+        return this;
+    }
+
+    public whereInArray(name: string, value: any[]): K8sCronJobsGet {
+        this.filter().whereInArray(name, value);
+        return this;
+    }
+
+    public whereNot(name: string, value: any): K8sCronJobsGet {
+        this.filter().whereNot(name, value);
+        return this;
+    }
+
+    public whereNotIn(name: string, value: any[]): K8sCronJobsGet {
+        this.filter().whereNotIn(name, value);
+        return this;
+    }
+
+    public whereGreaterThan(name: string, value: any): K8sCronJobsGet {
+        this.filter().whereGreaterThan(name, value);
+        return this;
+    }
+
+    public whereGreaterThanOrEqual(name: string, value: any): K8sCronJobsGet {
+        this.filter().whereGreaterThanOrEqual(name, value);
+        return this;
+    }
+
+    public whereLessThan(name: string, value: any): K8sCronJobsGet {
+        this.filter().whereLessThan(name, value);
+        return this;
+    }
+
+    public whereLessThanOrEqual(name: string, value: any): K8sCronJobsGet {
+        this.filter().whereLessThanOrEqual(name, value);
+        return this;
+    }
+
+    public search(name: string, value: any): K8sCronJobsGet {
+        this.filter().search(name, value);
+        return this;
+    }
+
+    public include(name: string): K8sCronJobsGet {
+        this.getInclude().include(name);
+        return this;
+    }
+
+    public orderBy(name: string, direction: string): K8sCronJobsGet {
+        this.ordering().orderBy(name, direction);
+        return this;
+    }
+
+    public orderAsc(name: string): K8sCronJobsGet {
+        this.ordering().orderAsc(name);
+        return this;
+    }
+
+    public orderDesc(name: string): K8sCronJobsGet {
+        this.ordering().orderDesc(name);
+        return this;
+    }
+
+    public limit(value: number): K8sCronJobsGet {
+        this.limitValue = value;
+        return this;
+    }
+
+    public offset(value: number): K8sCronJobsGet {
+        this.offsetValue = value;
+        return this;
+    }
+
+    public count(next?: (value: number) => void) {
+        return this.executeCount(next);
+    }
+
+    public find(next?: (value: K8sCronJob[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class K8sCronJobsGetById extends BaseApi<K8sCronJob> {
+
+    public topic = 'Resources.K8sCronJobs';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/k8s_cron_jobs/${id}`;
+    }
+
+    protected convertToResource(data: any): K8sCronJob {
+        return new K8sCronJob(data);
+    }
+
+    public include(name: string): K8sCronJobsGetById {
+        this.getInclude().include(name);
+        return this;
+    }
+
+    public find(next?: (value: K8sCronJob[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class K8sCronJobsPost extends BaseApi<K8sCronJob> {
+
+    public topic = 'Resources.K8sCronJobs';
+    protected method = 'post';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/k8s_cron_jobs`;
+    }
+
+    protected convertToResource(data: any): K8sCronJob {
+        return new K8sCronJob(data);
+    }
+
+    public save(data: K8sCronJob, next?: (value: K8sCronJob) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class K8sCronJobsPatchById extends BaseApi<K8sCronJob> {
+
+    public topic = 'Resources.K8sCronJobs';
+    protected method = 'patch';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/k8s_cron_jobs/${id}`;
+    }
+
+    protected convertToResource(data: any): K8sCronJob {
+        return new K8sCronJob(data);
+    }
+
+    public save(data: K8sCronJob, next?: (value: K8sCronJob) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class K8sCronJobsPatch extends BaseApi<K8sCronJob> {
+
+    public topic = 'Resources.K8sCronJobs';
+    protected method = 'patch';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/k8s_cron_jobs`;
+    }
+
+    protected convertToResource(data: any): K8sCronJob {
+        return new K8sCronJob(data);
+    }
+
+    public save(data: K8sCronJob, next?: (value: K8sCronJob) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class K8sCronJobsDeleteById extends BaseApi<K8sCronJob> {
+
+    public topic = 'Resources.K8sCronJobs';
+    protected method = 'delete';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/k8s_cron_jobs/${id}`;
+    }
+
+    protected convertToResource(data: any): K8sCronJob {
+        return new K8sCronJob(data);
+    }
+
+    public delete(next?: (value: K8sCronJob) => void) {
+        return super.executeDelete(next);
+    }
+}
+
+class K8sCronJobs {
+
+    public get(): K8sCronJobsGet {
+        return new K8sCronJobsGet();
+    }
+
+    public getById(id: number): K8sCronJobsGetById {
+        return new K8sCronJobsGetById(id);
+    }
+
+    public post(): K8sCronJobsPost {
+        return new K8sCronJobsPost();
+    }
+
+    public patchById(id: number): K8sCronJobsPatchById {
+        return new K8sCronJobsPatchById(id);
+    }
+
+    public patch(): K8sCronJobsPatch {
+        return new K8sCronJobsPatch();
+    }
+
+    public deleteById(id: number): K8sCronJobsDeleteById {
+        return new K8sCronJobsDeleteById(id);
     }
 
 }
@@ -6752,6 +7027,10 @@ export class Api {
 
     public static initContainers(): InitContainers {
         return new InitContainers();
+    }
+
+    public static k8sCronJobs(): K8sCronJobs {
+        return new K8sCronJobs();
     }
 
     public static kubernetes(): Kubernetes {

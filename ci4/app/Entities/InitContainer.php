@@ -47,6 +47,7 @@ class InitContainer extends Entity {
                 match ($this->container_image_tag_policy) {
                     \ContainerImageTagPolicies::MatchDeployment => $deployment->version,
                     \ContainerImageTagPolicies::Static => $this->container_image_tag_value,
+                    \ContainerImageTagPolicies::Default => $this->container_image->default_tag,
                 }
             )
             ->setAttribute('imagePullPolicy', $this->container_image_pull_policy);

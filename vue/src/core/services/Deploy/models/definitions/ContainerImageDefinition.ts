@@ -9,6 +9,7 @@ export class ContainerImageDefinition extends BaseModel {
     name?: string;
     url?: string;
     pull_secret?: string;
+    default_tag?: string;
     registry_subscribe?: boolean;
     registry_provider?: string;
     registry_provider_gcloud_registry_name?: string;
@@ -47,6 +48,7 @@ export class ContainerImageDefinition extends BaseModel {
             delete this.name;
             delete this.url;
             delete this.pull_secret;
+            delete this.default_tag;
             delete this.registry_subscribe;
             delete this.registry_provider;
             delete this.registry_provider_gcloud_registry_name;
@@ -85,6 +87,9 @@ export class ContainerImageDefinition extends BaseModel {
         }
         if (data.pull_secret != null) {
             this.pull_secret = data.pull_secret;
+        }
+        if (data.default_tag != null) {
+            this.default_tag = data.default_tag;
         }
         if (data.registry_subscribe != null) {
             this.registry_subscribe = data.registry_subscribe;

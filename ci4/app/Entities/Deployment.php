@@ -293,7 +293,11 @@ class Deployment extends Entity {
 
         $hasFailedStep = false;
         foreach ($steps as $step) {
-            if ($step->getStatus($this) != $step->getSuccessStatus($this)) {
+            $stepStatus = $step->getStatus($this);
+            $stepStatus = is_array($stepStatus) ? $stepStatus : [$stepStatus];
+            $successStatus = $step->getSuccessStatus($this);
+            $hasNonSuccessStatus = count(array_filter($stepStatus, fn($status) => $status !== $successStatus)) > 0;
+            if ($hasNonSuccessStatus) {
                 $hasFailedStep = true;
                 break;
             }

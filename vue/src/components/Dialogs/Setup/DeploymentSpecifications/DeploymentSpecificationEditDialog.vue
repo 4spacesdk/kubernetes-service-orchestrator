@@ -34,6 +34,10 @@ const migrationTagPolicies = ref([
         identifier: ContainerImageTagPolicies.Static,
         name: "Static",
     },
+    {
+        identifier: ContainerImageTagPolicies.Default,
+        name: "Default",
+    },
 ]);
 
 const migrationVerificationTypes = ref([
@@ -317,22 +321,6 @@ function onVariableClicked(text: string) {
                                 label="Cronjob"
                                 hide-details
                             />
-                            <div
-                                v-if="item.enable_cronjob"
-                                class="px-2"
-                            >
-                                <v-row>
-                                    <v-col cols="12">
-                                        <v-text-field
-                                            variant="outlined"
-                                            v-model="item.cronjob_url"
-                                            label="Cronjob Url"
-                                            hint="/api/jobby"
-                                            persistent-hint
-                                        />
-                                    </v-col>
-                                </v-row>
-                            </div>
                         </v-card>
                     </v-col>
 

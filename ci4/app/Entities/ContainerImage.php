@@ -17,6 +17,7 @@ use App\Core\Entity;
  * @property string $name
  * @property string $url
  * @property string $pull_secret
+ * @property string $default_tag
  *
  * # Registry Settings
  * @property bool $registry_subscribe

@@ -75,7 +75,8 @@ class DatabaseDrivers {
 class ContainerImageTagPolicies {
     const string
         MatchDeployment = 'match-deployment',
-        Static = 'static';
+        Static = 'static',
+        Default = 'default';
 }
 
 class ImagePullPolicies {
@@ -123,6 +124,22 @@ class PostUpdateActionTypes {
 class PostUpdateActionConditionTypes {
     const string
         PodioFieldEquals = 'podio-field-equals'
+    ;
+}
+
+class CronJobConcurrencyPolicies {
+    const string
+        Allow = 'Allow',
+        Forbid = 'Forbid',
+        Replace = 'Replace'
+    ;
+}
+
+class CronJobRestartPolicies {
+    const string
+        Always = 'Always',
+        OnFailure = 'OnFailure',
+        Never = 'Never'
     ;
 }
 

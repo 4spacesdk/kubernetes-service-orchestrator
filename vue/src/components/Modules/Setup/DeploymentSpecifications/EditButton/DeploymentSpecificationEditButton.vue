@@ -21,6 +21,8 @@ const showUpdateQuickCommands = ref(false);
 const showUpdateInitContainers = ref(false);
 const showUpdatePostUpdateActions = ref(false);
 const isUpdatePostUpdateActionsEnabled = ref(false);
+const showUpdateCronJobs = ref(false);
+const isUpdateCronJobsEnabled = ref(false);
 
 const showUpdateLabels = ref(false);
 const isUpdateLabelsEnabled = ref(false);
@@ -45,6 +47,8 @@ function render() {
     showUpdateInitContainers.value = true;
     showUpdatePostUpdateActions.value = true;
     isUpdatePostUpdateActionsEnabled.value = props.deploymentSpecification.container_image?.version_control_enabled ?? false;
+    showUpdateCronJobs.value = true;
+    isUpdateCronJobsEnabled.value = props.deploymentSpecification.enable_cronjob ?? false;
 
     showUpdateLabels.value = true;
     isUpdateLabelsEnabled.value = true;
@@ -118,6 +122,12 @@ function onUpdatePostUpdateActionsClicked() {
 
 function onUpdateLabelsClicked() {
     bus.emit('deploymentSpecificationUpdateLabels', {
+        deploymentSpecification: props.deploymentSpecification
+    });
+}
+
+function onUpdateCronJobsClicked() {
+    bus.emit('deploymentSpecificationUpdateCronJobs', {
         deploymentSpecification: props.deploymentSpecification
     });
 }
@@ -253,6 +263,27 @@ function onUpdateLabelsClicked() {
                         </div>
                     </template>
                     Setup container image version control to enable post update actions
+                </v-tooltip>
+                <v-tooltip
+                    v-if="showUpdateCronJobs"
+                    :disabled="isUpdateCronJobsEnabled"
+                    location="left">
+                    <template v-slot:activator="{ props }">
+                        <div
+                            v-bind="props">
+                            <v-list-item
+                                dense
+                                @click="onUpdateCronJobsClicked"
+                                :disabled="!isUpdateCronJobsEnabled"
+                            >
+                                <v-list-item-title>
+                                    <v-icon size="small" class="my-auto ml-2">fa fa-clock</v-icon>
+                                    <span class="ml-2">Cron Jobs</span>
+                                </v-list-item-title>
+                            </v-list-item>
+                        </div>
+                    </template>
+                    Enable Cron Jobs in deployment specification edit dialog
                 </v-tooltip>
             </v-list>
         </v-card>

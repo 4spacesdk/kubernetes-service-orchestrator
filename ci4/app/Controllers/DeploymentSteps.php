@@ -38,9 +38,9 @@ class DeploymentSteps extends \App\Core\BaseController {
      * @custom true
      * @param string $identifier
      * @parameter int $deploymentId parameterType=query
-     * @responseSchema StringInterface
+     * @responseSchema StringArrayInterface
      */
-    public function getStatus(string $identifier) {
+    public function getStatus(string $identifier): void {
         $valid = $this->validateStep($identifier);
         if (!$valid) {
             return;
@@ -52,8 +52,9 @@ class DeploymentSteps extends \App\Core\BaseController {
         [$step, $deployment] = $valid;
 
         try {
+            $status = $step->getStatus($deployment);
             Data::set('resource', [
-                'value' => $step->getStatus($deployment)
+                'values' => is_array($status) ? $status : [$status],
             ]);
         } catch (\Exception $e) {
             $this->fail(KubeHelper::PrintException($e));

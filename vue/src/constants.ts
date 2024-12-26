@@ -12,7 +12,7 @@ import {
     DatabaseService,
     Deployment, DeploymentPackage, DeploymentSpecification,
     Domain,
-    EmailService, InitContainer, OAuthClient, PodioIntegration, PostUpdateAction,
+    EmailService, InitContainer, K8sCronJob, OAuthClient, PodioIntegration, PostUpdateAction,
     User, Webhook,
     Workspace
 } from "@/core/services/Deploy/models";
@@ -217,6 +217,10 @@ import type {
 import type {
     DeploymentSpecificationUpdateDeploymentAnnotationDialog_Input
 } from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateDeploymentAnnotationDialog.vue";
+import type {
+    DeploymentSpecificationUpdateCronJobsDialog_Input
+} from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateCronJobsDialog.vue";
+import type {CronJobEditDialog_Input} from "@/components/Dialogs/Setup/CronJobs/CronJobEditDialog.vue";
 
 export type Events = {
     confirm: ConfirmationDialog_Input;
@@ -313,6 +317,7 @@ export type Events = {
     deploymentSpecificationUpdatePostUpdateActions: DeploymentSpecificationUpdatePostUpdateActionsDialog_Input;
     deploymentSpecificationUpdateLabels: DeploymentSpecificationUpdateLabelsDialog_Input;
     deploymentSpecificationUpdateLabel: DeploymentSpecificationUpdateLabelDialog_Input;
+    deploymentSpecificationUpdateCronJobs: DeploymentSpecificationUpdateCronJobsDialog_Input;
 
     deploymentPackageSaved: DeploymentPackage | undefined;
     deploymentPackageEdit: DeploymentPackageCreateDialog_Input;
@@ -349,6 +354,10 @@ export type Events = {
     postUpdateActionUpdateConditions: PostUpdateActionUpdateConditionsDialog_Input;
     postUpdateActionUpdateCondition: PostUpdateActionUpdateConditionDialog_Input;
 
+    cronJobEdit: CronJobEditDialog_Input;
+    cronJobSaved: K8sCronJob | undefined;
+    cronJobEditDialog_closed: K8sCronJob | undefined;
+
 }
 
 export const DeploymentStatusTypes = {
@@ -369,6 +378,7 @@ export const MigrationJobStatusTypes = {
 export const ContainerImageTagPolicies = {
     MatchDeployment: 'match-deployment',
     Static: 'static',
+    Default: 'default',
 };
 
 export const ImagePullPolicies = {
@@ -426,3 +436,15 @@ export const PostUpdateActionTypes = {
 export const PostUpdateActionConditionTypes = {
     PodioFieldEquals: 'podio-field-equals',
 };
+
+export const CronJobConcurrencyPolicies = {
+    Allow: 'Allow',
+    Forbid: 'Forbid',
+    Replace: 'Replace'
+};
+
+export const CronJobRestartPolicies = {
+    Always: 'Always',
+    OnFailure: 'OnFailure',
+    Never: 'Never'
+}

@@ -57,9 +57,6 @@ use App\Core\Entity;
  * @property string $database_migration_verification_type
  * @property string $database_migration_verification_value
  *
- * # Cron Job settings
- * @property string $cronjob_url
- *
  * # Custom Resource
  * @property string $custom_resource
  *
@@ -77,6 +74,7 @@ use App\Core\Entity;
  * @property DeploymentSpecificationQuickCommand $deployment_specification_quick_commands
  * @property DeploymentSpecificationInitContainer $deployment_specification_init_containers
  * @property DeploymentSpecificationPostUpdateAction $deployment_specification_post_update_actions
+ * @property DeploymentSpecificationCronJob $deployment_specification_cron_jobs
  * @property Label $labels
  *
  * @property DeploymentStep $deploymentSteps
@@ -302,6 +300,12 @@ class DeploymentSpecification extends Entity {
         $this->labels->find()->deleteAll();
         $this->save($values);
         $this->labels = $values;
+    }
+
+    public function updateCronJobs(DeploymentSpecificationCronJob $values): void {
+        $this->deployment_specification_cron_jobs->find()->deleteAll();
+        $this->save($values);
+        $this->deployment_specification_cron_jobs = $values;
     }
 
     // </editor-fold>

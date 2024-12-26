@@ -3,6 +3,7 @@
 use App\Core\ResourceController;
 use App\Entities\DeploymentSpecification;
 use App\Entities\DeploymentSpecificationClusterRoleRule;
+use App\Entities\DeploymentSpecificationCronJob;
 use App\Entities\DeploymentSpecificationDeploymentAnnotation;
 use App\Entities\DeploymentSpecificationEnvironmentVariable;
 use App\Entities\DeploymentSpecificationIngress;
@@ -382,6 +383,35 @@ class DeploymentSpecifications extends ResourceController {
                 $body->values
             );
             $item->updateLabels($values);
+        }
+        $this->_setResource($item);
+        $this->success();
+    }
+
+    /**
+     * @route /deployment-specifications/{id}/cron-jobs
+     * @method put
+     * @custom true
+     * @param int $id
+     * @requestSchema IntArrayInterface
+     * @return void
+     */
+    public function updateCronJobs(int $id): void {
+        $item = new DeploymentSpecification();
+        $item->find($id);
+        if ($item->exists()) {
+            /** @var IntArrayInterface $body */
+            $body = $this->request->getJSON();
+
+            $values = new DeploymentSpecificationCronJob();
+            $pos = 0;
+            $values->all = array_map(
+                fn($cronJobId, $i) => DeploymentSpecificationCronJob::Create($cronJobId, $pos + $i),
+                $body->values,
+                array_keys($body->values)
+            );
+
+            $item->updateCronJobs($values);
         }
         $this->_setResource($item);
         $this->success();

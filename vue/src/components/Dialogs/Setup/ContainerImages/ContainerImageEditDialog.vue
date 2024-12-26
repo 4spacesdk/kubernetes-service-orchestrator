@@ -160,6 +160,14 @@ function onCloseBtnClicked() {
                                     v-model="item.url"
                                     label="Url"
                                     density="compact"
+                                />
+                            </v-col>
+                            <v-col cols="12">
+                                <v-text-field
+                                    variant="outlined"
+                                    v-model="item.default_tag"
+                                    label="Default Tag"
+                                    density="compact"
                                     hide-details
                                 />
                             </v-col>

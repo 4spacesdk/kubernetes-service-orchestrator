@@ -373,7 +373,7 @@ function onCloseBtnClicked() {
                     </template>
 
                     <template v-slot:item.actions="{ item }">
-                        <div class="d-flex justify-end gap-1">
+                        <div class="d-flex justify-end">
                             <div>
                                 <v-btn
                                     :disabled="!item.item.hasKubernetesStatus"
