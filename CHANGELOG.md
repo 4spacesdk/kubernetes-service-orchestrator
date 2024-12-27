@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.3.1 (2024-12-27)
+
+### Fixed bugs
+* Added deployment name as prefix to cronjob name. To avoid collision in namespaces.
+
+### Enhancements
+*
+
+### Upgrade guide
+1. Deploy new image
+
+    
+
 ## v1.3.0 (2024-12-27)
 
 ### Fixed bugs
@@ -7,7 +20,7 @@
 
 ### Enhancements
 * Cluster role now has unique names to avoid collision between deployments [Issue #35](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/35)
-* Role and RoleBinding is now part of deployment RBAC 
+* Role and RoleBinding is now part of deployment RBAC
 * Deployment Specification can now include annotations for ingresses and deployment [Issue #36](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/36)
 * CronJobs V2. Previously a deployment specification could have zero or one cronjob associated. This has now been refactored to multiple cronjob, with a lot more available settings. [Issue #37](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/37)
 
@@ -15,7 +28,7 @@
 1. Deploy new image
 2. Migrate database [(Guide)](https://github.com/4spacesdk/kubernetes-service-orchestrator?tab=readme-ov-file#migrate-database-helm)
 3. Migrate cronjob for existing deployment specifications
-   * To clean up legacy cronjob: Create a new cronjob with the same name as the deployment. You can then terminate the cronjob from deployment resource list.
+    * To clean up legacy cronjob: Create a new cronjob with the same name as the deployment. You can then terminate the cronjob from deployment resource list.
 
 
 

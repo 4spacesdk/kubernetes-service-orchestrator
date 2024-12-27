@@ -37,6 +37,14 @@ use App\Core\Entity;
  */
 class K8sCronJob extends Entity {
 
+    public function generateName(Deployment $deployment): string {
+        if (strlen($this->name) > 0) {
+            return "{$deployment->name}-{$this->name}";
+        } else {
+            return $deployment->name;
+        }
+    }
+
     /**
      * @return \ArrayIterator|\OrmExtension\Extensions\Entity[]|\Traversable|K8sCronJob[]
      */

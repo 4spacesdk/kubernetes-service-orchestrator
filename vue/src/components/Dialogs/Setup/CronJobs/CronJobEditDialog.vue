@@ -29,6 +29,7 @@ const used = ref(false);
 const showDialog = ref(false);
 const isLoading = ref(false);
 
+const namePrefix = ref('');
 const item = ref<K8sCronJob>(new K8sCronJob());
 const args = ref<Argument[]>([]);
 
@@ -120,10 +121,12 @@ function render() {
                     value: value
                 };
             });
+            renderNamePrefix();
         });
     } else {
         item.value = props.input.cronJob;
         showDialog.value = true;
+        renderNamePrefix();
     }
 
     isLoadingContainerImageItems.value = true;
@@ -141,9 +144,15 @@ function close() {
     props.events.onClose();
 }
 
+function renderNamePrefix() {
+    namePrefix.value = ((item.value.name?.length ?? 0) > 0) ? '{deployment-name}-' : '{deployment-name}';
+}
+
 // </editor-fold>
 
 // <editor-fold desc="View Binding Functions">
+
+watch(() => item.value.name, newName => renderNamePrefix());
 
 function onSaveBtnClicked() {
     item.value.args = JSON.stringify(args.value.map(value => value.value));
@@ -205,8 +214,9 @@ function onArgVariableAdded(index: number, value: string) {
                             variant="outlined"
                             v-model="item.name"
                             :rules="[
-                                v => /^[a-z0-9-]{1,50}$/.test(v) || 'Invalid format'
+                                v => /^[a-z0-9-]{0,50}$/.test(v) || 'Invalid format'
                             ]"
+                            :prefix="namePrefix"
                             label="Name"
                             density="compact"
                             persistent-hint

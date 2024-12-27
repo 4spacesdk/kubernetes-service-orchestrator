@@ -272,7 +272,7 @@ class CronjobStep extends BaseDeploymentStep {
 
             $resource = new K8sCronJob();
             $resource
-                ->setName($cronJob->name)
+                ->setName($cronJob->generateName($deployment))
                 ->setNamespace($deployment->namespace)
                 ->setSchedule(new CronExpression($cronJob->schedule))
                 ->setSpec('concurrencyPolicy', $cronJob->concurrency_policy)
