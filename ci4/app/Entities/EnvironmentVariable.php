@@ -57,6 +57,7 @@ class EnvironmentVariable extends Entity {
 
             fn(string $value) => str_replace('${domain.host}', $deployment->workspace->domain->name, $value),
 
+            fn(string $value) => str_replace('${deployment.name}', $deployment->name, $value),
             fn(string $value) => str_replace('${deployment.subdomain}', $deployment->subdomain, $value),
 
             fn(string $value) => str_replace('${workspace.id}', $deployment->workspace->id, $value),

@@ -63,6 +63,10 @@ const variables = ref<Variable[]>([
         code: "${domain.host}"
     },
     {
+        name: "Deployment Name",
+        code: "${deployment.name}"
+    },
+    {
         name: "Deployment Subdomain",
         code: "${deployment.subdomain}"
     },

@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.3.2 (2024-12-27)
+
+### Fixed bugs
+* Added `${deployment.name}` as variable to commands, environment variables and command arguments.
+
+### Enhancements
+*
+
+### Upgrade guide
+1. Deploy new image
+
+
+
 ## v1.3.1 (2024-12-27)
 
 ### Fixed bugs
