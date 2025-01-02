@@ -292,10 +292,33 @@ class DeploymentStep extends BaseDeploymentStep {
         $items = [];
         /** @var K8sPod $pod */
         foreach ($pods as $pod) {
-            Data::debug("Pod found for", $deployment->name, 'with name', $pod->getName());
+            Data::debug("Pod found for", $deployment->name, 'with name', $pod->getName(), $pod->isRunning() ? 'is running' : 'is not running');
             $items[] = $pod;
         }
         return $items;
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public function waitForPodsToStabilize(Deployment $deployment): void {
+        $timeout = 120; // Seconds
+        $start = time();
+        while (time() - $start < $timeout) {
+            $pods = $this->getPods($deployment);
+            $hasTerminatingPod = false;
+            foreach ($pods as $pod) {
+                if (!$pod->isRunning()) {
+                    $hasTerminatingPod = true;
+                }
+            }
+            if (count($pods) == $deployment->replicas && !$hasTerminatingPod) {
+                return;
+            }
+            Data::debug("Found", count($pods), "pods, waiting for", $deployment->replicas, "to stabilize");
+            sleep(3);
+        }
+        throw new \Exception('Timed out waiting for pods to stabilize');
     }
 
     /**

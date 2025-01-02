@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.3.3 (2025-01-02)
+
+### Fixed bugs
+* Added `waitForPodsToStabilize` function before executing Post Update Actions. This prevents KSO for using a terminating pod as commit identifier.
+
+### Enhancements
+*
+
+### Upgrade guide
+1. Deploy new image
+
+
+
 ## v1.3.2 (2024-12-27)
 
 ### Fixed bugs

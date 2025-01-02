@@ -21,7 +21,9 @@ class EnvironmentVariableCommitIdentification extends BaseCommitIdentificationMe
         $env = [];
 
         try {
-            $pods = (new DeploymentStep())->getPods($deployment);
+            $deploymentStep = new DeploymentStep();
+            $deploymentStep->waitForPodsToStabilize($deployment);
+            $pods = $deploymentStep->getPods($deployment);
             Data::debug('found ' . count($pods) . ' pods');
             if (count($pods) == 0) {
                 Data::debug('ERROR no pods found');
