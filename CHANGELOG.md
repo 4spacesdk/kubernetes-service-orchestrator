@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.3.4 (?)
+
+### Fixed bugs
+* 
+
+### Enhancements
+*
+
+### Upgrade guide
+1. Deploy new image
+
+
+
 ## v1.3.3 (2025-01-02)
 
 ### Fixed bugs
