@@ -1,15 +1,24 @@
 # Changelog
 
-## v1.3.4 (?)
+## v1.4.0 (?)
 
 ### Fixed bugs
 * 
 
 ### Enhancements
-*
+* Support for KNative [Issue #39](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/38)
+  * Including separation of network layers; support for nginx-ingress, istio, contour
+  * Streamlining of external and internal access configuration
+  * This is a huge enhancement!
 
 ### Upgrade guide
 1. Deploy new image
+2. Migrate database [(Guide)](https://github.com/4spacesdk/kubernetes-service-orchestrator?tab=readme-ov-file#migrate-database-helm)
+3. Breaking changes
+   * Deployments must now belong to a workspace. 
+   * Following deployment configurations has been removed
+     * Domain configuration. Deployments will use domain + subdomain from workspace
+     * Custom Resource. Deployments will use setting from deployment specification
 
 
 

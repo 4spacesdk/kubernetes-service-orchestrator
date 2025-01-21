@@ -20,7 +20,10 @@
     ],
     "importsNotUsedAsValues": "remove",
     "isolatedModules": false,
-    "useDefineForClassFields": false
+    "useDefineForClassFields": false,
+    "lib": [
+      "es2021"
+    ]
   },
   "references": [
     {

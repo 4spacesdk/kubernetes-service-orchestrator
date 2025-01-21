@@ -25,6 +25,7 @@ class GoogleCloudArtifactRegistry extends BaseContainerRegistry {
                 'credentials' => json_decode($this->image->registry_provider_gcloud_credentials, true),
             ]);
             try {
+                Data::debug("projects/{$this->image->registry_provider_gcloud_project}/locations/{$this->image->registry_provider_gcloud_location}/repositories/{$this->image->registry_provider_gcloud_registry_name}/packages/{$this->image->getRegistryRepoName()}");
                 // Iterate through all elements
                 $pagedResponse = $artifactRegistryClient->listTags([
                     'parent' => "projects/{$this->image->registry_provider_gcloud_project}/locations/{$this->image->registry_provider_gcloud_location}/repositories/{$this->image->registry_provider_gcloud_registry_name}/packages/{$this->image->getRegistryRepoName()}"

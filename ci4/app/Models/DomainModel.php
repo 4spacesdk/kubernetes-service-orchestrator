@@ -10,7 +10,6 @@ class DomainModel extends \RestExtension\Models\UserModel implements ResourceMod
 
     public $hasMany = [
         WorkspaceModel::class,
-        DeploymentModel::class,
     ];
 
     public function preRestGet($queryParser, $id) {
@@ -26,7 +25,7 @@ class DomainModel extends \RestExtension\Models\UserModel implements ResourceMod
     }
 
     public function isRestUpdateAllowed($item): bool {
-        return false;
+        return true;
     }
 
     public function isRestDeleteAllowed($item): bool {

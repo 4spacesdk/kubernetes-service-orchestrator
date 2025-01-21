@@ -10,7 +10,6 @@ class DeploymentModel extends \RestExtension\Models\UserModel implements Resourc
         DeploymentSpecificationModel::class,
         WorkspaceModel::class,
         DatabaseServiceModel::class,
-        DomainModel::class,
         'last_migration_job' => [
             'class' => MigrationJobModel::class,
         ]

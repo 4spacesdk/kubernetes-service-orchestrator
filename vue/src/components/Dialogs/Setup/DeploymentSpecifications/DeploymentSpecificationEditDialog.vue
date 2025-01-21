@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
-import {ContainerImage, DeploymentSpecification} from "@/core/services/Deploy/models";
+import {ContainerImage, DeploymentSpecification, System} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
-import {ContainerImageTagPolicies, DeploymentSpecificationTypes, MigrationVerificationTypes} from "@/constants";
+import {ContainerImageTagPolicies, MigrationVerificationTypes, NetworkTypes, WorkloadTypes} from "@/constants";
 import CodeEditor from 'simple-code-editor';
 import VariableBtn from "@/components/Modules/Common/VariableBtn.vue";
 
@@ -51,6 +51,8 @@ const migrationVerificationTypes = ref([
     },
 ]);
 
+const networkTypes = ref([]);
+
 // <editor-fold desc="Functions">
 
 onMounted(() => {
@@ -87,6 +89,25 @@ function render() {
             containerImageItems.value = items;
             isLoadingContainerImageItems.value = false;
         });
+
+    if (System.Instance.is_network_nginx_ingress_supported) {
+        networkTypes.value.push({
+            identifier: NetworkTypes.NginxIngress,
+            name: 'Nginx Ingress',
+        });
+    }
+    if (System.Instance.is_network_istio_supported) {
+        networkTypes.value.push({
+            identifier: NetworkTypes.Istio,
+            name: 'Istio',
+        });
+    }
+    if (System.Instance.is_network_contour_supported) {
+        networkTypes.value.push({
+            identifier: NetworkTypes.Contour,
+            name: 'Contour',
+        });
+    }
 }
 
 function renderIsCustomMigrationImage() {
@@ -165,7 +186,7 @@ function onVariableClicked(text: string) {
 
                         <div
                             style="position: relative"
-                            v-if="item.type == DeploymentSpecificationTypes.Custom"
+                            v-if="item.workload_type == WorkloadTypes.CustomResource"
                         >
                             <CodeEditor
                                 v-model="item.custom_resource"
@@ -191,7 +212,7 @@ function onVariableClicked(text: string) {
                 </v-row>
 
                 <v-row
-                    v-if="item.type == DeploymentSpecificationTypes.Deployment"
+                    v-if="item.workload_type == WorkloadTypes.Deployment || item.workload_type == WorkloadTypes.KNativeService || item.workload_type == WorkloadTypes.DaemonSet"
                     dense
                 >
                     <v-col cols="12">
@@ -330,20 +351,31 @@ function onVariableClicked(text: string) {
                     >
                         <v-card>
                             <v-checkbox
-                                v-model="item.enable_ingress"
-                                label="Ingress"
+                                v-model="item.enable_external_access"
+                                label="External access"
                                 hide-details
                             />
                             <div
-                                v-if="item.enable_ingress"
+                                v-if="item.enable_external_access"
                                 class="px-2"
                             >
                                 <v-row>
                                     <v-col cols="6">
+                                        <v-select
+                                            v-model="item.network_type"
+                                            :items="networkTypes"
+                                            item-title="name"
+                                            item-value="identifier"
+                                            variant="outlined"
+                                            label="Network type"
+                                            density="compact"
+                                        />
+                                    </v-col>
+                                    <v-col cols="6">
                                         <v-text-field
                                             variant="outlined"
                                             v-model="item.domain_tls"
-                                            label="TLS"
+                                            label="Protocol"
                                             hint="http, https, ws, wss"
                                             persistent-hint
                                         />
@@ -366,7 +398,9 @@ function onVariableClicked(text: string) {
                                             persistent-hint
                                         />
                                     </v-col>
-                                    <v-col cols="6">
+                                    <v-col
+                                        v-if="item.network_type == NetworkTypes.NginxIngress"
+                                        cols="6">
                                         <v-text-field
                                             variant="outlined"
                                             v-model="item.domain_aliases"
@@ -376,6 +410,20 @@ function onVariableClicked(text: string) {
                                     </v-col>
                                 </v-row>
                             </div>
+                        </v-card>
+                    </v-col>
+
+                    <v-col
+                        v-if="item.workload_type == WorkloadTypes.Deployment || item.workload_type == WorkloadTypes.DaemonSet"
+                        cols="12"
+                        class="mt-4"
+                    >
+                        <v-card>
+                            <v-checkbox
+                                v-model="item.enable_internal_access"
+                                label="Internal access"
+                                hide-details
+                            />
                         </v-card>
                     </v-col>
 

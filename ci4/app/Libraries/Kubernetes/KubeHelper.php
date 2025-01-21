@@ -31,7 +31,7 @@ class KubeHelper {
         $content = $e->getPayload();
         Data::debug($e->getMessage());
         Data::debug($content);
-        return json_encode($content);
+        return $content ? json_encode($content) : $e->getMessage();
     }
 
     public static function GetMyNamespace(): string {

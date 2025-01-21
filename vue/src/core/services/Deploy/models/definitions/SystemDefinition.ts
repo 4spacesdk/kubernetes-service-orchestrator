@@ -6,9 +6,9 @@ import {Deletion} from '../Deletion';
 import {BaseModel} from '../BaseModel';
 
 export class SystemDefinition extends BaseModel {
-    default_email_service_id?: number;
-    default_database_service_id?: number;
-    default_domain_id?: number;
+    is_network_nginx_ingress_supported?: boolean;
+    is_network_istio_supported?: boolean;
+    is_network_contour_supported?: boolean;
     id?: number;
     created?: string;
     updated?: string;
@@ -26,9 +26,9 @@ export class SystemDefinition extends BaseModel {
 
     public populate(data?: any, patch = false) {
         if (!patch) {
-            delete this.default_email_service_id;
-            delete this.default_database_service_id;
-            delete this.default_domain_id;
+            delete this.is_network_nginx_ingress_supported;
+            delete this.is_network_istio_supported;
+            delete this.is_network_contour_supported;
             delete this.id;
             delete this.created;
             delete this.updated;
@@ -41,14 +41,14 @@ export class SystemDefinition extends BaseModel {
         }
 
         if (!data) return;
-        if (data.default_email_service_id != null) {
-            this.default_email_service_id = data.default_email_service_id;
+        if (data.is_network_nginx_ingress_supported != null) {
+            this.is_network_nginx_ingress_supported = data.is_network_nginx_ingress_supported;
         }
-        if (data.default_database_service_id != null) {
-            this.default_database_service_id = data.default_database_service_id;
+        if (data.is_network_istio_supported != null) {
+            this.is_network_istio_supported = data.is_network_istio_supported;
         }
-        if (data.default_domain_id != null) {
-            this.default_domain_id = data.default_domain_id;
+        if (data.is_network_contour_supported != null) {
+            this.is_network_contour_supported = data.is_network_contour_supported;
         }
         if (data.id != null) {
             this.id = data.id;

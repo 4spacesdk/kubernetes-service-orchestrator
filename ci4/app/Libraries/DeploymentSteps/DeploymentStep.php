@@ -9,7 +9,9 @@ use App\Entities\Domain;
 use App\Entities\EnvironmentVariable;
 use App\Entities\InitContainer;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
+use App\Libraries\DeploymentSteps\Helpers\DeploymentStepLevels;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
+use App\Libraries\DeploymentSteps\Helpers\DeploymentStepTriggers;
 use App\Libraries\Kubernetes\KubeAuth;
 use App\Models\ContainerImageModel;
 use App\Models\DeploymentSpecificationDeploymentAnnotationModel;
@@ -32,8 +34,23 @@ class DeploymentStep extends BaseDeploymentStep {
         return DeploymentSteps::Deployment;
     }
 
+    public function getLevel(): string {
+        return DeploymentStepLevels::Deployment;
+    }
+
     public function getName(): string {
         return 'Deployment';
+    }
+
+    public function getTriggers(): array {
+        return [
+            DeploymentStepTriggers::Deployment_Volume_Updated,
+            DeploymentStepTriggers::Deployment_Environment_Updated,
+            DeploymentStepTriggers::Deployment_EnvironmentVariable_Updated,
+            DeploymentStepTriggers::Deployment_ResourceManagement_Updated,
+            DeploymentStepTriggers::Deployment_UpdateManagement_Updated,
+            DeploymentStepTriggers::Deployment_Version_Updated,
+        ];
     }
 
     public function hasPreviewCommand(): bool {
@@ -130,9 +147,6 @@ class DeploymentStep extends BaseDeploymentStep {
         if (strlen($deployment->version) == 0) {
             return 'Missing version';
         }
-        if (!in_array($deployment->environment, \Environments::All())) {
-            return 'Missing environment';
-        }
         if ($deployment->replicas < 1) {
             return 'Replicas must be > 0';
         }
@@ -143,16 +157,6 @@ class DeploymentStep extends BaseDeploymentStep {
         }
 
         $spec = $deployment->findDeploymentSpecification();
-        if ($spec->enable_ingress) {
-            if (!$deployment->domain_id) {
-                return 'Missing domain';
-            }
-            $domain = new Domain();
-            $domain->find($deployment->domain_id);
-            if (!$domain->exists()) {
-                return 'domain no longer exists';
-            }
-        }
 
         if ($spec->hasDeploymentStep($deployment, DatabaseStep::class)) {
             if (!$deployment->database_service_id) {
@@ -429,7 +433,7 @@ class DeploymentStep extends BaseDeploymentStep {
         }
 
         $annotations = [
-
+            'app.kubernetes.io/managed-by' => 'kso',
         ];
 
         /** @var DeploymentSpecificationDeploymentAnnotation $deploymentAnnotation */

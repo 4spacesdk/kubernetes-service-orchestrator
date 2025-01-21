@@ -27,9 +27,6 @@ import type {
     DeploymentUpdateDatabaseServiceDialog_Input
 } from "@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateDatabaseServiceDialog.vue";
 import type {
-    DeploymentUpdateIngressDialog_Input
-} from "@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateIngressDialog.vue";
-import type {
     DeploymentUpdateResourceManagementDialog_Input
 } from "@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateResourceManagementDialog.vue";
 import type {
@@ -170,9 +167,6 @@ import type {
     DeploymentPackageUpdateLabelsDialog_Input
 } from "@/components/Dialogs/Setup/DeploymentPackages/UpdateDialogs/DeploymentPackageUpdateLabelsDialog.vue";
 import type {
-    DeploymentUpdateCustomResourceDialog_Input
-} from "@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateCustomResourceDialog.vue";
-import type {
     PodioIntegrationEditDialog_Input
 } from "@/components/Dialogs/Integrations/PodioIntegrations/PodioIntegrationEditDialog.vue";
 import type {
@@ -221,6 +215,16 @@ import type {
     DeploymentSpecificationUpdateCronJobsDialog_Input
 } from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateCronJobsDialog.vue";
 import type {CronJobEditDialog_Input} from "@/components/Dialogs/Setup/CronJobs/CronJobEditDialog.vue";
+import type {DomainEditDialog_Input} from "@/components/Dialogs/Setup/Domains/DomainEditDialog.vue";
+import type {
+    DeploymentSpecificationUpdateHttpProxyRoutesDialog_Input
+} from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateHttpProxyRoutesDialog.vue";
+import type {
+    DeploymentSpecificationUpdateHttpProxyRoutePathDialog_Input
+} from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateHttpProxyRouteDialog.vue";
+import type {
+    DeploymentUpdateWorkspaceDialog_Input
+} from "@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateWorkspaceDialog.vue";
 
 export type Events = {
     confirm: ConfirmationDialog_Input;
@@ -237,15 +241,14 @@ export type Events = {
     deploymentSaved: Deployment | undefined;
     deploymentUpdateVersion: DeploymentUpdateVersionDialog_Input;
     deploymentUpdateEnvironment: DeploymentUpdateEnvironmentDialog_Input;
+    deploymentUpdateWorkspace: DeploymentUpdateWorkspaceDialog_Input;
     deploymentUpdateDatabaseService: DeploymentUpdateDatabaseServiceDialog_Input;
-    deploymentUpdateIngress: DeploymentUpdateIngressDialog_Input;
     deploymentUpdateResourceManagement: DeploymentUpdateResourceManagementDialog_Input;
     deploymentUpdateUpdateManagement: DeploymentUpdateUpdateManagementDialog_Input;
     deploymentUpdateEnvironmentVariables: DeploymentUpdateEnvirontmentVariablesDialog_Input;
     deploymentUpdateEnvironmentVariable: DeploymentUpdateEnvirontmentVariableDialog_Input;
     deploymentUpdateVolumes: DeploymentUpdateVolumesDialog_Input;
     deploymentUpdateVolume: DeploymentUpdateVolumeDialog_Input;
-    deploymentUpdateCustomResource: DeploymentUpdateCustomResourceDialog_Input;
     deploymentResourceList: DeploymentResourceListDialog_Input;
     deploymentResourcePreview: DeploymentResourcePreviewDialog_Input;
     deployment_DeploymentStep_Status_Change: {
@@ -257,6 +260,7 @@ export type Events = {
     deploymentUpdateLabel: DeploymentUpdateLabelDialog_Input;
 
     domainCreate: DomainCreateDialog_Input;
+    domainEdit: DomainEditDialog_Input;
     domainSaved: Domain | undefined;
     domainEditDialog_closed: Domain | undefined;
 
@@ -317,6 +321,8 @@ export type Events = {
     deploymentSpecificationUpdatePostUpdateActions: DeploymentSpecificationUpdatePostUpdateActionsDialog_Input;
     deploymentSpecificationUpdateLabels: DeploymentSpecificationUpdateLabelsDialog_Input;
     deploymentSpecificationUpdateLabel: DeploymentSpecificationUpdateLabelDialog_Input;
+    deploymentSpecificationUpdateHttpProxyRoutes: DeploymentSpecificationUpdateHttpProxyRoutesDialog_Input;
+    deploymentSpecificationUpdateHttpProxyRoute: DeploymentSpecificationUpdateHttpProxyRoutePathDialog_Input;
     deploymentSpecificationUpdateCronJobs: DeploymentSpecificationUpdateCronJobsDialog_Input;
 
     deploymentPackageSaved: DeploymentPackage | undefined;
@@ -410,11 +416,6 @@ export const RbacPermissions = {
     },
 }
 
-export const DeploymentSpecificationTypes = {
-    Deployment: 'deployment',
-    Custom: 'custom'
-};
-
 export const ContainerRegistries = {
     ArtifactContainerRegistry: 'artifact-container-registry',
     AzureContainerRegistry: 'azure-container-registry',
@@ -447,4 +448,22 @@ export const CronJobRestartPolicies = {
     Always: 'Always',
     OnFailure: 'OnFailure',
     Never: 'Never'
+}
+
+export const WorkloadTypes = {
+    Deployment: 'deployment',
+    KNativeService: 'knative-service',
+    DaemonSet: 'daemon-set',
+    CustomResource: 'custom-resource'
+}
+
+export const NetworkTypes = {
+    NginxIngress: 'nginx-ingress',
+    Istio: 'istio',
+    Contour: 'contour'
+}
+
+export const DeploymentStepLevels = {
+    Workspace: 'workspace',
+    Deployment: 'deployment',
 }

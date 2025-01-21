@@ -92,6 +92,13 @@ const categories = ref<MenuCategory[]>([
         icon: 'fa fa-gear',
         items: [
             {
+                title: 'System',
+                url: '/setup/system',
+                permissions: [
+                    RbacPermissions.Developer,
+                ],
+            },
+            {
                 title: 'Deployments',
                 url: '/setup/deployments',
                 permissions: [

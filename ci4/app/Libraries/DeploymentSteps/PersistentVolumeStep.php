@@ -3,7 +3,9 @@
 use App\Entities\Deployment;
 use App\Entities\DeploymentVolume;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
+use App\Libraries\DeploymentSteps\Helpers\DeploymentStepLevels;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
+use App\Libraries\DeploymentSteps\Helpers\DeploymentStepTriggers;
 use App\Libraries\Kubernetes\KubeAuth;
 use App\Models\DeploymentVolumeModel;
 use RenokiCo\PhpK8s\Exceptions\KubernetesAPIException;
@@ -15,8 +17,18 @@ class PersistentVolumeStep extends BaseDeploymentStep {
         return DeploymentSteps::PersistentVolume;
     }
 
+    public function getLevel(): string {
+        return DeploymentStepLevels::Deployment;
+    }
+
     public function getName(): string {
         return 'Persistent Volume';
+    }
+
+    public function getTriggers(): array {
+        return [
+            DeploymentStepTriggers::Deployment_Volume_Updated,
+        ];
     }
 
     public function hasPreviewCommand(): bool {

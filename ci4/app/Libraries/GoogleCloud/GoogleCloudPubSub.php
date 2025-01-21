@@ -31,11 +31,12 @@ class GoogleCloudPubSub {
 
     /**
      * @param string $topic
-     * @param string $subscription
+     * @param string $subscriptionName
      * @return Message[]
      */
-    public function pull(string $topic, string $subscription): array {
-        $subscription = $this->client->subscription($subscription, $topic);
+    public function pull(string $topic, string $subscriptionName): array {
+        Data::debug($topic, $subscriptionName);
+        $subscription = $this->client->subscription($subscriptionName, $topic);
         $messages = $subscription->pull([
             'returnImmediately' => true,
         ]);

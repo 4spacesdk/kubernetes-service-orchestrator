@@ -1,7 +1,8 @@
 <?php namespace App\Interfaces;
 /**
  * @property string $namespace
- * @property string $name
+ * @property string $pod
+ * @property string $container
  * @property string $created
  * @property string $status
  */

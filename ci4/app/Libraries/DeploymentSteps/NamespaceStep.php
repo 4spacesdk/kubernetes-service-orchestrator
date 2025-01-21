@@ -2,9 +2,11 @@
 
 use App\Entities\Deployment;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
+use App\Libraries\DeploymentSteps\Helpers\DeploymentStepLevels;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
 use App\Libraries\Kubernetes\KubeAuth;
 use DebugTool\Data;
+use Exception;
 use RenokiCo\PhpK8s\Exceptions\KubernetesAPIException;
 use RenokiCo\PhpK8s\Kinds\K8sNamespace;
 use RenokiCo\PhpK8s\Kinds\K8sServiceAccount;
@@ -15,8 +17,18 @@ class NamespaceStep extends BaseDeploymentStep {
         return DeploymentSteps::Namespace;
     }
 
+    public function getLevel(): string {
+        return DeploymentStepLevels::Workspace;
+    }
+
     public function getName(): string {
         return 'Namespace';
+    }
+
+    public function getTriggers(): array {
+        return [
+
+        ];
     }
 
     public function hasPreviewCommand(): bool {
@@ -79,7 +91,11 @@ class NamespaceStep extends BaseDeploymentStep {
      * @throws \Exception
      */
     public function getStatus(Deployment $deployment): string {
-        $resource = $this->getResource($deployment, true);
+        try {
+            $resource = $this->getResource($deployment, true);
+        } catch (Exception $e) {
+            return DeploymentStepHelper::Namespace_Error;
+        }
         if ($resource->exists()) {
             return DeploymentStepHelper::Namespace_Found;
         } else {
@@ -88,8 +104,17 @@ class NamespaceStep extends BaseDeploymentStep {
     }
 
     public function validateDeployCommand(Deployment $deployment): ?string {
-        if (strlen($deployment->namespace) == 0) {
-            return 'Missing namespace';
+        if ($deployment->workspace_id && !$deployment->workspace->exists()) {
+            $deployment->workspace->find();
+        }
+        if (!$deployment->workspace->exists()) {
+            return 'Missing workspace';
+        }
+
+        $workspace = $deployment->workspace;
+
+        if (strlen($workspace->namespace) == 0) {
+            return 'Missing workspace namespace';
         }
 
         return null;
@@ -119,9 +144,17 @@ class NamespaceStep extends BaseDeploymentStep {
      * @throws \Exception
      */
     private function getResource(Deployment $deployment, bool $auth = false): K8sNamespace {
+        if ($deployment->workspace_id && !$deployment->workspace->exists()) {
+            $deployment->workspace->find();
+        }
+        if (!$deployment->workspace->exists()) {
+            throw new \Exception('This step require workspace');
+        }
+        $workspace = $deployment->workspace;
+
         $resource = new K8sNamespace();
         $resource
-            ->setName($deployment->namespace);
+            ->setName($workspace->namespace);
 
         if ($auth) {
             $auth = new KubeAuth();

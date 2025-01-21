@@ -25,8 +25,8 @@ class Events {
         return Events::Generate("migration-job.$migrationJobId.changed.status");
     }
 
-    public static function KubernetesPod_Logs_Watch(string $pod): string {
-        return Events::Generate("kubernetes.pod.{$pod}.logs.watch");
+    public static function KubernetesPod_Logs_Watch(string $pod, string $container): string {
+        return Events::Generate("kubernetes.pod.{$pod}.containers.{$container}.logs.watch");
     }
 
     public static function Workspace_Created(): string {

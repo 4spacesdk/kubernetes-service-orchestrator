@@ -2,8 +2,10 @@
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
-import {Domain} from "@/core/services/Deploy/models";
+import {Domain, System} from "@/core/services/Deploy/models";
 import debounce from "lodash.debounce";
+import DeploymentEditButton from "@/components/Modules/Setup/Deployments/EditButton/DeploymentEditButton.vue";
+import DomainEditButton from "@/components/Modules/Setup/Domains/EditButton/DomainEditButton.vue";
 
 const emit = defineEmits<{
     (e: 'onItemEditClicked', item: Domain): void
@@ -11,11 +13,7 @@ const emit = defineEmits<{
 
 const itemCount = ref(0);
 const rows = ref<Domain[]>([]);
-const headers = ref([
-    {title: 'Name', key: 'name', sortable: false},
-    {title: 'Certificate', key: 'certificate_name', sortable: false},
-    {title: '', key: 'actions', sortable: false},
-]);
+const headers = ref<{title: string, key: string, sortable: boolean}[]>([]);
 const isLoading = ref(true);
 const options = ref({});
 
@@ -25,6 +23,14 @@ onMounted(() => {
     bus.on('domainSaved', onItemSaved);
 
     getItems(false, true);
+
+    headers.value = [
+        {title: 'Name', key: 'name', sortable: false},
+        {title: 'Certificate', key: 'certificate_name', sortable: false},
+        ...(System.Instance.is_network_istio_supported ? [{title: 'Istio Gateway', key: 'istio_gateway', sortable: false}] : []),
+        ...(System.Instance.is_network_contour_supported ? [{title: 'Contour', key: 'contour', sortable: false}] : []),
+        {title: '', key: 'actions', sortable: false},
+    ];
 });
 
 onUnmounted(() => {
@@ -80,7 +86,13 @@ function createItem() {
     bus.emit('domainCreate', new Domain());
 }
 
-function deleteItem(item: Domain) {
+function onEditItemBtnClicked(item: Domain) {
+    bus.emit('domainEdit', {
+        domain: item,
+    });
+}
+
+function onDeleteItemBtnClicked(item: Domain) {
     bus.emit('confirm', {
         body: `Do you want to delete <strong>${item.name}</strong>?`,
         confirmIcon: 'fa fa-trash',
@@ -184,32 +196,40 @@ function getCertificateStatus(item: Domain) {
             class="table"
             density="compact"
             @update:options="options = $event; getItems()">
+            <template v-slot:item.istio_gateway="{ item }">
+                <span v-if="item.enable_istio_gateway">Enabled</span>
+            </template>
+            <template v-slot:item.contour="{ item }">
+                <span v-if="item.enable_contour">Enabled</span>
+            </template>
+
             <template v-slot:item.actions="{ item }">
-                <div class="d-flex justify-end gap-1">
+                <div class="d-flex justify-end">
+
+                    <v-menu
+                        min-width="250">
+                        <template v-slot:activator="{ props }">
+                            <v-btn
+                                v-bind="props"
+                                variant="plain" color="primary" size="small" icon>
+                                <v-icon>fa fa-cog</v-icon>
+                                <v-tooltip activator="parent" location="bottom">Settings</v-tooltip>
+                            </v-btn>
+                        </template>
+                        <domain-edit-button
+                            :domain="item"/>
+                    </v-menu>
 
                     <v-btn
-                        variant="plain" color="primary" size="small"
-                        @click="applyCertificate(item)">
-
-                        <v-icon>fa fa-certificate</v-icon>
-                        <v-tooltip activator="parent" location="bottom">Apply certificate</v-tooltip>
+                        variant="plain" color="primary" size="small" icon
+                        @click="onEditItemBtnClicked(item)">
+                        <v-icon>fa fa-pen</v-icon>
+                        <v-tooltip activator="parent" location="bottom">Edit</v-tooltip>
                     </v-btn>
 
                     <v-btn
-                        variant="plain" color="primary" size="small"
-                        @click="getCertificateEvents(item)">
-                        <v-icon>fa fa-terminal</v-icon>
-                        <v-tooltip activator="parent" location="bottom">Events</v-tooltip>
-                    </v-btn>
-
-                    <v-btn
-                        variant="plain" color="primary" size="small"
-                        @click="getCertificateStatus(item)">
-                        <v-icon>fa fa-signal</v-icon>
-                        <v-tooltip activator="parent" location="bottom">Status</v-tooltip>
-                    </v-btn>
-
-                    <v-btn variant="plain" color="red" size="small" @click="deleteItem(item)">
+                        variant="plain" color="red" size="small" icon
+                        @click="onDeleteItemBtnClicked(item)">
                         <v-icon>fa fa-trash</v-icon>
                         <v-tooltip activator="parent" location="bottom">Delete</v-tooltip>
                     </v-btn>

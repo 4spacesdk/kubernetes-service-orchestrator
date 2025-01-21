@@ -85,16 +85,15 @@ function getItems(doItems = true, doCount = false) {
 
     if (searchValue.value?.length) {
         api
-            .search('aliases', searchValue.value)
             .search('name', searchValue.value)
             .search('namespace', searchValue.value)
-            .search('subdomain', searchValue.value)
             .search('status', searchValue.value)
             .search('version', searchValue.value);
     }
 
     if (doItems) {
         api
+            .include('workspace')
             .limit(tableOptions.itemsPerPage)
             .offset(tableOptions.itemsPerPage * (tableOptions.page - 1));
 
@@ -251,7 +250,7 @@ function onShowMigrationJobsBtnClicked(item: Deployment) {
                 <div class="d-flex justify-end">
 
                     <v-menu
-                        width="550">
+                        min-width="550">
                         <template v-slot:activator="{ props }">
                             <v-btn
                                 v-bind="props"

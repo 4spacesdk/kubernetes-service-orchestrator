@@ -3,6 +3,7 @@
 use App\Entities\Deployment;
 use App\Entities\DeploymentSpecificationRoleRule;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
+use App\Libraries\DeploymentSteps\Helpers\DeploymentStepLevels;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
 use App\Libraries\Kubernetes\KubeAuth;
 use App\Models\DeploymentSpecificationRoleRuleModel;
@@ -16,8 +17,18 @@ class RoleStep extends BaseDeploymentStep {
         return DeploymentSteps::Role;
     }
 
+    public function getLevel(): string {
+        return DeploymentStepLevels::Deployment;
+    }
+
     public function getName(): string {
         return 'Role';
+    }
+
+    public function getTriggers(): array {
+        return [
+
+        ];
     }
 
     public function hasPreviewCommand(): bool {

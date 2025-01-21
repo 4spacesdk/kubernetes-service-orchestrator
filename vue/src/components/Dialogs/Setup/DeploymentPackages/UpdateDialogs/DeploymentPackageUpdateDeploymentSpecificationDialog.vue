@@ -3,12 +3,12 @@ import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch}
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
 import {Api} from "@/core/services/Deploy/Api";
 import {DeploymentSpecification} from "@/core/services/Deploy/models";
+import {WorkloadTypes} from "@/constants";
 
 export interface DeploymentPackageUpdateDeploymentSpecificationDialog_Input {
     settings: {
         deploymentSpecification: DeploymentSpecification,
 
-        defaultEnablePodioNotification?: boolean,
         defaultVersion?: string,
         defaultAutoUpdateEnabled?: boolean,
         defaultAutoUpdateTagRegex?: string,
@@ -19,6 +19,8 @@ export interface DeploymentPackageUpdateDeploymentSpecificationDialog_Input {
         defaultMemoryRequest?: number;
         defaultMemoryLimit?: number;
         defaultReplicas?: number;
+        defaultKnativeConcurrencyLimitSoft?: number;
+        defaultKnativeConcurrencyLimitHard?: number;
     };
 
     onSaveCallback: () => void;
@@ -33,7 +35,6 @@ const used = ref(false);
 const showDialog = ref(false);
 const formIsValid = ref<boolean>();
 
-const defaultEnablePodioNotification = ref<boolean>();
 const specifyDefaultVersion = ref<boolean>();
 const defaultVersion = ref<string>();
 const defaultAutoUpdateEnabled = ref<boolean>();
@@ -45,6 +46,8 @@ const defaultCpuLimit = ref<number>();
 const defaultMemoryRequest = ref<number>();
 const defaultMemoryLimit = ref<number>();
 const defaultReplicas = ref<number>();
+const defaultKnativeConcurrencyLimitSoft = ref<number>();
+const defaultKnativeConcurrencyLimitHard = ref<number>();
 
 const isLoadingVersionTags = ref(false);
 const versionTagItems = ref<string[]>([]);
@@ -78,7 +81,6 @@ onUnmounted(() => {
 });
 
 function render() {
-    defaultEnablePodioNotification.value = props.input.settings.defaultEnablePodioNotification ?? false;
     defaultVersion.value = props.input.settings.defaultVersion ?? '';
     specifyDefaultVersion.value = (defaultVersion.value?.length ?? 0) > 0;
     defaultAutoUpdateEnabled.value = props.input.settings.defaultAutoUpdateEnabled ?? false;
@@ -90,6 +92,8 @@ function render() {
     defaultMemoryRequest.value = props.input.settings.defaultMemoryRequest;
     defaultMemoryLimit.value = props.input.settings.defaultMemoryLimit;
     defaultReplicas.value = props.input.settings.defaultReplicas;
+    defaultKnativeConcurrencyLimitSoft.value = props.input.settings.defaultKnativeConcurrencyLimitSoft;
+    defaultKnativeConcurrencyLimitHard.value = props.input.settings.defaultKnativeConcurrencyLimitHard;
 
     loadVersionTags();
 
@@ -124,7 +128,6 @@ function loadVersionTags() {
 // <editor-fold desc="View Binding Functions">
 
 function onSaveBtnClicked() {
-    props.input.settings.defaultEnablePodioNotification = defaultEnablePodioNotification.value;
     props.input.settings.defaultVersion = specifyDefaultVersion.value ? defaultVersion.value : undefined;
     props.input.settings.defaultAutoUpdateEnabled = defaultAutoUpdateEnabled.value;
     props.input.settings.defaultAutoUpdateTagRegex = defaultAutoUpdateTagRegex.value;
@@ -135,6 +138,8 @@ function onSaveBtnClicked() {
     props.input.settings.defaultMemoryRequest = defaultMemoryRequest.value;
     props.input.settings.defaultMemoryLimit = defaultMemoryLimit.value;
     props.input.settings.defaultReplicas = defaultReplicas.value;
+    props.input.settings.defaultKnativeConcurrencyLimitSoft = defaultKnativeConcurrencyLimitSoft.value;
+    props.input.settings.defaultKnativeConcurrencyLimitHard = defaultKnativeConcurrencyLimitHard.value;
     props.input.onSaveCallback();
     close();
 }
@@ -162,15 +167,6 @@ function onCloseBtnClicked() {
                 <v-divider/>
                 <v-card-text>
                     <v-row>
-                        <v-col cols="12">
-                            <v-checkbox
-                                v-model="defaultEnablePodioNotification"
-                                variant="outlined"
-                                label="Default Enable Podio Notification"
-                                hide-details
-                            />
-                        </v-col>
-
                         <v-col cols="12">
                             <v-card>
                                 <v-checkbox
@@ -291,13 +287,44 @@ function onCloseBtnClicked() {
                                 :rules="required"
                             />
                         </v-col>
-                        <v-col cols="6">
+                        <v-col
+                            v-if="props.input.settings.deploymentSpecification.workload_type !== WorkloadTypes.KNativeService"
+                            cols="6"
+                        >
                             <v-text-field
                                 v-model.number="defaultReplicas"
                                 type="number"
                                 variant="outlined"
                                 label="Default Replicas"
                                 hint="0 = not running, 1 = testing purposes, 3 = production"
+                                persistent-hint
+                                :rules="required"
+                            />
+                        </v-col>
+                        <v-col
+                            v-if="props.input.settings.deploymentSpecification.workload_type == WorkloadTypes.KNativeService"
+                            cols="6"
+                        >
+                            <v-text-field
+                                v-model.number="defaultKnativeConcurrencyLimitSoft"
+                                type="number"
+                                variant="outlined"
+                                label="Container Concurrency Soft Limit"
+                                hint=""
+                                persistent-hint
+                                :rules="required"
+                            />
+                        </v-col>
+                        <v-col
+                            v-if="props.input.settings.deploymentSpecification.workload_type == WorkloadTypes.KNativeService"
+                            cols="6"
+                        >
+                            <v-text-field
+                                v-model.number="defaultKnativeConcurrencyLimitHard"
+                                type="number"
+                                variant="outlined"
+                                label="Container Concurrency Hard Limit"
+                                hint=""
                                 persistent-hint
                                 :rules="required"
                             />

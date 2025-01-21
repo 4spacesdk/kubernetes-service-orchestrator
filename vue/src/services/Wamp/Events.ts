@@ -24,8 +24,8 @@ export class Events {
         return Events.Generate(`migration-job.${migrationJobId}.changed.status`);
     }
 
-    public static KubernetesPod_Logs_Watch(pod: string): string {
-        return Events.Generate(`kubernetes.pod.${pod}.logs.watch`);
+    public static KubernetesPod_Logs_Watch(pod: string, container: string): string {
+        return Events.Generate(`kubernetes.pod.${pod}.containers.${container}.logs.watch`);
     }
 
     public static AutoUpdate_Created(): string {

@@ -41,12 +41,15 @@ class Kubernetes extends \App\Core\BaseController {
             $items = [];
             /** @var K8sPod $pod */
             foreach ($pods as $pod) {
-                $items[] = [
-                    'namespace' => $pod->getNamespace(),
-                    'name' => $pod->getName(),
-                    'created' => date('Y-m-d H:i:s', strtotime_($pod->getStatus('startTime'))),
-                    'status' => $pod->getStatus('phase'),
-                ];
+                foreach ($pod->getContainers() as $container) {
+                    $items[] = [
+                        'namespace' => $pod->getNamespace(),
+                        'pod' => $pod->getName(),
+                        'container' => $container->getName(),
+                        'created' => date('Y-m-d H:i:s', strtotime_($pod->getStatus('startTime'))),
+                        'status' => $pod->getStatus('phase'),
+                    ];
+                }
             }
 
             Data::set('resources', $items);
@@ -58,16 +61,17 @@ class Kubernetes extends \App\Core\BaseController {
     }
 
     /**
-     * @route /kubernetes/namespaces/{namespace}/pods/{name}/exec
+     * @route /kubernetes/namespaces/{namespace}/pods/{name}/containers/{container}/exec
      * @method put
      * @custom true
      * @param string $namespace
      * @param string $name
+     * @param string $container
      * @parameter string $command parameterType=query
      * @responseSchema KubernetesExecResponse
      * @return void
      */
-    public function exec(string $namespace, string $name): void {
+    public function exec(string $namespace, string $name, string $container): void {
         $command = $this->request->getGet('command');
         if (strlen($command) == 0) {
             $this->fail('missing command');
@@ -78,9 +82,10 @@ class Kubernetes extends \App\Core\BaseController {
         try {
             $cluster = $kubeAuth->authenticate();
             $pod = $cluster->getPodByName($name, $namespace);
-            $messages = $pod->exec([
-                '/bin/sh', '-c', $command
-            ]);
+            $messages = $pod->exec(
+                ['/bin/sh', '-c', $command],
+                $container
+            );
             $all = collect($messages)->where('channel', 'stdout')->all();
             $lines = [];
             foreach ($all as ['channel' => $channel, 'output' => $output]) {
@@ -103,19 +108,21 @@ class Kubernetes extends \App\Core\BaseController {
     }
 
     /**
-     * @route /kubernetes/namespaces/{namespace}/pods/{pod}/logs
+     * @route /kubernetes/namespaces/{namespace}/pods/{pod}/containers/{container}/logs
      * @method get
      * @custom true
      * @param string $namespace
      * @param string $pod
+     * @param string $container
      * @return void
      * @responseSchema KubernetesLogEntry
      */
-    public function getLogs(string $namespace, string $pod): void {
+    public function getLogs(string $namespace, string $pod, string $container): void {
         $kubeAuth = new KubeAuth();
         try {
             $kubeLog = new KubeLog($kubeAuth->authenticate());
-            $logs = $kubeLog->getLogs($namespace, $pod);
+            Data::debug($namespace, $pod, $container);
+            $logs = $kubeLog->getLogs($namespace, $pod, $container);
             Data::set('resources', $logs);
         } catch (\Exception $e) {
             $this->fail(KubeHelper::PrintException($e));
@@ -126,18 +133,19 @@ class Kubernetes extends \App\Core\BaseController {
     }
 
     /**
-     * @route /kubernetes/namespaces/{namespace}/pods/{pod}/logs/watch
+     * @route /kubernetes/namespaces/{namespace}/pods/{pod}/containers/{container}/logs/watch
      * @method put
      * @custom true
      * @param string $namespace
      * @param string $pod
+     * @param string $container
      * @return void
      */
-    public function watchLogs(string $namespace, string $pod): void {
+    public function watchLogs(string $namespace, string $pod, string $container): void {
         $kubeAuth = new KubeAuth();
         try {
             $kubeLog = new KubeLog($kubeAuth->authenticate());
-            $kubeLog->watchLog($namespace, $pod);
+            $kubeLog->watchLog($namespace, $pod, $container);
         } catch (\Exception $e) {
             $this->fail(KubeHelper::PrintException($e));
             return;

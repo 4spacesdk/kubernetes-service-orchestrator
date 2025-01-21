@@ -6,6 +6,7 @@ use App\Entities\DeploymentSpecification;
 use App\Entities\DeploymentVolume;
 use App\Entities\EnvironmentVariable;
 use App\Entities\Label;
+use App\Entities\Workspace;
 use App\Exceptions\ValidationException;
 use App\Interfaces\DeploymentVolumeList;
 use App\Interfaces\EnvironmentVariableList;
@@ -13,6 +14,7 @@ use App\Interfaces\LabelList;
 use App\Libraries\DeploymentSteps\BaseDeploymentStep;
 use App\Models\MigrationJobModel;
 use DebugTool\Data;
+use Google\ApiCore\ApiException;
 
 class Deployments extends ResourceController {
 
@@ -22,7 +24,9 @@ class Deployments extends ResourceController {
      * @custom true
      * @parameter int $deploymentSpecificationId parameterType=query
      * @parameter string $name parameterType=query
+     * @parameter int $workspaceId parameterType=query
      * @parameter string $namespace parameterType=query
+     * @parameter string $version parameterType=query
      * @return void
      */
     public function create(): void {
@@ -34,18 +38,31 @@ class Deployments extends ResourceController {
             return;
         }
 
+        $workspace = new Workspace();
+        $workspaceId = $this->request->getGet('workspaceId') ?? 0;
+        if ($workspaceId) {
+            $workspace->find($workspaceId);
+        }
+
         try {
-            $item = Deployment::Prepare(
-                $deploymentSpecification,
-                $this->request->getGet('namespace') ?? '',
-                $this->request->getGet('name') ?? ''
-            );
-            $item->save();
+            if ($workspace->exists()) {
+                $item = $workspace->addDeployment($deploymentSpecification, $this->request->getGet('version') ?? null);
+            } else {
+                $item = Deployment::Prepare(
+                    $deploymentSpecification,
+                    $this->request->getGet('namespace') ?? '',
+                    $this->request->getGet('workspaceId') ?? 0,
+                    $this->request->getGet('name') ?? '',
+                    $this->request->getGet('version') ?? ''
+                );
+                $item->save();
+            }
             $this->_setResource($item);
-        } catch (ValidationException $e) {
+        } catch (ValidationException|ApiException|\Google\ApiCore\ValidationException $e) {
             $this->fail($e->getMessage());
             return;
         }
+
         $this->success();
     }
 
@@ -80,6 +97,24 @@ class Deployments extends ResourceController {
         $item->find($id);
         if ($item->exists()) {
             $item->updateEnvironment($this->request->getGet('value'));
+        }
+        $this->_setResource($item);
+        $this->success();
+    }
+
+    /**
+     * @route /deployments/{id}/workspace
+     * @method put
+     * @custom true
+     * @param int $id
+     * @parameter int $value parameterType=query
+     * @return void
+     */
+    public function updateWorkspace(int $id): void {
+        $item = new Deployment();
+        $item->find($id);
+        if ($item->exists()) {
+            $item->updateWorkspaceId($this->request->getGet('value'));
         }
         $this->_setResource($item);
         $this->success();
@@ -144,7 +179,7 @@ class Deployments extends ResourceController {
      * @parameter int $replicas parameterType=query
      * @return void
      */
-    public function updateResourceManagemnet(int $id): void {
+    public function updateResourceManagement(int $id): void {
         $item = new Deployment();
         $item->find($id);
         if ($item->exists()) {
@@ -168,7 +203,6 @@ class Deployments extends ResourceController {
      * @parameter bool $enabled parameterType=query
      * @parameter string $tagRegex parameterType=query
      * @parameter bool $requireApproval parameterType=query
-     * @parameter bool $enablePodioNotification parameterType=query
      * @return void
      */
     public function updateUpdateManagement(int $id): void {
@@ -179,8 +213,7 @@ class Deployments extends ResourceController {
                 $item->updateUpdateManagement(
                     in_array($this->request->getGet('enabled'), ['1', 'true']),
                     $this->request->getGet('tagRegex'),
-                    in_array($this->request->getGet('requireApproval'), ['1', 'true']),
-                    in_array($this->request->getGet('enablePodioNotification'), ['1', 'true'])
+                    in_array($this->request->getGet('requireApproval'), ['1', 'true'])
                 );
             } catch (\Exception $e) {
                 Data::debug($e->getMessage());
@@ -249,22 +282,25 @@ class Deployments extends ResourceController {
     }
 
     /**
-     * @route /deployments/{id}/custom-resource
+     * @route /deployments/{id}/labels
      * @method put
      * @custom true
      * @param int $id
-     * @parameter string $content parameterType=query
+     * @requestSchema LabelList
      * @return void
      */
-    public function updateCustomResource(int $id): void {
+    public function updateLabels(int $id): void {
         $item = new Deployment();
         $item->find($id);
         if ($item->exists()) {
-            try {
-                $item->updateCustomResource($this->request->getGet('content'),);
-            } catch (\Exception $e) {
-                Data::debug($e->getMessage());
-            }
+            /** @var LabelList $body */
+            $body = $this->request->getJSON();
+            $values = new Label();
+            $values->all = array_map(
+                fn($data) => Label::Create($data->name, $data->value),
+                $body->values
+            );
+            $item->updateLabels($values);
         }
         $this->_setResource($item);
         $this->success();
@@ -324,31 +360,6 @@ class Deployments extends ResourceController {
         $result['deploymentSteps'] = array_map(fn (BaseDeploymentStep $step) => $step->toArray(), $spec->getDeploymentSteps($item));
 
         Data::set('resource', $result);
-        $this->success();
-    }
-
-    /**
-     * @route /deployments/{id}/labels
-     * @method put
-     * @custom true
-     * @param int $id
-     * @requestSchema LabelList
-     * @return void
-     */
-    public function updateLabels(int $id): void {
-        $item = new Deployment();
-        $item->find($id);
-        if ($item->exists()) {
-            /** @var LabelList $body */
-            $body = $this->request->getJSON();
-            $values = new Label();
-            $values->all = array_map(
-                fn($data) => Label::Create($data->name, $data->value),
-                $body->values
-            );
-            $item->updateLabels($values);
-        }
-        $this->_setResource($item);
         $this->success();
     }
 

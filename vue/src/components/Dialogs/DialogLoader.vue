@@ -39,6 +39,10 @@ bus.on('domainCreate', async input => {
     addComponent((await import('@/components/Dialogs/Setup/Domains/DomainCreateDialog.vue')).default, input);
 });
 
+bus.on('domainEdit', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/Domains/DomainEditDialog.vue')).default, input);
+});
+
 bus.on('databaseServiceEdit', async input => {
     addComponent((await import('@/components/Dialogs/Setup/DatabaseServices/DatabaseServiceEditDialog.vue')).default, input);
 });
@@ -60,11 +64,11 @@ bus.on('deploymentUpdateVersion', async input => {
 bus.on('deploymentUpdateEnvironment', async input => {
     addComponent((await import('@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateEnvironmentDialog.vue')).default, input);
 });
+bus.on('deploymentUpdateWorkspace', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateWorkspaceDialog.vue')).default, input);
+});
 bus.on('deploymentUpdateDatabaseService', async input => {
     addComponent((await import('@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateDatabaseServiceDialog.vue')).default, input);
-});
-bus.on('deploymentUpdateIngress', async input => {
-    addComponent((await import('@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateIngressDialog.vue')).default, input);
 });
 bus.on('deploymentUpdateResourceManagement', async input => {
     addComponent((await import('@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateResourceManagementDialog.vue')).default, input);
@@ -83,9 +87,6 @@ bus.on('deploymentUpdateVolumes', async input => {
 });
 bus.on('deploymentUpdateVolume', async input => {
     addComponent((await import('@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateVolumeDialog.vue')).default, input);
-});
-bus.on('deploymentUpdateCustomResource', async input => {
-    addComponent((await import('@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateCustomResourceDialog.vue')).default, input);
 });
 bus.on('deploymentResourceList', async input => {
     addComponent((await import('@/components/Dialogs/Setup/Deployments/DeploymentResourceListDialog.vue')).default, input);
@@ -240,6 +241,12 @@ bus.on('deploymentSpecificationUpdateLabels', async input => {
 });
 bus.on('deploymentSpecificationUpdateCronJobs', async input => {
     addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateCronJobsDialog.vue')).default, input);
+});
+bus.on('deploymentSpecificationUpdateHttpProxyRoute', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateHttpProxyRouteDialog.vue')).default, input);
+});
+bus.on('deploymentSpecificationUpdateHttpProxyRoutes', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateHttpProxyRoutesDialog.vue')).default, input);
 });
 
 

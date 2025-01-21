@@ -2,7 +2,7 @@
 import {computed, defineComponent, onMounted, reactive, ref, watch} from 'vue'
 import {DeploymentSpecification} from "@/core/services/Deploy/models";
 import bus from "@/plugins/bus";
-import {DeploymentSpecificationTypes} from "@/constants";
+import {NetworkTypes, WorkloadTypes} from "@/constants";
 
 const props = defineProps<{
     deploymentSpecification: DeploymentSpecification
@@ -12,7 +12,9 @@ const isVisible = ref(false);
 const showUpdatePostCommands = ref(false);
 const showUpdateEnvironmentVariables = ref(false);
 const showUpdateServicePorts = ref(false);
+const showNetwork = ref(false);
 const showUpdateIngresses = ref(false);
+const showUpdateHttpProxyRoutes = ref(false);
 const showUpdateClusterRoleRules = ref(false);
 const showUpdateRoleRules = ref(false);
 const showUpdateServiceAnnotations = ref(false);
@@ -34,22 +36,41 @@ onMounted(() => {
 });
 
 function render() {
-    isVisible.value = props.deploymentSpecification.type == DeploymentSpecificationTypes.Deployment;
-    showUpdatePostCommands.value = props.deploymentSpecification.enable_database ?? false;
-    showUpdateEnvironmentVariables.value = true;
-    showUpdateServicePorts.value = true;
-    showUpdateServiceAnnotations.value = true;
-    showUpdateDeploymentAnnotations.value = true;
-    showUpdateIngresses.value = props.deploymentSpecification.enable_ingress ?? false;
-    showUpdateClusterRoleRules.value = props.deploymentSpecification.enable_rbac ?? false;
-    showUpdateRoleRules.value = props.deploymentSpecification.enable_rbac ?? false;
-    showUpdateQuickCommands.value = true;
+    isVisible.value = props.deploymentSpecification.workload_type !== WorkloadTypes.CustomResource;
+    // Workload
     showUpdateInitContainers.value = true;
-    showUpdatePostUpdateActions.value = true;
-    isUpdatePostUpdateActionsEnabled.value = props.deploymentSpecification.container_image?.version_control_enabled ?? false;
+    showUpdateEnvironmentVariables.value = true;
+    showUpdateDeploymentAnnotations.value = true;
+
+    // Network
+    showNetwork.value = (props.deploymentSpecification.enable_external_access ?? false)
+        || (props.deploymentSpecification.enable_internal_access ?? false)
+    showUpdateIngresses.value = (props.deploymentSpecification.enable_external_access ?? false)
+        && props.deploymentSpecification.network_type == NetworkTypes.NginxIngress;
+    showUpdateHttpProxyRoutes.value = (props.deploymentSpecification.enable_external_access ?? false)
+        && props.deploymentSpecification.network_type == NetworkTypes.Contour;
+    showUpdateServicePorts.value = (props.deploymentSpecification.enable_internal_access ?? false)
+        && props.deploymentSpecification.workload_type == WorkloadTypes.Deployment;
+    showUpdateServiceAnnotations.value = (props.deploymentSpecification.enable_internal_access ?? false)
+        && props.deploymentSpecification.workload_type == WorkloadTypes.Deployment;
+
+    // Cronjob
     showUpdateCronJobs.value = true;
     isUpdateCronJobsEnabled.value = props.deploymentSpecification.enable_cronjob ?? false;
 
+    // Migration
+    showUpdatePostCommands.value = props.deploymentSpecification.enable_database ?? false;
+
+    // Update
+    showUpdatePostUpdateActions.value = true;
+    isUpdatePostUpdateActionsEnabled.value = props.deploymentSpecification.container_image?.version_control_enabled ?? false;
+
+    // RBAC
+    showUpdateClusterRoleRules.value = props.deploymentSpecification.enable_rbac ?? false;
+    showUpdateRoleRules.value = props.deploymentSpecification.enable_rbac ?? false;
+
+    // Other
+    showUpdateQuickCommands.value = true;
     showUpdateLabels.value = true;
     isUpdateLabelsEnabled.value = true;
 }
@@ -74,6 +95,12 @@ function onUpdateServicePortsClicked() {
 
 function onUpdateIngressesClicked() {
     bus.emit('deploymentSpecificationUpdateIngresses', {
+        deploymentSpecification: props.deploymentSpecification
+    });
+}
+
+function onUpdateHttpProxyRoutesClicked() {
+    bus.emit('deploymentSpecificationUpdateHttpProxyRoutes', {
         deploymentSpecification: props.deploymentSpecification
     });
 }
@@ -143,22 +170,15 @@ function onUpdateCronJobsClicked() {
 
             <v-list
                 class="list-items">
+
+                <v-list-subheader>Workload - {{ props.deploymentSpecification.workload_type }}</v-list-subheader>
                 <v-list-item
-                    v-if="showUpdateDeploymentAnnotations"
+                    v-if="showUpdateInitContainers"
                     dense
-                    @click="onUpdateDeploymentAnnotationsClicked">
+                    @click="onUpdateInitContainersClicked">
                     <v-list-item-title>
-                        <v-icon size="small" class="my-auto ml-2">fa fa-tags</v-icon>
-                        <span class="ml-2">Deployment Annotations</span>
-                    </v-list-item-title>
-                </v-list-item>
-                <v-list-item
-                    v-if="showUpdatePostCommands"
-                    dense
-                    @click="onUpdatePostCommandsClicked">
-                    <v-list-item-title>
-                        <v-icon size="small" class="my-auto ml-2">fa fa-terminal</v-icon>
-                        <span class="ml-2">Post Migration Commands</span>
+                        <v-icon size="small" class="my-auto ml-2">fa fa-box</v-icon>
+                        <span class="ml-2">Init Containers</span>
                     </v-list-item-title>
                 </v-list-item>
                 <v-list-item
@@ -171,12 +191,33 @@ function onUpdateCronJobsClicked() {
                     </v-list-item-title>
                 </v-list-item>
                 <v-list-item
-                    v-if="showUpdateServiceAnnotations"
+                    v-if="showUpdateDeploymentAnnotations"
                     dense
-                    @click="onUpdateServiceAnnotationsClicked">
+                    @click="onUpdateDeploymentAnnotationsClicked">
                     <v-list-item-title>
                         <v-icon size="small" class="my-auto ml-2">fa fa-tags</v-icon>
-                        <span class="ml-2">Service Annotations</span>
+                        <span class="ml-2">Deployment Annotations</span>
+                    </v-list-item-title>
+                </v-list-item>
+
+
+                <v-list-subheader v-if="showNetwork">Network - {{ props.deploymentSpecification.network_type }}</v-list-subheader>
+                <v-list-item
+                    v-if="showUpdateIngresses"
+                    dense
+                    @click="onUpdateIngressesClicked">
+                    <v-list-item-title>
+                        <v-icon size="small" class="my-auto ml-2">fa fa-link</v-icon>
+                        <span class="ml-2">Ingresses</span>
+                    </v-list-item-title>
+                </v-list-item>
+                <v-list-item
+                    v-if="showUpdateHttpProxyRoutes"
+                    dense
+                    @click="onUpdateHttpProxyRoutesClicked">
+                    <v-list-item-title>
+                        <v-icon size="small" class="my-auto ml-2">fa fa-link</v-icon>
+                        <span class="ml-2">Http Proxy Routes</span>
                     </v-list-item-title>
                 </v-list-item>
                 <v-list-item
@@ -189,14 +230,54 @@ function onUpdateCronJobsClicked() {
                     </v-list-item-title>
                 </v-list-item>
                 <v-list-item
-                    v-if="showUpdateIngresses"
+                    v-if="showUpdateServiceAnnotations"
                     dense
-                    @click="onUpdateIngressesClicked">
+                    @click="onUpdateServiceAnnotationsClicked">
                     <v-list-item-title>
-                        <v-icon size="small" class="my-auto ml-2">fa fa-link</v-icon>
-                        <span class="ml-2">Ingresses</span>
+                        <v-icon size="small" class="my-auto ml-2">fa fa-tags</v-icon>
+                        <span class="ml-2">Service Annotations</span>
                     </v-list-item-title>
                 </v-list-item>
+
+
+                <v-list-subheader v-if="showUpdateCronJobs">Cronjob</v-list-subheader>
+                <v-tooltip
+                    v-if="showUpdateCronJobs"
+                    :disabled="isUpdateCronJobsEnabled"
+                    location="left">
+                    <template v-slot:activator="{ props }">
+                        <div
+                            v-bind="props">
+                            <v-list-item
+                                dense
+                                @click="onUpdateCronJobsClicked"
+                                :disabled="!isUpdateCronJobsEnabled"
+                            >
+                                <v-list-item-title>
+                                    <v-icon size="small" class="my-auto ml-2">fa fa-clock</v-icon>
+                                    <span class="ml-2">Cron Jobs</span>
+                                </v-list-item-title>
+                            </v-list-item>
+                            <v-divider/>
+                        </div>
+                    </template>
+                    Enable Cron Jobs in deployment specification edit dialog
+                </v-tooltip>
+
+
+                <v-list-subheader v-if="showUpdatePostCommands">Migration</v-list-subheader>
+                <v-list-item
+                    v-if="showUpdatePostCommands"
+                    dense
+                    @click="onUpdatePostCommandsClicked">
+                    <v-list-item-title>
+                        <v-icon size="small" class="my-auto ml-2">fa fa-terminal</v-icon>
+                        <span class="ml-2">Post Migration Commands</span>
+                    </v-list-item-title>
+                </v-list-item>
+
+
+                <v-list-subheader v-if="showUpdateClusterRoleRules || showUpdateRoleRules">RBAC</v-list-subheader>
                 <v-list-item
                     v-if="showUpdateClusterRoleRules"
                     dense
@@ -215,34 +296,9 @@ function onUpdateCronJobsClicked() {
                         <span class="ml-2">Role Rules</span>
                     </v-list-item-title>
                 </v-list-item>
-                <v-list-item
-                    v-if="showUpdateQuickCommands"
-                    dense
-                    @click="onUpdateQuickCommandsClicked">
-                    <v-list-item-title>
-                        <v-icon size="small" class="my-auto ml-2">fa fa-terminal</v-icon>
-                        <span class="ml-2">Quick Commands</span>
-                    </v-list-item-title>
-                </v-list-item>
-                <v-list-item
-                    v-if="showUpdateInitContainers"
-                    dense
-                    @click="onUpdateInitContainersClicked">
-                    <v-list-item-title>
-                        <v-icon size="small" class="my-auto ml-2">fa fa-box</v-icon>
-                        <span class="ml-2">Init Containers</span>
-                    </v-list-item-title>
-                </v-list-item>
-                <v-list-item
-                    v-if="showUpdateLabels"
-                    :disabled="!isUpdateLabelsEnabled"
-                    dense
-                    @click="onUpdateLabelsClicked">
-                    <v-list-item-title>
-                        <v-icon size="small" class="my-auto ml-2">fa fa-tags</v-icon>
-                        <span class="ml-2">Labels</span>
-                    </v-list-item-title>
-                </v-list-item>
+
+
+                <v-list-subheader v-if="showUpdatePostUpdateActions">Update</v-list-subheader>
                 <v-tooltip
                     v-if="showUpdatePostUpdateActions"
                     :disabled="isUpdatePostUpdateActionsEnabled"
@@ -260,31 +316,33 @@ function onUpdateCronJobsClicked() {
                                     <span class="ml-2">Post Update Actions</span>
                                 </v-list-item-title>
                             </v-list-item>
+                            <v-divider/>
                         </div>
                     </template>
                     Setup container image version control to enable post update actions
                 </v-tooltip>
-                <v-tooltip
-                    v-if="showUpdateCronJobs"
-                    :disabled="isUpdateCronJobsEnabled"
-                    location="left">
-                    <template v-slot:activator="{ props }">
-                        <div
-                            v-bind="props">
-                            <v-list-item
-                                dense
-                                @click="onUpdateCronJobsClicked"
-                                :disabled="!isUpdateCronJobsEnabled"
-                            >
-                                <v-list-item-title>
-                                    <v-icon size="small" class="my-auto ml-2">fa fa-clock</v-icon>
-                                    <span class="ml-2">Cron Jobs</span>
-                                </v-list-item-title>
-                            </v-list-item>
-                        </div>
-                    </template>
-                    Enable Cron Jobs in deployment specification edit dialog
-                </v-tooltip>
+
+
+                <v-list-subheader>Other</v-list-subheader>
+                <v-list-item
+                    v-if="showUpdateQuickCommands"
+                    dense
+                    @click="onUpdateQuickCommandsClicked">
+                    <v-list-item-title>
+                        <v-icon size="small" class="my-auto ml-2">fa fa-terminal</v-icon>
+                        <span class="ml-2">Quick Commands</span>
+                    </v-list-item-title>
+                </v-list-item>
+                <v-list-item
+                    v-if="showUpdateLabels"
+                    :disabled="!isUpdateLabelsEnabled"
+                    dense
+                    @click="onUpdateLabelsClicked">
+                    <v-list-item-title>
+                        <v-icon size="small" class="my-auto ml-2">fa fa-tags</v-icon>
+                        <span class="ml-2">Labels</span>
+                    </v-list-item-title>
+                </v-list-item>
             </v-list>
         </v-card>
     </div>

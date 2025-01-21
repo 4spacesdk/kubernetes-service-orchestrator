@@ -52,30 +52,9 @@ class PullContainerRegistries extends BaseCommand {
 
             if (count($acrProjects)) {
                 Data::debug('found', count($acrProjects), 'ACR projects');
-
-                foreach ($acrProjects as $project => $credentials) {
-                    $googleCloudPubSub = new GoogleCloudPubSub($project, $credentials);
-                    $messages = $googleCloudPubSub->pull(
-                        'gcr',
-                        str_replace(' ', '_', strtolower(getenv('PROJECT_NAME'))) . '.kso-' . KubeHelper::GetMyHostname() . '.' . KubeHelper::GetMyNamespace()
-                    );
-                    Data::debug(count($messages), 'for', $project);
-
-                    foreach ($messages as $message) {
-                        Data::debug($message->data());
-                        $data = json_decode($message->data(), true);
-                        switch ($data['action']) {
-                            case 'DELETE':
-                                Data::debug('tag deleted, ignore');
-                                break;
-                            case 'INSERT':
-                                Data::debug('tag added, continue');
-                                [$image, $tag] = explode(':', $data['tag']);
-                                $this->emitNewTag($image, $tag);
-                                $hasCreatedAutoUpdate = true;
-                                break;
-                        }
-                    }
+                for ($i = 0; $i < 5; $i++) {
+                    $hasCreatedAutoUpdate = $this->runAcrProjects($acrProjects);
+                    sleep(2);
                 }
             }
 
@@ -92,6 +71,35 @@ class PullContainerRegistries extends BaseCommand {
 
         $job->last_log = json_encode(Data::getDebugger(), JSON_PRETTY_PRINT);
         $job->save();
+    }
+
+    private function runAcrProjects($acrProjects): bool {
+        $hasCreatedAutoUpdate = false;
+        foreach ($acrProjects as $project => $credentials) {
+            $googleCloudPubSub = new GoogleCloudPubSub($project, $credentials);
+            $messages = $googleCloudPubSub->pull(
+                'gcr',
+                str_replace(' ', '_', strtolower(getenv('PROJECT_NAME'))) . '.kso-' . KubeHelper::GetMyHostname() . '.' . KubeHelper::GetMyNamespace()
+            );
+            Data::debug(count($messages), 'for', $project);
+
+            foreach ($messages as $message) {
+                Data::debug($message->data());
+                $data = json_decode($message->data(), true);
+                switch ($data['action']) {
+                    case 'DELETE':
+                        Data::debug('tag deleted, ignore');
+                        break;
+                    case 'INSERT':
+                        Data::debug('tag added, continue');
+                        [$image, $tag] = explode(':', $data['tag']);
+                        $this->emitNewTag($image, $tag);
+                        $hasCreatedAutoUpdate = true;
+                        break;
+                }
+            }
+        }
+        return $hasCreatedAutoUpdate;
     }
 
     private function emitNewTag(string $image, string $tag): void {

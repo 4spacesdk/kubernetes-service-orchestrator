@@ -7,6 +7,7 @@ import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInter
 import DeploymentStepStatus from "@/components/Modules/Setup/Deployments/DeploymentStepStatus/DeploymentStepStatus.vue";
 import bus from "@/plugins/bus";
 import DeploymentEditButton from "@/components/Modules/Setup/Deployments/EditButton/DeploymentEditButton.vue";
+import {DeploymentStepLevels} from "@/constants";
 
 export interface DeploymentResourceListDialog_Input {
     deployment: Deployment;
@@ -26,8 +27,10 @@ interface Row {
     isLoadingKubernetesEvents: boolean;
 }
 
-const itemCount = ref(0);
-const rows = ref<Row[]>([]);
+const workspaceItemCount = ref(0);
+const deploymentItemCount = ref(0);
+const workspaceRows = ref<Row[]>([]);
+const deploymentRows = ref<Row[]>([]);
 const headers = ref<{
     readonly key?: string,
     readonly title?: string | undefined,
@@ -36,13 +39,15 @@ const headers = ref<{
 }[]>([
     {title: 'No.', key: 'no', sortable: false},
     {title: 'Step', key: 'item.name', sortable: false},
-    {title: 'Status', key: 'status', sortable: false, align: 'end'},
+    {title: 'Status', key: 'status', sortable: false, align: 'start'},
     {title: '', key: 'actions', sortable: false},
 ]);
 const isLoading = ref(false);
-const selectedRows = ref<Row[]>([]);
+const selectedWorkspaceRows = ref<Row[]>([]);
+const selectedDeploymentRows = ref<Row[]>([]);
 const isLoadingBatchDeploy = ref(false);
 const isLoadingBatchTerminate = ref(false);
+const isMissingWorkspace = ref(false);
 
 // <editor-fold desc="Functions">
 
@@ -52,20 +57,29 @@ onMounted(() => {
     }
     used.value = true;
     render();
+
+    bus.on('deploymentSaved', render);
 });
 
 onUnmounted(() => {
+    bus.off('deploymentSaved', render);
 });
 
 function render() {
     showDialog.value = true;
     isLoading.value = true;
+
+    isMissingWorkspace.value = !props.input.deployment.workspace_id;
+
     Api.deployments().getDeploymentSpecificationGetById(props.input.deployment.id!)
         .find(specs => {
-            rows.value = specs[0].deploymentSteps
-                ?.map((step, i) => {
+            let i = 1;
+            workspaceRows.value = specs[0].deploymentSteps
+                ?.filter(step => step.level == DeploymentStepLevels.Workspace)
+                ?.map(step => {
                     return {
-                        no: i + 1,
+                        no: i++,
+                        level: step.level,
                         item: step,
                         isLoadingDeploy: false,
                         isLoadingTerminate: false,
@@ -73,7 +87,22 @@ function render() {
                         isLoadingKubernetesEvents: false,
                     }
                 }) ?? [];
-            itemCount.value = rows.value.length;
+            workspaceItemCount.value = workspaceRows.value.length;
+
+            deploymentRows.value = specs[0].deploymentSteps
+                ?.filter(step => step.level == DeploymentStepLevels.Deployment)
+                ?.map(step => {
+                    return {
+                        no: i++,
+                        item: step,
+                        isLoadingDeploy: false,
+                        isLoadingTerminate: false,
+                        isLoadingKubernetesStatus: false,
+                        isLoadingKubernetesEvents: false,
+                    }
+                }) ?? [];
+            deploymentItemCount.value = deploymentRows.value.length;
+
             isLoading.value = false;
         });
 }
@@ -86,6 +115,12 @@ function close() {
 // </editor-fold>
 
 // <editor-fold desc="View Binding Functions">
+
+function onUpdateWorkspaceBtnClicked() {
+    bus.emit('deploymentUpdateWorkspace', {
+        deployment: props.input.deployment,
+    });
+}
 
 function onKubernetesStatusBtnClicked(row: Row) {
     row.isLoadingKubernetesStatus = true;
@@ -235,16 +270,21 @@ function doTerminateRow(row: Row, onFinish?: () => void, onError?: () => void) {
 function onBatchDeployBtnClicked() {
     isLoadingBatchDeploy.value = true;
 
+    const selectedRows = [
+        ...selectedWorkspaceRows.value,
+        ...selectedDeploymentRows.value,
+    ];
+
     let index = 0;
     const onError = () => {
         isLoadingBatchDeploy.value = false;
     };
     const onContinue = () => {
-        if (selectedRows.value.length == index) {
+        if (selectedRows.length == index) {
             isLoadingBatchDeploy.value = false;
             return;
         }
-        setTimeout(() => runRow(selectedRows.value[index++]), 2000);
+        setTimeout(() => runRow(selectedRows[index++]), 2000);
     };
     const runRow = (row: Row) => {
         onDeployBtnClicked(
@@ -261,8 +301,13 @@ function onBatchDeployBtnClicked() {
 }
 
 function onBatchTerminateBtnClicked() {
+    const selectedRows = [
+        ...selectedWorkspaceRows.value,
+        ...selectedDeploymentRows.value,
+    ];
+
     bus.emit('confirm', {
-        body: `Do you want to terminate <strong>${selectedRows.value.length} rows</strong>?`,
+        body: `Do you want to terminate <strong>${selectedRows.length} rows</strong>?`,
         confirmIcon: 'fa fa-skull',
         confirmColor: 'warning',
 
@@ -270,7 +315,7 @@ function onBatchTerminateBtnClicked() {
             if (confirmed) {
                 isLoadingBatchTerminate.value = true;
 
-                let index = selectedRows.value.length - 1;
+                let index = selectedRows.length - 1;
                 const onError = () => {
                     isLoadingBatchTerminate.value = false;
                 };
@@ -279,7 +324,7 @@ function onBatchTerminateBtnClicked() {
                         isLoadingBatchTerminate.value = false;
                         return;
                     }
-                    runRow(selectedRows.value[index--]);
+                    runRow(selectedRows[index--]);
                 };
                 const runRow = (row: Row) => {
                     doTerminateRow(
@@ -318,12 +363,15 @@ function onCloseBtnClicked() {
             <v-card-title>
                 <div class="d-flex w-100">
                     <span class="my-auto">Resources</span>
-                    <v-chip class="my-auto mx-auto">{{ props.input.deployment.name }}.{{ props.input.deployment.namespace }}</v-chip>
+                    <v-chip class="my-auto mx-auto">{{
+                            props.input.deployment.name
+                        }}.{{ props.input.deployment.namespace }}
+                    </v-chip>
 
                     <div class="my-auto ml-auto d-flex justify-end gap-1">
                         <div>
                             <v-btn
-                                :disabled="selectedRows.length === 0"
+                                :disabled="(selectedWorkspaceRows.length + selectedDeploymentRows.length) === 0"
                                 :loading="isLoadingBatchDeploy"
                                 variant="flat"
                                 color="green"
@@ -335,7 +383,7 @@ function onCloseBtnClicked() {
                         </div>
                         <div>
                             <v-btn
-                                :disabled="selectedRows.length === 0"
+                                :disabled="(selectedWorkspaceRows.length + selectedDeploymentRows.length) === 0"
                                 :loading="isLoadingBatchTerminate"
                                 variant="flat"
                                 color="red"
@@ -351,16 +399,45 @@ function onCloseBtnClicked() {
             <v-divider/>
             <v-card-text>
                 <v-data-table-server
-                    v-model="selectedRows"
+                    v-model="selectedWorkspaceRows"
                     :headers="headers"
-                    :items-length="itemCount"
-                    :items="rows"
+                    :items-length="workspaceItemCount"
+                    :items="workspaceRows"
                     :loading="isLoading"
                     :items-per-page="-1"
                     :show-select="true"
                     return-object
+                    hide-default-footer
                     class="table"
                     density="compact">
+                    <template v-slot:top>
+                        <v-toolbar
+                            flat
+                            density="compact"
+                        >
+                            <v-toolbar-title>
+                                <div
+                                    class="d-flex pr-4"
+                                >
+                                    <span class="my-auto">Workspace resources</span>
+                                    <v-chip
+                                        v-if="isMissingWorkspace"
+                                        class="ml-auto my-auto"
+                                        size="small"
+                                        @click="onUpdateWorkspaceBtnClicked"
+                                        color="error">missing workspace
+                                        <v-tooltip activator="parent" location="bottom">Select workspace</v-tooltip>
+                                    </v-chip>
+                                    <v-chip
+                                        v-if="!isMissingWorkspace"
+                                        class="ml-auto my-auto"
+                                        size="small"
+                                        color="success">{{ props.input.deployment.workspace?.name }}
+                                    </v-chip>
+                                </div>
+                            </v-toolbar-title>
+                        </v-toolbar>
+                    </template>
 
                     <template v-slot:item.no="{ item }">
                         <v-chip size="x-small" variant="outlined" color="grey">{{ item.no }}</v-chip>
@@ -368,6 +445,119 @@ function onCloseBtnClicked() {
 
                     <template v-slot:item.status="{ item }">
                         <deployment-step-status
+                            style="margin-left: -10px;"
+                            :step="item.item"
+                            :deployment="props.input.deployment"/>
+                    </template>
+
+                    <template v-slot:item.actions="{ item }">
+                        <div class="d-flex justify-end">
+                            <div>
+                                <v-btn
+                                    :disabled="!item.item.hasKubernetesStatus"
+                                    :loading="item.isLoadingKubernetesStatus"
+                                    variant="plain" :color="'grey'" size="small" icon
+                                    @click="onKubernetesStatusBtnClicked(item)">
+                                    <v-icon>fa fa-signal</v-icon>
+                                    <v-tooltip activator="parent" location="bottom">Kubernetes Status</v-tooltip>
+                                </v-btn>
+                                <v-tooltip
+                                    :disabled="item.item.hasKubernetesStatus"
+                                    activator="parent" location="bottom">Not available for this step
+                                </v-tooltip>
+                            </div>
+                            <div>
+                                <v-btn
+                                    :disabled="!item.item.hasKubernetesEvents"
+                                    :loading="item.isLoadingKubernetesEvents"
+                                    variant="plain" :color="'grey'" size="small" icon
+                                    @click="onKubernetesEventsBtnClicked(item)">
+                                    <v-icon>fa fa-calendar-days</v-icon>
+                                    <v-tooltip activator="parent" location="bottom">Kubernetes Events</v-tooltip>
+                                </v-btn>
+                                <v-tooltip
+                                    :disabled="item.item.hasKubernetesEvents"
+                                    activator="parent" location="bottom">Not available for this step
+                                </v-tooltip>
+                            </div>
+                            <div>
+                                <v-btn
+                                    :disabled="!item.item.hasPreviewCommand"
+                                    variant="plain" :color="'grey'" size="small" icon
+                                    @click="onPreviewBtnClicked(item)">
+                                    <v-icon>fa fa-file-code</v-icon>
+                                    <v-tooltip activator="parent" location="bottom">Preview</v-tooltip>
+                                </v-btn>
+                                <v-tooltip
+                                    :disabled="item.item.hasPreviewCommand"
+                                    activator="parent" location="bottom">Not available for this step
+                                </v-tooltip>
+                            </div>
+                            <div>
+                                <v-btn
+                                    :disabled="!item.item.hasDeployCommand"
+                                    :loading="item.isLoadingDeploy"
+                                    variant="plain" icon
+                                    :color="item.item.hasDeployCommand ? 'green' : 'grey'"
+                                    size="small"
+                                    @click="onDeployBtnClicked(item)">
+                                    <v-icon>fa fa-circle-play</v-icon>
+                                    <v-tooltip activator="parent" location="bottom">Deploy</v-tooltip>
+                                </v-btn>
+                                <v-tooltip
+                                    :disabled="item.item.hasDeployCommand"
+                                    activator="parent" location="bottom">Not available for this step
+                                </v-tooltip>
+                            </div>
+                            <div>
+                                <v-btn
+                                    :disabled="!item.item.hasTerminateCommand"
+                                    :loading="item.isLoadingTerminate"
+                                    icon
+                                    variant="plain" :color="item.item.hasTerminateCommand ? 'red' : 'grey'"
+                                    size="small"
+                                    @click="onTerminateBtnClicked(item)">
+                                    <v-icon>fa fa-skull</v-icon>
+                                    <v-tooltip activator="parent" location="bottom">Terminate</v-tooltip>
+                                </v-btn>
+                                <v-tooltip
+                                    :disabled="item.item.hasTerminateCommand"
+                                    activator="parent" location="bottom">Not available for this step
+                                </v-tooltip>
+                            </div>
+                        </div>
+                    </template>
+
+                </v-data-table-server>
+
+                <v-data-table-server
+                    v-model="selectedDeploymentRows"
+                    :headers="headers"
+                    :items-length="deploymentItemCount"
+                    :items="deploymentRows"
+                    :loading="isLoading"
+                    :items-per-page="-1"
+                    :show-select="true"
+                    return-object
+                    hide-default-footer
+                    class="table"
+                    density="compact">
+                    <template v-slot:top>
+                        <v-toolbar
+                            flat
+                            density="compact"
+                        >
+                            <v-toolbar-title>Deployment resources</v-toolbar-title>
+                        </v-toolbar>
+                    </template>
+
+                    <template v-slot:item.no="{ item }">
+                        <v-chip size="x-small" variant="outlined" color="grey">{{ item.no }}</v-chip>
+                    </template>
+
+                    <template v-slot:item.status="{ item }">
+                        <deployment-step-status
+                            style="margin-left: -10px;"
                             :step="item.item"
                             :deployment="props.input.deployment"/>
                     </template>
@@ -481,7 +671,7 @@ function onCloseBtnClicked() {
 </template>
 
 <style scoped>
-:deep(.v-data-table-footer) {
-    display: none;
+.table {
+    min-height: 0 !important;
 }
 </style>

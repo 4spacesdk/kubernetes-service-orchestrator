@@ -2,12 +2,11 @@
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
-import {DeploymentSpecification, EmailService} from "@/core/services/Deploy/models";
+import {DeploymentSpecification} from "@/core/services/Deploy/models";
 import debounce from "lodash.debounce";
-import DeploymentEditButton from "@/components/Modules/Setup/Deployments/EditButton/DeploymentEditButton.vue";
 import DeploymentSpecificationEditButton
     from "@/components/Modules/Setup/DeploymentSpecifications/EditButton/DeploymentSpecificationEditButton.vue";
-import {DeploymentSpecificationTypes} from "@/constants";
+import {WorkloadTypes} from "@/constants";
 
 const emit = defineEmits<{
     (e: 'onItemEditClicked', item: DeploymentSpecification): void
@@ -17,7 +16,8 @@ const itemCount = ref(0);
 const rows = ref<DeploymentSpecification[]>([]);
 const headers = ref([
     {title: 'Name', key: 'name', sortable: false},
-    {title: 'Type', key: 'type', sortable: false},
+    {title: 'Workload Type', key: 'workload_type', sortable: false},
+    {title: 'Network Type', key: 'network_type', sortable: false},
     {title: 'Database', key: 'enable_database', sortable: false},
     {title: 'Ingress', key: 'ingress', sortable: false},
     {title: 'RBAC', key: 'enable_rbac', sortable: false},
@@ -31,12 +31,20 @@ const searchValue = ref('');
 const showCreateMenu = ref(false);
 const createItems = ref([
     {
-        value: DeploymentSpecificationTypes.Deployment,
-        name: 'Deployment'
+        value: WorkloadTypes.Deployment,
+        name: 'Kubernetes Deployment'
     },
     {
-        value: DeploymentSpecificationTypes.Custom,
-        name: 'Custom'
+        value: WorkloadTypes.KNativeService,
+        name: 'KNative Service'
+    },
+    {
+        value: WorkloadTypes.DaemonSet,
+        name: 'DaemonSet'
+    },
+    {
+        value: WorkloadTypes.CustomResource,
+        name: 'Custom Resource'
     },
 ]);
 
@@ -195,12 +203,15 @@ function onEditItemBtnClicked(item: DeploymentSpecification) {
             <template v-slot:item.enable_rbac="{ item }">
                 <v-icon v-if="item.enable_rbac">fa fa-check</v-icon>
             </template>
+            <template v-slot:item.network_type="{ item }">
+                <span v-if="item.enable_external_access">{{ item.network_type }}</span>
+            </template>
 
             <template v-slot:item.actions="{ item }">
                 <div class="d-flex justify-end gap-1">
 
                     <v-menu
-                        v-if="item.type == DeploymentSpecificationTypes.Deployment"
+                        v-if="item.workload_type !== WorkloadTypes.CustomResource"
                         min-width="250">
                         <template v-slot:activator="{ props }">
                             <v-btn

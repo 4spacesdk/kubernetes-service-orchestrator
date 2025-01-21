@@ -19,6 +19,7 @@ const item = ref<Workspace | null>(null);
 const isLoadingDomains = ref(false);
 const domains = ref<Domain[]>([]);
 const isSaving = ref(false);
+const showAdvanced = ref(false);
 
 // <editor-fold desc="Functions">
 
@@ -51,15 +52,31 @@ function close() {
     props.events.onClose();
 }
 
+function generateNamespace() {
+    let system = item.value!.name
+        ?.toLocaleLowerCase() // To lowercase
+        ?.replaceAll(' ', '_') // Replace space with _
+        ?.replaceAll(',', '') // Remove ,
+        ?.replace(/[^A-Za-z0-9_]/, '') // Remove all non-alphabetic
+        ?.replaceAll('_', '-') // Replace _ with -
+        ?? '';
+    item.value!.namespace = `${props.input.deploymentPackage.namespace}-${system}`.substring(0, 63);
+}
+
 // </editor-fold>
 
 // <editor-fold desc="View Binding Functions">
+
+function onNameChanged() {
+    generateNamespace();
+}
 
 function onSaveBtnClicked() {
     isSaving.value = true;
     const api = Api.workspaces().createPost()
         .deploymentPackageId(props.input.deploymentPackage.id!)
         .name(item.value!.name_readable!)
+        .namespace(item.value!.namespace!)
         .domainId(item.value!.domain_id!)
         .subdomain(item.value!.subdomain!);
     api.setErrorHandler(response => {
@@ -109,6 +126,7 @@ function onCloseBtnClicked() {
                                 variant="outlined"
                                 label="Name"
                                 clearable
+                                @update:modelValue="onNameChanged"
                                 :rules="[
                                     v => (v?.length ?? 0) >= 4 || 'Must be at least four characters long'
                                 ]"
@@ -137,6 +155,57 @@ function onCloseBtnClicked() {
                                 hint="Max 63 characters, must begin with an alpha-numeric"/>
                         </v-col>
                     </v-row>
+                    <v-row
+                        class="mt-4"
+                        dense
+                    >
+                        <v-col cols="12">
+                            <v-btn
+                                class="w-100"
+                                @click="showAdvanced = !showAdvanced"
+                                variant="flat"
+                                density="compact"
+                            >
+                                <div class="d-flex ga-3">
+                                    <v-icon
+                                        v-if="showAdvanced"
+                                        class="my-auto">fa fa-chevron-up
+                                    </v-icon>
+                                    <v-icon
+                                        v-else
+                                        class="my-auto">fa fa-chevron-down
+                                    </v-icon>
+                                    <span class="my-auto">Advanced</span>
+                                    <v-icon
+                                        v-if="showAdvanced"
+                                        class="my-auto">fa fa-chevron-up
+                                    </v-icon>
+                                    <v-icon
+                                        v-else
+                                        class="my-auto">fa fa-chevron-down
+                                    </v-icon>
+                                </div>
+                            </v-btn>
+                        </v-col>
+                    </v-row>
+                    <v-expand-transition>
+                        <v-row
+                            v-if="showAdvanced"
+                            dense>
+                            <v-col cols="6">
+                                <v-text-field
+                                    v-model="item.namespace"
+                                    variant="outlined"
+                                    :rules="[
+                                    v => /^(?!^[0-9]*$)^([a-z0-9]([a-z0-9]|-(?!-)){0,14}(?<!-)$)/.test(v) || 'Invalid format'
+                                ]"
+                                    label="Namespace"
+                                    clearable
+                                    persistent-hint
+                                    hint="Max 63 characters, lowercase-only"/>
+                            </v-col>
+                        </v-row>
+                    </v-expand-transition>
                 </v-card-text>
                 <v-divider/>
                 <v-card-actions>

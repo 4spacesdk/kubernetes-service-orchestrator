@@ -16,6 +16,7 @@ import {DeploymentSpecificationQuickCommand} from '../DeploymentSpecificationQui
 import {DeploymentSpecificationInitContainer} from '../DeploymentSpecificationInitContainer';
 import {DeploymentSpecificationPostUpdateAction} from '../DeploymentSpecificationPostUpdateAction';
 import {DeploymentSpecificationCronJob} from '../DeploymentSpecificationCronJob';
+import {DeploymentSpecificationHttpProxyRoute} from '../DeploymentSpecificationHttpProxyRoute';
 import {Label} from '../Label';
 import {DeploymentStep} from '../DeploymentStep';
 import {User} from '../User';
@@ -24,14 +25,16 @@ import {BaseModel} from '../BaseModel';
 
 export class DeploymentSpecificationDefinition extends BaseModel {
     name?: string;
-    type?: string;
     container_image_id?: number;
     container_image?: ContainerImage;
+    workload_type?: string;
     enable_database?: boolean;
     enable_cronjob?: boolean;
-    enable_ingress?: boolean;
+    enable_external_access?: boolean;
+    enable_internal_access?: boolean;
     enable_rbac?: boolean;
     enable_volumes?: boolean;
+    network_type?: string;
     domain_tls?: string;
     domain_prefix?: string;
     domain_suffix?: string;
@@ -43,7 +46,6 @@ export class DeploymentSpecificationDefinition extends BaseModel {
     database_migration_command?: string;
     database_migration_verification_type?: string;
     database_migration_verification_value?: string;
-    cronjob_url?: string;
     custom_resource?: string;
     deployments?: Deployment[];
     deployment_specification_post_commands?: DeploymentSpecificationPostCommand[];
@@ -59,6 +61,7 @@ export class DeploymentSpecificationDefinition extends BaseModel {
     deployment_specification_init_containers?: DeploymentSpecificationInitContainer[];
     deployment_specification_post_update_actions?: DeploymentSpecificationPostUpdateAction[];
     deployment_specification_cron_jobs?: DeploymentSpecificationCronJob[];
+    deployment_specification_http_proxy_routes?: DeploymentSpecificationHttpProxyRoute[];
     labels?: Label[];
     deploymentSteps?: DeploymentStep[];
     id?: number;
@@ -79,14 +82,16 @@ export class DeploymentSpecificationDefinition extends BaseModel {
     public populate(data?: any, patch = false) {
         if (!patch) {
             delete this.name;
-            delete this.type;
             delete this.container_image_id;
             delete this.container_image;
+            delete this.workload_type;
             delete this.enable_database;
             delete this.enable_cronjob;
-            delete this.enable_ingress;
+            delete this.enable_external_access;
+            delete this.enable_internal_access;
             delete this.enable_rbac;
             delete this.enable_volumes;
+            delete this.network_type;
             delete this.domain_tls;
             delete this.domain_prefix;
             delete this.domain_suffix;
@@ -98,7 +103,6 @@ export class DeploymentSpecificationDefinition extends BaseModel {
             delete this.database_migration_command;
             delete this.database_migration_verification_type;
             delete this.database_migration_verification_value;
-            delete this.cronjob_url;
             delete this.custom_resource;
             delete this.deployments;
             delete this.deployment_specification_post_commands;
@@ -114,6 +118,7 @@ export class DeploymentSpecificationDefinition extends BaseModel {
             delete this.deployment_specification_init_containers;
             delete this.deployment_specification_post_update_actions;
             delete this.deployment_specification_cron_jobs;
+            delete this.deployment_specification_http_proxy_routes;
             delete this.labels;
             delete this.deploymentSteps;
             delete this.id;
@@ -131,14 +136,14 @@ export class DeploymentSpecificationDefinition extends BaseModel {
         if (data.name != null) {
             this.name = data.name;
         }
-        if (data.type != null) {
-            this.type = data.type;
-        }
         if (data.container_image_id != null) {
             this.container_image_id = data.container_image_id;
         }
         if (data.container_image != null) {
             this.container_image = new ContainerImage(data.container_image);
+        }
+        if (data.workload_type != null) {
+            this.workload_type = data.workload_type;
         }
         if (data.enable_database != null) {
             this.enable_database = data.enable_database;
@@ -146,14 +151,20 @@ export class DeploymentSpecificationDefinition extends BaseModel {
         if (data.enable_cronjob != null) {
             this.enable_cronjob = data.enable_cronjob;
         }
-        if (data.enable_ingress != null) {
-            this.enable_ingress = data.enable_ingress;
+        if (data.enable_external_access != null) {
+            this.enable_external_access = data.enable_external_access;
+        }
+        if (data.enable_internal_access != null) {
+            this.enable_internal_access = data.enable_internal_access;
         }
         if (data.enable_rbac != null) {
             this.enable_rbac = data.enable_rbac;
         }
         if (data.enable_volumes != null) {
             this.enable_volumes = data.enable_volumes;
+        }
+        if (data.network_type != null) {
+            this.network_type = data.network_type;
         }
         if (data.domain_tls != null) {
             this.domain_tls = data.domain_tls;
@@ -187,9 +198,6 @@ export class DeploymentSpecificationDefinition extends BaseModel {
         }
         if (data.database_migration_verification_value != null) {
             this.database_migration_verification_value = data.database_migration_verification_value;
-        }
-        if (data.cronjob_url != null) {
-            this.cronjob_url = data.cronjob_url;
         }
         if (data.custom_resource != null) {
             this.custom_resource = data.custom_resource;
@@ -235,6 +243,9 @@ export class DeploymentSpecificationDefinition extends BaseModel {
         }
         if (data.deployment_specification_cron_jobs != null) {
             this.deployment_specification_cron_jobs = data.deployment_specification_cron_jobs.map((i: any) => new DeploymentSpecificationCronJob(i));
+        }
+        if (data.deployment_specification_http_proxy_routes != null) {
+            this.deployment_specification_http_proxy_routes = data.deployment_specification_http_proxy_routes.map((i: any) => new DeploymentSpecificationHttpProxyRoute(i));
         }
         if (data.labels != null) {
             this.labels = data.labels.map((i: any) => new Label(i));

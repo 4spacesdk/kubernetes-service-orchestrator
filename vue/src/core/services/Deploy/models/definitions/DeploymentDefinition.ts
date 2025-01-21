@@ -4,7 +4,6 @@
 import {Workspace} from '../Workspace';
 import {DeploymentSpecification} from '../DeploymentSpecification';
 import {DatabaseService} from '../DatabaseService';
-import {Domain} from '../Domain';
 import {MigrationJob} from '../MigrationJob';
 import {EnvironmentVariable} from '../EnvironmentVariable';
 import {DeploymentVolume} from '../DeploymentVolume';
@@ -31,25 +30,24 @@ export class DeploymentDefinition extends BaseModel {
     database_user?: string;
     database_name?: string;
     database_pass?: string;
-    domain_id?: number;
-    domain?: Domain;
-    subdomain?: string;
-    aliases?: string;
     auto_update_enabled?: boolean;
     auto_update_tag_regex?: string;
     auto_update_require_approval?: boolean;
-    enable_podio_notification?: boolean;
     cpu_limit?: number;
     cpu_request?: number;
     memory_limit?: number;
     memory_request?: number;
     replicas?: number;
+    knative_concurrency_limit_soft?: number;
+    knative_concurrency_limit_hard?: number;
     last_migration_job_id?: number;
     last_migration_job?: MigrationJob;
     environment_variables?: EnvironmentVariable[];
     deployment_volumes?: DeploymentVolume[];
     last_migration_jobs?: MigrationJob[];
     labels?: Label[];
+    url_external?: string;
+    url_internal?: string;
     id?: number;
     created?: string;
     updated?: string;
@@ -84,25 +82,24 @@ export class DeploymentDefinition extends BaseModel {
             delete this.database_user;
             delete this.database_name;
             delete this.database_pass;
-            delete this.domain_id;
-            delete this.domain;
-            delete this.subdomain;
-            delete this.aliases;
             delete this.auto_update_enabled;
             delete this.auto_update_tag_regex;
             delete this.auto_update_require_approval;
-            delete this.enable_podio_notification;
             delete this.cpu_limit;
             delete this.cpu_request;
             delete this.memory_limit;
             delete this.memory_request;
             delete this.replicas;
+            delete this.knative_concurrency_limit_soft;
+            delete this.knative_concurrency_limit_hard;
             delete this.last_migration_job_id;
             delete this.last_migration_job;
             delete this.environment_variables;
             delete this.deployment_volumes;
             delete this.last_migration_jobs;
             delete this.labels;
+            delete this.url_external;
+            delete this.url_internal;
             delete this.id;
             delete this.created;
             delete this.updated;
@@ -166,18 +163,6 @@ export class DeploymentDefinition extends BaseModel {
         if (data.database_pass != null) {
             this.database_pass = data.database_pass;
         }
-        if (data.domain_id != null) {
-            this.domain_id = data.domain_id;
-        }
-        if (data.domain != null) {
-            this.domain = new Domain(data.domain);
-        }
-        if (data.subdomain != null) {
-            this.subdomain = data.subdomain;
-        }
-        if (data.aliases != null) {
-            this.aliases = data.aliases;
-        }
         if (data.auto_update_enabled != null) {
             this.auto_update_enabled = data.auto_update_enabled;
         }
@@ -186,9 +171,6 @@ export class DeploymentDefinition extends BaseModel {
         }
         if (data.auto_update_require_approval != null) {
             this.auto_update_require_approval = data.auto_update_require_approval;
-        }
-        if (data.enable_podio_notification != null) {
-            this.enable_podio_notification = data.enable_podio_notification;
         }
         if (data.cpu_limit != null) {
             this.cpu_limit = data.cpu_limit;
@@ -204,6 +186,12 @@ export class DeploymentDefinition extends BaseModel {
         }
         if (data.replicas != null) {
             this.replicas = data.replicas;
+        }
+        if (data.knative_concurrency_limit_soft != null) {
+            this.knative_concurrency_limit_soft = data.knative_concurrency_limit_soft;
+        }
+        if (data.knative_concurrency_limit_hard != null) {
+            this.knative_concurrency_limit_hard = data.knative_concurrency_limit_hard;
         }
         if (data.last_migration_job_id != null) {
             this.last_migration_job_id = data.last_migration_job_id;
@@ -222,6 +210,12 @@ export class DeploymentDefinition extends BaseModel {
         }
         if (data.labels != null) {
             this.labels = data.labels.map((i: any) => new Label(i));
+        }
+        if (data.url_external != null) {
+            this.url_external = data.url_external;
+        }
+        if (data.url_internal != null) {
+            this.url_internal = data.url_internal;
         }
         if (data.id != null) {
             this.id = data.id;

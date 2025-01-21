@@ -48,6 +48,7 @@ function reload() {
     api.find(response => {
         textAll.value = response[0].values ?? [];
 
+        let hasError = false;
         let hasFailed = false;
         let hasWarning = false;
         let hasSuccess = false;
@@ -55,6 +56,10 @@ function reload() {
 
         textAll.value.forEach(value => {
             switch (value) {
+                case 'error':
+                    hasError = true;
+                    break;
+
                 case 'not-found':
                 case 'not-performed':
                 case 'running':
@@ -81,7 +86,10 @@ function reload() {
             }
         });
 
-        if (hasFailed) {
+        if (hasError) {
+            icon.value = 'fa-circle-xmark';
+            color.value = 'red';
+        } else if (hasFailed) {
             icon.value = 'fa-circle-xmark';
             color.value = 'red';
         } else if (hasUnknown) {

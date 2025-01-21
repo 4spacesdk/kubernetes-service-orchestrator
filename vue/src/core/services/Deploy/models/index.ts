@@ -12,6 +12,7 @@ export {DeploymentSpecificationClusterRoleRule as DeploymentSpecificationCluster
 export {DeploymentSpecificationCronJob as DeploymentSpecificationCronJob} from "./DeploymentSpecificationCronJob";
 export {DeploymentSpecificationDeploymentAnnotation as DeploymentSpecificationDeploymentAnnotation} from "./DeploymentSpecificationDeploymentAnnotation";
 export {DeploymentSpecificationEnvironmentVariable as DeploymentSpecificationEnvironmentVariable} from "./DeploymentSpecificationEnvironmentVariable";
+export {DeploymentSpecificationHttpProxyRoute as DeploymentSpecificationHttpProxyRoute} from "./DeploymentSpecificationHttpProxyRoute";
 export {DeploymentSpecificationIngress as DeploymentSpecificationIngress} from "./DeploymentSpecificationIngress";
 export {DeploymentSpecificationIngressAnnotation as DeploymentSpecificationIngressAnnotation} from "./DeploymentSpecificationIngressAnnotation";
 export {DeploymentSpecificationIngressRulePath as DeploymentSpecificationIngressRulePath} from "./DeploymentSpecificationIngressRulePath";

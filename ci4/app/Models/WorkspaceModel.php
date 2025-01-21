@@ -24,6 +24,8 @@ class WorkspaceModel extends Model implements ResourceModelInterface {
     ];
 
     public function preRestGet($queryParser, $id) {
+        $this->includeRelated(DomainModel::class);
+
         if ($queryParser->hasInclude('deployment')) {
             $queryParser->getInclude('deployment')->ignoreAuto = true;
         }
@@ -75,11 +77,15 @@ class WorkspaceModel extends Model implements ResourceModelInterface {
             /** @var Deployment $deployments */
             $deployments = (new DeploymentModel())
                 ->includeRelated(DeploymentSpecificationModel::class)
-                ->includeRelated(DomainModel::class)
                 ->whereIn('workspace_id', $items)
                 ->find();
             foreach ($deployments as $deployment) {
-                $items->getById($deployment->workspace_id)->deployments->add($deployment);
+                $workspace = $items->getById($deployment->workspace_id);
+                $workspace->deployments->add($deployment);
+                $deployment->url_external = $deployment
+                    ->findDeploymentSpecification()
+                    ->getUrl($workspace->subdomain, $workspace->domain, true, true);
+                $deployment->url_internal = $deployment->getInternalUrl();
             }
 
             if ($deployments->exists()) {

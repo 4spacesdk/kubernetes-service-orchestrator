@@ -87,7 +87,7 @@ function onCloseBtnClicked() {
             <v-card-title>
                 <div class="d-flex">
                     <span class="my-auto">Pod Terminal</span>
-                    <v-chip class="my-auto mx-auto">{{ props.input.pod.name }}</v-chip>
+                    <v-chip class="my-auto mx-auto">{{ props.input.pod.pod }}</v-chip>
                 </div>
             </v-card-title>
             <v-divider/>

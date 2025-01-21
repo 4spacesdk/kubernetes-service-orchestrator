@@ -3,6 +3,7 @@
 use App\Libraries\ZMQ\ChangeEvent;
 use App\Libraries\ZMQ\Events;
 use App\Libraries\ZMQ\ZMQProxy;
+use DebugTool\Data;
 use RenokiCo\PhpK8s\Exceptions\KubernetesAPIException;
 use RenokiCo\PhpK8s\Exceptions\KubernetesLogsException;
 use RenokiCo\PhpK8s\Exceptions\KubernetesWatchException;
@@ -20,9 +21,9 @@ class KubeLog {
      * @throws KubernetesAPIException
      * @throws KubernetesLogsException
      */
-    public function getLogs(string $namespace, string $podName): array {
+    public function getLogs(string $namespace, string $podName, string $containerName): array {
         $pod = $this->cluster->getPodByName($podName, $namespace);
-        $logs = explode("\n", $pod->logs([
+        $logs = explode("\n", $pod->containerLogs($containerName, [
             'tailLines' => 100,
             'timestamps' => true,
         ]));
@@ -42,9 +43,9 @@ class KubeLog {
      * @throws KubernetesWatchException
      * @throws KubernetesLogsException
      */
-    public function watchLog(string $namespace, string $podName): void {
+    public function watchLog(string $namespace, string $podName, string $containerName): void {
         $pod = $this->cluster->getPodByName($podName, $namespace);
-        $pod->watchLogs(function ($logs) use ($podName) {
+        $pod->watchContainerLogs($containerName, function ($logs) use ($containerName, $podName) {
             $lines = [];
             foreach (explode("\n", $logs) as $log) {
                 if (strlen($log)) {
@@ -56,7 +57,7 @@ class KubeLog {
             }
 
             ZMQProxy::getInstance()->send(
-                Events::KubernetesPod_Logs_Watch($podName),
+                Events::KubernetesPod_Logs_Watch($podName, $containerName),
                 (new ChangeEvent(null, $lines))->toArray()
             );
         }, ['tailLines' => 1, 'timestamps' => true]);

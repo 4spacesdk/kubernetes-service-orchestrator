@@ -7,6 +7,7 @@ import {BaseModel} from '../BaseModel';
 
 export class DeploymentStepDefinition extends BaseModel {
     identifier?: string;
+    level?: string;
     name?: string;
     hasPreviewCommand?: boolean;
     hasStatusCommand?: boolean;
@@ -32,6 +33,7 @@ export class DeploymentStepDefinition extends BaseModel {
     public populate(data?: any, patch = false) {
         if (!patch) {
             delete this.identifier;
+            delete this.level;
             delete this.name;
             delete this.hasPreviewCommand;
             delete this.hasStatusCommand;
@@ -53,6 +55,9 @@ export class DeploymentStepDefinition extends BaseModel {
         if (!data) return;
         if (data.identifier != null) {
             this.identifier = data.identifier;
+        }
+        if (data.level != null) {
+            this.level = data.level;
         }
         if (data.name != null) {
             this.name = data.name;

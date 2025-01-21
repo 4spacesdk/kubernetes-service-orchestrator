@@ -9,12 +9,14 @@ import WampService from "@/services/Wamp/WampService";
 import {Events} from "@/services/Wamp/Events";
 import {ChangeEvent} from "@/services/Wamp/ChangeEvent";
 import {ApiRequest} from "@/core/services/ApiHelpers/ApiRequest";
+import bus from "@/plugins/bus";
 
 const props = defineProps<{
     namespace?: string;
     app?: string;
     role?: string;
     preselectedPodName?: string;
+    preselectedContainerName?: string;
 
     showHeader: boolean;
 }>();
@@ -94,14 +96,14 @@ function reload() {
             isPodsLoading.value = false;
 
             if (pods.value.length) {
-                const updatedPod = pods.value.find(p => p.pod.name == activePod?.value?.name);
+                const updatedPod = pods.value.find(p => p.pod.pod == activePod?.value?.pod && p.pod.container == activePod?.value?.container);
                 if (previousPod && updatedPod) {
                     activePod.value = updatedPod.pod;
                 } else {
 
                     // Look for preselected pod
                     if (props.preselectedPodName) {
-                        const preselectedPod = pods.value.find(p => p.pod.name == props.preselectedPodName);
+                        const preselectedPod = pods.value.find(p => p.pod.pod == props.preselectedPodName && p.pod.container == props.preselectedContainerName);
                         if (preselectedPod) {
                             activePod.value = preselectedPod.pod;
                         }
@@ -126,36 +128,46 @@ function getLogs() {
 
     isLogsLoading.value = true;
     logs.value = [];
-    Api.kubernetes().getLogsGetByNamespaceByPod(props.namespace!, activePod.value!.name!)
-        .find(response => {
-            logs.value = response.map(entry => {
-                return {
-                    date: new Date(entry.date!),
-                    line: entry.line!,
-                }
+    const api = Api.kubernetes().getLogsGetByNamespaceByPodByContainer(props.namespace!, activePod.value!.pod!, activePod.value!.container!);
+    api.setErrorHandler(response => {
+        if (response.error) {
+            bus.emit('json', {
+                title: `Failed to fetch log`,
+                body: JSON.parse(response.error),
             });
             isLogsLoading.value = false;
-            setTimeout(() => container?.value?.scrollIntoView(false));
-
-            // Cancel previous watchers
-            watchWampSubscription.value?.unsubscribe();
-
-            watchWampSubscription.value = WampService.subscribe(
-                Events.KubernetesPod_Logs_Watch(activePod.value!.name!),
-                data => {
-                    const changeEvent = new ChangeEvent<KubernetesLogEntry[]>(data.previous, data.next);
-                    changeEvent.next.forEach(entry => {
-                        logs.value.push({
-                            date: new Date(entry.date!),
-                            line: entry.line!,
-                        });
-                    });
-                    setTimeout(() => container?.value?.scrollIntoView(false));
-                }
-            );
-
-            startWatching();
+        }
+        return false;
+    });
+    api.find(response => {
+        logs.value = response.map(entry => {
+            return {
+                date: new Date(entry.date!),
+                line: entry.line!,
+            }
         });
+        isLogsLoading.value = false;
+        setTimeout(() => container?.value?.scrollIntoView(false));
+
+        // Cancel previous watchers
+        watchWampSubscription.value?.unsubscribe();
+
+        watchWampSubscription.value = WampService.subscribe(
+            Events.KubernetesPod_Logs_Watch(activePod.value!.pod!, activePod.value!.container!),
+            data => {
+                const changeEvent = new ChangeEvent<KubernetesLogEntry[]>(data.previous, data.next);
+                changeEvent.next.forEach(entry => {
+                    logs.value.push({
+                        date: new Date(entry.date!),
+                        line: entry.line!,
+                    });
+                });
+                setTimeout(() => container?.value?.scrollIntoView(false));
+            }
+        );
+
+        startWatching();
+    });
 }
 
 function startWatching() {
@@ -163,7 +175,7 @@ function startWatching() {
     setTimeout(() => { // Let it finish before starting new request
         isWatching.value = true;
         showWatcherFinishedMessage.value = false;
-        watchApiRequest.value = Api.kubernetes().watchLogsPutByNamespaceByPod(props.namespace!, activePod.value!.name!)
+        watchApiRequest.value = Api.kubernetes().watchLogsPutByNamespaceByPodByContainer(props.namespace!, activePod.value!.pod!, activePod.value!.container!)
             .save(null, () => {
                 isWatching.value = false;
                 showWatcherFinishedMessage.value = true;
@@ -203,16 +215,22 @@ function onPodListItemClicked(item: PodOption) {
                    color="blue-grey lighten-5"
                    class="d-flex w-100 flex-column"
         >
-            <div class="d-flex flex-grow-1 px-5">
-                <div>
-                    <span>Pod name: </span> <strong>{{ activePod?.name || 'Loading...' }}</strong>
+            <div class="d-flex flex-grow-1 px-5 ga-3">
+                <div class="d-flex flex-column">
+                    <span>Pod name</span>
+                    <strong>{{ activePod?.pod || 'Loading...' }}</strong>
                 </div>
-                <div class="mx-1">
-                    <span>Pod created: </span>
+                <div class="d-flex flex-column">
+                    <span>Container name</span>
+                    <strong>{{ activePod?.container }}</strong>
+                </div>
+                <div class="d-flex flex-column">
+                    <span>Pod created</span>
                     <DateView :date-string="activePod?.created"/>
                 </div>
-                <div class="mx-1">
-                    <span>Pod status: </span> <strong>{{ activePod?.status }}</strong>
+                <div class="d-flex flex-column">
+                    <span>Pod status</span>
+                    <strong>{{ activePod?.status }}</strong>
                 </div>
             </div>
 
@@ -224,12 +242,12 @@ function onPodListItemClicked(item: PodOption) {
                         v-bind="props"
                         variant="outlined" color="white" size="small"
                     >
-                        {{ activePod?.name }}
+                        {{ activePod?.pod }} - {{ activePod?.container }}
                     </v-btn>
                 </template>
                 <v-list>
                     <v-list-item
-                        v-for="pod in pods" :key="pod.pod.name"
+                        v-for="(pod, i) in pods" :key="i"
                         :value="pod.pod"
                         @click="onPodListItemClicked(pod)"
                     >
@@ -242,10 +260,10 @@ function onPodListItemClicked(item: PodOption) {
                                         size="small">{{ pod.pod.status }}
                                     </v-chip>
                                 </div>
-                                {{ pod.pod.name }}
+                                <span class="my-auto">{{ pod.pod.pod }} - {{ pod.pod.container }}</span>
 
                                 <DateView
-                                    class="ml-auto pl-4"
+                                    class="ml-auto pl-4 my-auto"
                                     :date-string="pod.pod.created"/>
                             </div>
                         </v-list-item-title>

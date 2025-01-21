@@ -15,6 +15,7 @@ import {PodioIntegration} from "./models";
 import {PostUpdateAction} from "./models";
 import {RbacPermission} from "./models";
 import {RbacRole} from "./models";
+import {System} from "./models";
 import {User} from "./models";
 import {Webhook} from "./models";
 import {WebhookDelivery} from "./models";
@@ -54,6 +55,8 @@ export interface DeploymentPackageDeploymentSpecification {
     defaultMemoryRequest?: number;
     defaultMemoryLimit?: number;
     defaultReplicas?: number;
+    defaultKnativeConcurrencyLimitSoft?: number;
+    defaultKnativeConcurrencyLimitHard?: number;
     defaultAutoUpdateEnabled?: boolean;
     defaultAutoUpdateTagRegex?: string;
     defaultAutoUpdateRequireApproval?: boolean;
@@ -139,6 +142,16 @@ export interface EnvironmentsGetResponse {
     name?: string;
 }
 
+export interface HttpProxyRoute {
+    path?: string;
+    port?: number;
+    protocol?: string;
+}
+
+export interface HttpProxyRouteList {
+    values?: HttpProxyRoute[];
+}
+
 export interface Ingress {
     ingressClass?: string;
     proxyBodySize?: number;
@@ -200,7 +213,8 @@ export interface KubernetesNodeInfoResponse {
 
 export interface KubernetesPod {
     namespace?: string;
-    name?: string;
+    pod?: string;
+    container?: string;
     created?: string;
     status?: string;
 }
@@ -1978,6 +1992,27 @@ export class DeploymentSpecificationsUpdateCronJobsPutById extends BaseApi<Deplo
     }
 }
 
+export class DeploymentSpecificationsUpdateDeploymentHttpProxyRoutesPutById extends BaseApi<DeploymentSpecification> {
+
+    public topic = 'Resources.DeploymentSpecifications';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/deployment-specifications/${id}/http-proxy-routes`;
+    }
+
+    protected convertToResource(data: any): DeploymentSpecification {
+        return new DeploymentSpecification(data);
+    }
+
+    public save(data: HttpProxyRouteList, next?: (value: DeploymentSpecification) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
 class DeploymentSpecifications {
 
     public get(): DeploymentSpecificationsGet {
@@ -2058,6 +2093,10 @@ class DeploymentSpecifications {
 
     public updateCronJobsPutById(id: number): DeploymentSpecificationsUpdateCronJobsPutById {
         return new DeploymentSpecificationsUpdateCronJobsPutById(id);
+    }
+
+    public updateDeploymentHttpProxyRoutesPutById(id: number): DeploymentSpecificationsUpdateDeploymentHttpProxyRoutesPutById {
+        return new DeploymentSpecificationsUpdateDeploymentHttpProxyRoutesPutById(id);
     }
 
 }
@@ -2473,8 +2512,18 @@ export class DeploymentsCreatePost extends BaseApi<Deployment> {
         return this;
     }
 
+    public workspaceId(value: number): DeploymentsCreatePost {
+        this.addQueryParameter('workspaceId', value);
+        return this;
+    }
+
     public namespace(value: string): DeploymentsCreatePost {
         this.addQueryParameter('namespace', value);
+        return this;
+    }
+
+    public version(value: string): DeploymentsCreatePost {
+        this.addQueryParameter('version', value);
         return this;
     }
 
@@ -2526,6 +2575,32 @@ export class DeploymentsUpdateEnvironmentPutById extends BaseApi<Deployment> {
     }
 
     public value(value: string): DeploymentsUpdateEnvironmentPutById {
+        this.addQueryParameter('value', value);
+        return this;
+    }
+
+    public save(data: any, next?: (value: Deployment) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class DeploymentsUpdateWorkspacePutById extends BaseApi<Deployment> {
+
+    public topic = 'Resources.Deployments';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/deployments/${id}/workspace`;
+    }
+
+    protected convertToResource(data: any): Deployment {
+        return new Deployment(data);
+    }
+
+    public value(value: number): DeploymentsUpdateWorkspacePutById {
         this.addQueryParameter('value', value);
         return this;
     }
@@ -2597,7 +2672,7 @@ export class DeploymentsUpdateIngressPutById extends BaseApi<Deployment> {
     }
 }
 
-export class DeploymentsUpdateResourceManagemnetPutById extends BaseApi<Deployment> {
+export class DeploymentsUpdateResourceManagementPutById extends BaseApi<Deployment> {
 
     public topic = 'Resources.Deployments';
     protected method = 'put';
@@ -2613,27 +2688,27 @@ export class DeploymentsUpdateResourceManagemnetPutById extends BaseApi<Deployme
         return new Deployment(data);
     }
 
-    public cpuLimit(value: number): DeploymentsUpdateResourceManagemnetPutById {
+    public cpuLimit(value: number): DeploymentsUpdateResourceManagementPutById {
         this.addQueryParameter('cpuLimit', value);
         return this;
     }
 
-    public cpuRequest(value: number): DeploymentsUpdateResourceManagemnetPutById {
+    public cpuRequest(value: number): DeploymentsUpdateResourceManagementPutById {
         this.addQueryParameter('cpuRequest', value);
         return this;
     }
 
-    public memoryLimit(value: number): DeploymentsUpdateResourceManagemnetPutById {
+    public memoryLimit(value: number): DeploymentsUpdateResourceManagementPutById {
         this.addQueryParameter('memoryLimit', value);
         return this;
     }
 
-    public memoryRequest(value: number): DeploymentsUpdateResourceManagemnetPutById {
+    public memoryRequest(value: number): DeploymentsUpdateResourceManagementPutById {
         this.addQueryParameter('memoryRequest', value);
         return this;
     }
 
-    public replicas(value: number): DeploymentsUpdateResourceManagemnetPutById {
+    public replicas(value: number): DeploymentsUpdateResourceManagementPutById {
         this.addQueryParameter('replicas', value);
         return this;
     }
@@ -2671,11 +2746,6 @@ export class DeploymentsUpdateUpdateManagementPutById extends BaseApi<Deployment
 
     public requireApproval(value: boolean): DeploymentsUpdateUpdateManagementPutById {
         this.addQueryParameter('requireApproval', value);
-        return this;
-    }
-
-    public enablePodioNotification(value: boolean): DeploymentsUpdateUpdateManagementPutById {
-        this.addQueryParameter('enablePodioNotification', value);
         return this;
     }
 
@@ -2726,7 +2796,7 @@ export class DeploymentsUpdateDeploymentVolumesPutById extends BaseApi<Deploymen
     }
 }
 
-export class DeploymentsUpdateCustomResourcePutById extends BaseApi<Deployment> {
+export class DeploymentsUpdateLabelsPutById extends BaseApi<Deployment> {
 
     public topic = 'Resources.Deployments';
     protected method = 'put';
@@ -2735,19 +2805,14 @@ export class DeploymentsUpdateCustomResourcePutById extends BaseApi<Deployment> 
 
     public constructor(id: number) {
         super();
-        this.uri = `/deployments/${id}/custom-resource`;
+        this.uri = `/deployments/${id}/labels`;
     }
 
     protected convertToResource(data: any): Deployment {
         return new Deployment(data);
     }
 
-    public content(value: string): DeploymentsUpdateCustomResourcePutById {
-        this.addQueryParameter('content', value);
-        return this;
-    }
-
-    public save(data: any, next?: (value: Deployment) => void) {
+    public save(data: LabelList, next?: (value: Deployment) => void) {
         return super.executeSave(data, next);
     }
 }
@@ -2815,27 +2880,6 @@ export class DeploymentsGetDeploymentSpecificationGetById extends BaseApi<Deploy
     }
 }
 
-export class DeploymentsUpdateLabelsPutById extends BaseApi<Deployment> {
-
-    public topic = 'Resources.Deployments';
-    protected method = 'put';
-    protected scope = '';
-    protected summary = '';
-
-    public constructor(id: number) {
-        super();
-        this.uri = `/deployments/${id}/labels`;
-    }
-
-    protected convertToResource(data: any): Deployment {
-        return new Deployment(data);
-    }
-
-    public save(data: LabelList, next?: (value: Deployment) => void) {
-        return super.executeSave(data, next);
-    }
-}
-
 class Deployments {
 
     public get(): DeploymentsGet {
@@ -2870,6 +2914,10 @@ class Deployments {
         return new DeploymentsUpdateEnvironmentPutById(id);
     }
 
+    public updateWorkspacePutById(id: number): DeploymentsUpdateWorkspacePutById {
+        return new DeploymentsUpdateWorkspacePutById(id);
+    }
+
     public updateDatabaseServiceIdPutById(id: number): DeploymentsUpdateDatabaseServiceIdPutById {
         return new DeploymentsUpdateDatabaseServiceIdPutById(id);
     }
@@ -2878,8 +2926,8 @@ class Deployments {
         return new DeploymentsUpdateIngressPutById(id);
     }
 
-    public updateResourceManagemnetPutById(id: number): DeploymentsUpdateResourceManagemnetPutById {
-        return new DeploymentsUpdateResourceManagemnetPutById(id);
+    public updateResourceManagementPutById(id: number): DeploymentsUpdateResourceManagementPutById {
+        return new DeploymentsUpdateResourceManagementPutById(id);
     }
 
     public updateUpdateManagementPutById(id: number): DeploymentsUpdateUpdateManagementPutById {
@@ -2894,8 +2942,8 @@ class Deployments {
         return new DeploymentsUpdateDeploymentVolumesPutById(id);
     }
 
-    public updateCustomResourcePutById(id: number): DeploymentsUpdateCustomResourcePutById {
-        return new DeploymentsUpdateCustomResourcePutById(id);
+    public updateLabelsPutById(id: number): DeploymentsUpdateLabelsPutById {
+        return new DeploymentsUpdateLabelsPutById(id);
     }
 
     public getStatusGetById(id: number): DeploymentsGetStatusGetById {
@@ -2908,10 +2956,6 @@ class Deployments {
 
     public getDeploymentSpecificationGetById(id: number): DeploymentsGetDeploymentSpecificationGetById {
         return new DeploymentsGetDeploymentSpecificationGetById(id);
-    }
-
-    public updateLabelsPutById(id: number): DeploymentsUpdateLabelsPutById {
-        return new DeploymentsUpdateLabelsPutById(id);
     }
 
 }
@@ -3200,6 +3244,48 @@ export class DomainsGetCertificateStatusGetById extends BaseApi<DomainsGetCertif
     }
 }
 
+export class DomainsApplyIstioGatewayPutById extends BaseApi<Domain> {
+
+    public topic = 'Resources.Domains';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/domains/${id}/istio-gateway/apply`;
+    }
+
+    protected convertToResource(data: any): Domain {
+        return new Domain(data);
+    }
+
+    public save(data: any, next?: (value: Domain) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class DomainsTerminateIstioGatewayPutById extends BaseApi<Domain> {
+
+    public topic = 'Resources.Domains';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/domains/${id}/istio-gateway/terminate`;
+    }
+
+    protected convertToResource(data: any): Domain {
+        return new Domain(data);
+    }
+
+    public save(data: any, next?: (value: Domain) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
 class Domains {
 
     public get(): DomainsGet {
@@ -3236,6 +3322,14 @@ class Domains {
 
     public getCertificateStatusGetById(id: number): DomainsGetCertificateStatusGetById {
         return new DomainsGetCertificateStatusGetById(id);
+    }
+
+    public applyIstioGatewayPutById(id: number): DomainsApplyIstioGatewayPutById {
+        return new DomainsApplyIstioGatewayPutById(id);
+    }
+
+    public terminateIstioGatewayPutById(id: number): DomainsTerminateIstioGatewayPutById {
+        return new DomainsTerminateIstioGatewayPutById(id);
     }
 
 }
@@ -4074,23 +4168,23 @@ export class KubernetesGetPodsGetByNamespace extends BaseApi<KubernetesPod> {
     }
 }
 
-export class KubernetesExecPutByNamespaceByName extends BaseApi<KubernetesExecResponse> {
+export class KubernetesExecPutByNamespaceByNameByContainer extends BaseApi<KubernetesExecResponse> {
 
     public topic = 'Resources.KubernetesExecResponses';
     protected method = 'put';
     protected scope = '';
     protected summary = '';
 
-    public constructor(namespace: string, name: string) {
+    public constructor(namespace: string, name: string, container: string) {
         super();
-        this.uri = `/kubernetes/namespaces/${namespace}/pods/${name}/exec`;
+        this.uri = `/kubernetes/namespaces/${namespace}/pods/${name}/containers/${container}/exec`;
     }
 
     protected convertToResource(data: any): KubernetesExecResponse {
         return data;
     }
 
-    public command(value: string): KubernetesExecPutByNamespaceByName {
+    public command(value: string): KubernetesExecPutByNamespaceByNameByContainer {
         this.addQueryParameter('command', value);
         return this;
     }
@@ -4100,16 +4194,16 @@ export class KubernetesExecPutByNamespaceByName extends BaseApi<KubernetesExecRe
     }
 }
 
-export class KubernetesGetLogsGetByNamespaceByPod extends BaseApi<KubernetesLogEntry> {
+export class KubernetesGetLogsGetByNamespaceByPodByContainer extends BaseApi<KubernetesLogEntry> {
 
     public topic = 'Resources.KubernetesLogEntries';
     protected method = 'get';
     protected scope = '';
     protected summary = '';
 
-    public constructor(namespace: string, pod: string) {
+    public constructor(namespace: string, pod: string, container: string) {
         super();
-        this.uri = `/kubernetes/namespaces/${namespace}/pods/${pod}/logs`;
+        this.uri = `/kubernetes/namespaces/${namespace}/pods/${pod}/containers/${container}/logs`;
     }
 
     protected convertToResource(data: any): KubernetesLogEntry {
@@ -4121,16 +4215,16 @@ export class KubernetesGetLogsGetByNamespaceByPod extends BaseApi<KubernetesLogE
     }
 }
 
-export class KubernetesWatchLogsPutByNamespaceByPod extends BaseApi<any> {
+export class KubernetesWatchLogsPutByNamespaceByPodByContainer extends BaseApi<any> {
 
     public topic = 'UnknownResource';
     protected method = 'put';
     protected scope = '';
     protected summary = '';
 
-    public constructor(namespace: string, pod: string) {
+    public constructor(namespace: string, pod: string, container: string) {
         super();
-        this.uri = `/kubernetes/namespaces/${namespace}/pods/${pod}/logs/watch`;
+        this.uri = `/kubernetes/namespaces/${namespace}/pods/${pod}/containers/${container}/logs/watch`;
     }
 
     protected convertToResource(data: any): any {
@@ -4190,16 +4284,16 @@ class Kubernetes {
         return new KubernetesGetPodsGetByNamespace(namespace);
     }
 
-    public execPutByNamespaceByName(namespace: string, name: string): KubernetesExecPutByNamespaceByName {
-        return new KubernetesExecPutByNamespaceByName(namespace, name);
+    public execPutByNamespaceByNameByContainer(namespace: string, name: string, container: string): KubernetesExecPutByNamespaceByNameByContainer {
+        return new KubernetesExecPutByNamespaceByNameByContainer(namespace, name, container);
     }
 
-    public getLogsGetByNamespaceByPod(namespace: string, pod: string): KubernetesGetLogsGetByNamespaceByPod {
-        return new KubernetesGetLogsGetByNamespaceByPod(namespace, pod);
+    public getLogsGetByNamespaceByPodByContainer(namespace: string, pod: string, container: string): KubernetesGetLogsGetByNamespaceByPodByContainer {
+        return new KubernetesGetLogsGetByNamespaceByPodByContainer(namespace, pod, container);
     }
 
-    public watchLogsPutByNamespaceByPod(namespace: string, pod: string): KubernetesWatchLogsPutByNamespaceByPod {
-        return new KubernetesWatchLogsPutByNamespaceByPod(namespace, pod);
+    public watchLogsPutByNamespaceByPodByContainer(namespace: string, pod: string, container: string): KubernetesWatchLogsPutByNamespaceByPodByContainer {
+        return new KubernetesWatchLogsPutByNamespaceByPodByContainer(namespace, pod, container);
     }
 
     public rbacShowGet(): KubernetesRbacShowGet {
@@ -5682,6 +5776,61 @@ class RbacRoles {
 }
 
 
+export class SystemsPatchById extends BaseApi<System> {
+
+    public topic = 'Resources.Systems';
+    protected method = 'patch';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/systems/${id}`;
+    }
+
+    protected convertToResource(data: any): System {
+        return new System(data);
+    }
+
+    public save(data: System, next?: (value: System) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class SystemsPatch extends BaseApi<System> {
+
+    public topic = 'Resources.Systems';
+    protected method = 'patch';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/systems`;
+    }
+
+    protected convertToResource(data: any): System {
+        return new System(data);
+    }
+
+    public save(data: System, next?: (value: System) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+class Systems {
+
+    public patchById(id: number): SystemsPatchById {
+        return new SystemsPatchById(id);
+    }
+
+    public patch(): SystemsPatch {
+        return new SystemsPatch();
+    }
+
+}
+
+
 export class UsersGet extends BaseApi<User> {
 
     public topic = 'Resources.Users';
@@ -6635,6 +6784,11 @@ export class WorkspacesCreatePost extends BaseApi<Workspace> {
         return this;
     }
 
+    public namespace(value: string): WorkspacesCreatePost {
+        this.addQueryParameter('namespace', value);
+        return this;
+    }
+
     public domainId(value: number): WorkspacesCreatePost {
         this.addQueryParameter('domainId', value);
         return this;
@@ -6678,6 +6832,11 @@ export class WorkspacesCreateDeploymentPostById extends BaseApi<Deployment> {
 
     public namespace(value: string): WorkspacesCreateDeploymentPostById {
         this.addQueryParameter('namespace', value);
+        return this;
+    }
+
+    public version(value: string): WorkspacesCreateDeploymentPostById {
+        this.addQueryParameter('version', value);
         return this;
     }
 
@@ -7059,6 +7218,10 @@ export class Api {
 
     public static rbacRoles(): RbacRoles {
         return new RbacRoles();
+    }
+
+    public static systems(): Systems {
+        return new Systems();
     }
 
     public static users(): Users {

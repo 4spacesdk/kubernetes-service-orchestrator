@@ -92,12 +92,6 @@ class MigrationVerificationTypes {
         Regex = 'regex';
 }
 
-class DeploymentSpecificationTypes {
-    const string
-        Deployment = 'deployment',
-        Custom = 'custom';
-}
-
 class ContainerRegistries {
     const string
         ArtifactContainerRegistry = 'artifact-container-registry',
@@ -140,6 +134,23 @@ class CronJobRestartPolicies {
         Always = 'Always',
         OnFailure = 'OnFailure',
         Never = 'Never'
+    ;
+}
+
+class WorkloadTypes {
+    const string
+        Deployment = 'deployment',
+        KNativeService = 'knative-service',
+        DaemonSet = 'daemon-set',
+        CustomResource = 'custom-resource'
+    ;
+}
+
+class NetworkTypes {
+    const string
+        NginxIngress = 'nginx-ingress',
+        Istio = 'istio',
+        Contour = 'contour'
     ;
 }
 

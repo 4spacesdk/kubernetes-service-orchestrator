@@ -6,6 +6,7 @@
 import {DeploymentSpecificationDefinition} from './definitions/DeploymentSpecificationDefinition';
 import {Deployment} from "@/core/services/Deploy/models/Deployment";
 import {MigrationVerificationTypes} from "@/constants";
+import {Domain} from "@/core/services/Deploy/models/Domain";
 
 export class DeploymentSpecification extends DeploymentSpecificationDefinition {
 
@@ -15,19 +16,21 @@ export class DeploymentSpecification extends DeploymentSpecificationDefinition {
 
     public static Create(type: string): DeploymentSpecification {
         const item = new DeploymentSpecification();
-        item.type = type;
+        item.workload_type = type;
         item.custom_resource = '';
         item.database_migration_verification_type = MigrationVerificationTypes.EndsWith;
         item.database_migration_verification_value = 'Done migrations.';
         return item;
     }
 
-    public generateUrl(deployment: Deployment, includeTls: boolean): string {
+    public generateUrl(subdomain: string, domain: Domain, includeTls: boolean, includeSuffix: boolean): string {
         const tls = includeTls ? `${this.domain_tls}://` : '';
-        const domain = deployment.subdomain?.length
-            ? `${deployment.subdomain}.${deployment.domain?.name}`
-            : deployment.domain?.name;
-        return `${tls}${this.domain_prefix}${domain}${this.domain_suffix}`;
+        let url = domain.name!;
+        if (subdomain.length > 0) {
+            url = `${subdomain}.${url}`;
+        }
+        const suffix = includeSuffix ? (this.domain_suffix ?? '') : '';
+        return `${tls}${this.domain_prefix}${url}${suffix}`;
     }
 
 }

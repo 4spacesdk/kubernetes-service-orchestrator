@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
-import {Deployment, Workspace} from "@/core/services/Deploy/models";
+import {Deployment, Domain, Workspace} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import {DeploymentStatusTypes} from "@/constants";
 import {WampSubscription} from "@/services/Wamp/WampSubscription";
@@ -37,11 +37,17 @@ onUnmounted(() => {
 
 function setup() {
     rows.value = props.workspace.deployments
-        ?.filter(deployment => deployment.deployment_specification?.enable_ingress ?? false)
+        ?.filter(deployment => deployment.deployment_specification?.enable_external_access ?? false)
         ?.map(deployment => {
             return {
                 deployment: deployment,
-                url: deployment.deployment_specification?.generateUrl(deployment, true) ?? 'missing url',
+                url: deployment.url_external ?? 'missing url',
+                /*url: deployment.deployment_specification?.generateUrl(
+                    props.workspace.subdomain ?? '',
+                    props.workspace.domain ?? new Domain(),
+                    true,
+                    true
+                ) ?? 'missing url',*/
             };
         }) ?? [];
 

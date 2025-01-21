@@ -69,7 +69,7 @@ function onCommandSubmitted() {
     commandHistory.value.push(commandInput.value);
     currentCommandHistoryIndex.value = commandHistory.value.length;
 
-    Api.kubernetes().execPutByNamespaceByName(pod.value?.namespace!, pod.value?.name!)
+    Api.kubernetes().execPutByNamespaceByNameByContainer(pod.value?.namespace!, pod.value?.pod!, pod.value?.container!)
         .command(commandInput.value)
         .save(null, response => {
             if (response) {
@@ -144,16 +144,22 @@ function clearCommandInput() {
             color="blue-grey lighten-5"
             class="d-flex w-100 flex-column"
         >
-            <div class="d-flex flex-grow-1 px-5">
-                <div>
-                    <span>Pod name: </span> <strong>{{ pod?.name || 'Loading...' }}</strong>
+            <div class="d-flex flex-grow-1 px-5 ga-6">
+                <div class="d-flex flex-column">
+                    <span>Pod name</span>
+                    <strong>{{ pod?.pod || 'Loading...' }}</strong>
                 </div>
-                <div class="mx-1">
-                    <span>Pod created: </span>
+                <div class="d-flex flex-column">
+                    <span>Container name</span>
+                    <strong>{{ pod?.container }}</strong>
+                </div>
+                <div class="d-flex flex-column">
+                    <span>Pod created</span>
                     <DateView :date-string="pod?.created"/>
                 </div>
-                <div class="mx-1">
-                    <span>Pod status: </span> <strong>{{ pod?.status }}</strong>
+                <div class="d-flex flex-column">
+                    <span>Pod status</span>
+                    <strong>{{ pod?.status }}</strong>
                 </div>
             </div>
 

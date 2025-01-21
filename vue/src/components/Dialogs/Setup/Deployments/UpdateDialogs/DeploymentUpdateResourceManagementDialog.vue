@@ -4,6 +4,7 @@ import {Deployment} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
+import {WorkloadTypes} from "@/constants";
 
 export interface DeploymentUpdateResourceManagementDialog_Input {
     deployment: Deployment;
@@ -19,6 +20,8 @@ const cpuRequest = ref<number>();
 const memoryLimit = ref<number>();
 const memoryRequest = ref<number>();
 const replicas = ref<number>();
+const knativeConcurrencyLimitSoft = ref<number>();
+const knativeConcurrencyLimitHard = ref<number>();
 
 // <editor-fold desc="Functions">
 
@@ -39,6 +42,8 @@ function render() {
     memoryLimit.value = props.input.deployment.memory_limit ?? 0;
     memoryRequest.value = props.input.deployment.memory_request ?? 0;
     replicas.value = props.input.deployment.replicas ?? 0;
+    knativeConcurrencyLimitSoft.value = props.input.deployment.knative_concurrency_limit_soft ?? 0;
+    knativeConcurrencyLimitHard.value = props.input.deployment.knative_concurrency_limit_hard ?? 0;
     showDialog.value = true;
 }
 
@@ -52,7 +57,7 @@ function close() {
 // <editor-fold desc="View Binding Functions">
 
 function onSaveBtnClicked() {
-    const api = Api.deployments().updateResourceManagemnetPutById(props.input.deployment.id!)
+    const api = Api.deployments().updateResourceManagementPutById(props.input.deployment.id!)
         .cpuLimit(cpuLimit.value!)
         .cpuRequest(cpuRequest.value!)
         .memoryLimit(memoryLimit.value!)
@@ -132,7 +137,10 @@ function onCloseBtnClicked() {
                             label="Memory Limit"/>
                     </v-col>
 
-                    <v-col cols="12">
+                    <v-col
+                        v-if="props.input.deployment.deployment_specification.workload_type !== WorkloadTypes.KNativeService"
+                        cols="12"
+                    >
                         <v-text-field
                             v-model.number="replicas"
                             type="number"
@@ -140,6 +148,30 @@ function onCloseBtnClicked() {
                             hint="0 = not running, 1 = testing purposes, 3 = production"
                             persistent-hint
                             label="Replicas"/>
+                    </v-col>
+                    <v-col
+                        v-if="props.input.deployment.deployment_specification.workload_type == WorkloadTypes.KNativeService"
+                        cols="6"
+                    >
+                        <v-text-field
+                            v-model.number="knativeConcurrencyLimitSoft"
+                            type="number"
+                            variant="outlined"
+                            hint=""
+                            persistent-hint
+                            label="Container Concurrency Soft Limit"/>
+                    </v-col>
+                    <v-col
+                        v-if="props.input.deployment.deployment_specification.workload_type == WorkloadTypes.KNativeService"
+                        cols="6"
+                    >
+                        <v-text-field
+                            v-model.number="knativeConcurrencyLimitHard"
+                            type="number"
+                            variant="outlined"
+                            hint=""
+                            persistent-hint
+                            label="Container Concurrency Hard Limit"/>
                     </v-col>
                 </v-row>
             </v-card-text>

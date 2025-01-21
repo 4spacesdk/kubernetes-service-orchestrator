@@ -2,6 +2,7 @@
 
 use App\Entities\Deployment;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
+use App\Libraries\DeploymentSteps\Helpers\DeploymentStepLevels;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
 use App\Libraries\Kubernetes\KubeAuth;
 use App\Libraries\Kubernetes\KubeHelper;
@@ -14,8 +15,18 @@ class ServiceAccountStep extends BaseDeploymentStep {
         return DeploymentSteps::ServiceAccount;
     }
 
+    public function getLevel(): string {
+        return DeploymentStepLevels::Deployment;
+    }
+
     public function getName(): string {
         return 'Service Account';
+    }
+
+    public function getTriggers(): array {
+        return [
+
+        ];
     }
 
     public function hasPreviewCommand(): bool {

@@ -4,7 +4,7 @@ import {Deployment, DeploymentSpecification, Workspace} from "@/core/services/De
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
-import {DeploymentSpecificationTypes} from "@/constants";
+import {WorkloadTypes} from "@/constants";
 
 export interface DeploymentCreateDialog_Input {
     spec: DeploymentSpecification;
@@ -20,6 +20,13 @@ const showDialog = ref(false);
 
 const item = ref<Deployment>(new Deployment());
 const isSaving = ref(false);
+
+const workspaceItems = ref<Workspace[]>();
+const isLoadingWorkspaces = ref(false);
+
+const showTags = ref(false);
+const tags = ref<string[]>([]);
+const isLoadingTags = ref(false);
 
 // <editor-fold desc="Functions">
 
@@ -38,7 +45,24 @@ function render() {
     item.value.name = props.input.spec.name;
     item.value.namespace = props.input.workspace?.namespace ?? '';
     item.value.image = props.input.spec.container_image?.url;
+    item.value.workspace_id = props.input.workspace?.id;
+    showTags.value = props.input.spec.container_image_id !== undefined;
     showDialog.value = true;
+
+    isLoadingWorkspaces.value = true;
+    Api.workspaces().get().find(workspaces => {
+        workspaceItems.value = workspaces;
+        isLoadingWorkspaces.value = false;
+    });
+
+    if (showTags.value) {
+        isLoadingTags.value = true;
+        Api.deploymentSpecifications().getTagsGetById(props.input.spec.id!)
+            .find(response => {
+                tags.value = response[0]?.tags ?? [];
+                isLoadingTags.value = false;
+            });
+    }
 }
 
 function close() {
@@ -50,27 +74,41 @@ function close() {
 
 // <editor-fold desc="View Binding Functions">
 
+function onWorkspaceChanged() {
+    if (item.value.workspace_id) {
+        item.value.namespace = workspaceItems.value
+            ?.find(workspace => workspace.id === item.value.workspace_id)
+            ?.namespace ?? '';
+    } else {
+        item.value.namespace = '';
+    }
+}
+
 function onSaveBtnClicked() {
     isSaving.value = true;
 
-    const api = props.input.workspace !== undefined
-        ? Api.workspaces().createDeploymentPostById(props.input.workspace.id!)
-        : Api.deployments().createPost();
+    let api;
+    if (props.input.workspace !== undefined) {
+        api = Api.workspaces().createDeploymentPostById(props.input.workspace.id!);
+    } else {
+        api = Api.deployments().createPost()
+            .workspaceId(item.value.workspace_id!)
+    }
 
     api
         .deploymentSpecificationId(props.input!.spec!.id!)
         .namespace(item.value.namespace!)
-        .name(item.value.name!);
-
-    api.setErrorHandler(response => {
-        if (response.error) {
-            bus.emit('toast', {
-                text: response.error
-            });
-        }
-        isSaving.value = false;
-        return false;
-    });
+        .name(item.value.name!)
+        .version(item.value.version!)
+        .setErrorHandler(response => {
+            if (response.error) {
+                bus.emit('toast', {
+                    text: response.error
+                });
+            }
+            isSaving.value = false;
+            return false;
+        });
     api.save(item.value!, newItem => {
         if (newItem) {
             isSaving.value = false;
@@ -105,49 +143,94 @@ function onCloseBtnClicked() {
             </v-card-title>
             <v-divider/>
             <v-card-text>
-                <v-row
-                    dense>
+                <v-row>
                     <v-col
-                        v-if="props.input.spec.type == DeploymentSpecificationTypes.Deployment"
+                        v-if="props.input.spec.workload_type !== WorkloadTypes.CustomResource"
                         cols="12"
                     >
                         <v-text-field
                             v-model="item.image"
                             :disabled="true"
                             variant="outlined"
-                            label="Image"/>
+                            label="Image"
+                            density="compact"
+                            hide-details
+                        />
                     </v-col>
                     <v-col
-                        v-if="props.input.spec.type == DeploymentSpecificationTypes.Deployment"
-                        cols="4"
+                        v-if="props.input.spec.workload_type !== WorkloadTypes.CustomResource"
+                        cols="6"
                     >
                         <v-checkbox
                             v-model="props.input.spec.enable_database"
                             :disabled="true"
                             color="black"
-                            label="Database"/>
+                            label="Database"
+                            density="compact"
+                            hide-details
+                        />
                     </v-col>
                     <v-col
-                        v-if="props.input.spec.type == DeploymentSpecificationTypes.Deployment"
-                        cols="4"
+                        v-if="props.input.spec.workload_type !== WorkloadTypes.CustomResource"
+                        cols="6"
                     >
                         <v-checkbox
                             v-model="props.input.spec.enable_cronjob"
                             :disabled="true"
                             color="black"
-                            label="CronJob"/>
+                            label="CronJob"
+                            density="compact"
+                            hide-details
+                        />
                     </v-col>
                     <v-col
-                        v-if="props.input.spec.type == DeploymentSpecificationTypes.Deployment"
-                        cols="4"
+                        v-if="props.input.spec.workload_type !== WorkloadTypes.CustomResource"
+                        cols="6"
                     >
                         <v-checkbox
-                            v-model="props.input.spec.enable_ingress"
+                            v-model="props.input.spec.enable_external_access"
                             :disabled="true"
                             color="black"
-                            label="Ingress"/>
+                            label="External Access"
+                            density="compact"
+                            hide-details
+                        />
+                    </v-col>
+                    <v-col
+                        v-if="props.input.spec.workload_type !== WorkloadTypes.CustomResource"
+                        cols="6"
+                    >
+                        <v-checkbox
+                            v-model="props.input.spec.enable_internal_access"
+                            :disabled="true"
+                            color="black"
+                            label="Internal Access"
+                            density="compact"
+                            hide-details
+                        />
                     </v-col>
 
+                    <v-col cols="6">
+                        <v-select
+                            v-model="item.workspace_id"
+                            :items="workspaceItems"
+                            :loading="isLoadingWorkspaces"
+                            :disabled="props.input.workspace !== undefined"
+                            item-value="id"
+                            item-title="name"
+                            variant="outlined"
+                            label="Workspace"
+                            clearable
+                            @update:modelValue="onWorkspaceChanged"
+                        >
+                            <template v-slot:item="{ props, item }">
+                                <v-list-item
+                                    v-bind="props"
+                                    :subtitle="`Namespace: ${item.raw.namespace}`"
+                                />
+                            </template>
+                        </v-select>
+                    </v-col>
                     <v-col cols="6">
                         <v-text-field
                             v-model="item.namespace"
@@ -172,6 +255,17 @@ function onCloseBtnClicked() {
                             clearable
                             persistent-hint
                             hint="Max 63 characters, lowercase-only"/>
+                    </v-col>
+                    <v-col
+                        v-if="showTags"
+                        cols="6"
+                    >
+                        <v-select
+                            v-model="item.version"
+                            :loading="isLoadingTags"
+                            :items="tags"
+                            variant="outlined"
+                            label="Version"/>
                     </v-col>
                 </v-row>
             </v-card-text>

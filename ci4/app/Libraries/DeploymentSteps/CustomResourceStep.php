@@ -3,7 +3,9 @@
 use App\Entities\Deployment;
 use App\Entities\EnvironmentVariable;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
+use App\Libraries\DeploymentSteps\Helpers\DeploymentStepLevels;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
+use App\Libraries\DeploymentSteps\Helpers\DeploymentStepTriggers;
 use App\Libraries\Kubernetes\CustomResourceDefinitions\K8sCustomResource;
 use App\Libraries\Kubernetes\KubeAuth;
 use DebugTool\Data;
@@ -17,8 +19,18 @@ class CustomResourceStep extends BaseDeploymentStep {
         return DeploymentSteps::CustomResource;
     }
 
+    public function getLevel(): string {
+        return DeploymentStepLevels::Deployment;
+    }
+
     public function getName(): string {
         return 'Custom Resource';
+    }
+
+    public function getTriggers(): array {
+        return [
+            DeploymentStepTriggers::Deployment_CustomResource_Updated,
+        ];
     }
 
     public function hasPreviewCommand(): bool {
@@ -82,9 +94,14 @@ class CustomResourceStep extends BaseDeploymentStep {
      */
     public function getStatus(Deployment $deployment): string {
         $resource = $this->getResource($deployment, true);
-        if ($resource->exists()) {
-            return DeploymentStepHelper::CustomResource_Found;
-        } else {
+        try {
+            if ($resource->exists()) {
+                return DeploymentStepHelper::CustomResource_Found;
+            } else {
+                return DeploymentStepHelper::CustomResource_NotFound;
+            }
+        } catch (\Exception $e) {
+            Data::debug($e->getMessage());
             return DeploymentStepHelper::CustomResource_NotFound;
         }
     }
@@ -94,7 +111,7 @@ class CustomResourceStep extends BaseDeploymentStep {
             return 'Missing namespace';
         }
 
-        if (strlen($deployment->custom_resource) == 0) {
+        if (strlen($deployment->findDeploymentSpecification()->custom_resource) == 0) {
             return 'Missing custom resource';
         }
 
@@ -140,7 +157,7 @@ class CustomResourceStep extends BaseDeploymentStep {
      * @throws \Exception
      */
     private function getResource(Deployment $deployment, bool $auth = false): K8sResource {
-        $yaml = yaml_parse(EnvironmentVariable::ApplyVariablesToString($deployment->custom_resource, $deployment));
+        $yaml = yaml_parse(EnvironmentVariable::ApplyVariablesToString($deployment->findDeploymentSpecification()->custom_resource, $deployment));
 
         Data::debug($yaml);
 

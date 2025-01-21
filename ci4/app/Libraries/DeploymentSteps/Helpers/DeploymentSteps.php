@@ -2,9 +2,15 @@
 
 class DeploymentSteps {
 
+    // Level: Workspace
+    const string
+        Namespace = 'namespace',
+        ContourHttpProxy = 'contour-http-proxy'
+    ;
+
+    // Level: Deployment
     const string
         Database = 'database',
-        Namespace = 'namespace',
         ClusterRole = 'cluster-role',
         Role = 'role',
         ServiceAccount = 'service-account',
@@ -15,9 +21,10 @@ class DeploymentSteps {
         Cronjob = 'cronjob',
         CustomResource = 'custom-resource',
         Deployment = 'deployment',
+        KService = 'kservice',
         Service = 'service',
         Ingress = 'ingress',
-        Redirects = 'redirects',
+        IstioVirtualService = 'istio-virtual-service',
         Migration = 'migration';
 
 }

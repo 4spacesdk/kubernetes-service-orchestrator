@@ -15,13 +15,6 @@ class AddDeploymentSpecificationTypes extends Migration {
             ->column('custom_resource', ColumnTypes::TEXT);
         Table::init('deployments')
             ->column('custom_resource', ColumnTypes::TEXT);
-        Database::connect()
-            ->table('deployment_specifications')
-            ->where('type', '')
-            ->set('type', \DeploymentSpecificationTypes::Deployment)
-            ->update();
-
-        ApiRoute::quick('/deployments/([0-9]+)/custom-resource', Deployments::class, 'updateCustomResource/$1', 'put');
     }
 
     public function down() {

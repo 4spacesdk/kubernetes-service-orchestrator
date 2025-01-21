@@ -3,7 +3,7 @@ import {computed, defineComponent, onMounted, reactive, ref, watch} from 'vue'
 import {Deployment, DeploymentSpecification} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
-import {DeploymentSpecificationTypes, DeploymentStatusTypes} from "@/constants";
+import {DeploymentStatusTypes, WorkloadTypes} from "@/constants";
 
 const props = defineProps<{
     deployment: Deployment
@@ -21,9 +21,6 @@ const isUpdateEnvironmentEnabled = ref(false);
 const showUpdateDatabaseService = ref(false);
 const isUpdateDatabaseServiceEnabled = ref(false);
 
-const showUpdateIngress = ref(false);
-const isUpdateIngressEnabled = ref(false);
-
 const showUpdateResourceManagement = ref(false);
 const isUpdateResourceManagementEnabled = ref(false);
 
@@ -35,9 +32,6 @@ const isUpdateEnvironmentVariablesEnabled = ref(false);
 
 const showUpdateVolumes = ref(false);
 const isUpdateVolumesEnabled = ref(false);
-
-const showUpdateCustomResource = ref(false);
-const isUpdateCustomResourceEnabled = ref(false);
 
 const showUpdateLabels = ref(false);
 const isUpdateLabelsEnabled = ref(false);
@@ -52,32 +46,26 @@ onMounted(() => {
 });
 
 function render() {
-    showUpdateVersion.value = spec.value?.type == DeploymentSpecificationTypes.Deployment;
+    showUpdateVersion.value = spec.value?.workload_type !== WorkloadTypes.CustomResource
     isUpdateVersionEnabled.value = true;
 
-    showUpdateEnvironment.value = spec.value?.type == DeploymentSpecificationTypes.Deployment;
+    showUpdateEnvironment.value = spec.value?.workload_type !== WorkloadTypes.CustomResource
     isUpdateEnvironmentEnabled.value = true;
 
     showUpdateDatabaseService.value = spec.value?.enable_database ?? false;
     isUpdateDatabaseServiceEnabled.value = props.deployment.status == DeploymentStatusTypes.Draft;
 
-    showUpdateIngress.value = spec.value?.enable_ingress ?? false;
-    isUpdateIngressEnabled.value = true;
-
-    showUpdateResourceManagement.value = spec.value?.type == DeploymentSpecificationTypes.Deployment;
+    showUpdateResourceManagement.value = spec.value?.workload_type !== WorkloadTypes.CustomResource
     isUpdateResourceManagementEnabled.value = true;
 
-    showUpdateUpdateManagement.value = spec.value?.type == DeploymentSpecificationTypes.Deployment;
+    showUpdateUpdateManagement.value = spec.value?.workload_type !== WorkloadTypes.CustomResource
     isUpdateUpdateManagementEnabled.value = true;
 
-    showUpdateEnvironmentVariables.value = spec.value?.type == DeploymentSpecificationTypes.Deployment;
+    showUpdateEnvironmentVariables.value = spec.value?.workload_type !== WorkloadTypes.CustomResource
     isUpdateEnvironmentVariablesEnabled.value = true;
 
     showUpdateVolumes.value = spec.value?.enable_volumes ?? false;
     isUpdateVolumesEnabled.value = true;
-
-    showUpdateCustomResource.value = spec.value?.type == DeploymentSpecificationTypes.Custom;
-    isUpdateCustomResourceEnabled.value = true;
 
     showUpdateLabels.value = true;
     isUpdateLabelsEnabled.value = true;
@@ -103,12 +91,6 @@ function onUpdateDatabaseServiceClicked() {
     });
 }
 
-function onUpdateIngressClicked() {
-    bus.emit('deploymentUpdateIngress', {
-        deployment: props.deployment
-    });
-}
-
 function onUpdateResourceManagementClicked() {
     bus.emit('deploymentUpdateResourceManagement', {
         deployment: props.deployment
@@ -129,12 +111,6 @@ function onUpdateEnvironmentVariablesClicked() {
 
 function onUpdateVolumesClicked() {
     bus.emit('deploymentUpdateVolumes', {
-        deployment: props.deployment
-    });
-}
-
-function onUpdateCustomResourceClicked() {
-    bus.emit('deploymentUpdateCustomResource', {
         deployment: props.deployment
     });
 }
@@ -195,20 +171,11 @@ function onUpdateLabelsClicked() {
                                     <span class="ml-2">Database Service</span>
                                 </v-list-item-title>
                             </v-list-item>
+                            <v-divider/>
                         </div>
                     </template>
                     Only available during setup
                 </v-tooltip>
-                <v-list-item
-                    v-if="showUpdateIngress"
-                    :disabled="!isUpdateIngressEnabled"
-                    dense
-                    @click="onUpdateIngressClicked">
-                    <v-list-item-title>
-                        <v-icon size="small" class="my-auto ml-2">fa fa-code-merge</v-icon>
-                        <span class="ml-2">Ingress</span>
-                    </v-list-item-title>
-                </v-list-item>
                 <v-list-item
                     v-if="showUpdateResourceManagement"
                     :disabled="!isUpdateResourceManagementEnabled"
@@ -247,16 +214,6 @@ function onUpdateLabelsClicked() {
                     <v-list-item-title>
                         <v-icon size="small" class="my-auto ml-2">fa fa-hard-drive</v-icon>
                         <span class="ml-2">Volumes</span>
-                    </v-list-item-title>
-                </v-list-item>
-                <v-list-item
-                    v-if="showUpdateCustomResource"
-                    :disabled="!isUpdateCustomResourceEnabled"
-                    dense
-                    @click="onUpdateCustomResourceClicked">
-                    <v-list-item-title>
-                        <v-icon size="small" class="my-auto ml-2">fa fa-file-lines</v-icon>
-                        <span class="ml-2">Custom Resource</span>
                     </v-list-item-title>
                 </v-list-item>
                 <v-list-item

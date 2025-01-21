@@ -3,7 +3,9 @@
 use App\Entities\Deployment;
 use App\Entities\DeploymentVolume;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
+use App\Libraries\DeploymentSteps\Helpers\DeploymentStepLevels;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
+use App\Libraries\DeploymentSteps\Helpers\DeploymentStepTriggers;
 use App\Libraries\Kubernetes\KubeAuth;
 use App\Models\DeploymentVolumeModel;
 use DebugTool\Data;
@@ -16,8 +18,18 @@ class PersistentVolumeClaimStep extends BaseDeploymentStep {
         return DeploymentSteps::PersistentVolumeClaim;
     }
 
+    public function getLevel(): string {
+        return DeploymentStepLevels::Deployment;
+    }
+
     public function getName(): string {
         return 'Persistent Volume Claim';
+    }
+
+    public function getTriggers(): array {
+        return [
+            DeploymentStepTriggers::Deployment_Volume_Updated,
+        ];
     }
 
     public function hasPreviewCommand(): bool {

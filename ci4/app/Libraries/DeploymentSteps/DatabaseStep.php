@@ -3,6 +3,7 @@
 use App\Entities\DatabaseService;
 use App\Entities\Deployment;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
+use App\Libraries\DeploymentSteps\Helpers\DeploymentStepLevels;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
 use Config\Database;
 
@@ -12,8 +13,18 @@ class DatabaseStep extends BaseDeploymentStep {
         return DeploymentSteps::Database;
     }
 
+    public function getLevel(): string {
+        return DeploymentStepLevels::Deployment;
+    }
+
     public function getName(): string {
         return 'Database';
+    }
+
+    public function getTriggers(): array {
+        return [
+
+        ];
     }
 
     public function hasPreviewCommand(): bool {

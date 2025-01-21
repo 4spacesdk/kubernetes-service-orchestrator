@@ -8,7 +8,9 @@ use App\Entities\Domain;
 use App\Entities\EnvironmentVariable;
 use App\Entities\MigrationJob;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
+use App\Libraries\DeploymentSteps\Helpers\DeploymentStepLevels;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
+use App\Libraries\DeploymentSteps\Helpers\DeploymentStepTriggers;
 use App\Libraries\Kubernetes\KubeAuth;
 use App\Libraries\Kubernetes\KubeHelper;
 use App\Models\ContainerImageModel;
@@ -28,8 +30,18 @@ class MigrationJobStep extends BaseDeploymentStep {
         return DeploymentSteps::Migration;
     }
 
+    public function getLevel(): string {
+        return DeploymentStepLevels::Deployment;
+    }
+
     public function getName(): string {
         return 'Migration Job';
+    }
+
+    public function getTriggers(): array {
+        return [
+            DeploymentStepTriggers::Deployment_Version_Updated,
+        ];
     }
 
     public function hasPreviewCommand(): bool {
@@ -140,18 +152,6 @@ class MigrationJobStep extends BaseDeploymentStep {
         $databaseService->find($deployment->database_service_id);
         if (!$databaseService->exists()) {
             return 'Database service no longer exists';
-        }
-
-        $spec = $deployment->findDeploymentSpecification();
-        if ($spec->enable_ingress) {
-            if (!$deployment->domain_id) {
-                return 'Missing domain';
-            }
-            $domain = new Domain();
-            $domain->find($deployment->domain_id);
-            if (!$domain->exists()) {
-                return 'domain no longer exists';
-            }
         }
 
         $namespaceStep = new NamespaceStep();

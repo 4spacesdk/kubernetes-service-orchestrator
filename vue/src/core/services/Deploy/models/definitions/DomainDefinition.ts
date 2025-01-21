@@ -12,6 +12,9 @@ export class DomainDefinition extends BaseModel {
     certificate_namespace?: string;
     certificate_name?: string;
     issuer_ref_name?: string;
+    enable_istio_gateway?: boolean;
+    enable_contour?: boolean;
+    contour_ingress_class_name?: string;
     workspaces?: Workspace[];
     deployments?: Deployment[];
     id?: number;
@@ -35,6 +38,9 @@ export class DomainDefinition extends BaseModel {
             delete this.certificate_namespace;
             delete this.certificate_name;
             delete this.issuer_ref_name;
+            delete this.enable_istio_gateway;
+            delete this.enable_contour;
+            delete this.contour_ingress_class_name;
             delete this.workspaces;
             delete this.deployments;
             delete this.id;
@@ -60,6 +66,15 @@ export class DomainDefinition extends BaseModel {
         }
         if (data.issuer_ref_name != null) {
             this.issuer_ref_name = data.issuer_ref_name;
+        }
+        if (data.enable_istio_gateway != null) {
+            this.enable_istio_gateway = data.enable_istio_gateway;
+        }
+        if (data.enable_contour != null) {
+            this.enable_contour = data.enable_contour;
+        }
+        if (data.contour_ingress_class_name != null) {
+            this.contour_ingress_class_name = data.contour_ingress_class_name;
         }
         if (data.workspaces != null) {
             this.workspaces = data.workspaces.map((i: any) => new Workspace(i));

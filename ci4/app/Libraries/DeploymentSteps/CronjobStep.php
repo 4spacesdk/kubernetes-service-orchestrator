@@ -4,6 +4,7 @@ use App\Entities\Deployment;
 use App\Entities\Domain;
 use App\Entities\EnvironmentVariable;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
+use App\Libraries\DeploymentSteps\Helpers\DeploymentStepLevels;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
 use App\Libraries\Kubernetes\KubeAuth;
 use App\Models\ContainerImageModel;
@@ -26,8 +27,18 @@ class CronjobStep extends BaseDeploymentStep {
         return DeploymentSteps::Cronjob;
     }
 
+    public function getLevel(): string {
+        return DeploymentStepLevels::Deployment;
+    }
+
     public function getName(): string {
         return 'Cron Job';
+    }
+
+    public function getTriggers(): array {
+        return [
+
+        ];
     }
 
     public function hasPreviewCommand(): bool {
@@ -123,28 +134,11 @@ class CronjobStep extends BaseDeploymentStep {
             return 'Missing namespace';
         }
 
-        if (!$deployment->domain_id) {
-            return 'Missing domain';
-        }
-
-        $spec = $deployment->findDeploymentSpecification();
-        if ($spec->enable_ingress) {
-            $domain = new Domain();
-            $domain->find($deployment->domain_id);
-            if (!$domain->exists()) {
-                return 'domain no longer exists';
-            }
-        }
-
         $namespaceStep = new NamespaceStep();
         if ($namespaceStep->getStatus($deployment) != DeploymentStepHelper::Namespace_Found) {
             return 'Missing Namespace';
         }
 
-        $ingressStep = new IngressStep();
-        if ($ingressStep->getStatus($deployment) != DeploymentStepHelper::Ingress_Found) {
-            return 'Missing Ingress';
-        }
         return null;
     }
 

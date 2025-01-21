@@ -6,6 +6,7 @@ use App\Entities\DeploymentSpecificationClusterRoleRule;
 use App\Entities\DeploymentSpecificationCronJob;
 use App\Entities\DeploymentSpecificationDeploymentAnnotation;
 use App\Entities\DeploymentSpecificationEnvironmentVariable;
+use App\Entities\DeploymentSpecificationHttpProxyRoute;
 use App\Entities\DeploymentSpecificationIngress;
 use App\Entities\DeploymentSpecificationPostCommand;
 use App\Entities\DeploymentSpecificationPostUpdateAction;
@@ -18,6 +19,7 @@ use App\Entities\DeploymentSpecificationInitContainer;
 use App\Interfaces\ClusterRoleRuleList;
 use App\Interfaces\DeploymentAnnotationList;
 use App\Interfaces\EnvironmentVariableList;
+use App\Interfaces\HttpProxyRouteList;
 use App\Interfaces\IngressList;
 use App\Interfaces\IntArrayInterface;
 use App\Interfaces\LabelList;
@@ -152,7 +154,7 @@ class DeploymentSpecifications extends ResourceController {
                     $data->protocol,
                     $data->name,
                     $data->port,
-                    $data->targetPort
+                    $data->targetPort ?? $data->port
                 ),
                 $body->values
             );
@@ -412,6 +414,31 @@ class DeploymentSpecifications extends ResourceController {
             );
 
             $item->updateCronJobs($values);
+        }
+        $this->_setResource($item);
+        $this->success();
+    }
+
+    /**
+     * @route /deployment-specifications/{id}/http-proxy-routes
+     * @method put
+     * @custom true
+     * @param int $id
+     * @requestSchema HttpProxyRouteList
+     * @return void
+     */
+    public function updateDeploymentHttpProxyRoutes(int $id): void {
+        $item = new DeploymentSpecification();
+        $item->find($id);
+        if ($item->exists()) {
+            /** @var HttpProxyRouteList $body */
+            $body = $this->request->getJSON();
+            $values = new DeploymentSpecificationHttpProxyRoute();
+            $values->all = array_map(
+                fn($data) => DeploymentSpecificationHttpProxyRoute::Create($data->path, $data->port, $data->protocol),
+                $body->values
+            );
+            $item->updateHttpProxyRoutes($values);
         }
         $this->_setResource($item);
         $this->success();

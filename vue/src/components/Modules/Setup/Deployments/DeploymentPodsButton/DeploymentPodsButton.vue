@@ -57,7 +57,8 @@ function render() {
 function onShowLogsBtnClicked(item: PodOption) {
     bus.emit('deploymentLogs', {
         deployment: props.deployment,
-        preselectedPodName: item.pod.name,
+        preselectedPodName: item.pod.pod,
+        preselectedContainerName: item.pod.container,
     });
 }
 
@@ -96,7 +97,7 @@ function onOpenTerminalBtnClicked(item: PodOption) {
                                 </v-chip>
                             </div>
 
-                            <span class="my-auto">{{ pod.pod.name }}</span>
+                            <span class="my-auto">{{ pod.pod.pod }}.{{ pod.pod.container }}</span>
 
                             <DateView
                                 class="ml-auto pl-4 my-auto"
@@ -127,7 +128,7 @@ function onOpenTerminalBtnClicked(item: PodOption) {
 
 <style scoped>
 .list-wrapper {
-    min-width: 120px;
+    min-width: 260px;
 }
 
 .v-list-item {

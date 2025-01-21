@@ -11,6 +11,8 @@ use App\Entities\DeploymentSpecification;
  * @property ?int $defaultMemoryRequest
  * @property ?int $defaultMemoryLimit
  * @property ?int $defaultReplicas
+ * @property ?int $defaultKnativeConcurrencyLimitSoft
+ * @property ?int $defaultKnativeConcurrencyLimitHard
  * @property ?bool $defaultAutoUpdateEnabled
  * @property ?string $defaultAutoUpdateTagRegex
  * @property ?bool $defaultAutoUpdateRequireApproval

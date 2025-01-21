@@ -3,23 +3,24 @@
 use App\Libraries\DeploymentSteps\BaseDeploymentStep;
 use App\Libraries\DeploymentSteps\ClusterRoleBindingStep;
 use App\Libraries\DeploymentSteps\ClusterRoleStep;
+use App\Libraries\DeploymentSteps\ContourHttpProxyStep;
 use App\Libraries\DeploymentSteps\CronjobStep;
 use App\Libraries\DeploymentSteps\CustomResourceStep;
 use App\Libraries\DeploymentSteps\DatabaseStep;
 use App\Libraries\DeploymentSteps\DeploymentStep;
 use App\Libraries\DeploymentSteps\IngressStep;
+use App\Libraries\DeploymentSteps\IstioVirtualServiceStep;
+use App\Libraries\DeploymentSteps\KServiceStep;
 use App\Libraries\DeploymentSteps\MigrationJobStep;
 use App\Libraries\DeploymentSteps\NamespaceStep;
 use App\Libraries\DeploymentSteps\PersistentVolumeClaimStep;
 use App\Libraries\DeploymentSteps\PersistentVolumeStep;
-use App\Libraries\DeploymentSteps\RedirectsStep;
 use App\Libraries\DeploymentSteps\RoleBindingStep;
 use App\Libraries\DeploymentSteps\RoleStep;
 use App\Libraries\DeploymentSteps\ServiceAccountStep;
 use App\Libraries\DeploymentSteps\ServiceStep;
 use App\Models\DeploymentSpecificationEnvironmentVariableModel;
-use App\Models\DeploymentSpecificationIngressModel;
-use App\Models\DeploymentSpecificationIngressRulePathModel;
+use App\Models\DeploymentSpecificationHttpProxyRouteModel;
 use App\Models\DeploymentSpecificationServiceAnnotationModel;
 use App\Models\DeploymentSpecificationServicePortModel;
 use App\Models\DeploymentVolumeModel;
@@ -31,16 +32,22 @@ use App\Core\Entity;
  *
  * # Mandatory settings
  * @property string $name
- * @property string $type
  * @property int $container_image_id
  * @property ContainerImage $container_image
+ *
+ * # Workload
+ * @property string $workload_type
  *
  * # Enable features
  * @property bool $enable_database
  * @property bool $enable_cronjob
- * @property bool $enable_ingress
+ * @property bool $enable_external_access
+ * @property bool $enable_internal_access
  * @property bool $enable_rbac
  * @property bool $enable_volumes
+ *
+ * # Network
+ * @property string $network_type
  *
  * # Domain settings
  * @property string $domain_tls
@@ -75,6 +82,7 @@ use App\Core\Entity;
  * @property DeploymentSpecificationInitContainer $deployment_specification_init_containers
  * @property DeploymentSpecificationPostUpdateAction $deployment_specification_post_update_actions
  * @property DeploymentSpecificationCronJob $deployment_specification_cron_jobs
+ * @property DeploymentSpecificationHttpProxyRoute $deployment_specification_http_proxy_routes
  * @property Label $labels
  *
  * @property DeploymentStep $deploymentSteps
@@ -87,8 +95,12 @@ class DeploymentSpecification extends Entity {
      */
     public function getDeploymentSteps(?Deployment $deployment = null): array {
         $order = [
-            DatabaseStep::class,
+            // Level: Workspace
             NamespaceStep::class,
+            ContourHttpProxyStep::class,
+
+            // Level: Deployment
+            DatabaseStep::class,
             ClusterRoleStep::class,
             RoleStep::class,
             ServiceAccountStep::class,
@@ -98,9 +110,10 @@ class DeploymentSpecification extends Entity {
             PersistentVolumeClaimStep::class,
             CustomResourceStep::class,
             DeploymentStep::class,
+            KServiceStep::class,
             ServiceStep::class,
             IngressStep::class,
-            RedirectsStep::class,
+            IstioVirtualServiceStep::class,
             MigrationJobStep::class,
             CronjobStep::class,
         ];
@@ -109,12 +122,17 @@ class DeploymentSpecification extends Entity {
             new NamespaceStep(),
         ];
 
-        switch ($this->type) {
-            case \DeploymentSpecificationTypes::Deployment:
+        switch ($this->workload_type) {
+            case \WorkloadTypes::Deployment:
                 $steps[] = new DeploymentStep();
-                $steps[] = new ServiceStep();
                 break;
-            case \DeploymentSpecificationTypes::Custom:
+            case \WorkloadTypes::KNativeService:
+                $steps[] = new KServiceStep();
+                break;
+            case \WorkloadTypes::DaemonSet:
+                // Not yet supported
+                break;
+            case \WorkloadTypes::CustomResource:
                 $steps[] = new CustomResourceStep();
                 break;
         }
@@ -130,9 +148,31 @@ class DeploymentSpecification extends Entity {
             $steps[] = new ClusterRoleBindingStep();
             $steps[] = new RoleBindingStep();
         }
-        if ($this->enable_ingress) {
-            $steps[] = new IngressStep();
-            $steps[] = new RedirectsStep();
+        if ($this->enable_external_access) {
+            switch ($this->network_type) {
+                case \NetworkTypes::NginxIngress:
+                    $steps[] = new IngressStep();
+                    break;
+                case \NetworkTypes::Istio:
+                    $steps[] = new IstioVirtualServiceStep();
+                    break;
+                case \NetworkTypes::Contour:
+                    $steps[] = new ContourHttpProxyStep();
+                    break;
+            }
+        }
+        if ($this->enable_internal_access) {
+            switch ($this->workload_type) {
+                case \WorkloadTypes::Deployment:
+                case \WorkloadTypes::DaemonSet:
+                    $steps[] = new ServiceStep();
+                    break;
+                case \WorkloadTypes::KNativeService:
+                    // KNative Service is handling Service
+                case \WorkloadTypes::CustomResource:
+                    // Not supported
+                    break;
+            }
         }
         if ($this->enable_cronjob) {
             $steps[] = new CronjobStep();
@@ -163,12 +203,12 @@ class DeploymentSpecification extends Entity {
 
     public function getUrl(string $subdomain, Domain $domain, bool $includeTls = false, bool $includeSuffix = false): string {
         $tls = $includeTls ? "{$this->domain_tls}://" : '';
-        $domain = $domain->name;
+        $url = $domain->name;
         if (strlen($subdomain)) {
-            $domain = $subdomain . '.' . $domain;
+            $url = $subdomain . '.' . $url;
         }
         $suffix = $includeSuffix ? $this->domain_suffix : '';
-        return "{$tls}{$this->domain_prefix}{$domain}{$suffix}";
+        return "{$tls}{$this->domain_prefix}{$url}{$suffix}";
     }
 
     public function getServicePorts(): array {
@@ -225,6 +265,14 @@ class DeploymentSpecification extends Entity {
         }
 
         return $variables;
+    }
+
+    public function getHttpProxyRoutes(): DeploymentSpecificationHttpProxyRoute {
+        /** @var DeploymentSpecificationHttpProxyRoute $httpProxyRoutes */
+        $httpProxyRoutes = (new DeploymentSpecificationHttpProxyRouteModel())
+            ->where('deployment_specification_id', $this->id)
+            ->find();
+        return $httpProxyRoutes;
     }
 
 
@@ -306,6 +354,12 @@ class DeploymentSpecification extends Entity {
         $this->deployment_specification_cron_jobs->find()->deleteAll();
         $this->save($values);
         $this->deployment_specification_cron_jobs = $values;
+    }
+
+    public function updateHttpProxyRoutes(DeploymentSpecificationHttpProxyRoute $values): void {
+        $this->deployment_specification_http_proxy_routes->find()->deleteAll();
+        $this->save($values);
+        $this->deployment_specification_http_proxy_routes = $values;
     }
 
     // </editor-fold>

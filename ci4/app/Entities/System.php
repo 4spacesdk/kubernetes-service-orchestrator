@@ -5,9 +5,9 @@ use App\Core\Entity;
 /**
  * Class System
  * @package App\Entities
- * @property int $default_email_service_id
- * @property int $default_database_service_id
- * @property int $default_domain_id
+ * @property bool $is_network_nginx_ingress_supported
+ * @property bool $is_network_istio_supported
+ * @property bool $is_network_contour_supported
  */
 class System extends Entity {
 

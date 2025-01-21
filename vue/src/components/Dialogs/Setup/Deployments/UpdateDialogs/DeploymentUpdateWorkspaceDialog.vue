@@ -1,22 +1,23 @@
 <script setup lang="ts">
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
-import {Deployment} from "@/core/services/Deploy/models";
+import {Deployment, Workspace} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
-import CodeEditor from 'simple-code-editor';
-import VariableBtn from "@/components/Modules/Common/VariableBtn.vue";
 
-export interface DeploymentUpdateCustomResourceDialog_Input {
+export interface DeploymentUpdateWorkspaceDialog_Input {
     deployment: Deployment;
 }
 
-const props = defineProps<{ input: DeploymentUpdateCustomResourceDialog_Input, events: DialogEventsInterface }>();
+const props = defineProps<{ input: DeploymentUpdateWorkspaceDialog_Input, events: DialogEventsInterface }>();
 
 const used = ref(false);
 const showDialog = ref(false);
 
-const content = ref<string>();
+const value = ref<number>();
+const workspaceItems = ref<Workspace[]>([]);
+const isLoading = ref(false);
+const isSaving = ref(false);
 
 // <editor-fold desc="Functions">
 
@@ -32,8 +33,14 @@ onUnmounted(() => {
 });
 
 function render() {
-    content.value = props.input.deployment.custom_resource ?? '';
+    value.value = props.input.deployment.workspace_id;
     showDialog.value = true;
+
+    isLoading.value = true;
+    Api.workspaces().get().find(workspaces => {
+        workspaceItems.value = workspaces;
+        isLoading.value = false;
+    });
 }
 
 function close() {
@@ -46,33 +53,29 @@ function close() {
 // <editor-fold desc="View Binding Functions">
 
 function onSaveBtnClicked() {
-    const api = Api.deployments().updateCustomResourcePutById(props.input.deployment.id!)
-        .content(content.value!);
+    isSaving.value = true;
+    const api = Api.deployments().updateWorkspacePutById(props.input.deployment.id!)
+        .value(value.value!)
     api.setErrorHandler(response => {
         if (response.error) {
             bus.emit('toast', {
                 text: response.error
             });
         }
+        isSaving.value = false;
         return false;
     });
     api.save(null, newItem => {
+        props.input.deployment.workspace_id = newItem.workspace_id;
+        props.input.deployment.workspace = newItem.workspace;
         bus.emit('deploymentSaved', newItem);
         close();
+        isSaving.value = false;
     });
-
-    close();
 }
 
 function onCloseBtnClicked() {
     close();
-}
-
-function onVariableClicked(text: string) {
-    navigator.clipboard.writeText(text);
-    bus.emit('toast', {
-        text: `Variables copied to clipboard`
-    });
 }
 
 // </editor-fold>
@@ -82,7 +85,7 @@ function onVariableClicked(text: string) {
 <template>
     <v-dialog
         persistent
-        width="60vw"
+        max-width="300px"
         v-model="showDialog">
         <v-card
             class="w-100 h-100">
@@ -92,28 +95,22 @@ function onVariableClicked(text: string) {
                 <v-row
                     dense>
                     <v-col cols="12">
-                        <div
-                            style="position: relative"
+                        <v-select
+                            v-model="value"
+                            :loading="isLoading"
+                            :items="workspaceItems"
+                            item-value="id"
+                            item-title="name"
+                            variant="outlined"
+                            label="Workspace"
                         >
-                            <CodeEditor
-                                v-model="content"
-                                :languages="[['yaml']]"
-                                class="w-100"
-                                height="500px"
-                                theme="atom-one-dark"
-                                font-size="13px"
-                                :line-nums="true"
-                            />
-
-                            <div
-                                style="position: absolute; top: -2px; right: 40px;"
-                            >
-                                <variable-btn
-                                    color="grey"
-                                    @add-variable="newText => onVariableClicked(newText)"
+                            <template v-slot:item="{ props, item }">
+                                <v-list-item
+                                    v-bind="props"
+                                    :subtitle="`Namespace: ${item.raw.namespace}`"
                                 />
-                            </div>
-                        </div>
+                            </template>
+                        </v-select>
                     </v-col>
                 </v-row>
             </v-card-text>
@@ -129,6 +126,7 @@ function onVariableClicked(text: string) {
                 </v-btn>
 
                 <v-btn
+                    :loading="isSaving"
                     flat
                     variant="tonal"
                     prepend-icon="fa fa-check"
@@ -143,8 +141,4 @@ function onVariableClicked(text: string) {
 
 <style scoped>
 
-.code-editor {
-    letter-spacing: 0 !important;
-    line-height: 0 !important;
-}
 </style>

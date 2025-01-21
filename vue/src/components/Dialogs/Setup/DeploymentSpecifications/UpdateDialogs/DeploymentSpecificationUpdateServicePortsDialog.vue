@@ -4,6 +4,7 @@ import {DeploymentSpecification} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
+import {NetworkTypes} from "@/constants";
 
 export interface DeploymentSpecificationUpdateServicePortsDialog_Input {
     deploymentSpecification: DeploymentSpecification;
@@ -16,6 +17,12 @@ interface Row {
     targetPort?: number;
 }
 
+interface Header {
+    title: string,
+    key: string,
+    sortable: boolean
+}
+
 const props = defineProps<{ input: DeploymentSpecificationUpdateServicePortsDialog_Input, events: DialogEventsInterface }>();
 
 const used = ref(false);
@@ -24,13 +31,7 @@ const showDialog = ref(false);
 const isLoading = ref(false);
 const itemCount = ref(0);
 const rows = ref<Row[]>([]);
-const headers = ref([
-    {title: 'Protocol', key: 'protocol', sortable: false},
-    {title: 'Name', key: 'name', sortable: false},
-    {title: 'Port', key: 'port', sortable: false},
-    {title: 'Target Port', key: 'targetPort', sortable: false},
-    {title: '', key: 'actions', sortable: false},
-]);
+const headers = ref<Header[]>([]);
 const isSaving = ref(false);
 
 // <editor-fold desc="Functions">
@@ -48,6 +49,14 @@ onUnmounted(() => {
 
 function render() {
     showDialog.value = true;
+
+    headers.value = [
+        {title: 'Protocol', key: 'protocol', sortable: false},
+        {title: 'Name', key: 'name', sortable: false},
+        {title: 'Port', key: 'port', sortable: false},
+        {title: 'Target Port', key: 'targetPort', sortable: false},
+        {title: '', key: 'actions', sortable: false},
+    ];
 
     isLoading.value = true;
     Api.deploymentSpecifications().get()
@@ -81,6 +90,7 @@ function onCreateBtnClicked() {
     const newItem = {
     };
     bus.emit('deploymentSpecificationUpdateServicePort', {
+        deploymentSpecification: props.input.deploymentSpecification,
         servicePort: newItem,
         onSaveCallback: () => rows.value.push(newItem),
     });
@@ -88,6 +98,7 @@ function onCreateBtnClicked() {
 
 function onEditRowClicked(row: Row) {
     bus.emit('deploymentSpecificationUpdateServicePort', {
+        deploymentSpecification: props.input.deploymentSpecification,
         servicePort: row,
         onSaveCallback: () => {
 

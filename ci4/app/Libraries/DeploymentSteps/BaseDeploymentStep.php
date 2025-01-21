@@ -8,7 +8,11 @@ abstract class BaseDeploymentStep {
 
     abstract public function getIdentifier(): string;
 
+    abstract public function getLevel(): string;
+
     abstract public function getName(): string;
+
+    abstract public function getTriggers(): array;
 
     abstract public function hasPreviewCommand(): bool;
 
@@ -76,6 +80,7 @@ abstract class BaseDeploymentStep {
     public function toArray(): array {
         return [
             'identifier' => $this->getIdentifier(),
+            'level' => $this->getLevel(),
             'name' => $this->getName(),
             'hasPreviewCommand' => $this->hasPreviewCommand(),
             'hasStatusCommand' => $this->hasStatusCommand(),

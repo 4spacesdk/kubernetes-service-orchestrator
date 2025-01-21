@@ -4,6 +4,7 @@ use App\Core\Entity;
 
 /**
  * @property string $identifier
+ * @property string $level
  * @property string $name
  * @property bool $hasPreviewCommand
  * @property bool $hasStatusCommand

@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
+import {DeploymentSpecification} from "@/core/services/Deploy/models";
+import {NetworkTypes} from "@/constants";
 
 export interface DeploymentSpecificationUpdateServicePortDialog_Input {
+    deploymentSpecification: DeploymentSpecification;
     servicePort: {
         protocol?: string;
         name?: string;
@@ -21,6 +24,8 @@ const props = defineProps<{
 const used = ref(false);
 const showDialog = ref(false);
 const formIsValid = ref(false);
+const showProtocol = ref(false);
+const showTargetPort = ref(false);
 
 const protocolItems = ref([
     'TCP', 'UDP', 'SCTP',
@@ -55,6 +60,9 @@ onUnmounted(() => {
 });
 
 function render() {
+    showProtocol.value = true;
+    showTargetPort.value = true;
+
     protocol.value = props.input.servicePort.protocol ?? protocolItems.value[0];
     name.value = props.input.servicePort.name ?? '';
     port.value = props.input.servicePort.port;
@@ -102,7 +110,9 @@ function onCloseBtnClicked() {
                 <v-divider/>
                 <v-card-text>
                     <v-row>
-                        <v-col cols="6">
+                        <v-col
+                            v-if="showProtocol"
+                            cols="6">
                             <v-select
                                 v-model="protocol"
                                 variant="outlined"
@@ -128,7 +138,9 @@ function onCloseBtnClicked() {
                                 type="number"
                             />
                         </v-col>
-                        <v-col cols="6">
+                        <v-col
+                            v-if="showTargetPort"
+                            cols="6">
                             <v-text-field
                                 v-model.number="targetPort"
                                 variant="outlined"

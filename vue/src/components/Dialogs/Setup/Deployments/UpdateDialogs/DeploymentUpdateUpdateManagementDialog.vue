@@ -17,7 +17,6 @@ const showDialog = ref(false);
 const enabled = ref<boolean>();
 const tagRegex = ref<string>();
 const requireApproval = ref<boolean>();
-const enablePodioNotifications = ref<boolean>();
 
 // <editor-fold desc="Functions">
 
@@ -36,7 +35,6 @@ function render() {
     enabled.value = props.input.deployment.auto_update_enabled ?? false;
     tagRegex.value = props.input.deployment.auto_update_tag_regex ?? '';
     requireApproval.value = props.input.deployment.auto_update_require_approval ?? false;
-    enablePodioNotifications.value = props.input.deployment.enable_podio_notification ?? false;
     showDialog.value = true;
 }
 
@@ -53,8 +51,7 @@ function onSaveBtnClicked() {
     const api = Api.deployments().updateUpdateManagementPutById(props.input.deployment.id!)
         .enabled(enabled.value!)
         .tagRegex(tagRegex.value!)
-        .requireApproval(requireApproval.value!)
-        .enablePodioNotification(enablePodioNotifications.value!);
+        .requireApproval(requireApproval.value!);
     api.setErrorHandler(response => {
         if (response.error) {
             bus.emit('toast', {
@@ -108,12 +105,6 @@ function onCloseBtnClicked() {
                             v-model="requireApproval"
                             density="compact"
                             label="Require approval"/>
-                    </v-col>
-                    <v-col cols="6">
-                        <v-checkbox
-                            v-model="enablePodioNotifications"
-                            density="compact"
-                            label="Podio Notification"/>
                     </v-col>
                 </v-row>
             </v-card-text>

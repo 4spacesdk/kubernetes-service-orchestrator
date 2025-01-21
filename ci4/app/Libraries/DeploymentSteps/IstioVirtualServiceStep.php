@@ -3,21 +3,31 @@
 use App\Entities\Deployment;
 use App\Entities\Domain;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
+use App\Libraries\DeploymentSteps\Helpers\DeploymentStepLevels;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
+use App\Libraries\Kubernetes\CustomResourceDefinitions\K8sIstioVirtualService;
 use App\Libraries\Kubernetes\KubeAuth;
-use DebugTool\Data;
 use RenokiCo\PhpK8s\Exceptions\KubernetesAPIException;
 use RenokiCo\PhpK8s\Kinds\K8sEvent;
-use RenokiCo\PhpK8s\Kinds\K8sIngress;
 
-class RedirectsStep extends BaseDeploymentStep {
+class IstioVirtualServiceStep extends BaseDeploymentStep {
 
     public function getIdentifier(): string {
-        return DeploymentSteps::Redirects;
+        return DeploymentSteps::IstioVirtualService;
+    }
+
+    public function getLevel(): string {
+        return DeploymentStepLevels::Deployment;
     }
 
     public function getName(): string {
-        return 'Redirects';
+        return 'Istio Virtual Service';
+    }
+
+    public function getTriggers(): array {
+        return [
+
+        ];
     }
 
     public function hasPreviewCommand(): bool {
@@ -45,10 +55,7 @@ class RedirectsStep extends BaseDeploymentStep {
     }
 
     public function getSuccessStatus(Deployment $deployment): string {
-        $expectAlias = strlen($deployment->aliases) > 0;
-        return $expectAlias
-            ? DeploymentStepHelper::Redirects_Found
-            : DeploymentStepHelper::Redirects_NotFoundNotExpected;
+        return DeploymentStepHelper::IstioVirtualService_Found;
     }
 
     /**
@@ -63,11 +70,9 @@ class RedirectsStep extends BaseDeploymentStep {
             $remote = json_decode($exiting->toJson(), true);
             unset($remote['metadata']['uid']);
             unset($remote['metadata']['resourceVersion']);
-            unset($remote['metadata']['generation']);
             unset($remote['metadata']['creationTimestamp']);
             unset($remote['metadata']['annotations']['kubectl.kubernetes.io/last-applied-configuration']);
-            unset($remote['metadata']['managedFields']);
-            unset($remote['status']);
+            unset($remote['metadata']['generation']);
             $remote = json_encode($remote);
         }
 
@@ -82,19 +87,8 @@ class RedirectsStep extends BaseDeploymentStep {
      * @throws \Exception
      */
     public function getStatus(Deployment $deployment): string {
-        $expectAlias = strlen($deployment->aliases) > 0;
-
         $resource = $this->getResource($deployment, true);
-        $hasAlias = $resource->exists();
-        if ($hasAlias) {
-            return $expectAlias
-                ? DeploymentStepHelper::Redirects_Found
-                : DeploymentStepHelper::Redirects_FoundNotExpected;
-        } else {
-            return $expectAlias
-                ? DeploymentStepHelper::Redirects_NotFound
-                : DeploymentStepHelper::Redirects_NotFoundNotExpected;
-        }
+        return $resource->exists() ? DeploymentStepHelper::IstioVirtualService_Found : DeploymentStepHelper::IstioVirtualService_NotFound;
     }
 
     public function validateDeployCommand(Deployment $deployment): ?string {
@@ -105,13 +99,29 @@ class RedirectsStep extends BaseDeploymentStep {
             return 'Missing namespace';
         }
 
-        if (!$deployment->domain_id) {
-            return 'Missing domain';
+        if ($deployment->workspace_id && !$deployment->workspace->exists()) {
+            $deployment->workspace->find();
+        }
+        if (!$deployment->workspace->exists()) {
+            return 'Missing workspace';
+        }
+
+        $workspace = $deployment->workspace;
+
+        if (strlen($workspace->namespace) == 0) {
+            return 'Missing workspace namespace';
+        }
+
+        if (!$workspace->domain_id) {
+            return 'Missing workspace domain';
         }
         $domain = new Domain();
-        $domain->find($deployment->domain_id);
+        $domain->find($workspace->domain_id);
         if (!$domain->exists()) {
             return 'domain no longer exists';
+        }
+        if (!$domain->enable_istio_gateway) {
+            return 'domain istio gateway not enabled';
         }
 
         $namespaceStep = new NamespaceStep();
@@ -119,30 +129,27 @@ class RedirectsStep extends BaseDeploymentStep {
             return 'Missing Namespace';
         }
 
-        $ingressStep = new IngressStep();
-        if ($ingressStep->getStatus($deployment) != DeploymentStepHelper::Ingress_Found) {
-            return 'Missing ingress';
+        $serviceStep = new ServiceStep();
+        if ($serviceStep->getStatus($deployment) != DeploymentStepHelper::Service_Found) {
+            return 'Missing Service';
         }
         return null;
     }
 
     public function startDeployCommand(Deployment $deployment, ?string $reason = null): void {
-        if (strlen($deployment->aliases) == 0) {
-            $this->startTerminateCommand($deployment);
-            return;
-        }
         $resource = $this->getResource($deployment, true);
         $resource->createOrUpdate();
     }
 
     public function startTerminateCommand(Deployment $deployment): void {
         $resource = $this->getResource($deployment, true);
-        if ($resource->exists()) {
-            $resource->synced();
-            $resource->delete();
-        }
+        $resource->synced();
+        $resource->delete();
     }
 
+    /**
+     * @throws \Exception
+     */
     public function getKubernetesEvents(Deployment $deployment): array {
         $resource = $this->getResource($deployment, true);
         $events = [];
@@ -160,8 +167,12 @@ class RedirectsStep extends BaseDeploymentStep {
         return $events;
     }
 
+    /**
+     * @throws KubernetesAPIException
+     * @throws \Exception
+     */
     public function getKubernetesStatus(Deployment $deployment): array {
-        /** @var K8sIngress $resource */
+        /** @var K8sIstioVirtualService $resource */
         $resource = $this->getResource($deployment, true)->get();
         $status = $resource->getAttribute('status');
         return $status;
@@ -170,60 +181,63 @@ class RedirectsStep extends BaseDeploymentStep {
     /**
      * @throws \Exception
      */
-    private function getResource(Deployment $deployment, bool $auth = false): K8sIngress {
-        $resource = new K8sIngress();
+    private function getResource(Deployment $deployment, bool $auth = false): K8sIstioVirtualService {
+        if ($deployment->workspace_id && !$deployment->workspace->exists()) {
+            $deployment->workspace->find();
+        }
+        if (!$deployment->workspace->exists()) {
+            throw new \Exception('This step require workspace');
+        }
+        $workspace = $deployment->workspace;
+        if (!$workspace->domain->exists()) {
+            $workspace->domain->find();
+        }
+        $domain = $deployment->workspace->domain;
+
+        $resource = new K8sIstioVirtualService();
         $resource
-            ->setName($deployment->name . '-redirects')
+            ->setName($deployment->name)
             ->setNamespace($deployment->namespace)
             ->setAnnotations([
-                'kubernetes.io/ingress.class' => 'nginx',
-                'nginx.ingress.kubernetes.io/rewrite-target' => $deployment->getUrl(true, true),
-            ]);
-
-        $tlsHosts = [];
-        $rules = [];
-
-        if (strlen($deployment->aliases)) {
-            $aliases = explode(',', $deployment->aliases);
-            $spec = $deployment->findDeploymentSpecification();
-            foreach ($aliases as $alias) {
-                $url = $spec->getUrl($alias, $deployment->domain);
-                $tlsHosts[] = $url;
-                $rules[] = [
-                    'host' => $url,
-                    'http' => [
-                        'paths' => [
+                'app.kubernetes.io/managed-by' => '4spaces.kso',
+            ])
+            ->setAttribute('spec', [
+                'gateways' => [
+                    "{$domain->certificate_namespace}/{$domain->getIstioGatewayName()}",
+                ],
+                'hosts' => [
+                    $deployment->getUrl(),
+                ],
+                'http' => [
+                    [
+                        'match' => [
                             [
-                                'path' => strlen($spec->domain_suffix) ? $spec->domain_suffix : '/',
-                                'pathType' => 'Prefix',
-                                'backend' => [
-                                    'service' => [
-                                        'name' => 'http-svc',
-                                        'port' => [
-                                            'name' => 'http',
-                                        ],
+                                'uri' => [
+                                    'prefix' => '/api'
+                                ],
+                            ],
+                        ],
+                        'rewrite' => [
+                            'authority' => "{$deployment->name}.{$deployment->namespace}.svc.cluster.local",
+                        ],
+                        'route' => [
+                            [
+                                'destination' => [
+                                    'host' => "{$deployment->name}.{$deployment->namespace}.svc.cluster.local",
+                                    'port' => [
+                                        'number' => 80,
                                     ],
                                 ],
-                            ]
-                        ]
+                            ],
+                        ],
                     ],
-                ];
-            }
-        }
-
-        $resource
-            ->setTls([
-                [
-                    'hosts' => $tlsHosts,
-                    'secretName' => $deployment->domain->certificate_name,
-                ]
-            ])
-            ->setRules($rules);
-
+                ],
+            ]);
 
         if ($auth) {
             $auth = new KubeAuth();
-            $resource->onCluster($auth->authenticate());
+            $cluster = $auth->authenticate();
+            $resource->onCluster($cluster);
         }
 
         return $resource;

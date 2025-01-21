@@ -7,6 +7,7 @@ import AuthService from "@/services/AuthService";
 
 const version = ref(versions.version);
 
+const isLoading = ref(false);
 const status = ref<string>('');
 const message = ref<string>('');
 const nodes = ref<KubernetesNodeInfo[]>([]);
@@ -14,6 +15,7 @@ const nodes = ref<KubernetesNodeInfo[]>([]);
 const statusInternal = ref<number>();
 
 onMounted(() => {
+    isLoading.value = true;
     getStatus();
     statusInternal.value = setInterval(() => {
         getStatus();
@@ -30,8 +32,14 @@ function getStatus() {
             status.value = value[0].status ?? '';
             message.value = value[0].message ?? '';
             nodes.value = value[0].nodes ?? [];
+            isLoading.value = false;
         });
     }
+}
+
+function onReloadBtnClicked() {
+    isLoading.value = true;
+    getStatus();
 }
 
 </script>
@@ -50,10 +58,11 @@ function getStatus() {
         >
             <v-badge
                 style="margin-bottom: 4px;"
-                :color="status == 'success' ? 'success' : 'error'"
+                :color="isLoading ? 'orange' : (status == 'success' ? 'success' : 'error')"
+                @click="onReloadBtnClicked"
             >
                 <v-tooltip activator="parent" location="top">
-                    {{ status == 'success' ? 'Connected' : message }}
+                    {{ isLoading ? 'Loading...' : (status == 'success' ? 'Connected' : message) }}
                 </v-tooltip>
             </v-badge>
         </div>

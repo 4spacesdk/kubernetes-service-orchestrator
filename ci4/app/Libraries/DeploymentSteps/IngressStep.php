@@ -4,6 +4,7 @@ use App\Entities\Deployment;
 use App\Entities\DeploymentSpecificationIngress;
 use App\Entities\Domain;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
+use App\Libraries\DeploymentSteps\Helpers\DeploymentStepLevels;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
 use App\Libraries\Kubernetes\KubeAuth;
 use App\Models\DeploymentSpecificationIngressModel;
@@ -18,8 +19,18 @@ class IngressStep extends BaseDeploymentStep {
         return DeploymentSteps::Ingress;
     }
 
+    public function getLevel(): string {
+        return DeploymentStepLevels::Deployment;
+    }
+
     public function getName(): string {
         return 'Ingress';
+    }
+
+    public function getTriggers(): array {
+        return [
+
+        ];
     }
 
     public function hasPreviewCommand(): bool {
@@ -108,11 +119,24 @@ class IngressStep extends BaseDeploymentStep {
             return 'Missing namespace';
         }
 
-        if (!$deployment->domain_id) {
-            return 'Missing domain';
+        if ($deployment->workspace_id && !$deployment->workspace->exists()) {
+            $deployment->workspace->find();
+        }
+        if (!$deployment->workspace->exists()) {
+            return 'Missing workspace';
+        }
+
+        $workspace = $deployment->workspace;
+
+        if (strlen($workspace->namespace) == 0) {
+            return 'Missing workspace namespace';
+        }
+
+        if (!$workspace->domain_id) {
+            return 'Missing workspace domain';
         }
         $domain = new Domain();
-        $domain->find($deployment->domain_id);
+        $domain->find($workspace->domain_id);
         if (!$domain->exists()) {
             return 'domain no longer exists';
         }
@@ -188,9 +212,17 @@ class IngressStep extends BaseDeploymentStep {
     private function getResources(Deployment $deployment, bool $auth = false): array {
         $spec = $deployment->findDeploymentSpecification();
 
-        if (!$deployment->domain->exists()) {
-            $deployment->domain->find();
+        if ($deployment->workspace_id && !$deployment->workspace->exists()) {
+            $deployment->workspace->find();
         }
+        if (!$deployment->workspace->exists()) {
+            throw new \Exception('This step require workspace');
+        }
+        $workspace = $deployment->workspace;
+        if (!$workspace->domain->exists()) {
+            $workspace->domain->find();
+        }
+        $domain = $deployment->workspace->domain;
 
         /** @var DeploymentSpecificationIngress $ingresses */
         $ingresses = (new DeploymentSpecificationIngressModel())
@@ -222,7 +254,7 @@ class IngressStep extends BaseDeploymentStep {
                         'hosts' => [
                             $deployment->getUrl(),
                         ],
-                        'secretName' => $deployment->domain->certificate_name,
+                        'secretName' => $domain->certificate_name,
                     ]
                 ]);
             }

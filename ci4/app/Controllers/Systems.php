@@ -1,9 +1,39 @@
 <?php namespace App\Controllers;
 
-class Systems extends \App\Core\BaseController {
+use App\Core\ResourceController;
 
-    public function requireAuth(string $method): bool {
-        return true;
+class Systems extends ResourceController {
+
+    /**
+     * @ignore true
+     * @param $id
+     * @return void
+     */
+    public function get($id = 0) {
+    }
+
+    /**
+     * @ignore true
+     * @param $id
+     * @return void
+     */
+    public function post($id = 0) {
+    }
+
+    /**
+     * @ignore true
+     * @param $id
+     * @return void
+     */
+    public function put($id = 0) {
+    }
+
+    /**
+     * @ignore true
+     * @param $id
+     * @return void
+     */
+    public function delete($id = 0) {
     }
 
 }

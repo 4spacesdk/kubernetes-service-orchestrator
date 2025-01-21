@@ -20,6 +20,7 @@ class Workspaces extends ResourceController {
      * @custom true
      * @parameter int $deploymentPackageId parameterType=query
      * @parameter string $name parameterType=query
+     * @parameter string $namespace parameterType=query
      * @parameter int $domainId parameterType=query
      * @parameter string $subdomain parameterType=query
      * @return void
@@ -32,6 +33,7 @@ class Workspaces extends ResourceController {
             $item = Workspace::Create(
                 $deploymentPackage,
                 $this->request->getGet('name') ?? '',
+                $this->request->getGet('namespace') ?? '',
                 $this->request->getGet('domainId') ?? 0,
                 $this->request->getGet('subdomain') ?? ''
             );
@@ -51,6 +53,7 @@ class Workspaces extends ResourceController {
      * @parameter int $deploymentSpecificationId parameterType=query
      * @parameter string $name parameterType=query
      * @parameter string $namespace parameterType=query
+     * @parameter string $version parameterType=query
      * @return void
      * @responseSchema Deployment
      */
@@ -70,29 +73,15 @@ class Workspaces extends ResourceController {
             return;
         }
 
-        // Check if this spec is part of the workspace deployment package
-        /** @var DeploymentPackageDeploymentSpecification $deploymentPackageDeploymentSpecification */
-        $deploymentPackageDeploymentSpecification = (new DeploymentPackageDeploymentSpecificationModel())
-            ->where('deployment_package_id', $item->deployment_package_id)
-            ->where('deployment_specification_id', $deploymentSpecification->id)
-            ->find();
-        if ($deploymentPackageDeploymentSpecification->exists()) {
-            try {
-                $deployment = $item->createDeploymentFromPackage($deploymentPackageDeploymentSpecification);
-                $this->_setResource($deployment);
-            } catch (ValidationException|ApiException|\Google\ApiCore\ValidationException $e) {
-                $this->fail($e->getMessage());
-                return;
-            }
-        } else {
-            try {
-                $deployment = $item->prepareDeploymentFromSpecification($deploymentSpecification);
-                $deployment->save();
-                $this->_setResource($deployment);
-            } catch (ValidationException $e) {
-                $this->fail($e->getMessage());
-                return;
-            }
+        try {
+            $deployment = $item->addDeployment(
+                $deploymentSpecification,
+                $this->request->getGet('version') ?? null
+            );
+            $this->_setResource($deployment);
+        } catch (ValidationException|ApiException|\Google\ApiCore\ValidationException $e) {
+            $this->fail($e->getMessage());
+            return;
         }
 
         $this->success();

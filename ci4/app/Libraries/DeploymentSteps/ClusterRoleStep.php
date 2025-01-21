@@ -3,6 +3,7 @@
 use App\Entities\Deployment;
 use App\Entities\DeploymentSpecificationClusterRoleRule;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
+use App\Libraries\DeploymentSteps\Helpers\DeploymentStepLevels;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
 use App\Libraries\Kubernetes\KubeAuth;
 use App\Models\DeploymentSpecificationClusterRoleRuleModel;
@@ -17,8 +18,18 @@ class ClusterRoleStep extends BaseDeploymentStep {
         return DeploymentSteps::ClusterRole;
     }
 
+    public function getLevel(): string {
+        return DeploymentStepLevels::Deployment;
+    }
+
     public function getName(): string {
         return 'Cluster Role';
+    }
+
+    public function getTriggers(): array {
+        return [
+
+        ];
     }
 
     public function hasPreviewCommand(): bool {

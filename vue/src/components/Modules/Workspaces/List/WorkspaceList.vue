@@ -119,6 +119,7 @@ function getItems(doItems = true, doCount = false) {
     if (doItems) {
         api
             .include('deployment')
+            .include('domain')
             .limit(tableOptions.itemsPerPage)
             .offset(tableOptions.itemsPerPage * (tableOptions.page - 1))
             .orderAsc('name_readable')

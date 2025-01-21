@@ -4,7 +4,7 @@ import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
 import {DeploymentPackage, DeploymentSpecification} from "@/core/services/Deploy/models";
-import {DeploymentSpecificationTypes} from "@/constants";
+import {WorkloadTypes} from "@/constants";
 
 export interface DeploymentPackageUpdateDeploymentSpecificationsDialog_Input {
     deploymentPackage: DeploymentPackage;
@@ -12,7 +12,6 @@ export interface DeploymentPackageUpdateDeploymentSpecificationsDialog_Input {
 
 interface Row {
     deploymentSpecification: DeploymentSpecification;
-    defaultEnablePodioNotification?: boolean;
     defaultVersion?: string;
     defaultAutoUpdateEnabled?: boolean,
     defaultAutoUpdateTagRegex?: string,
@@ -23,6 +22,8 @@ interface Row {
     defaultMemoryRequest?: number;
     defaultMemoryLimit?: number;
     defaultReplicas?: number;
+    defaultKnativeConcurrencyLimitSoft?: number;
+    defaultKnativeConcurrencyLimitHard?: number;
 }
 
 interface CreateItem {
@@ -73,7 +74,6 @@ function render() {
                 ?.map(deploymentSpecificationSettings => {
                     return {
                         deploymentSpecification: deploymentSpecificationSettings.deployment_specification!,
-                        defaultEnablePodioNotification: deploymentSpecificationSettings.default_enable_podio_notification,
                         defaultVersion: deploymentSpecificationSettings.default_version,
                         defaultAutoUpdateEnabled: deploymentSpecificationSettings.default_auto_update_enabled,
                         defaultAutoUpdateTagRegex: deploymentSpecificationSettings.default_auto_update_tag_regex,
@@ -84,6 +84,8 @@ function render() {
                         defaultMemoryRequest: deploymentSpecificationSettings.default_memory_request,
                         defaultMemoryLimit: deploymentSpecificationSettings.default_memory_limit,
                         defaultReplicas: deploymentSpecificationSettings.default_replicas,
+                        defaultKnativeConcurrencyLimitSoft: deploymentSpecificationSettings.default_knative_concurrency_limit_soft,
+                        defaultKnativeConcurrencyLimitHard: deploymentSpecificationSettings.default_knative_concurrency_limit_hard,
                     }
                 })
                 ?.sort((a, b) => a.deploymentSpecification.name?.localeCompare(b.deploymentSpecification.name ?? '') ?? 0)
@@ -122,8 +124,10 @@ function onCreateItemBtnClicked(createItem: CreateItem) {
     const newItem = {
         deploymentSpecification: createItem.deploymentSpecification,
     };
-    switch (createItem.deploymentSpecification.type) {
-        case DeploymentSpecificationTypes.Deployment:
+    switch (createItem.deploymentSpecification.workload_type) {
+        case WorkloadTypes.Deployment:
+        case WorkloadTypes.KNativeService:
+        case WorkloadTypes.DaemonSet:
             bus.emit('deploymentPackageUpdateDeploymentSpecification', {
                 settings: newItem,
                 onSaveCallback: () => {
@@ -132,7 +136,7 @@ function onCreateItemBtnClicked(createItem: CreateItem) {
                 }
             });
             break;
-        case DeploymentSpecificationTypes.Custom:
+        case WorkloadTypes.CustomResource:
             createItem.inUse = true;
             rows.value.push(newItem);
             break;
@@ -255,7 +259,7 @@ function onCloseBtnClicked() {
                     <template v-slot:item.actions="{ item }">
                         <div class="d-flex justify-end gap-1">
                             <v-btn
-                                v-if="item.deploymentSpecification.type == DeploymentSpecificationTypes.Deployment"
+                                v-if="item.deploymentSpecification.workload_type !== WorkloadTypes.CustomResource"
                                 variant="plain" color="primary" size="small"
                                 @click="onEditRowClicked(item)">
                                 <v-icon>fa fa-pen</v-icon>

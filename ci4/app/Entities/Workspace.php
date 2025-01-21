@@ -43,7 +43,7 @@ class Workspace extends Entity {
      * @throws ApiException
      * @throws \Google\ApiCore\ValidationException
      */
-    public static function Create(DeploymentPackage $deploymentPackage, string $name, int $domainId, string $subdomain): ?Workspace {
+    public static function Create(DeploymentPackage $deploymentPackage, string $name, string $namespace, int $domainId, string $subdomain): ?Workspace {
         if (!$deploymentPackage->exists()) {
             throw new ValidationException("Invalid deployment package");
         }
@@ -82,7 +82,7 @@ class Workspace extends Entity {
         $name = str_replace('_', '-', $name); // Replace _ with -
         $item->name_system = $name;
 
-        $item->namespace = substr("{$deploymentPackage->namespace}-{$item->name_system}", 0, 63);
+        $item->namespace = $namespace;
         $item->domain_id = $domainId;
         $item->subdomain = $subdomain;
         $item->email_service_id = $deploymentPackage->default_email_service_id;
@@ -125,13 +125,34 @@ class Workspace extends Entity {
     }
 
     /**
+     * @throws ValidationException
+     * @throws \Google\ApiCore\ValidationException
+     * @throws ApiException
+     */
+    public function addDeployment(DeploymentSpecification $deploymentSpecification, ?string $version): ?Deployment {
+        // Check if this spec is part of the workspace deployment package
+        /** @var DeploymentPackageDeploymentSpecification $deploymentPackageDeploymentSpecification */
+        $deploymentPackageDeploymentSpecification = (new DeploymentPackageDeploymentSpecificationModel())
+            ->where('deployment_package_id', $this->deployment_package_id)
+            ->where('deployment_specification_id', $deploymentSpecification->id)
+            ->find();
+        if ($deploymentPackageDeploymentSpecification->exists()) {
+            return $this->createDeploymentFromPackage($deploymentPackageDeploymentSpecification, $version);
+        } else {
+            $deployment = $this->prepareDeploymentFromSpecification($deploymentSpecification, $version);
+            $deployment->save();
+            return $deployment;
+        }
+    }
+
+    /**
      * @param DeploymentPackageDeploymentSpecification $deploymentPackageDeploymentSpecification
      * @return Deployment
      * @throws ValidationException
      * @throws ApiException
      * @throws \Google\ApiCore\ValidationException
      */
-    public function createDeploymentFromPackage(DeploymentPackageDeploymentSpecification $deploymentPackageDeploymentSpecification): Deployment {
+    public function createDeploymentFromPackage(DeploymentPackageDeploymentSpecification $deploymentPackageDeploymentSpecification, ?string $version = null): Deployment {
         if (!$deploymentPackageDeploymentSpecification->deployment_specification->exists()) {
             $deploymentPackageDeploymentSpecification->deployment_specification->find();
         }
@@ -139,11 +160,13 @@ class Workspace extends Entity {
 
         $deployment = $this->prepareDeploymentFromSpecification($deploymentSpecification);
 
-        switch ($deploymentSpecification->type) {
-            case \DeploymentSpecificationTypes::Deployment:
-                if (strlen($deploymentPackageDeploymentSpecification->default_version)) {
+        switch ($deploymentSpecification->workload_type) {
+            default:
+                if ($version) {
+                    $deployment->version = $version;
+                } else if (strlen($deploymentPackageDeploymentSpecification->default_version)) {
                     $deployment->version = $deploymentPackageDeploymentSpecification->default_version;
-                } else {
+                } else  {
                     // Find newest version
                     if (!$deploymentSpecification->container_image->exists()) {
                         $deploymentSpecification->container_image->find();
@@ -156,15 +179,16 @@ class Workspace extends Entity {
                 $deployment->auto_update_tag_regex = $deploymentPackageDeploymentSpecification->default_auto_update_tag_regex;
                 $deployment->auto_update_require_approval = $deploymentPackageDeploymentSpecification->default_auto_update_require_approval;
                 $deployment->environment = $deploymentPackageDeploymentSpecification->default_environment;
-                $deployment->enable_podio_notification = $deploymentPackageDeploymentSpecification->default_enable_podio_notification;
 
                 $deployment->cpu_request = $deploymentPackageDeploymentSpecification->default_cpu_request;
                 $deployment->cpu_limit = $deploymentPackageDeploymentSpecification->default_cpu_limit;
                 $deployment->memory_request = $deploymentPackageDeploymentSpecification->default_memory_request;
                 $deployment->memory_limit = $deploymentPackageDeploymentSpecification->default_memory_limit;
                 $deployment->replicas = $deploymentPackageDeploymentSpecification->default_replicas;
+                $deployment->knative_concurrency_limit_soft = $deploymentPackageDeploymentSpecification->default_knative_concurrency_limit_soft;
+                $deployment->knative_concurrency_limit_hard = $deploymentPackageDeploymentSpecification->default_knative_concurrency_limit_hard;
                 break;
-            case \DeploymentSpecificationTypes::Custom:
+            case \WorkloadTypes::CustomResource:
                 break;
         }
 
@@ -198,21 +222,17 @@ class Workspace extends Entity {
     /**
      * @throws ValidationException
      */
-    public function prepareDeploymentFromSpecification(DeploymentSpecification $specification): Deployment {
+    public function prepareDeploymentFromSpecification(DeploymentSpecification $specification, ?string $version = null): Deployment {
         $deployment = Deployment::Prepare(
             $specification,
             $this->namespace,
-            $specification->name ?? ''
+            $this->id,
+            $specification->name ?? '',
+            $version ?? '',
         );
-        $deployment->workspace_id = $this->id;
 
         if ($specification->enable_database) {
             $deployment->database_service_id = $this->database_service_id;
-        }
-        if ($specification->enable_ingress) {
-            $deployment->domain_id = $this->domain_id;
-            $deployment->subdomain = $this->subdomain;
-            $deployment->aliases = $this->aliases;
         }
 
         return $deployment;
@@ -263,14 +283,6 @@ class Workspace extends Entity {
         $this->subdomain = $subdomain;
         $this->aliases = $aliases;
         $this->save();
-
-        /** @var Deployment $deployments */
-        $deployments = (new DeploymentModel())
-            ->where('workspace_id', $this->id)
-            ->find();
-        foreach ($deployments as $deployment) {
-            $deployment->updateIngress($domainId, $subdomain, $aliases);
-        }
     }
 
     public function updateLabels(Label $values): void {
@@ -333,6 +345,17 @@ class Workspace extends Entity {
         );
 
         return count($allErrors) ? implode("\n", $allErrors) : null;
+    }
+
+    public function getUrl(): string {
+        if (!$this->domain->exists()) {
+            $this->domain->find();
+        }
+        if (strlen($this->subdomain)) {
+            return "{$this->subdomain}.{$this->domain->name}";
+        } else {
+            return $this->domain->name;
+        }
     }
 
     public function save($related = null, $relatedField = null) {

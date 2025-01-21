@@ -4,10 +4,12 @@ use App\Core\Entity;
 use App\Exceptions\ValidationException;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
+use App\Libraries\DeploymentSteps\Helpers\DeploymentStepTriggers;
 use App\Libraries\ZMQ\ChangeEvent;
 use App\Libraries\ZMQ\Events;
 use App\Libraries\ZMQ\ZMQProxy;
 use App\Models\DeploymentModel;
+use App\Models\DomainModel;
 use App\Models\EnvironmentVariableModel;
 use App\Models\WorkspaceModel;
 use DebugTool\Data;
@@ -34,16 +36,11 @@ use DebugTool\Data;
  * @property string $database_user
  * @property string $database_name
  * @property string $database_pass
- * @property int $domain_id
- * @property Domain $domain
- * @property string $subdomain
- * @property string $aliases
  *
  * # Update management
  * @property bool $auto_update_enabled
  * @property string $auto_update_tag_regex
  * @property bool $auto_update_require_approval
- * @property bool $enable_podio_notification
  *
  * # Resource management
  * @property int $cpu_limit
@@ -51,6 +48,8 @@ use DebugTool\Data;
  * @property int $memory_limit
  * @property int $memory_request
  * @property int $replicas
+ * @property int $knative_concurrency_limit_soft
+ * @property int $knative_concurrency_limit_hard
  *
  * # Migration Job
  * @property int $last_migration_job_id
@@ -61,13 +60,17 @@ use DebugTool\Data;
  * @property DeploymentVolume $deployment_volumes
  * @property MigrationJob $last_migration_jobs
  * @property Label $labels
+ *
+ * OTF
+ * @property string $url_external
+ * @property string $url_internal
  */
 class Deployment extends Entity {
 
     /**
      * @throws ValidationException
      */
-    public static function Prepare(DeploymentSpecification $spec, string $namespace, string $name): ?Deployment {
+    public static function Prepare(DeploymentSpecification $spec, string $namespace, int $workspaceId, string $name, string $version): ?Deployment {
         // Validate input
         if (strlen($namespace) == 0) {
             throw new ValidationException("Namespace missing");
@@ -91,12 +94,14 @@ class Deployment extends Entity {
         $item = new Deployment();
         $item->deployment_specification_id = $spec->id;
         $item->namespace = $namespace;
+        $item->workspace_id = $workspaceId > 0 ? $workspaceId : null;
         $item->name = $name;
         if ($spec->container_image->exists()) {
             $item->image = $spec->container_image->url;
         }
-        $item->custom_resource = $spec->custom_resource;
         $item->status = \DeploymentStatusTypes::Draft;
+        $item->version = $version;
+        $item->replicas = 1;
         return $item;
     }
 
@@ -108,10 +113,11 @@ class Deployment extends Entity {
         $this->save();
 
         if ($applyToKubernetes) {
-            DeploymentStepHelper::ExecuteDeployCommand($this, [
-                DeploymentSteps::Deployment,
-                DeploymentSteps::Migration,
-            ], "4spacesdk/kubernetes-service-orchestrator, version {$prevVersion} -> {$this->version} [{$this->last_updated}]");
+            DeploymentStepHelper::EmitTrigger(
+                DeploymentStepTriggers::Deployment_Version_Updated,
+                $this,
+                "4spacesdk/kubernetes-service-orchestrator, version {$prevVersion} -> {$this->version} [{$this->last_updated}]"
+            );
         }
     }
 
@@ -119,34 +125,18 @@ class Deployment extends Entity {
         $this->environment = $value;
         $this->save();
 
-        DeploymentStepHelper::ExecuteDeployCommand($this, [
-            DeploymentSteps::Deployment,
-        ]);
+        DeploymentStepHelper::EmitTrigger(DeploymentStepTriggers::Deployment_Environment_Updated, $this);
+    }
+
+    public function updateWorkspaceId(int $value): void {
+        $this->workspace_id = $value;
+        $this->save();
+        $this->workspace = (new WorkspaceModel())->find($this->workspace_id);
     }
 
     public function updateDatabaseServiceId(int $value): void {
         $this->database_service_id = $value;
         $this->save();
-    }
-
-    /**
-     * @throws ValidationException
-     */
-    public function updateIngress(int $domainId, string $subdomain, string $aliases): void {
-        $domain = new Domain();
-        $domain->find($domainId);
-        if (!$domain->exists()) {
-            throw new ValidationException("Domain not found");
-        }
-
-        $this->domain_id = $domainId;
-        $this->subdomain = $subdomain;
-        $this->aliases = $aliases;
-        $this->save();
-
-        DeploymentStepHelper::ExecuteDeployCommand($this, [
-            DeploymentSteps::Redirects,
-        ]);
     }
 
     public function updateResourceManagement(int $cpuLimit, int $cpuRequest,
@@ -159,21 +149,16 @@ class Deployment extends Entity {
         $this->replicas = $replicas;
         $this->save();
 
-        DeploymentStepHelper::ExecuteDeployCommand($this, [
-            DeploymentSteps::Deployment,
-        ]);
+        DeploymentStepHelper::EmitTrigger(DeploymentStepTriggers::Deployment_ResourceManagement_Updated, $this);
     }
 
-    public function updateUpdateManagement(bool $enabled, string $tagRegex, bool $requireApproval, bool $enablePodioNotification): void {
+    public function updateUpdateManagement(bool $enabled, string $tagRegex, bool $requireApproval): void {
         $this->auto_update_enabled = $enabled;
         $this->auto_update_tag_regex = $tagRegex;
         $this->auto_update_require_approval = $requireApproval;
-        $this->enable_podio_notification = $enablePodioNotification;
         $this->save();
 
-        DeploymentStepHelper::ExecuteDeployCommand($this, [
-            DeploymentSteps::Deployment,
-        ]);
+        DeploymentStepHelper::EmitTrigger(DeploymentStepTriggers::Deployment_UpdateManagement_Updated, $this);
     }
 
     public function updateEnvironmentVariables(EnvironmentVariable $values): void {
@@ -181,9 +166,7 @@ class Deployment extends Entity {
         $this->save($values);
         $this->environment_variables = $values;
 
-        DeploymentStepHelper::ExecuteDeployCommand($this, [
-            DeploymentSteps::Deployment,
-        ]);
+        DeploymentStepHelper::EmitTrigger(DeploymentStepTriggers::Deployment_EnvironmentVariable_Updated, $this);
     }
 
     public function updateEnvironmentVariable(EnvironmentVariable $value, bool $override): void {
@@ -200,9 +183,7 @@ class Deployment extends Entity {
         $environmentVariable->value = $value->value;
         $environmentVariable->save();
 
-        DeploymentStepHelper::ExecuteDeployCommand($this, [
-            DeploymentSteps::Deployment,
-        ]);
+        DeploymentStepHelper::EmitTrigger(DeploymentStepTriggers::Deployment_EnvironmentVariable_Updated, $this);
     }
 
     public function updateDeploymentVolumes(DeploymentVolume $values): void {
@@ -210,20 +191,7 @@ class Deployment extends Entity {
         $this->save($values);
         $this->deployment_volumes = $values;
 
-        DeploymentStepHelper::ExecuteDeployCommand($this, [
-            DeploymentSteps::PersistentVolume,
-            DeploymentSteps::PersistentVolumeClaim,
-            DeploymentSteps::Deployment,
-        ]);
-    }
-
-    public function updateCustomResource(string $content): void {
-        $this->custom_resource = $content;
-        $this->save();
-
-        DeploymentStepHelper::ExecuteDeployCommand($this, [
-            DeploymentSteps::CustomResource,
-        ]);
+        DeploymentStepHelper::EmitTrigger(DeploymentStepTriggers::Deployment_Volume_Updated, $this);
     }
 
     public function updateStatus(string $value): void {
@@ -257,20 +225,19 @@ class Deployment extends Entity {
     }
 
     public function getInternalUrl(): string {
-        if (!$this->domain->exists()) {
-            $this->domain->find();
-        }
-
         $spec = $this->findDeploymentSpecification();
         return "{$this->name}.{$this->namespace}{$spec->domain_suffix}";
     }
 
     public function getUrl(bool $includeTls = false, bool $includeSuffix = false): string {
-        if (!$this->domain->exists()) {
-            $this->domain->find();
+        if ($this->workspace_id && !$this->workspace->exists()) {
+            $this->workspace->find();
         }
-
-        return $this->findDeploymentSpecification()->getUrl($this->subdomain, $this->domain, $includeTls, $includeSuffix);
+        /** @var Domain $domain */
+        $domain = (new DomainModel())
+            ->whereRelated([WorkspaceModel::class, DeploymentModel::class], 'id', $this->id)
+            ->find();
+        return $this->findDeploymentSpecification()->getUrl($this->workspace->subdomain, $domain, $includeTls, $includeSuffix);
     }
 
     public function checkStatus(): void {
@@ -359,9 +326,11 @@ class Deployment extends Entity {
     public function toArray(bool $onlyChanged = false, bool $cast = true, bool $recursive = false, array $fieldsFilter = null): array {
         $item = parent::toArray($onlyChanged, $cast, $recursive, $fieldsFilter);
 
-        if (isset($this->domain) && isset($this->deployment_specification)) {
-            $item['url_external'] = $this->getUrl(true, true);
-            $item['url_internal'] = $this->getInternalUrl();
+        if (isset($this->url_external)) {
+            $item['url_external'] = $this->url_external;
+        }
+        if (isset($this->url_internal)) {
+            $item['url_internal'] = $this->url_internal;
         }
 
         return $item;

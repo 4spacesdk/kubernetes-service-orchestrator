@@ -12,7 +12,6 @@ export class DeploymentPackageDeploymentSpecificationDefinition extends BaseMode
     deployment_package?: DeploymentPackage;
     deployment_specification_id?: number;
     deployment_specification?: DeploymentSpecification;
-    default_enable_podio_notification?: boolean;
     default_version?: string;
     default_environment?: string;
     default_cpu_request?: number;
@@ -20,6 +19,8 @@ export class DeploymentPackageDeploymentSpecificationDefinition extends BaseMode
     default_memory_request?: number;
     default_memory_limit?: number;
     default_replicas?: number;
+    default_knative_concurrency_limit_soft?: number;
+    default_knative_concurrency_limit_hard?: number;
     default_auto_update_enabled?: boolean;
     default_auto_update_tag_regex?: string;
     default_auto_update_require_approval?: boolean;
@@ -44,7 +45,6 @@ export class DeploymentPackageDeploymentSpecificationDefinition extends BaseMode
             delete this.deployment_package;
             delete this.deployment_specification_id;
             delete this.deployment_specification;
-            delete this.default_enable_podio_notification;
             delete this.default_version;
             delete this.default_environment;
             delete this.default_cpu_request;
@@ -52,6 +52,8 @@ export class DeploymentPackageDeploymentSpecificationDefinition extends BaseMode
             delete this.default_memory_request;
             delete this.default_memory_limit;
             delete this.default_replicas;
+            delete this.default_knative_concurrency_limit_soft;
+            delete this.default_knative_concurrency_limit_hard;
             delete this.default_auto_update_enabled;
             delete this.default_auto_update_tag_regex;
             delete this.default_auto_update_require_approval;
@@ -79,9 +81,6 @@ export class DeploymentPackageDeploymentSpecificationDefinition extends BaseMode
         if (data.deployment_specification != null) {
             this.deployment_specification = new DeploymentSpecification(data.deployment_specification);
         }
-        if (data.default_enable_podio_notification != null) {
-            this.default_enable_podio_notification = data.default_enable_podio_notification;
-        }
         if (data.default_version != null) {
             this.default_version = data.default_version;
         }
@@ -102,6 +101,12 @@ export class DeploymentPackageDeploymentSpecificationDefinition extends BaseMode
         }
         if (data.default_replicas != null) {
             this.default_replicas = data.default_replicas;
+        }
+        if (data.default_knative_concurrency_limit_soft != null) {
+            this.default_knative_concurrency_limit_soft = data.default_knative_concurrency_limit_soft;
+        }
+        if (data.default_knative_concurrency_limit_hard != null) {
+            this.default_knative_concurrency_limit_hard = data.default_knative_concurrency_limit_hard;
         }
         if (data.default_auto_update_enabled != null) {
             this.default_auto_update_enabled = data.default_auto_update_enabled;
