@@ -164,11 +164,6 @@ function onCloseBtnClicked() {
                     :items-per-page="-1"
                     class="table"
                     density="compact">
-                    <template v-slot:item.value="{ item }">
-                        <span
-                            class="text-truncate d-inline-block"
-                            style="max-width: 300px;">{{ item.value }}</span>
-                    </template>
                     <template v-slot:item.actions="{ item }">
                         <div class="d-flex justify-end gap-1">
                             <v-btn

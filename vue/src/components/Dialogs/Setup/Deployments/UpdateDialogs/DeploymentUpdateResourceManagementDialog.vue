@@ -138,7 +138,7 @@ function onCloseBtnClicked() {
                     </v-col>
 
                     <v-col
-                        v-if="props.input.deployment.deployment_specification.workload_type !== WorkloadTypes.KNativeService"
+                        v-if="props.input.deployment.deployment_specification?.workload_type !== WorkloadTypes.KNativeService"
                         cols="12"
                     >
                         <v-text-field
@@ -150,7 +150,7 @@ function onCloseBtnClicked() {
                             label="Replicas"/>
                     </v-col>
                     <v-col
-                        v-if="props.input.deployment.deployment_specification.workload_type == WorkloadTypes.KNativeService"
+                        v-if="props.input.deployment.deployment_specification?.workload_type == WorkloadTypes.KNativeService"
                         cols="6"
                     >
                         <v-text-field
@@ -162,7 +162,7 @@ function onCloseBtnClicked() {
                             label="Container Concurrency Soft Limit"/>
                     </v-col>
                     <v-col
-                        v-if="props.input.deployment.deployment_specification.workload_type == WorkloadTypes.KNativeService"
+                        v-if="props.input.deployment.deployment_specification?.workload_type == WorkloadTypes.KNativeService"
                         cols="6"
                     >
                         <v-text-field

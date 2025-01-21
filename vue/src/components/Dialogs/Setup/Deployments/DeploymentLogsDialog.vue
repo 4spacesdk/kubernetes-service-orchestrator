@@ -7,6 +7,7 @@ import KubernetesLogList from "@/components/Modules/KubernetesLogs/List/Kubernet
 export interface DeploymentLogsDialog_Input {
     deployment: Deployment;
     preselectedPodName?: string;
+    preselectedContainerName?: string;
 }
 
 const props = defineProps<{ input: DeploymentLogsDialog_Input, events: DialogEventsInterface }>();
@@ -78,6 +79,7 @@ function onCloseBtnClicked() {
                     :namespace="props.input.deployment.namespace"
                     :app="props.input.deployment.name"
                     :preselected-pod-name="props.input.preselectedPodName"
+                    :preselected-container-name="props.input.preselectedContainerName"
                     role="app"/>
             </v-card-text>
             <v-divider/>

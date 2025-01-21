@@ -194,7 +194,7 @@ function onCloseBtnClicked() {
                             dense>
                             <v-col cols="6">
                                 <v-text-field
-                                    v-model="item.namespace"
+                                    v-model="item!.namespace"
                                     variant="outlined"
                                     :rules="[
                                     v => /^(?!^[0-9]*$)^([a-z0-9]([a-z0-9]|-(?!-)){0,14}(?<!-)$)/.test(v) || 'Invalid format'

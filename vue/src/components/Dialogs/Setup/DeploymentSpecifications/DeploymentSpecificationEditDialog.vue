@@ -51,7 +51,10 @@ const migrationVerificationTypes = ref([
     },
 ]);
 
-const networkTypes = ref([]);
+const networkTypes = ref<{
+    identifier: string,
+    name: string,
+}[]>([]);
 
 // <editor-fold desc="Functions">
 
