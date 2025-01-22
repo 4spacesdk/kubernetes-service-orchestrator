@@ -3,10 +3,10 @@
 ## v1.4.0 (?)
 
 ### Fixed bugs
-* 
+* Script "install composer dependencies" tried to cd ../zmq [Issue #39](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/39)
 
 ### Enhancements
-* Support for KNative Serving [Issue #39](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/38)
+* Support for KNative Serving [Issue #38](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/38)
   * Including separation of network layers; support for nginx-ingress, istio, contour
   * Streamlining of external and internal access configuration
   * This is a huge enhancement!
