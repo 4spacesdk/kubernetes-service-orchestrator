@@ -41,6 +41,7 @@ services:
       - deploy-service-network
 
   db:
+    platform: linux/amd64
     image: mysql:5.7.25
     container_name: 4s-deploy-service-db
     restart: unless-stopped
