@@ -16,7 +16,7 @@ class DeleteOldKubernetesRoutes extends Migration {
             ])
             ->find();
         if ($apiRoutes->exists()) {
-            $apiRoutes->delete();
+            $apiRoutes->deleteAll();
         }
     }
 
