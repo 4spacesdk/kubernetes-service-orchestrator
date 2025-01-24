@@ -177,7 +177,6 @@ function onVariableClicked(text: string) {
                 <v-row
                     dense
                 >
-
                     <v-col cols="12">
                         <v-text-field
                             variant="outlined"
@@ -186,39 +185,12 @@ function onVariableClicked(text: string) {
                                 v => /^[a-z0-9-]{1,50}$/.test(v) || 'Invalid format'
                             ]"
                             label="Name"/>
-
-                        <div
-                            style="position: relative"
-                            v-if="item.workload_type == WorkloadTypes.CustomResource"
-                        >
-                            <CodeEditor
-                                v-model="item.custom_resource"
-                                :languages="[['yaml']]"
-                                class="w-100"
-                                height="500px"
-                                theme="atom-one-dark"
-                                font-size="13px"
-                                :line-nums="true"
-                            />
-
-                            <div
-                                style="position: absolute; top: -2px; right: 40px;"
-                            >
-                                <variable-btn
-                                    color="grey"
-                                    @add-variable="newText => onVariableClicked(newText)"
-                                />
-                            </div>
-                        </div>
                     </v-col>
 
-                </v-row>
-
-                <v-row
-                    v-if="item.workload_type == WorkloadTypes.Deployment || item.workload_type == WorkloadTypes.KNativeService || item.workload_type == WorkloadTypes.DaemonSet"
-                    dense
-                >
-                    <v-col cols="12">
+                    <v-col
+                        v-if="item.workload_type == WorkloadTypes.Deployment || item.workload_type == WorkloadTypes.KNativeService || item.workload_type == WorkloadTypes.DaemonSet"
+                        cols="12"
+                    >
                         <v-select
                             v-model="item.container_image_id"
                             :loading="isLoadingContainerImageItems"
@@ -417,7 +389,7 @@ function onVariableClicked(text: string) {
                     </v-col>
 
                     <v-col
-                        v-if="item.workload_type == WorkloadTypes.Deployment || item.workload_type == WorkloadTypes.DaemonSet"
+                        v-if="item.workload_type == WorkloadTypes.Deployment || item.workload_type == WorkloadTypes.DaemonSet || item.workload_type == WorkloadTypes.CustomResource"
                         cols="12"
                         class="mt-4"
                     >
@@ -474,6 +446,32 @@ function onVariableClicked(text: string) {
                                 </v-row>
                             </div>
                         </v-card>
+                    </v-col>
+
+                    <v-col cols="12">
+                        <div
+                            style="position: relative"
+                            v-if="item.workload_type == WorkloadTypes.CustomResource"
+                        >
+                            <CodeEditor
+                                v-model="item.custom_resource"
+                                :languages="[['yaml']]"
+                                class="w-100"
+                                height="500px"
+                                theme="atom-one-dark"
+                                font-size="13px"
+                                :line-nums="true"
+                            />
+
+                            <div
+                                style="position: absolute; top: -2px; right: 40px;"
+                            >
+                                <variable-btn
+                                    color="grey"
+                                    @add-variable="newText => onVariableClicked(newText)"
+                                />
+                            </div>
+                        </div>
                     </v-col>
                 </v-row>
 

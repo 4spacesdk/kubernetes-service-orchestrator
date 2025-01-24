@@ -11,6 +11,7 @@
   * Streamlining of external and internal access configuration
   * This is a huge enhancement!
 * Support for Apple Silicon (M1, M2 etc.) [Issue #40](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/40)
+* Allow for custom resources to configuration related resources, such as database, cronjob, network access, etc.
 
 ### Upgrade guide
 1. Deploy new image

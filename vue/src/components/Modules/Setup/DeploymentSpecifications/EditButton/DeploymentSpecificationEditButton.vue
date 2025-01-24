@@ -36,11 +36,10 @@ onMounted(() => {
 });
 
 function render() {
-    isVisible.value = props.deploymentSpecification.workload_type !== WorkloadTypes.CustomResource;
     // Workload
-    showUpdateInitContainers.value = true;
-    showUpdateEnvironmentVariables.value = true;
-    showUpdateDeploymentAnnotations.value = true;
+    showUpdateInitContainers.value = props.deploymentSpecification.workload_type != WorkloadTypes.CustomResource;
+    showUpdateEnvironmentVariables.value = props.deploymentSpecification.workload_type != WorkloadTypes.CustomResource;
+    showUpdateDeploymentAnnotations.value = props.deploymentSpecification.workload_type != WorkloadTypes.CustomResource;
 
     // Network
     showNetwork.value = (props.deploymentSpecification.enable_external_access ?? false)
@@ -50,7 +49,7 @@ function render() {
     showUpdateHttpProxyRoutes.value = (props.deploymentSpecification.enable_external_access ?? false)
         && props.deploymentSpecification.network_type == NetworkTypes.Contour;
     showUpdateServicePorts.value = (props.deploymentSpecification.enable_internal_access ?? false)
-        && props.deploymentSpecification.workload_type == WorkloadTypes.Deployment;
+        && props.deploymentSpecification.workload_type !== WorkloadTypes.KNativeService;
     showUpdateServiceAnnotations.value = (props.deploymentSpecification.enable_internal_access ?? false)
         && props.deploymentSpecification.workload_type == WorkloadTypes.Deployment;
 
@@ -62,7 +61,7 @@ function render() {
     showUpdatePostCommands.value = props.deploymentSpecification.enable_database ?? false;
 
     // Update
-    showUpdatePostUpdateActions.value = true;
+    showUpdatePostUpdateActions.value = props.deploymentSpecification.workload_type != WorkloadTypes.CustomResource;
     isUpdatePostUpdateActionsEnabled.value = props.deploymentSpecification.container_image?.version_control_enabled ?? false;
 
     // RBAC
@@ -70,9 +69,11 @@ function render() {
     showUpdateRoleRules.value = props.deploymentSpecification.enable_rbac ?? false;
 
     // Other
-    showUpdateQuickCommands.value = true;
+    showUpdateQuickCommands.value = props.deploymentSpecification.workload_type != WorkloadTypes.CustomResource;
     showUpdateLabels.value = true;
     isUpdateLabelsEnabled.value = true;
+
+    isVisible.value = true;
 }
 
 function onUpdatePostCommandsClicked() {
@@ -171,7 +172,9 @@ function onUpdateCronJobsClicked() {
             <v-list
                 class="list-items">
 
-                <v-list-subheader>Workload - {{ props.deploymentSpecification.workload_type }}</v-list-subheader>
+                <v-list-subheader
+                    v-if="props.deploymentSpecification.workload_type != WorkloadTypes.CustomResource"
+                >Workload - {{ props.deploymentSpecification.workload_type }}</v-list-subheader>
                 <v-list-item
                     v-if="showUpdateInitContainers"
                     dense

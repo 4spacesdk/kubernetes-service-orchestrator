@@ -211,7 +211,6 @@ function onEditItemBtnClicked(item: DeploymentSpecification) {
                 <div class="d-flex justify-end gap-1">
 
                     <v-menu
-                        v-if="item.workload_type !== WorkloadTypes.CustomResource"
                         min-width="250">
                         <template v-slot:activator="{ props }">
                             <v-btn
