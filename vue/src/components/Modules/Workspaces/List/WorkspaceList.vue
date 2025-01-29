@@ -80,7 +80,7 @@ onMounted(() => {
 
     Api.deploymentPackages().get()
         .find(items => {
-            // deploymentPackages.value = items;
+            deploymentPackages.value = items;
             showDeploymentPackagesWarning.value = deploymentPackages.value.length === 0;
         });
 });

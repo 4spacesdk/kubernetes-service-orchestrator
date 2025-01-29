@@ -56,7 +56,7 @@ onMounted(() => {
             .include('container_image')
             .orderAsc('name')
             .find(items => {
-                // deploymentSpecs.value = items;
+                deploymentSpecs.value = items;
                 showDeploymentSpecsWarning.value = deploymentSpecs.value.length === 0;
             });
     }
