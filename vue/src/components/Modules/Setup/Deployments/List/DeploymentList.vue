@@ -10,6 +10,7 @@ import DeploymentLastMigrationStatus
 import DateView from "@/components/Modules/Common/DateView.vue";
 import debounce from "lodash.debounce";
 import DeploymentPodsButton from "@/components/Modules/Setup/Deployments/DeploymentPodsButton/DeploymentPodsButton.vue";
+import {useRouter} from 'vue-router';
 
 const props = defineProps<{
     filterByWorkspaceId?: number;
@@ -22,6 +23,8 @@ const emit = defineEmits<{
     (e: 'onItemDeleted', item: Deployment): void;
     (e: 'onItemSaved', item: Deployment): void;
 }>();
+
+const router = useRouter();
 
 const itemCount = ref(0);
 const rows = ref<Deployment[]>([]);
@@ -39,6 +42,7 @@ const options = ref({});
 
 const showCreateMenu = ref(false);
 const deploymentSpecs = ref<DeploymentSpecification[]>([]);
+const showDeploymentSpecsWarning = ref(true);
 
 const searchValue = ref('');
 
@@ -52,7 +56,8 @@ onMounted(() => {
             .include('container_image')
             .orderAsc('name')
             .find(items => {
-                deploymentSpecs.value = items;
+                // deploymentSpecs.value = items;
+                showDeploymentSpecsWarning.value = deploymentSpecs.value.length === 0;
             });
     }
 });
@@ -160,6 +165,11 @@ function onShowMigrationJobsBtnClicked(item: Deployment) {
     });
 }
 
+function onDeploymentSpecsShortcutClicked() {
+    router.push('/setup/deployment-specifications').catch((e: any) => {
+    });
+}
+
 // </editor-fold>
 
 </script>
@@ -204,6 +214,26 @@ function onShowMigrationJobsBtnClicked(item: Deployment) {
                 </template>
 
                 <v-list
+                    v-if="showDeploymentSpecsWarning"
+                    class="list-items">
+                    <v-list-item
+                        dense>
+                        <v-list-item-title>
+                            <span class="font-italic">No Deployment Specification found.</span>
+                        </v-list-item-title>
+                    </v-list-item>
+                    <v-list-item
+                        dense
+                        @click="onDeploymentSpecsShortcutClicked">
+                        <v-list-item-title>
+                            <v-icon size="small" class="my-auto">fa fa-circle-right</v-icon>
+                            <span class="ml-2">Go to Deployment Specifications</span>
+                        </v-list-item-title>
+                    </v-list-item>
+                </v-list>
+
+                <v-list
+                    v-else
                     class="list-items">
                     <v-list-item
                         v-for="(spec, i) in deploymentSpecs" :key="i"

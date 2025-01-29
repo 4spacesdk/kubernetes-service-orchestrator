@@ -80,7 +80,7 @@ onMounted(() => {
 
     Api.deploymentPackages().get()
         .find(items => {
-            deploymentPackages.value = items;
+            // deploymentPackages.value = items;
             showDeploymentPackagesWarning.value = deploymentPackages.value.length === 0;
         });
 });
@@ -318,22 +318,27 @@ function onDeploymentPackagesShortcutClicked() {
                         </template>
 
                         <v-list
+                            v-if="showDeploymentPackagesWarning"
                             class="list-items">
                             <v-list-item
-                                v-if="showDeploymentPackagesWarning"
-                                dense
+                                dense>
+                                <v-list-item-title>
+                                    <span class="font-italic">No Workspace Template found.</span>
+                                </v-list-item-title>
+                            </v-list-item>
+                            <v-list-item
                                 @click="onDeploymentPackagesShortcutClicked">
                                 <v-list-item-title>
-                                    <span class="font-italic">No Workspace Templates found.</span>
-                                </v-list-item-title>
-                                <v-list-item-title>
-                                    <v-icon size="small" class="my-auto">fa fa-gear</v-icon>
+                                    <v-icon size="small" class="my-auto">fa fa-circle-right</v-icon>
                                     <span class="ml-2">Go to Workspace Templates</span>
                                 </v-list-item-title>
                             </v-list-item>
+                        </v-list>
 
+                        <v-list
+                            v-else
+                            class="list-items">
                             <v-list-item
-                                v-else
                                 v-for="(type, i) in deploymentPackages" :key="i"
                                 dense
                                 @click="onCreateItemBtnClicked(type)">
