@@ -13,11 +13,14 @@ import WorkspaceDeploymentDomains
 import {it} from "vuetify/locale";
 import AuthService from "@/services/AuthService";
 import {DeploymentStatusTypes, RbacPermissions} from "@/constants";
+import {useRouter} from 'vue-router';
 
 interface Row {
     workspace: Workspace;
     isLoadingDeleteBtn?: boolean;
 }
+
+const router = useRouter();
 
 const itemCount = ref(0);
 const rows = ref<Row[]>([]);
@@ -33,6 +36,7 @@ const options = ref({});
 
 const showCreateMenu = ref(false);
 const deploymentPackages = ref<DeploymentPackage[]>([]);
+const showDeploymentPackagesWarning = ref(true);
 
 const searchValue = ref('');
 const statusOptions = ref([
@@ -77,6 +81,7 @@ onMounted(() => {
     Api.deploymentPackages().get()
         .find(items => {
             deploymentPackages.value = items;
+            showDeploymentPackagesWarning.value = deploymentPackages.value.length === 0;
         });
 });
 
@@ -264,6 +269,11 @@ function onShowLogsBtnClicked(item: Workspace) {
     });
 }
 
+function onDeploymentPackagesShortcutClicked() {
+    router.push('/setup/deployment-packages').catch((e: any) => {
+    });
+}
+
 // </editor-fold>
 
 </script>
@@ -301,7 +311,7 @@ function onShowLogsBtnClicked(item: Workspace) {
                                 v-bind="props"
                                 small
                                 prepend-icon="fa fa-plus"
-                                class="pr-0"
+                                style="margin-right: -16px"
                             >
                                 Create
                             </v-btn>
@@ -310,6 +320,20 @@ function onShowLogsBtnClicked(item: Workspace) {
                         <v-list
                             class="list-items">
                             <v-list-item
+                                v-if="showDeploymentPackagesWarning"
+                                dense
+                                @click="onDeploymentPackagesShortcutClicked">
+                                <v-list-item-title>
+                                    <span class="font-italic">No Workspace Templates found.</span>
+                                </v-list-item-title>
+                                <v-list-item-title>
+                                    <v-icon size="small" class="my-auto">fa fa-gear</v-icon>
+                                    <span class="ml-2">Go to Workspace Templates</span>
+                                </v-list-item-title>
+                            </v-list-item>
+
+                            <v-list-item
+                                v-else
                                 v-for="(type, i) in deploymentPackages" :key="i"
                                 dense
                                 @click="onCreateItemBtnClicked(type)">

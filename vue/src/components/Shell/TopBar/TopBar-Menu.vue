@@ -40,7 +40,7 @@ function onLogoutBtnClicked() {
 
         <v-list class="list-items">
             <v-list-item
-                dense
+                density="comfortable"
                 @click="onMyProfileBtnClicked">
                 <v-list-item-title>
                     <v-icon size="small" class="my-auto ml-2">fa fa-user</v-icon>
@@ -48,7 +48,7 @@ function onLogoutBtnClicked() {
                 </v-list-item-title>
             </v-list-item>
             <v-list-item
-                dense
+                density="comfortable"
                 @click="onLogoutBtnClicked">
                 <v-list-item-title >
                     <v-icon size="small" class="my-auto ml-2">fa fa-lock</v-icon>

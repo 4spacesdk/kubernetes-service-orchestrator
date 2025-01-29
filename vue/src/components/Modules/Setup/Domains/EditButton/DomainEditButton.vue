@@ -214,8 +214,8 @@ function onCertificateStatusClicked() {
                     dense
                     @click="onCertificateEventsClicked">
                     <v-list-item-title>
-                        <v-icon size="small" class="my-auto ml-2">fa fa-terminal</v-icon>
-                        <span class="ml-2">Certificate Status</span>
+                        <v-icon size="small" class="my-auto ml-2">fa fa-triangle-exclamation</v-icon>
+                        <span class="ml-2">Certificate Events</span>
                     </v-list-item-title>
                 </v-list-item>
                 <v-list-item
@@ -224,8 +224,8 @@ function onCertificateStatusClicked() {
                     dense
                     @click="onCertificateStatusClicked">
                     <v-list-item-title>
-                        <v-icon size="small" class="my-auto ml-2">fa fa-signal</v-icon>
-                        <span class="ml-2">Certificate Events</span>
+                        <v-icon size="small" class="my-auto ml-2">fa fa-list-check</v-icon>
+                        <span class="ml-2">Certificate Status</span>
                     </v-list-item-title>
                 </v-list-item>
             </v-list>
