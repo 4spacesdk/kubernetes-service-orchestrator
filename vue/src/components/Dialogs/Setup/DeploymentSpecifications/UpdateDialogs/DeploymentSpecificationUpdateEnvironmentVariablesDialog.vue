@@ -4,6 +4,7 @@ import {DeploymentSpecification} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
+import debounce from 'lodash.debounce';
 
 export interface DeploymentSpecificationUpdateEnvironmentVariablesDialog_Input {
     deploymentSpecification: DeploymentSpecification;
@@ -14,12 +15,21 @@ interface Row {
     value: string;
 }
 
-const props = defineProps<{ input: DeploymentSpecificationUpdateEnvironmentVariablesDialog_Input, events: DialogEventsInterface }>();
+const props = defineProps<{
+    input: DeploymentSpecificationUpdateEnvironmentVariablesDialog_Input,
+    events: DialogEventsInterface
+}>();
 
 const used = ref(false);
 const showDialog = ref(false);
+const showBulkEdit = ref(false);
+const bulkEditBtnText = computed(() => {
+    return showBulkEdit.value ? 'Key-Value Edit' : 'Bulk Edit';
+})
+const bulkEditContent = ref('');
 
 const isLoading = ref(false);
+const isSaving = ref(false);
 const itemCount = ref(0);
 const rows = ref<Row[]>([]);
 const headers = ref([
@@ -27,7 +37,7 @@ const headers = ref([
     {title: 'Value', key: 'value', sortable: false},
     {title: '', key: 'actions', sortable: false},
 ]);
-const isSaving = ref(false);
+const alertMessage = ref('');
 
 // <editor-fold desc="Functions">
 
@@ -41,6 +51,10 @@ onMounted(() => {
 
 onUnmounted(() => {
 });
+
+watch(bulkEditContent, debounce(() => {
+    updateRowsFromBulkEdit();
+}, 500))
 
 function render() {
     showDialog.value = true;
@@ -58,6 +72,7 @@ function render() {
                     }
                 }) ?? [];
             itemCount.value = rows.value.length;
+            bulkEditContent.value = JSON.stringify(rows.value);
             isLoading.value = false;
         });
 }
@@ -70,6 +85,21 @@ function close() {
 // </editor-fold>
 
 // <editor-fold desc="View Binding Functions">
+
+function updateRowsFromBulkEdit() {
+    try {
+        rows.value = JSON.parse(bulkEditContent.value);
+        alertMessage.value = '';
+    } catch (e) {
+        if (e instanceof Error) {
+            alertMessage.value = `${e.name}: ${e.message}`;
+            console.error('error obj', `${e.name}: ${e.message}`);
+        } else {
+            alertMessage.value = String(e);
+            console.error('a string', String(e))
+        }
+    }
+}
 
 function onCreateBtnClicked() {
     const newItem = {
@@ -120,8 +150,15 @@ function onCloseBtnClicked() {
     close();
 }
 
-// </editor-fold>
+function onBulkEditBtnClicked() {
+    if (!showBulkEdit.value) {
+        bulkEditContent.value = JSON.stringify(rows.value);
+    }
+    alertMessage.value = '';
+    showBulkEdit.value = !showBulkEdit.value;
+}
 
+// </editor-fold>
 </script>
 
 <template>
@@ -151,9 +188,27 @@ function onCloseBtnClicked() {
                     </div>
                 </div>
             </v-card-title>
-            <v-divider/>
-            <v-card-text>
+
+            <v-card-text class="px-4">
+                <v-btn
+                    style="top: 62px; right: 16px;"
+                    position="absolute"
+                    variant="tonal"
+                    density="default"
+                    color="blue-grey-darken-2"
+                    @click="onBulkEditBtnClicked">
+                    {{ bulkEditBtnText }}
+                </v-btn>
+
+                <v-textarea
+                    v-if="showBulkEdit"
+                    style="position: relative; top: 40px; margin-bottom: 28px;"
+                    variant="outlined"
+                    v-model="bulkEditContent">
+                </v-textarea>
+
                 <v-data-table-server
+                    v-else
                     :headers="headers"
                     :items-length="itemCount"
                     :items="rows"
@@ -184,9 +239,18 @@ function onCloseBtnClicked() {
                     </template>
                 </v-data-table-server>
             </v-card-text>
-            <v-divider/>
+
             <v-card-actions>
-                <v-spacer/>
+                <v-alert
+                    v-if="alertMessage"
+                    :text="alertMessage"
+                    density="compact"
+                    type="error"
+                    variant="tonal"
+                    class="grow mr-2"
+                    style="font-size: 12px"
+                ></v-alert>
+
                 <v-btn
                     variant="tonal"
                     color="grey"
