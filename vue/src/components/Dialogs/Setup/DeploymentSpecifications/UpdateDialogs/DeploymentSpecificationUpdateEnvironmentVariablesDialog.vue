@@ -27,6 +27,7 @@ const bulkEditBtnText = computed(() => {
     return showBulkEdit.value ? 'Key-Value Edit' : 'Bulk Edit';
 })
 const bulkEditContent = ref('');
+const bulkEditContentRowCount = ref(5);
 
 const isLoading = ref(false);
 const isSaving = ref(false);
@@ -37,7 +38,6 @@ const headers = ref([
     {title: 'Value', key: 'value', sortable: false},
     {title: '', key: 'actions', sortable: false},
 ]);
-const alertMessage = ref('');
 
 // <editor-fold desc="Functions">
 
@@ -51,10 +51,6 @@ onMounted(() => {
 
 onUnmounted(() => {
 });
-
-watch(bulkEditContent, debounce(() => {
-    updateRowsFromBulkEdit();
-}, 500))
 
 function render() {
     showDialog.value = true;
@@ -72,7 +68,6 @@ function render() {
                     }
                 }) ?? [];
             itemCount.value = rows.value.length;
-            bulkEditContent.value = JSON.stringify(rows.value);
             isLoading.value = false;
         });
 }
@@ -86,17 +81,34 @@ function close() {
 
 // <editor-fold desc="View Binding Functions">
 
-function updateRowsFromBulkEdit() {
-    try {
-        rows.value = JSON.parse(bulkEditContent.value);
-        alertMessage.value = '';
-    } catch (e) {
-        if (e instanceof Error) {
-            alertMessage.value = `${e.name}: ${e.message}`;
-        } else {
-            alertMessage.value = String(e);
+function convertRowsToBulkEditContent(rows: Row[]): string {
+    return rows.map(({name, value}) => `${name}:${value}`).join('\n');
+}
+
+function convertBulkEditToRows(bulkEditString: string): Row[] {
+    return bulkEditString.split('\n').map(line => {
+        const firstColonIndex = line.indexOf(':');
+        if (firstColonIndex === -1) {
+            return {name: line, value: ''};
         }
-    }
+        return {
+            name: line.substring(0, firstColonIndex),
+            value: line.substring(firstColonIndex + 1)
+        };
+    });
+}
+
+function updateRowsFromBulkEdit() {
+    rows.value = convertBulkEditToRows(bulkEditContent.value);
+}
+
+function updateBulkEditContentFromRows() {
+    bulkEditContent.value = convertRowsToBulkEditContent(rows.value);
+}
+
+function updateBulkEditContentRowCount() {
+    const count = (bulkEditContent.value.match(/\n/g) || []).length;
+    bulkEditContentRowCount.value = count < 5 ? 5 : count + 1;
 }
 
 function onCreateBtnClicked() {
@@ -106,7 +118,14 @@ function onCreateBtnClicked() {
     };
     bus.emit('deploymentSpecificationUpdateEnvironmentVariable', {
         environmentVariable: newItem,
-        onSaveCallback: () => rows.value.push(newItem),
+        onSaveCallback: () => {
+            rows.value.push(newItem);
+            itemCount.value++;
+            if (showBulkEdit.value) {
+                bulkEditContent.value = bulkEditContent.value.concat('\n', `${newItem.name}:${newItem.value}`);
+                updateBulkEditContentRowCount();
+            }
+        }
     });
 }
 
@@ -125,6 +144,9 @@ function onDeleteRowClicked(row: Row) {
 
 function onSaveBtnClicked() {
     isSaving.value = true;
+    if (showBulkEdit.value) {
+        updateRowsFromBulkEdit();
+    }
     const api = Api.deploymentSpecifications().updateEnvironmentVariablesPutById(props.input.deploymentSpecification.id!);
     api.setErrorHandler(response => {
         if (response.error) {
@@ -149,12 +171,18 @@ function onCloseBtnClicked() {
 }
 
 function onBulkEditBtnClicked() {
-    if (!showBulkEdit.value) {
-        bulkEditContent.value = JSON.stringify(rows.value);
+    if (showBulkEdit.value) {
+        updateRowsFromBulkEdit();
+    } else {
+        updateBulkEditContentFromRows();
+        updateBulkEditContentRowCount();
     }
-    alertMessage.value = '';
     showBulkEdit.value = !showBulkEdit.value;
 }
+
+const onBulkEditUpdate = debounce(() => {
+    updateBulkEditContentRowCount();
+}, 300);
 
 // </editor-fold>
 </script>
@@ -175,9 +203,18 @@ function onBulkEditBtnClicked() {
 
                     <div class="my-auto ml-auto d-flex justify-end gap-1">
                         <v-btn
+                            style="margin-top: 2px"
+                            variant="flat"
+                            density="default"
+                            slim flat
+                            color="blue-grey-darken-2"
+                            @click="onBulkEditBtnClicked">
+                            {{ bulkEditBtnText }}
+                        </v-btn>
+                        <v-btn
                             icon
                             variant="plain"
-                            color="secondary"
+                            color="secondary-ligthen-1"
                             size="small"
                             @click="onCreateBtnClicked()">
                             <v-icon>fa fa-plus</v-icon>
@@ -188,21 +225,15 @@ function onBulkEditBtnClicked() {
             </v-card-title>
 
             <v-card-text class="px-4">
-                <v-btn
-                    style="top: 62px; right: 16px;"
-                    position="absolute"
-                    variant="tonal"
-                    density="default"
-                    color="blue-grey-darken-2"
-                    @click="onBulkEditBtnClicked">
-                    {{ bulkEditBtnText }}
-                </v-btn>
-
                 <v-textarea
                     v-if="showBulkEdit"
-                    style="position: relative; top: 40px; margin-bottom: 28px;"
+                    v-model="bulkEditContent"
                     variant="outlined"
-                    v-model="bulkEditContent">
+                    :no-resize="false"
+                    auto-grow
+                    max-rows="20"
+                    :rows="bulkEditContentRowCount"
+                    @update:modelValue="onBulkEditUpdate">
                 </v-textarea>
 
                 <v-data-table-server
@@ -239,16 +270,6 @@ function onBulkEditBtnClicked() {
             </v-card-text>
 
             <v-card-actions>
-                <v-alert
-                    v-if="alertMessage"
-                    :text="alertMessage"
-                    density="compact"
-                    type="error"
-                    variant="tonal"
-                    class="grow mr-2"
-                    style="font-size: 12px"
-                ></v-alert>
-
                 <v-btn
                     variant="tonal"
                     color="grey"
@@ -274,5 +295,10 @@ function onBulkEditBtnClicked() {
 <style scoped>
 :deep(.v-data-table-footer) {
     display: none;
+}
+
+.v-textarea :deep(.v-field__input) {
+    -webkit-mask-image: none !important;
+    mask-image: none !important;
 }
 </style>
