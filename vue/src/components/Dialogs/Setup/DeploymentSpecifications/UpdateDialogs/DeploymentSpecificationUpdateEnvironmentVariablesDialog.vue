@@ -93,10 +93,8 @@ function updateRowsFromBulkEdit() {
     } catch (e) {
         if (e instanceof Error) {
             alertMessage.value = `${e.name}: ${e.message}`;
-            console.error('error obj', `${e.name}: ${e.message}`);
         } else {
             alertMessage.value = String(e);
-            console.error('a string', String(e))
         }
     }
 }
