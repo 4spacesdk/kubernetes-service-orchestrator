@@ -4,7 +4,6 @@ import {DeploymentSpecification} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
-import debounce from 'lodash.debounce';
 
 export interface DeploymentSpecificationUpdateEnvironmentVariablesDialog_Input {
     deploymentSpecification: DeploymentSpecification;
@@ -77,10 +76,6 @@ function close() {
     props.events.onClose();
 }
 
-// </editor-fold>
-
-// <editor-fold desc="View Binding Functions">
-
 function convertRowsToBulkEditContent(rows: Row[]): string {
     return rows.map(({name, value}) => `${name}:${value}`).join('\n');
 }
@@ -110,6 +105,10 @@ function updateBulkEditContentRowCount() {
     const count = (bulkEditContent.value.match(/\n/g) || []).length;
     bulkEditContentRowCount.value = count < 5 ? 5 : count + 1;
 }
+
+// </editor-fold>
+
+// <editor-fold desc="View Binding Functions">
 
 function onCreateBtnClicked() {
     const newItem = {
@@ -180,10 +179,6 @@ function onBulkEditBtnClicked() {
     showBulkEdit.value = !showBulkEdit.value;
 }
 
-const onBulkEditUpdate = debounce(() => {
-    updateBulkEditContentRowCount();
-}, 300);
-
 // </editor-fold>
 </script>
 
@@ -233,7 +228,7 @@ const onBulkEditUpdate = debounce(() => {
                     auto-grow
                     max-rows="20"
                     :rows="bulkEditContentRowCount"
-                    @update:modelValue="onBulkEditUpdate">
+                    @update:modelValue="updateBulkEditContentRowCount()">
                 </v-textarea>
 
                 <v-data-table-server

@@ -270,7 +270,7 @@ function onShowLogsBtnClicked(item: Workspace) {
 }
 
 function onDeploymentPackagesShortcutClicked() {
-    router.push('/setup/deployment-packages').catch((e: any) => {
+    router.push({name: 'DeploymentPackages'}).catch((e: any) => {
     });
 }
 

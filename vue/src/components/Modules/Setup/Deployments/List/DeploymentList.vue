@@ -166,7 +166,7 @@ function onShowMigrationJobsBtnClicked(item: Deployment) {
 }
 
 function onDeploymentSpecsShortcutClicked() {
-    router.push('/setup/deployment-specifications').catch((e: any) => {
+    router.push({name: 'DeploymentSpecifications'}).catch((e: any) => {
     });
 }
 
