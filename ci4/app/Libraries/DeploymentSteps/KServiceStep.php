@@ -283,7 +283,7 @@ class KServiceStep extends BaseDeploymentStep {
             $container->setAttribute('resources.requests.cpu', $deployment->cpu_request . 'm');
         }
         if ($deployment->cpu_limit) {
-            $container->setAttribute('resources.limits.cpu', $deployment->cpu_request . 'm');
+            $container->setAttribute('resources.limits.cpu', $deployment->cpu_limit . 'm');
         }
         if ($deployment->memory_request) {
             $container->setAttribute('resources.requests.memory', $deployment->memory_request . 'Mi');

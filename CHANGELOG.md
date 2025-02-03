@@ -1,9 +1,22 @@
 # Changelog
 
+## v1.4.2 (2025-02-03)
+
+### Fixed bugs
+* Fixed a bug regarding knative resource limits
+
+### Enhancements
+* 
+
+### Upgrade guide
+1. Deploy new image
+
+
+
 ## v1.4.1 (2025-02-03)
 
 ### Fixed bugs
-* 
+*
 
 ### Enhancements
 * Added option to specify container name for post migration commands
