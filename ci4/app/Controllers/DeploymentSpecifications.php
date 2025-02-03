@@ -71,7 +71,8 @@ class DeploymentSpecifications extends ResourceController {
                 fn($data) => DeploymentSpecificationPostCommand::Create(
                     $data->name,
                     $data->command,
-                    $data->allPods
+                    $data->allPods,
+                    $data->container
                 ),
                 $body->values
             );

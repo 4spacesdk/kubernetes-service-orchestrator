@@ -19,12 +19,9 @@ use App\Models\DeploymentSpecificationInitContainerModel;
 use App\Models\DeploymentVolumeModel;
 use App\Models\EnvironmentVariableModel;
 use App\Models\InitContainerModel;
-use DebugTool\Data;
 use RenokiCo\PhpK8s\Exceptions\KubernetesAPIException;
 use RenokiCo\PhpK8s\Instances\Instance;
-use RenokiCo\PhpK8s\Kinds\K8sDeployment;
 use RenokiCo\PhpK8s\Kinds\K8sEvent;
-use RenokiCo\PhpK8s\Kinds\K8sPod;
 
 class KServiceStep extends BaseDeploymentStep {
 
@@ -237,101 +234,6 @@ class KServiceStep extends BaseDeploymentStep {
         $resource = $this->getResource($deployment, true)->get();
         $status = $resource->getAttribute('status');
         return $status;
-    }
-
-    /**
-     * @throws \Exception
-     */
-    public function hasNonReadyContainer(Deployment $deployment): bool {
-        $cluster = (new KubeAuth())->authenticate();
-        $resource = $cluster->getDeploymentByName($deployment->name, $deployment->namespace);
-        $resource::selectPods(function(K8sDeployment $dep) use ($deployment) {
-            return [
-                "app" => "$deployment->name,role=app",
-            ];
-        });
-        $pods = $resource->getPods();
-        $hasNonReadyContainer = false;
-        /** @var K8sPod $pod */
-        foreach ($pods as $pod) {
-            Data::debug("Pod found for", $deployment->name, 'with name', $pod->getName());
-            if (!$pod->containersAreReady()) {
-                $hasNonReadyContainer = true;
-            }
-        }
-        return $hasNonReadyContainer;
-    }
-
-    /**
-     * @throws \Exception
-     */
-    public function executeCommand(Deployment $deployment, array $command, bool $forAll): array {
-        Data::debug('executeCommand for', $deployment->name, $deployment->namespace);
-        $pods = $this->getPods($deployment);
-        Data::debug('found', count($pods), 'running pods');
-        $log = [];
-        foreach ($pods as $pod) {
-            if ($pod->isRunning()) {
-                $messages = $pod->exec($command);
-                $all = collect($messages)->where('channel', 'stdout')->all();
-                $lines = [];
-                foreach ($all as ['channel' => $channel, 'output' => $output]) {
-                    $lines[] = $output;
-                }
-                $lines = explode("\n", implode("\n", $lines)); // K8s returning multiple vars in single line. This will fix that.
-                $log = array_merge($log, $lines);
-
-                if (!$forAll) {
-                    break;
-                }
-            }
-        }
-        return $log;
-    }
-
-    /**
-     * @return K8sPod[]
-     * @throws \Exception
-     */
-    public function getPods(Deployment $deployment): array {
-        $cluster = (new KubeAuth())->authenticate();
-        $resource = $cluster->getDeploymentByName($deployment->name, $deployment->namespace);
-        $resource::selectPods(function(K8sDeployment $dep) use ($deployment) {
-            return [
-                "app" => "$deployment->name,role=app",
-            ];
-        });
-        $pods = $resource->getPods();
-        $items = [];
-        /** @var K8sPod $pod */
-        foreach ($pods as $pod) {
-            Data::debug("Pod found for", $deployment->name, 'with name', $pod->getName(), $pod->isRunning() ? 'is running' : 'is not running');
-            $items[] = $pod;
-        }
-        return $items;
-    }
-
-    /**
-     * @throws \Exception
-     */
-    public function waitForPodsToStabilize(Deployment $deployment): void {
-        $timeout = 120; // Seconds
-        $start = time();
-        while (time() - $start < $timeout) {
-            $pods = $this->getPods($deployment);
-            $hasTerminatingPod = false;
-            foreach ($pods as $pod) {
-                if (!$pod->isRunning()) {
-                    $hasTerminatingPod = true;
-                }
-            }
-            if (count($pods) == $deployment->replicas && !$hasTerminatingPod) {
-                return;
-            }
-            Data::debug("Found", count($pods), "pods, waiting for", $deployment->replicas, "to stabilize");
-            sleep(3);
-        }
-        throw new \Exception('Timed out waiting for pods to stabilize');
     }
 
     /**

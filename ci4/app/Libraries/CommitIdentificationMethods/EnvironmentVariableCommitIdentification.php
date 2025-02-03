@@ -33,7 +33,7 @@ class EnvironmentVariableCommitIdentification extends BaseCommitIdentificationMe
             foreach ($pods as $pod) {
                 // Get environment variables
                 try {
-                    $messages = $pod->exec(['/bin/sh', '-c', "printenv"]);
+                    $messages = $pod->exec(['/bin/sh', '-c', "printenv"], $deployment->name);
                 } catch (\RenokiCo\PhpK8s\Exceptions\KubernetesExecException|\RenokiCo\PhpK8s\Exceptions\KubernetesAPIException $e) {
                     Data::debug($e->getMessage());
                 }

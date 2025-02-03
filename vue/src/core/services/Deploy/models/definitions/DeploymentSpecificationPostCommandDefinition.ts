@@ -12,6 +12,7 @@ export class DeploymentSpecificationPostCommandDefinition extends BaseModel {
     name?: string;
     command?: string;
     all_pods?: boolean;
+    container?: string;
     id?: number;
     created?: string;
     updated?: string;
@@ -34,6 +35,7 @@ export class DeploymentSpecificationPostCommandDefinition extends BaseModel {
             delete this.name;
             delete this.command;
             delete this.all_pods;
+            delete this.container;
             delete this.id;
             delete this.created;
             delete this.updated;
@@ -60,6 +62,9 @@ export class DeploymentSpecificationPostCommandDefinition extends BaseModel {
         }
         if (data.all_pods != null) {
             this.all_pods = data.all_pods;
+        }
+        if (data.container != null) {
+            this.container = data.container;
         }
         if (data.id != null) {
             this.id = data.id;

@@ -261,6 +261,7 @@ export interface PostCommand {
     name?: string;
     command?: string;
     allPods?: boolean;
+    container?: string;
 }
 
 export interface PostCommandList {

@@ -97,6 +97,7 @@ class MigrationJob extends Entity {
                         Data::debug($postCommand->command);
                         $commandOutputLines = $deploymentStep->executeCommand(
                             $deployment,
+                            strlen($postCommand->container) ? $postCommand->container : $deployment->name,
                             [
                                 '/bin/sh',
                                 '-c',

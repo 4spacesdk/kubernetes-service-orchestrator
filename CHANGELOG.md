@@ -1,5 +1,19 @@
 # Changelog
 
+## v1.4.1 (2025-02-03)
+
+### Fixed bugs
+* 
+
+### Enhancements
+* Added option to specify container name for post migration commands
+
+### Upgrade guide
+1. Deploy new image
+2. Migrate database [(Guide)](https://github.com/4spacesdk/kubernetes-service-orchestrator?tab=readme-ov-file#migrate-database-helm)
+
+
+
 ## v1.4.0 (2025-02-03)
 
 ### Fixed bugs

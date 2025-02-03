@@ -256,14 +256,14 @@ class DeploymentStep extends BaseDeploymentStep {
     /**
      * @throws \Exception
      */
-    public function executeCommand(Deployment $deployment, array $command, bool $forAll): array {
+    public function executeCommand(Deployment $deployment, string $container, array $command, bool $forAll): array {
         Data::debug('executeCommand for', $deployment->name, $deployment->namespace);
         $pods = $this->getPods($deployment);
         Data::debug('found', count($pods), 'running pods');
         $log = [];
         foreach ($pods as $pod) {
             if ($pod->isRunning()) {
-                $messages = $pod->exec($command);
+                $messages = $pod->exec($command, $container);
                 $all = collect($messages)->where('channel', 'stdout')->all();
                 $lines = [];
                 foreach ($all as ['channel' => $channel, 'output' => $output]) {
@@ -286,13 +286,16 @@ class DeploymentStep extends BaseDeploymentStep {
      */
     public function getPods(Deployment $deployment): array {
         $cluster = (new KubeAuth())->authenticate();
-        $resource = $cluster->getDeploymentByName($deployment->name, $deployment->namespace);
-        $resource::selectPods(function (K8sDeployment $dep) use($deployment) {
-            return [
-                "app" => "$deployment->name,role=app",
-            ];
-        });
-        $pods = $resource->getPods();
+        $pods = $cluster->getAllPods(
+            $deployment->namespace,
+            [
+                'labelSelector' => urldecode(http_build_query(
+                    [
+                        "app" => "$deployment->name,role=app",
+                    ]
+                ))
+            ]
+        );
         $items = [];
         /** @var K8sPod $pod */
         foreach ($pods as $pod) {

@@ -13,6 +13,7 @@ interface Row {
     name: string;
     command: string;
     allPods: boolean;
+    container: string;
     position: number;
 }
 
@@ -27,6 +28,7 @@ const rows = ref<Row[]>([]);
 const headers = ref([
     {title: '', key: 'handle', sortable: false, width: 30},
     {title: 'Name', key: 'name', sortable: false},
+    {title: 'Container', key: 'container', sortable: false},
     {title: 'Command', key: 'command', sortable: false},
     {title: 'All pods', key: 'allPods', sortable: false},
     {title: '', key: 'actions', sortable: false},
@@ -61,6 +63,7 @@ function render() {
                         name: postCommand.name ?? '',
                         command: postCommand.command ?? '',
                         allPods: postCommand.all_pods ?? false,
+                        container: postCommand.container ?? '',
                         position: pos++,
                     }
                 }) ?? [];
@@ -82,6 +85,7 @@ function onCreateBtnClicked() {
     const newItem = {
         name: '',
         command: '',
+        container: '',
         allPods: false,
         position: rows.value.length - 1,
     };

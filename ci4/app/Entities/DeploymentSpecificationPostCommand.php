@@ -10,14 +10,16 @@ use App\Core\Entity;
  * @property string $name
  * @property string $command
  * @property bool $all_pods
+ * @property string $container
  */
 class DeploymentSpecificationPostCommand extends Entity {
 
-    public static function Create(string $name, string $command, bool $allPods): DeploymentSpecificationPostCommand {
+    public static function Create(string $name, string $command, bool $allPods, string $container): DeploymentSpecificationPostCommand {
         $item = new DeploymentSpecificationPostCommand();
         $item->name = $name;
         $item->command = $command;
         $item->all_pods = $allPods;
+        $item->container = $container;
         $item->save();
         return $item;
     }
