@@ -1,12 +1,25 @@
 # Changelog
 
+## v1.4.3 (2025-02-06)
+
+### Fixed bugs
+* Fixed a bug in `waitForPodsToStabilize` when using knative with 0 replicas 
+
+### Enhancements
+*
+
+### Upgrade guide
+1. Deploy new image
+
+
+
 ## v1.4.2 (2025-02-03)
 
 ### Fixed bugs
 * Fixed a bug regarding knative resource limits
 
 ### Enhancements
-* 
+*
 
 ### Upgrade guide
 1. Deploy new image

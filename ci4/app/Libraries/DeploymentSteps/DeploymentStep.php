@@ -319,7 +319,7 @@ class DeploymentStep extends BaseDeploymentStep {
                     $hasTerminatingPod = true;
                 }
             }
-            if (count($pods) == $deployment->replicas && !$hasTerminatingPod) {
+            if (count($pods) >= $deployment->replicas && !$hasTerminatingPod) {
                 return;
             }
             Data::debug("Found", count($pods), "pods, waiting for", $deployment->replicas, "to stabilize");
