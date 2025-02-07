@@ -308,29 +308,6 @@ class DeploymentStep extends BaseDeploymentStep {
     /**
      * @throws \Exception
      */
-    public function waitForPodsToStabilize(Deployment $deployment): void {
-        $timeout = 120; // Seconds
-        $start = time();
-        while (time() - $start < $timeout) {
-            $pods = $this->getPods($deployment);
-            $hasTerminatingPod = false;
-            foreach ($pods as $pod) {
-                if (!$pod->isRunning()) {
-                    $hasTerminatingPod = true;
-                }
-            }
-            if (count($pods) >= $deployment->replicas && !$hasTerminatingPod) {
-                return;
-            }
-            Data::debug("Found", count($pods), "pods, waiting for", $deployment->replicas, "to stabilize");
-            sleep(3);
-        }
-        throw new \Exception('Timed out waiting for pods to stabilize');
-    }
-
-    /**
-     * @throws \Exception
-     */
     private function getResource(Deployment $deployment, bool $auth = false): K8sDeployment {
         $spec = $deployment->findDeploymentSpecification();
 

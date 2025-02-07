@@ -2,7 +2,7 @@
 
 use App\Entities\ContainerImage;
 use App\Entities\Deployment;
-use App\Libraries\DeploymentSteps\DeploymentStep;
+use App\Libraries\Kubernetes\RunJobHelper;
 use DebugTool\Data;
 
 class EnvironmentVariableCommitIdentification extends BaseCommitIdentificationMethod {
@@ -21,40 +21,25 @@ class EnvironmentVariableCommitIdentification extends BaseCommitIdentificationMe
         $env = [];
 
         try {
-            $deploymentStep = new DeploymentStep();
-            $deploymentStep->waitForPodsToStabilize($deployment);
-            $pods = $deploymentStep->getPods($deployment);
-            Data::debug('found ' . count($pods) . ' pods');
-            if (count($pods) == 0) {
-                Data::debug('ERROR no pods found');
+            $runJobHelper = new RunJobHelper();
+            $log = $runJobHelper->runJob($deployment, 'printenv');
+            if (!$log) {
+                Data::debug("EnvironmentVariableCommitIdentification failed cause of missing log from run-job");
                 return "";
             }
-
-            foreach ($pods as $pod) {
-                // Get environment variables
-                try {
-                    $messages = $pod->exec(['/bin/sh', '-c', "printenv"], $deployment->name);
-                } catch (\RenokiCo\PhpK8s\Exceptions\KubernetesExecException|\RenokiCo\PhpK8s\Exceptions\KubernetesAPIException $e) {
-                    Data::debug($e->getMessage());
+            $lines = explode("\n", $log); // K8s returning multiple vars in single line. This will fix that.
+            Data::debug('found ' . count($lines) . ' lines');
+            foreach ($lines as $line) {
+                $parts = explode('=', $line, 2);
+                $key = $parts[0];
+                if (count($parts) == 2) {
+                    $env[$key] = $parts[1];
+                } else if (count($parts) == 1) {
+                    $env[$key] = null;
                 }
-                $all = collect($messages)->where('channel', 'stdout')->all();
-                $lines = [];
-                foreach ($all as ['channel' => $channel, 'output' => $output]) {
-                    $lines[] = $output;
-                }
-                $lines = explode("\n", implode("\n", $lines)); // K8s returning multiple vars in single line. This will fix that.
-                Data::debug('found ' . count($lines) . ' lines');
-                foreach ($lines as $line) {
-                    $parts = explode('=', $line, 2);
-                    $key = $parts[0];
-                    if (count($parts) == 2) {
-                        $env[$key] = $parts[1];
-                    } else if (count($parts) == 1) {
-                        $env[$key] = null;
-                    }
-                }
-                Data::debug('found ' . count($env) . ' env vars');
             }
+            Data::debug('found ' . count($env) . ' env vars');
+            Data::debug($env);
         } catch (\Exception $e) {
             Data::debug($e->getMessage());
         }

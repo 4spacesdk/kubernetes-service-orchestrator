@@ -1,9 +1,31 @@
 # Changelog
 
+## v1.4.4 (2025-02-07)
+
+### Fixed bugs
+* 
+
+### Enhancements
+* Updated zmq-server composer dependencies
+* Added run-job feature
+  * Start kubernetes job and get log as response
+  * Internally this feature handles
+    * Job creation
+    * Wait for completion
+    * Fetch pod logs
+    * Delete pod and job
+    * Return log
+  * This feature is used to handle interaction with deployments that run on zero replicas (knative serving) 
+
+### Upgrade guide
+1. Deploy new image
+
+
+
 ## v1.4.3 (2025-02-06)
 
 ### Fixed bugs
-* Fixed a bug in `waitForPodsToStabilize` when using knative with 0 replicas 
+* Fixed a bug in `waitForPodsToStabilize` when using knative with 0 replicas
 
 ### Enhancements
 *
