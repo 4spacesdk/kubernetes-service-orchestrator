@@ -82,8 +82,12 @@ class AutoUpdate extends Entity {
 
         $log = Data::getDebugger();
         if (is_array($log)) {
-            $lines = implode("\n", $log);
-            $this->appendLog($lines);
+            try {
+                $lines = implode("\n", $log);
+                $this->appendLog($lines);
+            } catch (\Exception $e) {
+                $this->appendLog(json_encode($log, JSON_PRETTY_PRINT));
+            }
         }
 
         ZMQProxy::getInstance()->send(

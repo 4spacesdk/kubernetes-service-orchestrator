@@ -30,7 +30,7 @@ class RunJobHelper {
             Data::debug("failed to apply job");
             return null;
         }
-        Data::debug("Created job {$this->getJobName($deployment)}, {$deployment->namespace}, {$jobId}");
+        Data::debug("Created job {$this->getJobName($deployment, $jobId)}, {$deployment->namespace}, {$jobId}");
 
         try {
             $this->waitForCompletion($deployment, $jobId);
@@ -49,7 +49,7 @@ class RunJobHelper {
         }
 
         try {
-            $this->deleteJob($deployment);
+            $this->deleteJob($deployment, $jobId);
         } catch (\Exception $e) {
             Data::debug(KubeHelper::PrintException($e));
             Data::debug("failed to delete job");
@@ -59,8 +59,8 @@ class RunJobHelper {
         return $logs;
     }
 
-    private function getJobName(Deployment $deployment): string {
-        return "{$deployment->name}-run-job";
+    private function getJobName(Deployment $deployment, string $jobId): string {
+        return "{$deployment->name}-run-job-{$jobId}";
     }
 
     /**
@@ -150,7 +150,7 @@ class RunJobHelper {
 
         $resource = new K8sJob();
         $resource
-            ->setName($this->getJobName($deployment))
+            ->setName($this->getJobName($deployment, $jobId))
             ->setNamespace($deployment->namespace)
             ->setTemplate($template)
             ->setSpec('activeDeadlineSeconds', MINUTE)
@@ -182,12 +182,12 @@ class RunJobHelper {
     /**
      * @throws \Exception
      */
-    private function waitForCompletion(Deployment $deployment): void {
+    private function waitForCompletion(Deployment $deployment, string $jobId): void {
         $ticks = 0;
         $cluster = (new KubeAuth())->authenticate();
-        $job = $cluster->getJobByName($this->getJobName($deployment), $deployment->namespace);
-        $job->watch(function($data) use ($deployment, $cluster, $job, &$ticks) {
-            Data::debug($data);
+        $job = $cluster->getJobByName($this->getJobName($deployment, $jobId), $deployment->namespace);
+        $job->watch(function($data) use ($jobId, $deployment, $cluster, $job, &$ticks) {
+//            Data::debug($data);
 
             $done = false;
             $message = "";
@@ -196,21 +196,23 @@ class RunJobHelper {
             switch ($data) {
                 case 'ADDED':
                 case 'MODIFIED':
-                    $job = $cluster->getJobByName($this->getJobName($deployment), $deployment->namespace);
+                    $job = $cluster->getJobByName($this->getJobName($deployment, $jobId), $deployment->namespace);
                     $conditions = $job->getStatus('conditions');
-                    Data::debug($conditions);
-                    foreach ($conditions as $condition) {
-                        switch ($condition['type']) {
-                            case 'Failed':
-                                $failed = true;
-                                $message = $condition['message'];
-                                $done = true;
-                                break;
-                            case 'Complete':
-                                $failed = false;
-                                $message = $condition['message'];
-                                $done = true;
-                                break;
+//                    Data::debug($conditions);
+                    if ($conditions) {
+                        foreach ($conditions as $condition) {
+                            switch ($condition['type']) {
+                                case 'Failed':
+                                    $failed = true;
+                                    $message = $condition['message'];
+                                    $done = true;
+                                    break;
+                                case 'Complete':
+                                    $failed = false;
+                                    $message = $condition['message'];
+                                    $done = true;
+                                    break;
+                            }
                         }
                     }
                     break;
@@ -218,7 +220,6 @@ class RunJobHelper {
                 case 'DELETED':
                 case 'ERROR':
                     return true; // Stop, failed
-                    break;
             }
 
             if ($done) {
@@ -268,9 +269,9 @@ class RunJobHelper {
      * @throws KubernetesAPIException
      * @throws \Exception
      */
-    private function deleteJob(Deployment $deployment): void {
+    private function deleteJob(Deployment $deployment, string $jobId): void {
         $cluster = (new KubeAuth())->authenticate();
-        $job = $cluster->getJobByName($this->getJobName($deployment), $deployment->namespace);
+        $job = $cluster->getJobByName($this->getJobName($deployment, $jobId), $deployment->namespace);
         /** @var K8sPod $pod */
         foreach ($job->getPods() as $pod) {
             $pod->delete();

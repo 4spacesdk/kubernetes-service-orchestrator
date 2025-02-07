@@ -39,7 +39,6 @@ class EnvironmentVariableCommitIdentification extends BaseCommitIdentificationMe
                 }
             }
             Data::debug('found ' . count($env) . ' env vars');
-            Data::debug($env);
         } catch (\Exception $e) {
             Data::debug($e->getMessage());
         }
