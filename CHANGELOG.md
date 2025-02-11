@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.4.7 (2025-02-12)
+
+### Fixed bugs
+*
+
+### Enhancements
+* KNative Services now support init containers
+
+### Upgrade guide
+1. Deploy new image
+
+
+
 ## v1.4.6 (2025-02-11)
 
 ### Fixed bugs
@@ -7,9 +20,9 @@
 
 ### Enhancements
 * Volumes V2
-  * We can now manage volumes at deployment specification level
-  * Init containers now support volumes
-  * KNative Services now support volumes
+    * We can now manage volumes at deployment specification level
+    * Init containers now support volumes
+    * KNative Services now support volumes
 
 ### Upgrade guide
 1. Deploy new image

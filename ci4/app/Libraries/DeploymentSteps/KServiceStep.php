@@ -395,12 +395,12 @@ class KServiceStep extends BaseDeploymentStep {
             $initContainers[] = $deploymentSpecificationInitContainer->init_container->toKubernetesResource($deployment)->toArray();
         }
         if (count($initContainers) > 0) {
-            $template->setAttribute('initContainers', $initContainers);
+            $template->setAttribute('spec.initContainers', $initContainers);
         }
 
         // Service Account
         if ($spec->hasDeploymentStep($deployment, ServiceAccountStep::class)) {
-            $template->setAttribute('serviceAccountName', $deployment->name);
+            $template->setAttribute('spec.serviceAccountName', $deployment->name);
         }
 
         // KNativeService
