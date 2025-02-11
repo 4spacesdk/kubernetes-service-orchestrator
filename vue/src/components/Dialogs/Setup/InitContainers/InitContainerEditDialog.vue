@@ -301,6 +301,17 @@ function onArgVariableAdded(index: number, value: string) {
                             color="secondary"
                         />
                     </v-col>
+
+                    <v-col cols="12">
+                        <v-switch
+                            v-model="item.include_volumes"
+                            variant="outlined"
+                            label="Mount volumes"
+                            density="compact"
+                            hide-details
+                            color="secondary"
+                        />
+                    </v-col>
                 </v-row>
             </v-card-text>
             <v-divider/>

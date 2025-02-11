@@ -441,7 +441,7 @@ function onVariableClicked(text: string) {
                             >
                                 <v-row>
                                     <v-col cols="12">
-                                        <span>Volumes can be added to deployments</span>
+                                        <span>Volumes can be added from the settings button or directly to deployments</span>
                                     </v-col>
                                 </v-row>
                             </div>

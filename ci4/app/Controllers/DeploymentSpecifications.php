@@ -11,6 +11,7 @@ use App\Entities\DeploymentSpecificationIngress;
 use App\Entities\DeploymentSpecificationPostCommand;
 use App\Entities\DeploymentSpecificationPostUpdateAction;
 use App\Entities\DeploymentSpecificationRoleRule;
+use App\Entities\DeploymentSpecificationVolume;
 use App\Entities\Label;
 use App\Entities\DeploymentSpecificationQuickCommand;
 use App\Entities\DeploymentSpecificationServiceAnnotation;
@@ -18,6 +19,7 @@ use App\Entities\DeploymentSpecificationServicePort;
 use App\Entities\DeploymentSpecificationInitContainer;
 use App\Interfaces\ClusterRoleRuleList;
 use App\Interfaces\DeploymentAnnotationList;
+use App\Interfaces\DeploymentSpecificationVolumeList;
 use App\Interfaces\EnvironmentVariableList;
 use App\Interfaces\HttpProxyRouteList;
 use App\Interfaces\IngressList;
@@ -440,6 +442,39 @@ class DeploymentSpecifications extends ResourceController {
                 $body->values
             );
             $item->updateHttpProxyRoutes($values);
+        }
+        $this->_setResource($item);
+        $this->success();
+    }
+
+    /**
+     * @route /deployment-specifications/{id}/volumes
+     * @method put
+     * @custom true
+     * @param int $id
+     * @requestSchema DeploymentSpecificationVolumeList
+     * @return void
+     */
+    public function updateVolumes(int $id): void {
+        $item = new DeploymentSpecification();
+        $item->find($id);
+        if ($item->exists()) {
+            /** @var DeploymentSpecificationVolumeList $body */
+            $body = $this->request->getJSON();
+            $values = new DeploymentSpecificationVolume();
+            $values->all = array_map(
+                fn($data) => DeploymentSpecificationVolume::Create(
+                    $data->mount_path,
+                    $data->sub_path,
+                    $data->capacity,
+                    $data->volume_mode,
+                    $data->reclaim_policy,
+                    $data->nfs_server,
+                    $data->nfs_path,
+                ),
+                $body->values
+            );
+            $item->updateVolumes($values);
         }
         $this->_setResource($item);
         $this->success();

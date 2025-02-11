@@ -23,6 +23,7 @@ use App\Models\DeploymentSpecificationEnvironmentVariableModel;
 use App\Models\DeploymentSpecificationHttpProxyRouteModel;
 use App\Models\DeploymentSpecificationServiceAnnotationModel;
 use App\Models\DeploymentSpecificationServicePortModel;
+use App\Models\DeploymentSpecificationVolumeModel;
 use App\Models\DeploymentVolumeModel;
 use App\Core\Entity;
 
@@ -83,6 +84,7 @@ use App\Core\Entity;
  * @property DeploymentSpecificationPostUpdateAction $deployment_specification_post_update_actions
  * @property DeploymentSpecificationCronJob $deployment_specification_cron_jobs
  * @property DeploymentSpecificationHttpProxyRoute $deployment_specification_http_proxy_routes
+ * @property DeploymentSpecificationVolume $deployment_specification_volumes
  * @property Label $labels
  *
  * @property DeploymentStep $deploymentSteps
@@ -185,6 +187,15 @@ class DeploymentSpecification extends Entity {
             if ($deploymentVolumes->exists()) {
                 $steps[] = new PersistentVolumeStep();
                 $steps[] = new PersistentVolumeClaimStep();
+            } else {
+                /** @var DeploymentSpecificationVolume $deploymentSpecificationVolumes */
+                $deploymentSpecificationVolumes = (new DeploymentSpecificationVolumeModel())
+                    ->where('deployment_specification_id', $this->id)
+                    ->find();
+                if ($deploymentSpecificationVolumes->exists()) {
+                    $steps[] = new PersistentVolumeStep();
+                    $steps[] = new PersistentVolumeClaimStep();
+                }
             }
         }
 
@@ -360,6 +371,12 @@ class DeploymentSpecification extends Entity {
         $this->deployment_specification_http_proxy_routes->find()->deleteAll();
         $this->save($values);
         $this->deployment_specification_http_proxy_routes = $values;
+    }
+
+    public function updateVolumes(DeploymentSpecificationVolume $values): void {
+        $this->deployment_specification_volumes->find()->deleteAll();
+        $this->save($values);
+        $this->deployment_specification_volumes = $values;
     }
 
     // </editor-fold>

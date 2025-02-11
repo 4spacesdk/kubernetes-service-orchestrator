@@ -225,6 +225,12 @@ import type {
 import type {
     DeploymentUpdateWorkspaceDialog_Input
 } from "@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateWorkspaceDialog.vue";
+import type {
+    DeploymentSpecificationUpdateVolumesDialog_Input
+} from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateVolumesDialog.vue";
+import type {
+    DeploymentSpecificationUpdateVolumeDialog_Input
+} from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateVolumeDialog.vue";
 
 export type Events = {
     confirm: ConfirmationDialog_Input;
@@ -324,6 +330,8 @@ export type Events = {
     deploymentSpecificationUpdateHttpProxyRoutes: DeploymentSpecificationUpdateHttpProxyRoutesDialog_Input;
     deploymentSpecificationUpdateHttpProxyRoute: DeploymentSpecificationUpdateHttpProxyRoutePathDialog_Input;
     deploymentSpecificationUpdateCronJobs: DeploymentSpecificationUpdateCronJobsDialog_Input;
+    deploymentSpecificationUpdateVolumes: DeploymentSpecificationUpdateVolumesDialog_Input;
+    deploymentSpecificationUpdateVolume: DeploymentSpecificationUpdateVolumeDialog_Input;
 
     deploymentPackageSaved: DeploymentPackage | undefined;
     deploymentPackageEdit: DeploymentPackageCreateDialog_Input;

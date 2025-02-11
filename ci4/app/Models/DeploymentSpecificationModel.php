@@ -32,6 +32,7 @@ class DeploymentSpecificationModel extends Model implements ResourceModelInterfa
         LabelModel::class,
         DeploymentSpecificationCronJobModel::class,
         DeploymentSpecificationHttpProxyRouteModel::class,
+        DeploymentSpecificationVolumeModel::class,
     ];
 
     public function preRestGet($queryParser, $id) {

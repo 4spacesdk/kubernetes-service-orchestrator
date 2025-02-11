@@ -3,6 +3,7 @@
 use App\Entities\ContainerImage;
 use App\Entities\DatabaseService;
 use App\Entities\Deployment;
+use App\Entities\DeploymentSpecificationVolume;
 use App\Entities\DeploymentVolume;
 use App\Entities\Domain;
 use App\Entities\EnvironmentVariable;
@@ -14,6 +15,7 @@ use App\Libraries\DeploymentSteps\Helpers\DeploymentStepTriggers;
 use App\Libraries\Kubernetes\KubeAuth;
 use App\Libraries\Kubernetes\KubeHelper;
 use App\Models\ContainerImageModel;
+use App\Models\DeploymentSpecificationVolumeModel;
 use App\Models\DeploymentVolumeModel;
 use App\Models\EnvironmentVariableModel;
 use DebugTool\Data;
@@ -308,6 +310,25 @@ class MigrationJobStep extends BaseDeploymentStep {
                 ]);
 
             $container->addMountedVolume($volume->mountTo($deploymentVolume->mount_path, $deploymentVolume->sub_path));
+
+            $volumes[] = $volume;
+        }
+        /** @var DeploymentSpecificationVolume $deploymentSpecificationVolumes */
+        $deploymentSpecificationVolumes = (new DeploymentSpecificationVolumeModel())
+            ->where('deployment_specification_id', $spec->id)
+            ->find();
+        foreach ($deploymentSpecificationVolumes as $deploymentSpecificationVolume) {
+            $volume = new Volume();
+            $volume
+                ->setAttribute('name', $deployment->name)
+                ->setAttribute('persistentVolumeClaim', [
+                    'claimName' => $deployment->name,
+                ]);
+
+            $container->addMountedVolume($volume->mountTo(
+                $deploymentSpecificationVolume->mount_path,
+                $deploymentSpecificationVolume->getCompiledSubPath($deployment)
+            ));
 
             $volumes[] = $volume;
         }

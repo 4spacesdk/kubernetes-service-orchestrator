@@ -4,10 +4,9 @@ use App\Entities\DatabaseService;
 use App\Entities\Deployment;
 use App\Entities\DeploymentSpecificationDeploymentAnnotation;
 use App\Entities\DeploymentSpecificationInitContainer;
+use App\Entities\DeploymentSpecificationVolume;
 use App\Entities\DeploymentVolume;
-use App\Entities\Domain;
 use App\Entities\EnvironmentVariable;
-use App\Entities\InitContainer;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepLevels;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
@@ -16,7 +15,7 @@ use App\Libraries\Kubernetes\KubeAuth;
 use App\Models\ContainerImageModel;
 use App\Models\DeploymentSpecificationDeploymentAnnotationModel;
 use App\Models\DeploymentSpecificationInitContainerModel;
-use App\Models\DeploymentSpecificationModel;
+use App\Models\DeploymentSpecificationVolumeModel;
 use App\Models\DeploymentVolumeModel;
 use App\Models\EnvironmentVariableModel;
 use App\Models\InitContainerModel;
@@ -377,6 +376,25 @@ class DeploymentStep extends BaseDeploymentStep {
                 ]);
 
             $container->addMountedVolume($volume->mountTo($deploymentVolume->mount_path, $deploymentVolume->sub_path));
+
+            $volumes[] = $volume;
+        }
+        /** @var DeploymentSpecificationVolume $deploymentSpecificationVolumes */
+        $deploymentSpecificationVolumes = (new DeploymentSpecificationVolumeModel())
+            ->where('deployment_specification_id', $spec->id)
+            ->find();
+        foreach ($deploymentSpecificationVolumes as $deploymentSpecificationVolume) {
+            $volume = new Volume();
+            $volume
+                ->setAttribute('name', $deployment->name)
+                ->setAttribute('persistentVolumeClaim', [
+                    'claimName' => $deployment->name,
+                ]);
+
+            $container->addMountedVolume($volume->mountTo(
+                $deploymentSpecificationVolume->mount_path,
+                $deploymentSpecificationVolume->getCompiledSubPath($deployment)
+            ));
 
             $volumes[] = $volume;
         }

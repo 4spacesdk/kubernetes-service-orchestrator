@@ -248,6 +248,12 @@ bus.on('deploymentSpecificationUpdateHttpProxyRoute', async input => {
 bus.on('deploymentSpecificationUpdateHttpProxyRoutes', async input => {
     addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateHttpProxyRoutesDialog.vue')).default, input);
 });
+bus.on('deploymentSpecificationUpdateVolume', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateVolumeDialog.vue')).default, input);
+});
+bus.on('deploymentSpecificationUpdateVolumes', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateVolumesDialog.vue')).default, input);
+});
 
 
 bus.on('deploymentPackageEdit', async input => {

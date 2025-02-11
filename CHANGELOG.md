@@ -1,12 +1,29 @@
 # Changelog
 
+## v1.4.6 (2025-02-11)
+
+### Fixed bugs
+*
+
+### Enhancements
+* Volumes V2
+  * We can now manage volumes at deployment specification level
+  * Init containers now support volumes
+  * KNative Services now support volumes
+
+### Upgrade guide
+1. Deploy new image
+2. Migrate database [(Guide)](https://github.com/4spacesdk/kubernetes-service-orchestrator?tab=readme-ov-file#migrate-database-helm)
+
+
+
 ## v1.4.5 (2025-02-07)
 
 ### Fixed bugs
-* 
+*
 
 ### Enhancements
-* 
+*
 
 ### Upgrade guide
 1. Deploy new image

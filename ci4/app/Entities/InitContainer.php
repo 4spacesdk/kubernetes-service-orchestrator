@@ -1,9 +1,12 @@
 <?php namespace App\Entities;
 
+use App\Models\DeploymentSpecificationVolumeModel;
+use App\Models\DeploymentVolumeModel;
 use App\Models\EnvironmentVariableModel;
 use App\Models\InitContainerEnvironmentVariableModel;
 use RenokiCo\PhpK8s\Instances\Container;
 use App\Core\Entity;
+use RenokiCo\PhpK8s\Instances\Volume;
 
 /**
  * Class InitContainer
@@ -17,6 +20,7 @@ use App\Core\Entity;
  * @property string $container_image_tag_value
  * @property string $container_image_pull_policy
  * @property bool $include_deployment_environment_variables
+ * @property bool $include_volumes
  *
  * Many
  * @property InitContainerEnvironmentVariable $init_container_environment_variables
@@ -83,6 +87,40 @@ class InitContainer extends Entity {
         $initContainerEnvVars = $this->getEnvironmentVariables($deployment);
         foreach ($initContainerEnvVars as $key => $value) {
             $envVars[$key] = $value;
+        }
+
+        if ($this->include_volumes) {
+            /** @var DeploymentVolume $deploymentVolumes */
+            $deploymentVolumes = (new DeploymentVolumeModel())
+                ->where('deployment_id', $deployment->id)
+                ->find();
+            foreach ($deploymentVolumes as $deploymentVolume) {
+                $volume = new Volume();
+                $volume
+                    ->setAttribute('name', $deployment->name)
+                    ->setAttribute('persistentVolumeClaim', [
+                        'claimName' => $deployment->name,
+                    ]);
+
+                $container->addMountedVolume($volume->mountTo($deploymentVolume->mount_path, $deploymentVolume->sub_path));
+            }
+            /** @var DeploymentSpecificationVolume $deploymentSpecificationVolumes */
+            $deploymentSpecificationVolumes = (new DeploymentSpecificationVolumeModel())
+                ->where('deployment_specification_id', $spec->id)
+                ->find();
+            foreach ($deploymentSpecificationVolumes as $deploymentSpecificationVolume) {
+                $volume = new Volume();
+                $volume
+                    ->setAttribute('name', $deployment->name)
+                    ->setAttribute('persistentVolumeClaim', [
+                        'claimName' => $deployment->name,
+                    ]);
+
+                $container->addMountedVolume($volume->mountTo(
+                    $deploymentSpecificationVolume->mount_path,
+                    $deploymentSpecificationVolume->getCompiledSubPath($deployment)
+                ));
+            }
         }
 
         $container->addEnvs($envVars);

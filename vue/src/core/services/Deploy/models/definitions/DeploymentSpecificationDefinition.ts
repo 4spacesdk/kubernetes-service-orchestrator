@@ -17,6 +17,7 @@ import {DeploymentSpecificationInitContainer} from '../DeploymentSpecificationIn
 import {DeploymentSpecificationPostUpdateAction} from '../DeploymentSpecificationPostUpdateAction';
 import {DeploymentSpecificationCronJob} from '../DeploymentSpecificationCronJob';
 import {DeploymentSpecificationHttpProxyRoute} from '../DeploymentSpecificationHttpProxyRoute';
+import {DeploymentSpecificationVolume} from '../DeploymentSpecificationVolume';
 import {Label} from '../Label';
 import {DeploymentStep} from '../DeploymentStep';
 import {User} from '../User';
@@ -62,6 +63,7 @@ export class DeploymentSpecificationDefinition extends BaseModel {
     deployment_specification_post_update_actions?: DeploymentSpecificationPostUpdateAction[];
     deployment_specification_cron_jobs?: DeploymentSpecificationCronJob[];
     deployment_specification_http_proxy_routes?: DeploymentSpecificationHttpProxyRoute[];
+    deployment_specification_volumes?: DeploymentSpecificationVolume[];
     labels?: Label[];
     deploymentSteps?: DeploymentStep[];
     id?: number;
@@ -119,6 +121,7 @@ export class DeploymentSpecificationDefinition extends BaseModel {
             delete this.deployment_specification_post_update_actions;
             delete this.deployment_specification_cron_jobs;
             delete this.deployment_specification_http_proxy_routes;
+            delete this.deployment_specification_volumes;
             delete this.labels;
             delete this.deploymentSteps;
             delete this.id;
@@ -246,6 +249,9 @@ export class DeploymentSpecificationDefinition extends BaseModel {
         }
         if (data.deployment_specification_http_proxy_routes != null) {
             this.deployment_specification_http_proxy_routes = data.deployment_specification_http_proxy_routes.map((i: any) => new DeploymentSpecificationHttpProxyRoute(i));
+        }
+        if (data.deployment_specification_volumes != null) {
+            this.deployment_specification_volumes = data.deployment_specification_volumes.map((i: any) => new DeploymentSpecificationVolume(i));
         }
         if (data.labels != null) {
             this.labels = data.labels.map((i: any) => new Label(i));

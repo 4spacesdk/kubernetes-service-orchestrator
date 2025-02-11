@@ -25,6 +25,8 @@ const showUpdatePostUpdateActions = ref(false);
 const isUpdatePostUpdateActionsEnabled = ref(false);
 const showUpdateCronJobs = ref(false);
 const isUpdateCronJobsEnabled = ref(false);
+const showUpdateVolumes = ref(false);
+const isUpdateVolumesEnabled = ref(false);
 
 const showUpdateLabels = ref(false);
 const isUpdateLabelsEnabled = ref(false);
@@ -72,6 +74,8 @@ function render() {
     showUpdateQuickCommands.value = props.deploymentSpecification.workload_type != WorkloadTypes.CustomResource;
     showUpdateLabels.value = true;
     isUpdateLabelsEnabled.value = true;
+    showUpdateVolumes.value = props.deploymentSpecification.enable_volumes ?? false;
+    isUpdateVolumesEnabled.value = props.deploymentSpecification.enable_volumes ?? false;
 
     isVisible.value = true;
 }
@@ -156,6 +160,12 @@ function onUpdateLabelsClicked() {
 
 function onUpdateCronJobsClicked() {
     bus.emit('deploymentSpecificationUpdateCronJobs', {
+        deploymentSpecification: props.deploymentSpecification
+    });
+}
+
+function onUpdateVolumesClicked() {
+    bus.emit('deploymentSpecificationUpdateVolumes', {
         deploymentSpecification: props.deploymentSpecification
     });
 }
@@ -344,6 +354,16 @@ function onUpdateCronJobsClicked() {
                     <v-list-item-title>
                         <v-icon size="small" class="my-auto ml-2">fa fa-tags</v-icon>
                         <span class="ml-2">Labels</span>
+                    </v-list-item-title>
+                </v-list-item>
+                <v-list-item
+                    v-if="showUpdateVolumes"
+                    :disabled="!isUpdateVolumesEnabled"
+                    dense
+                    @click="onUpdateVolumesClicked">
+                    <v-list-item-title>
+                        <v-icon size="small" class="my-auto ml-2">fa fa-hard-drive</v-icon>
+                        <span class="ml-2">Volumes</span>
                     </v-list-item-title>
                 </v-list-item>
             </v-list>

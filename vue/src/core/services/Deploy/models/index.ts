@@ -23,6 +23,7 @@ export {DeploymentSpecificationQuickCommand as DeploymentSpecificationQuickComma
 export {DeploymentSpecificationRoleRule as DeploymentSpecificationRoleRule} from "./DeploymentSpecificationRoleRule";
 export {DeploymentSpecificationServiceAnnotation as DeploymentSpecificationServiceAnnotation} from "./DeploymentSpecificationServiceAnnotation";
 export {DeploymentSpecificationServicePort as DeploymentSpecificationServicePort} from "./DeploymentSpecificationServicePort";
+export {DeploymentSpecificationVolume as DeploymentSpecificationVolume} from "./DeploymentSpecificationVolume";
 export {DeploymentStep as DeploymentStep} from "./DeploymentStep";
 export {DeploymentVolume as DeploymentVolume} from "./DeploymentVolume";
 export {DeploymentsLabel as DeploymentsLabel} from "./DeploymentsLabel";

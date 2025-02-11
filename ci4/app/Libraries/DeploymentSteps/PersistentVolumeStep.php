@@ -1,12 +1,14 @@
 <?php namespace App\Libraries\DeploymentSteps;
 
 use App\Entities\Deployment;
+use App\Entities\DeploymentSpecificationVolume;
 use App\Entities\DeploymentVolume;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepLevels;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepTriggers;
 use App\Libraries\Kubernetes\KubeAuth;
+use App\Models\DeploymentSpecificationVolumeModel;
 use App\Models\DeploymentVolumeModel;
 use RenokiCo\PhpK8s\Exceptions\KubernetesAPIException;
 use RenokiCo\PhpK8s\Kinds\K8sPersistentVolume;
@@ -115,12 +117,21 @@ class PersistentVolumeStep extends BaseDeploymentStep {
         $deploymentVolumes = (new DeploymentVolumeModel())
             ->where('deployment_id', $deployment->id)
             ->find();
-        if ($deploymentVolumes->count() == 0) {
+        /** @var DeploymentSpecificationVolume $deploymentSpecificationVolumes */
+        $deploymentSpecificationVolumes = (new DeploymentSpecificationVolumeModel())
+            ->where('deployment_specification_id', $deployment->findDeploymentSpecification()->id)
+            ->find();
+        if ($deploymentVolumes->count() == 0 && $deploymentSpecificationVolumes->count() == 0) {
             return 'No volumes found';
         }
 
         foreach ($deploymentVolumes as $deploymentVolume) {
             if ($error = $deploymentVolume->validate()) {
+                return $error;
+            }
+        }
+        foreach ($deploymentSpecificationVolumes as $deploymentSpecificationVolume) {
+            if ($error = $deploymentSpecificationVolume->validate()) {
                 return $error;
             }
         }
@@ -175,6 +186,26 @@ class PersistentVolumeStep extends BaseDeploymentStep {
                     'path' => $deploymentVolume->nfs_path,
                 ])
                 ->setSpec('persistentVolumeReclaimPolicy', $deploymentVolume->reclaim_policy);
+
+            $resources[] = $resource;
+        }
+
+        /** @var DeploymentSpecificationVolume $deploymentSpecificationVolumes */
+        $deploymentSpecificationVolumes = (new DeploymentSpecificationVolumeModel())
+            ->where('deployment_specification_id', $deployment->findDeploymentSpecification()->id)
+            ->find();
+        foreach ($deploymentSpecificationVolumes as $deploymentSpecificationVolume) {
+            $resource = new K8sPersistentVolume();
+            $resource
+                ->setName("{$deployment->namespace}-{$deployment->name}")
+                ->setCapacity($deploymentSpecificationVolume->capacity)
+                ->setSpec('volumeMode', $deploymentSpecificationVolume->volume_mode)
+                ->setAccessModes(['ReadWriteMany'])
+                ->setSpec('nfs', [
+                    'server' => $deploymentSpecificationVolume->nfs_server,
+                    'path' => $deploymentSpecificationVolume->nfs_path,
+                ])
+                ->setSpec('persistentVolumeReclaimPolicy', $deploymentSpecificationVolume->reclaim_policy);
 
             $resources[] = $resource;
         }

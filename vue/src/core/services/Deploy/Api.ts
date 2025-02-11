@@ -81,6 +81,20 @@ export interface DeploymentSpecificationTagsGetResponse {
     tags?: string[];
 }
 
+export interface DeploymentSpecificationVolume {
+    mount_path?: string;
+    sub_path?: string;
+    capacity?: number;
+    volume_mode?: string;
+    reclaim_policy?: string;
+    nfs_server?: string;
+    nfs_path?: string;
+}
+
+export interface DeploymentSpecificationVolumeList {
+    values?: DeploymentSpecificationVolume[];
+}
+
 export interface DeploymentStep {
     identifier?: string;
     name?: string;
@@ -2014,6 +2028,27 @@ export class DeploymentSpecificationsUpdateDeploymentHttpProxyRoutesPutById exte
     }
 }
 
+export class DeploymentSpecificationsUpdateVolumesPutById extends BaseApi<DeploymentSpecification> {
+
+    public topic = 'Resources.DeploymentSpecifications';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/deployment-specifications/${id}/volumes`;
+    }
+
+    protected convertToResource(data: any): DeploymentSpecification {
+        return new DeploymentSpecification(data);
+    }
+
+    public save(data: DeploymentSpecificationVolumeList, next?: (value: DeploymentSpecification) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
 class DeploymentSpecifications {
 
     public get(): DeploymentSpecificationsGet {
@@ -2098,6 +2133,10 @@ class DeploymentSpecifications {
 
     public updateDeploymentHttpProxyRoutesPutById(id: number): DeploymentSpecificationsUpdateDeploymentHttpProxyRoutesPutById {
         return new DeploymentSpecificationsUpdateDeploymentHttpProxyRoutesPutById(id);
+    }
+
+    public updateVolumesPutById(id: number): DeploymentSpecificationsUpdateVolumesPutById {
+        return new DeploymentSpecificationsUpdateVolumesPutById(id);
     }
 
 }

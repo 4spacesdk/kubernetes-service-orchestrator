@@ -4,6 +4,7 @@ use App\Entities\DatabaseService;
 use App\Entities\Deployment;
 use App\Entities\DeploymentSpecificationDeploymentAnnotation;
 use App\Entities\DeploymentSpecificationInitContainer;
+use App\Entities\DeploymentSpecificationVolume;
 use App\Entities\DeploymentVolume;
 use App\Entities\Domain;
 use App\Entities\EnvironmentVariable;
@@ -16,6 +17,7 @@ use App\Libraries\Kubernetes\KubeAuth;
 use App\Models\ContainerImageModel;
 use App\Models\DeploymentSpecificationDeploymentAnnotationModel;
 use App\Models\DeploymentSpecificationInitContainerModel;
+use App\Models\DeploymentSpecificationVolumeModel;
 use App\Models\DeploymentVolumeModel;
 use App\Models\EnvironmentVariableModel;
 use App\Models\InitContainerModel;
@@ -305,6 +307,18 @@ class KServiceStep extends BaseDeploymentStep {
                 'subPath' => $deploymentVolume->sub_path,
             ]);
         }
+        /** @var DeploymentSpecificationVolume $deploymentSpecificationVolumes */
+        $deploymentSpecificationVolumes = (new DeploymentSpecificationVolumeModel())
+            ->where('deployment_specification_id', $spec->id)
+            ->find();
+        foreach ($deploymentSpecificationVolumes as $deploymentSpecificationVolume) {
+            $container->addToAttribute('volumeMounts', [
+                'mountPath' => $deploymentSpecificationVolume->mount_path,
+                'name' => $deployment->name,
+                'readOnly' => false,
+                'subPath' => $deploymentSpecificationVolume->getCompiledSubPath($deployment),
+            ]);
+        }
 
         // Template
         $template = new Instance();
@@ -323,6 +337,32 @@ class KServiceStep extends BaseDeploymentStep {
                     $container->toArray(),
                 ],
             ]);
+
+        // Volumes
+        foreach ($deploymentVolumes as $deploymentVolume) {
+            $template->addToAttribute('spec.volumes', [
+//                'configMap' => [],
+//                'emptyDir' => [],
+                'name' => $deployment->name,
+                'persistentVolumeClaim' => [
+                    'claimName' => $deployment->name,
+                ],
+//                'projected' => [],
+//                'secret' => [],
+            ]);
+        }
+        foreach ($deploymentSpecificationVolumes as $deploymentSpecificationVolume) {
+            $template->addToAttribute('spec.volumes', [
+//                'configMap' => [],
+//                'emptyDir' => [],
+                'name' => $deployment->name,
+                'persistentVolumeClaim' => [
+                    'claimName' => $deployment->name,
+                ],
+//                'projected' => [],
+//                'secret' => [],
+            ]);
+        }
 
         // Container Concurrency
         if ($deployment->knative_concurrency_limit_soft) {
@@ -352,7 +392,7 @@ class KServiceStep extends BaseDeploymentStep {
             ->orderBy('position', 'asc')
             ->find();
         foreach ($deploymentSpecificationInitContainers as $deploymentSpecificationInitContainer) {
-            $initContainers[] = $deploymentSpecificationInitContainer->init_container->toKubernetesResource($deployment);
+            $initContainers[] = $deploymentSpecificationInitContainer->init_container->toKubernetesResource($deployment)->toArray();
         }
         if (count($initContainers) > 0) {
             $template->setAttribute('initContainers', $initContainers);
@@ -361,21 +401,6 @@ class KServiceStep extends BaseDeploymentStep {
         // Service Account
         if ($spec->hasDeploymentStep($deployment, ServiceAccountStep::class)) {
             $template->setAttribute('serviceAccountName', $deployment->name);
-        }
-
-        // Volumes
-        foreach ($deploymentVolumes as $deploymentVolume) {
-            $template->addToAttribute('volumes', [
-//                'configMap' => [],
-//                'emptyDir' => [],
-                'name' => $deployment->name,
-                'persistentVolumeClaim' => [
-                    'claimName' => $deployment->name,
-                ],
-//                'projected' => [],
-//                'secret' => [],
-
-            ]);
         }
 
         // KNativeService
