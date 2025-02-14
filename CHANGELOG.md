@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.4.8 (2025-02-14)
+
+### Fixed bugs
+* Added missing deployment-step-trigger constants
+
+### Enhancements
+* 
+
+### Upgrade guide
+1. Deploy new image
+
+
+
 ## v1.4.7 (2025-02-12)
 
 ### Fixed bugs
