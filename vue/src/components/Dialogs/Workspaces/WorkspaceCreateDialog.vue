@@ -128,7 +128,8 @@ function onCloseBtnClicked() {
                                 clearable
                                 @update:modelValue="onNameChanged"
                                 :rules="[
-                                    v => (v?.length ?? 0) >= 4 || 'Must be at least four characters long'
+                                    v => (v?.length ?? 0) >= 4 || 'Must be at least four characters long',
+                                    v => /^[a-zA-Z0-9](.*[a-zA-Z0-9])?$/.test(v) || 'Cannot start or end with a space character'
                                 ]"
                             />
                         </v-col>

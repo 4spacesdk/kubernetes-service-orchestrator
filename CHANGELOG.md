@@ -1,12 +1,25 @@
 # Changelog
 
+## v1.5.0 (?)
+
+### Fixed bugs
+* Added missing deployment-step-trigger constants
+
+### Enhancements
+* More validation to workspace name [Issue #47](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/47)
+
+### Upgrade guide
+1. Deploy new image
+
+
+
 ## v1.4.8 (2025-02-14)
 
 ### Fixed bugs
 * Added missing deployment-step-trigger constants
 
 ### Enhancements
-* 
+*
 
 ### Upgrade guide
 1. Deploy new image
