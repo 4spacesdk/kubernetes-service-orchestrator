@@ -3,7 +3,7 @@
 ## v1.5.0 (?)
 
 ### Fixed bugs
-* Added missing deployment-step-trigger constants
+* Do not fail if deploying/terminating workspaces that do not have ClusterRole/Role [Issue #45](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/45) 
 
 ### Enhancements
 * More validation to workspace name [Issue #47](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/47)

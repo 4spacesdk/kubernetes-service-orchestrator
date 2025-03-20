@@ -127,13 +127,17 @@ class RoleStep extends BaseDeploymentStep {
 
     public function startDeployCommand(Deployment $deployment, ?string $reason = null): void {
         $resource = $this->getResource($deployment, true);
-        $resource->createOrUpdate();
+        if (count($resource->getRules())) {
+            $resource->createOrUpdate();
+        }
     }
 
     public function startTerminateCommand(Deployment $deployment): void {
         $resource = $this->getResource($deployment, true);
-        $resource->synced();
-        $resource->delete();
+        if ($resource->exists()) {
+            $resource->synced();
+            $resource->delete();
+        }
     }
 
     public function getKubernetesEvents(Deployment $deployment): array {

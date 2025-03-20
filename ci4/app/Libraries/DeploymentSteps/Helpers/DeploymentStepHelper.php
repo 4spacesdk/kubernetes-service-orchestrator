@@ -117,9 +117,9 @@ class DeploymentStepHelper {
             DeploymentSteps::ContourHttpProxy => new ContourHttpProxyStep(),
 
             DeploymentSteps::Database => new DatabaseStep(),
+            DeploymentSteps::ServiceAccount => new ServiceAccountStep(),
             DeploymentSteps::ClusterRole => new ClusterRoleStep(),
             DeploymentSteps::Role => new RoleStep(),
-            DeploymentSteps::ServiceAccount => new ServiceAccountStep(),
             DeploymentSteps::ClusterRoleBinding => new ClusterRoleBindingStep(),
             DeploymentSteps::RoleBinding => new RoleBindingStep(),
             DeploymentSteps::PersistentVolume => new PersistentVolumeStep(),

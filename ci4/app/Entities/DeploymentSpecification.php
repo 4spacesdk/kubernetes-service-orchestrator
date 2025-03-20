@@ -103,10 +103,10 @@ class DeploymentSpecification extends Entity {
 
             // Level: Deployment
             DatabaseStep::class,
-            ClusterRoleStep::class,
-            RoleStep::class,
             ServiceAccountStep::class,
+            ClusterRoleStep::class,
             ClusterRoleBindingStep::class,
+            RoleStep::class,
             RoleBindingStep::class,
             PersistentVolumeStep::class,
             PersistentVolumeClaimStep::class,
@@ -144,9 +144,9 @@ class DeploymentSpecification extends Entity {
             $steps[] = new MigrationJobStep();
         }
         if ($this->enable_rbac) {
+            $steps[] = new ServiceAccountStep();
             $steps[] = new ClusterRoleStep();
             $steps[] = new RoleStep();
-            $steps[] = new ServiceAccountStep();
             $steps[] = new ClusterRoleBindingStep();
             $steps[] = new RoleBindingStep();
         }

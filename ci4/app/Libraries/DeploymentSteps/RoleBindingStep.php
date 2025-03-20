@@ -130,8 +130,8 @@ class RoleBindingStep extends BaseDeploymentStep {
         if ($namespaceStep->getStatus($deployment) != DeploymentStepHelper::Namespace_Found) {
             return 'Missing Namespace';
         }
-        $clusterRoleStep = new RoleStep();
-        if ($clusterRoleStep->getStatus($deployment) != DeploymentStepHelper::Role_Found) {
+        $roleStep = new RoleStep();
+        if ($roleStep->getStatus($deployment) != DeploymentStepHelper::Role_Found) {
             return 'Missing Role';
         }
         $serviceAccount = new ServiceAccountStep();
