@@ -1,12 +1,13 @@
 # Changelog
 
-## v1.5.0 (?)
+## v1.5.0 (2025-03-20)
 
 ### Fixed bugs
 * Do not fail if deploying/terminating workspaces that do not have ClusterRole/Role [Issue #45](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/45) 
 
 ### Enhancements
 * More validation to workspace name [Issue #47](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/47)
+* Add certificate expiration notifications [Issue #48](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/48)
 
 ### Upgrade guide
 1. Deploy new image

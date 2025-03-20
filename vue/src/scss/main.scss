@@ -28,7 +28,9 @@ body,
 }
 
 .v-btn {
-  text-transform: capitalize !important;
+  span {
+    text-transform: none;
+  }
 
   .v-btn__prepend {
     padding-left: .25rem;

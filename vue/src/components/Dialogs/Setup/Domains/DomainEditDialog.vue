@@ -122,6 +122,32 @@ function onCloseBtnClicked() {
                             disabled
                         />
                     </v-col>
+                    <v-col cols="12">
+                        <v-row dense>
+                            <v-col
+                                cols="6"
+                            >
+                                <v-switch
+                                    v-model="item.has_certificate_monitoring"
+                                    variant="outlined"
+                                    label="Enable Certificate Monitoring"
+                                    density="compact" hide-details
+                                    color="secondary"
+                                />
+                            </v-col>
+                            <v-col
+                                v-if="item.has_certificate_monitoring"
+                                cols="6"
+                            >
+                                <v-text-field
+                                    variant="outlined"
+                                    v-model.number="item.certificate_monitoring_days_before_expiry"
+                                    label="Threshold (days before expiration)"
+                                    type="number"
+                                />
+                            </v-col>
+                        </v-row>
+                    </v-col>
                     <v-col
                         v-if="showIstio"
                         cols="6"

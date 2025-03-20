@@ -14,7 +14,7 @@ const props = defineProps<{ input: DomainCreateDialog_Input, events: DialogEvent
 const used = ref(false);
 const showDialog = ref(false);
 
-const item = ref<Domain>(new Domain());
+const item = ref<Domain>(Domain.Create());
 
 // <editor-fold desc="Functions">
 
@@ -30,8 +30,6 @@ onUnmounted(() => {
 });
 
 function render() {
-    item.value.issuer_ref_name = System.certManagerIssuerDefaultName;
-
     showDialog.value = true;
 }
 
@@ -103,6 +101,32 @@ function onCloseBtnClicked() {
                             v-model="item.issuer_ref_name"
                             label="Cert manager issuer name"
                         />
+                    </v-col>
+                    <v-col cols="12">
+                        <v-row dense>
+                            <v-col
+                                cols="6"
+                            >
+                                <v-switch
+                                    v-model="item.has_certificate_monitoring"
+                                    variant="outlined"
+                                    label="Enable Certificate Monitoring"
+                                    density="compact" hide-details
+                                    color="secondary"
+                                />
+                            </v-col>
+                            <v-col
+                                v-if="item.has_certificate_monitoring"
+                                cols="6"
+                            >
+                                <v-text-field
+                                    variant="outlined"
+                                    v-model.number="item.certificate_monitoring_days_before_expiry"
+                                    label="Threshold (days before expiration)"
+                                    type="number"
+                                />
+                            </v-col>
+                        </v-row>
                     </v-col>
                 </v-row>
             </v-card-text>

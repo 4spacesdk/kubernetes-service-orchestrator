@@ -2,9 +2,11 @@
 
 class CronJobIds {
     const int
-        CleanupGoogleContainerRegistry = 1,
+        CleanupGoogleContainerRegistry = 1, // Removed in v1.5.0
         RunKeelHooks = 2, // Removed in v0.1.18
-        PullContainerRegistries = 3;
+        PullContainerRegistries = 3,
+        CheckCertificateExpiry = 4
+    ;
 }
 
 class Environments {

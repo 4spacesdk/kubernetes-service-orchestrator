@@ -4,16 +4,26 @@ import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import {Domain, System} from "@/core/services/Deploy/models";
 import debounce from "lodash.debounce";
-import DeploymentEditButton from "@/components/Modules/Setup/Deployments/EditButton/DeploymentEditButton.vue";
 import DomainEditButton from "@/components/Modules/Setup/Domains/EditButton/DomainEditButton.vue";
+import DateView from "@/components/Modules/Common/DateView.vue";
 
 const emit = defineEmits<{
     (e: 'onItemEditClicked', item: Domain): void
 }>();
 
+interface Row {
+    domain: Domain;
+    certificate?: {
+        renewalDate?: Date;
+        notBeforeDate?: Date;
+        notAfterDate?: Date;
+    },
+    isLoadingCertificate?: boolean;
+}
+
 const itemCount = ref(0);
-const rows = ref<Domain[]>([]);
-const headers = ref<{title: string, key: string, sortable: boolean}[]>([]);
+const rows = ref<Row[]>([]);
+const headers = ref<{ title: string, key: string, sortable: boolean }[]>([]);
 const isLoading = ref(true);
 const options = ref({});
 
@@ -25,9 +35,13 @@ onMounted(() => {
     getItems(false, true);
 
     headers.value = [
-        {title: 'Name', key: 'name', sortable: false},
-        {title: 'Certificate', key: 'certificate_name', sortable: false},
-        ...(System.Instance.is_network_istio_supported ? [{title: 'Istio Gateway', key: 'istio_gateway', sortable: false}] : []),
+        {title: 'Name', key: 'domain.name', sortable: false},
+        {title: 'Certificate', key: 'certificate', sortable: false},
+        ...(System.Instance.is_network_istio_supported ? [{
+            title: 'Istio Gateway',
+            key: 'istio_gateway',
+            sortable: false
+        }] : []),
         ...(System.Instance.is_network_contour_supported ? [{title: 'Contour', key: 'contour', sortable: false}] : []),
         {title: '', key: 'actions', sortable: false},
     ];
@@ -67,7 +81,7 @@ function getItems(doItems = true, doCount = false) {
             .offset(tableOptions.itemsPerPage * (tableOptions.page - 1))
             .orderAsc('name')
             .find(items => {
-                rows.value = items;
+                rows.value = items.map(item => ({domain: item}));
                 isLoading.value = false;
             });
     }
@@ -83,76 +97,48 @@ function getItems(doItems = true, doCount = false) {
 // <editor-fold desc="View functions">
 
 function createItem() {
-    bus.emit('domainCreate', new Domain());
+    bus.emit('domainCreate', Domain.Create());
 }
 
-function onEditItemBtnClicked(item: Domain) {
+function onEditItemBtnClicked(item: Row) {
     bus.emit('domainEdit', {
-        domain: item,
+        domain: item.domain,
     });
 }
 
-function onDeleteItemBtnClicked(item: Domain) {
+function onDeleteItemBtnClicked(item: Row) {
     bus.emit('confirm', {
-        body: `Do you want to delete <strong>${item.name}</strong>?`,
+        body: `Do you want to delete <strong>${item.domain.name}</strong>?`,
         confirmIcon: 'fa fa-trash',
         confirmColor: 'red',
 
         responseCallback: (confirmed: boolean) => {
             if (confirmed) {
-                Api.domains().deleteById(item.id!).delete(() => bus.emit('domainSaved'));
+                Api.domains().deleteById(item.domain.id!).delete(() => bus.emit('domainSaved'));
             }
         }
     });
 }
 
-function applyCertificate(item: Domain) {
-    Api.domains().applyCertificatePutById(item.id!)
-        .save(() => {
-
-        });
-}
-
-function getCertificateEvents(item: Domain) {
-    Api.domains().getCertificateEventsGetById(item.id!)
-        .find(events => {
-            bus.emit('info', {
-                title: item.name,
-                body: events.length
-                    ? events.map(event => `${event.age}: ${event.message}`).join('<br>')
-                    : 'No events found',
-            });
-        });
-}
-
-function getCertificateStatus(item: Domain) {
-    Api.domains().getCertificateStatusGetById(item.id!)
-        .find(response => {
-            if (response.length == 1 && response[0].conditions?.length) {
-                const status = response[0]!;
-                const lines = [
-                    `Renewal: ${status.renewalTime}`,
-                    `Not before: ${status.notBefore}`,
-                    `Not after: ${status.notAfter}`,
-                    '',
-                    '<strong>Conditions</strong>'
-                ];
-                lines.push(...status.conditions!
-                    .map(condition => {
-                        return `${condition.lastTransitionTime}: ${condition.type}, ${condition.reason}, ${condition.message}`;
-                    })
-                );
-                bus.emit('info', {
-                    title: item.name,
-                    body: lines.join('<br>')
-                });
-            } else {
-                bus.emit('info', {
-                    title: item.name,
-                    body: 'Certificate not found',
-                });
-            }
-        });
+function onCertificateClicked(item: Row) {
+    item.isLoadingCertificate = true;
+    const api = Api.domains().getCertificateStatusGetById(item.domain.id!);
+    api.setErrorHandler(error => {
+        item.isLoadingCertificate = false;
+        return true;
+    });
+    api.find(response => {
+        if (response.length == 1 && response[0].conditions?.length) {
+            const status = response[0]!;
+            item.certificate = {
+                renewalDate: status.renewalTime ? new Date(status.renewalTime) : undefined,
+                notBeforeDate: status.notBefore ? new Date(status.notBefore) : undefined,
+                notAfterDate: status.notAfter ? new Date(status.notAfter) : undefined,
+            };
+            item.isLoadingCertificate = false;
+        }
+        item.isLoadingCertificate = false;
+    });
 }
 
 // </editor-fold>
@@ -197,10 +183,67 @@ function getCertificateStatus(item: Domain) {
             density="compact"
             @update:options="options = $event; getItems()">
             <template v-slot:item.istio_gateway="{ item }">
-                <span v-if="item.enable_istio_gateway">Enabled</span>
+                <span v-if="item.domain.enable_istio_gateway">Enabled</span>
             </template>
             <template v-slot:item.contour="{ item }">
-                <span v-if="item.enable_contour">Enabled</span>
+                <span v-if="item.domain.enable_contour">Enabled</span>
+            </template>
+
+            <template v-slot:item.certificate="{ item }">
+                <v-menu
+                    min-width="250">
+                    <template v-slot:activator="{ props }">
+                        <v-btn
+                            v-bind="props"
+                            v-if="item.domain.certificate_name"
+                            variant="text"
+                            size="small"
+                            class="px-0"
+                            :loading="item.isLoadingCertificate"
+                            @click="onCertificateClicked(item)"
+                        >
+                            {{ item.domain.certificate_name }}
+                        </v-btn>
+                    </template>
+                    <v-card
+                        style="width: 250px;"
+                        class="pa-4"
+                    >
+                        <div class="d-flex flex-column ga-2">
+                            <div
+                                v-if="item.certificate?.renewalDate"
+                                class="d-flex justify-space-between"
+                            >
+                                <span>Renewal</span>
+                                <DateView
+                                    :date="item.certificate.renewalDate"
+                                    textFormat="DD/MM-YY HH:mm:ss"
+                                />
+                            </div>
+                            <div
+                                v-if="item.certificate?.notBeforeDate"
+                                class="d-flex justify-space-between"
+                            >
+                                <span>Not before</span>
+                                <DateView
+                                    :date="item.certificate.notBeforeDate"
+                                    textFormat="DD/MM-YY HH:mm:ss"
+                                />
+                            </div>
+                            <div
+                                v-if="item.certificate?.notAfterDate"
+                                class="d-flex justify-space-between"
+                            >
+                                <span>Not after</span>
+                                <DateView
+                                    :date="item.certificate.notAfterDate"
+                                    textFormat="DD/MM-YY HH:mm:ss"
+                                />
+                            </div>
+                        </div>
+                        <span v-if="!item.certificate && !item.isLoadingCertificate">Failed to get certificate status</span>
+                    </v-card>
+                </v-menu>
             </template>
 
             <template v-slot:item.actions="{ item }">
@@ -217,7 +260,7 @@ function getCertificateStatus(item: Domain) {
                             </v-btn>
                         </template>
                         <domain-edit-button
-                            :domain="item"/>
+                            :domain="item.domain"/>
                     </v-menu>
 
                     <v-btn

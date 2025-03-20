@@ -12,6 +12,8 @@ use App\Core\Entity;
  * @property bool $enable_istio_gateway
  * @property bool $enable_contour
  * @property string $contour_ingress_class_name
+ * @property bool $has_certificate_monitoring
+ * @property int $certificate_monitoring_days_before_expiry
  *
  * Many
  * @property Workspace $workspaces
