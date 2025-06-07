@@ -264,6 +264,17 @@ class CronjobStep extends BaseDeploymentStep {
                 $container->maxMemory($cronJob->memory_limit, 'Mi');
             }
 
+            $template = (new K8sPod())
+                ->setContainers([$container])
+                ->setSpec('restartPolicy', $cronJob->restart_policy);
+            if (strlen($cronJob->container_image->pull_secret) > 0) {
+                $template->setSpec('imagePullSecrets', [
+                    [
+                        'name' => $cronJob->container_image->pull_secret,
+                    ],
+                ]);
+            }
+
             $resource = new K8sCronJob();
             $resource
                 ->setName($cronJob->generateName($deployment))
@@ -271,10 +282,7 @@ class CronjobStep extends BaseDeploymentStep {
                 ->setSchedule(new CronExpression($cronJob->schedule))
                 ->setSpec('concurrencyPolicy', $cronJob->concurrency_policy)
                 ->setJobTemplate((new K8sJob())
-                    ->setTemplate((new K8sPod())
-                        ->setContainers([$container])
-                        ->setSpec('restartPolicy', $cronJob->restart_policy)
-                    )
+                    ->setTemplate($template)
                 );
 
             if (is_numeric($cronJob->successful_jobs_history_limit)) {
