@@ -1,9 +1,23 @@
 # Changelog
 
+## v1.5.1 (?)
+
+### Fixed bugs
+* Corrected cronjob schedule hint [Issue #49](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/49)
+
+### Enhancements
+* 
+
+### Upgrade guide
+1. Deploy new image
+2. Migrate database [(Guide)](https://github.com/4spacesdk/kubernetes-service-orchestrator?tab=readme-ov-file#migrate-database-helm)
+
+
+
 ## v1.5.0 (2025-03-20)
 
 ### Fixed bugs
-* Do not fail if deploying/terminating workspaces that do not have ClusterRole/Role [Issue #45](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/45) 
+* Do not fail if deploying/terminating workspaces that do not have ClusterRole/Role [Issue #45](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/45)
 
 ### Enhancements
 * More validation to workspace name [Issue #47](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/47)

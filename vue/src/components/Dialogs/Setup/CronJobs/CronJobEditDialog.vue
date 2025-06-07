@@ -234,7 +234,7 @@ function onArgVariableAdded(index: number, value: string) {
                             label="Schedule"
                             density="compact"
                             persistent-hint
-                            hint="[day-of-week] [month] [day-of-month] [hours] [minutes]"
+                            hint="[minutes] [hours] [day-of-month] [month] [day-of-week]"
                         />
                     </v-col>
 
