@@ -280,6 +280,16 @@ class MigrationJobStep extends BaseDeploymentStep {
             ->addEnv('ENVIRONMENT', \Environments::Development)
             ->addEnv('BASE_URL', $deployment->getUrl(true, true));
 
+        // Security Context
+        if (strlen($containerImage->security_context_run_as_user) > 0) {
+            $container->setAttribute('securityContext.runAsUser', (int)$containerImage->security_context_run_as_user);
+        }
+        if (strlen($containerImage->security_context_run_as_group) > 0) {
+            $container->setAttribute('securityContext.runAsGroup', (int)$containerImage->security_context_run_as_group);
+        }
+        $container->setAttribute('securityContext.allowPrivilegeEscalation', (bool)$containerImage->security_context_allow_privilege_escalation);
+        $container->setAttribute('securityContext.readOnlyRootFilesystem', (bool)$containerImage->security_context_read_only_root_filesystem);
+
         $extraEnvVars = [];
         $specEnvVars = $spec->getEnvironmentVariables($deployment);
         foreach ($specEnvVars as $key => $value) {

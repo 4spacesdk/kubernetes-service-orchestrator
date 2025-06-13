@@ -20,6 +20,10 @@ export class ContainerImageDefinition extends BaseModel {
     registry_provider_azure_tenant?: string;
     registry_provider_azure_client_id?: string;
     registry_provider_azure_client_secret?: string;
+    security_context_run_as_user?: string;
+    security_context_run_as_group?: string;
+    security_context_allow_privilege_escalation?: boolean;
+    security_context_read_only_root_filesystem?: boolean;
     version_control_enabled?: boolean;
     version_control_provider?: string;
     version_control_repository_name?: string;
@@ -59,6 +63,10 @@ export class ContainerImageDefinition extends BaseModel {
             delete this.registry_provider_azure_tenant;
             delete this.registry_provider_azure_client_id;
             delete this.registry_provider_azure_client_secret;
+            delete this.security_context_run_as_user;
+            delete this.security_context_run_as_group;
+            delete this.security_context_allow_privilege_escalation;
+            delete this.security_context_read_only_root_filesystem;
             delete this.version_control_enabled;
             delete this.version_control_provider;
             delete this.version_control_repository_name;
@@ -120,6 +128,18 @@ export class ContainerImageDefinition extends BaseModel {
         }
         if (data.registry_provider_azure_client_secret != null) {
             this.registry_provider_azure_client_secret = data.registry_provider_azure_client_secret;
+        }
+        if (data.security_context_run_as_user != null) {
+            this.security_context_run_as_user = data.security_context_run_as_user;
+        }
+        if (data.security_context_run_as_group != null) {
+            this.security_context_run_as_group = data.security_context_run_as_group;
+        }
+        if (data.security_context_allow_privilege_escalation != null) {
+            this.security_context_allow_privilege_escalation = data.security_context_allow_privilege_escalation;
+        }
+        if (data.security_context_read_only_root_filesystem != null) {
+            this.security_context_read_only_root_filesystem = data.security_context_read_only_root_filesystem;
         }
         if (data.version_control_enabled != null) {
             this.version_control_enabled = data.version_control_enabled;

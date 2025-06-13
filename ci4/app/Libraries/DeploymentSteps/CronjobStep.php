@@ -233,6 +233,16 @@ class CronjobStep extends BaseDeploymentStep {
                 );
             }
 
+            // Security Context
+            if (strlen($cronJob->container_image->security_context_run_as_user) > 0) {
+                $container->setAttribute('securityContext.runAsUser', (int)$cronJob->container_image->security_context_run_as_user);
+            }
+            if (strlen($cronJob->container_image->security_context_run_as_group) > 0) {
+                $container->setAttribute('securityContext.runAsGroup', (int)$cronJob->container_image->security_context_run_as_group);
+            }
+            $container->setAttribute('securityContext.allowPrivilegeEscalation', (bool)$cronJob->container_image->security_context_allow_privilege_escalation);
+            $container->setAttribute('securityContext.readOnlyRootFilesystem', (bool)$cronJob->container_image->security_context_read_only_root_filesystem);
+
             $envVars = [];
 
             if ($cronJob->include_deployment_environment_variables) {

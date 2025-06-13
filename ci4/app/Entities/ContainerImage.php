@@ -31,6 +31,12 @@ use App\Core\Entity;
  * @property string $registry_provider_azure_client_id
  * @property string $registry_provider_azure_client_secret
  *
+ * # Security Context
+ * @property string $security_context_run_as_user
+ * @property string $security_context_run_as_group
+ * @property bool $security_context_allow_privilege_escalation
+ * @property bool $security_context_read_only_root_filesystem
+ *
  *  # Version Control
  * @property bool $version_control_enabled
  * @property string $version_control_provider

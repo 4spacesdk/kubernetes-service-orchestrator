@@ -68,6 +68,16 @@ class InitContainer extends Entity {
             );
         }
 
+        // Security Context
+        if (strlen($this->container_image->security_context_run_as_user) > 0) {
+            $container->setAttribute('securityContext.runAsUser', (int)$this->container_image->security_context_run_as_user);
+        }
+        if (strlen($this->container_image->security_context_run_as_group) > 0) {
+            $container->setAttribute('securityContext.runAsGroup', (int)$this->container_image->security_context_run_as_group);
+        }
+        $container->setAttribute('securityContext.allowPrivilegeEscalation', (bool)$this->container_image->security_context_allow_privilege_escalation);
+        $container->setAttribute('securityContext.readOnlyRootFilesystem', (bool)$this->container_image->security_context_read_only_root_filesystem);
+
         $envVars = [];
 
         if ($this->include_deployment_environment_variables) {

@@ -351,6 +351,17 @@ class DeploymentStep extends BaseDeploymentStep {
             $container->maxMemory($deployment->memory_limit, 'Mi');
         }
 
+        // Security Context
+        if (strlen($spec->container_image->security_context_run_as_user) > 0) {
+            $container->setAttribute('securityContext.runAsUser', (int)$spec->container_image->security_context_run_as_user);
+        }
+        if (strlen($spec->container_image->security_context_run_as_group) > 0) {
+            $container->setAttribute('securityContext.runAsGroup', (int)$spec->container_image->security_context_run_as_group);
+        }
+        $container->setAttribute('securityContext.allowPrivilegeEscalation', (bool)$spec->container_image->security_context_allow_privilege_escalation);
+        $container->setAttribute('securityContext.readOnlyRootFilesystem', (bool)$spec->container_image->security_context_read_only_root_filesystem);
+
+        // Init Containers
         $initContainers = [];
         /** @var DeploymentSpecificationInitContainer $deploymentSpecificationInitContainers */
         $deploymentSpecificationInitContainers = (new DeploymentSpecificationInitContainerModel())

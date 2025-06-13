@@ -133,6 +133,7 @@ function onCloseBtnClicked() {
                     class="ml-auto"
                 >
                     <v-tab value="basic">Info</v-tab>
+                    <v-tab value="security">Security</v-tab>
                     <v-tab value="registry">Registry</v-tab>
                     <v-tab value="version-control">VCS</v-tab>
                 </v-tabs>
@@ -146,7 +147,7 @@ function onCloseBtnClicked() {
                     <v-tabs-window-item value="basic">
                         <v-row
                             dense
-                            class="pb-4 px-2"
+                            class="pb-4 px-2 pt-2"
                         >
                             <v-col cols="12">
                                 <v-text-field
@@ -203,6 +204,50 @@ function onCloseBtnClicked() {
                                         </v-row>
                                     </div>
                                 </v-card>
+                            </v-col>
+                        </v-row>
+                    </v-tabs-window-item>
+
+                    <v-tabs-window-item value="security">
+                        <v-row
+                            dense
+                            class="pb-4 px-2 pt-2"
+                        >
+                            <v-col cols="6">
+                                <v-text-field
+                                    variant="outlined"
+                                    type="number"
+                                    v-model.number="item.security_context_run_as_user"
+                                    label="Run as user"
+                                    density="compact"
+                                />
+                            </v-col>
+                            <v-col cols="6">
+                                <v-text-field
+                                    variant="outlined"
+                                    type="number"
+                                    v-model.number="item.security_context_run_as_group"
+                                    label="Run as group"
+                                    density="compact"
+                                />
+                            </v-col>
+                            <v-col cols="6">
+                                <v-switch
+                                    v-model="item.security_context_allow_privilege_escalation"
+                                    variant="outlined"
+                                    label="Allow privilege escalation"
+                                    density="compact"
+                                    color="secondary"
+                                />
+                            </v-col>
+                            <v-col cols="6">
+                                <v-switch
+                                    v-model="item.security_context_read_only_root_filesystem"
+                                    variant="outlined"
+                                    label="Readonly root filesystem"
+                                    density="compact"
+                                    color="secondary"
+                                />
                             </v-col>
                         </v-row>
                     </v-tabs-window-item>
