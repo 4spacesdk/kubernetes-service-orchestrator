@@ -1,9 +1,22 @@
 # Changelog
 
+## v1.5.3 (2025-06-15)
+
+### Fixed bugs
+* KService now uses ports from http proxy routes and not static setting containerPort 80
+
+### Enhancements
+* 
+
+### Upgrade guide
+1. Deploy new image
+
+
+
 ## v1.5.2 (2025-06-13)
 
 ### Fixed bugs
-* 
+*
 
 ### Enhancements
 * Added security context fields to ContainerImage allowing for `runAsUser`, `runAsGroup`, `allowPrivilegeEscalation` and `readOnlyRootFilesystem` to be set at container level

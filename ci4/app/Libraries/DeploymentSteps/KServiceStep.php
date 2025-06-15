@@ -253,12 +253,15 @@ class KServiceStep extends BaseDeploymentStep {
         $container
             ->setAttribute('name', $deployment->name)
             ->setAttribute('image', $spec->container_image->url . ':' . $deployment->version)
-            ->setAttribute('imagePullPolicy', 'Always')
-            ->setAttribute('ports', [
-                [
-                    'containerPort' => 80,
-                ]
-            ]);
+            ->setAttribute('imagePullPolicy', 'Always');
+
+        $ports = [];
+        foreach ($spec->getHttpProxyRoutes() as $route) {
+            $ports[] = [
+                'containerPort' => (int)$route->port,
+            ];
+        }
+        $container->setAttribute('ports', $ports);
 
         // Env vars
         $envVars = [

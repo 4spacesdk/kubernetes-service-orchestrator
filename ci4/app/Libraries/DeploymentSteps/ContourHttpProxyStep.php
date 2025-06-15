@@ -282,7 +282,9 @@ class ContourHttpProxyStep extends BaseDeploymentStep {
                         'services' => [
                             [
                                 'name' => $deployment->name,
-                                'port' => (int)$route->port,
+                                'port' => $spec->workload_type == \WorkloadTypes::KNativeService
+                                            ? 80 // KNative only listen for ports 80
+                                            : (int)$route->port,
                             ]
                         ]
                     ];
