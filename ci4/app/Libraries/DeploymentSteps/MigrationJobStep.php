@@ -99,7 +99,6 @@ class MigrationJobStep extends BaseDeploymentStep {
             unset($remote['spec']['jobTemplate']['spec']['template']['spec']['containers'][0]['terminationMessagePolicy']);
             unset($remote['spec']['jobTemplate']['spec']['template']['spec']['terminationGracePeriodSeconds']);
             unset($remote['spec']['jobTemplate']['spec']['template']['spec']['dnsPolicy']);
-            unset($remote['spec']['jobTemplate']['spec']['template']['spec']['securityContext']);
             unset($remote['spec']['jobTemplate']['spec']['template']['spec']['schedulerName']);
             unset($remote['spec']['successfulJobsHistoryLimit']);
             unset($remote['spec']['failedJobsHistoryLimit']);

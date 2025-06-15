@@ -105,7 +105,6 @@ class DeploymentStep extends BaseDeploymentStep {
             unset($remote['spec']['template']['spec']['restartPolicy']);
             unset($remote['spec']['template']['spec']['terminationGracePeriodSeconds']);
             unset($remote['spec']['template']['spec']['dnsPolicy']);
-            unset($remote['spec']['template']['spec']['securityContext']);
             unset($remote['spec']['template']['spec']['schedulerName']);
             unset($remote['spec']['strategy']);
             unset($remote['spec']['revisionHistoryLimit']);
