@@ -32,6 +32,7 @@ use App\Core\Entity;
  * @property string $registry_provider_azure_client_secret
  *
  * # Security Context
+ * @property string $security_context_fs_group
  * @property string $security_context_run_as_user
  * @property string $security_context_run_as_group
  * @property bool $security_context_allow_privilege_escalation

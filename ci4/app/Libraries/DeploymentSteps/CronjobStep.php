@@ -239,6 +239,9 @@ class CronjobStep extends BaseDeploymentStep {
             if (strlen($cronJob->container_image->security_context_run_as_group) > 0) {
                 $container->setAttribute('securityContext.runAsGroup', (int)$cronJob->container_image->security_context_run_as_group);
             }
+            if (strlen($cronJob->container_image->security_context_fs_group) > 0) {
+                $container->setAttribute('securityContext.fsGroup', (int)$cronJob->container_image->security_context_fs_group);
+            }
             $container->setAttribute('securityContext.allowPrivilegeEscalation', (bool)$cronJob->container_image->security_context_allow_privilege_escalation);
             $container->setAttribute('securityContext.readOnlyRootFilesystem', (bool)$cronJob->container_image->security_context_read_only_root_filesystem);
 

@@ -213,7 +213,7 @@ function onCloseBtnClicked() {
                             dense
                             class="pb-4 px-2 pt-2"
                         >
-                            <v-col cols="6">
+                            <v-col cols="4">
                                 <v-text-field
                                     variant="outlined"
                                     type="number"
@@ -222,12 +222,21 @@ function onCloseBtnClicked() {
                                     density="compact"
                                 />
                             </v-col>
-                            <v-col cols="6">
+                            <v-col cols="4">
                                 <v-text-field
                                     variant="outlined"
                                     type="number"
                                     v-model.number="item.security_context_run_as_group"
                                     label="Run as group"
+                                    density="compact"
+                                />
+                            </v-col>
+                            <v-col cols="4">
+                                <v-text-field
+                                    variant="outlined"
+                                    type="number"
+                                    v-model.number="item.security_context_fs_group"
+                                    label="FS Group"
                                     density="compact"
                                 />
                             </v-col>

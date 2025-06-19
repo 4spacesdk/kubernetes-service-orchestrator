@@ -20,6 +20,7 @@ export class ContainerImageDefinition extends BaseModel {
     registry_provider_azure_tenant?: string;
     registry_provider_azure_client_id?: string;
     registry_provider_azure_client_secret?: string;
+    security_context_fs_group?: string;
     security_context_run_as_user?: string;
     security_context_run_as_group?: string;
     security_context_allow_privilege_escalation?: boolean;
@@ -63,6 +64,7 @@ export class ContainerImageDefinition extends BaseModel {
             delete this.registry_provider_azure_tenant;
             delete this.registry_provider_azure_client_id;
             delete this.registry_provider_azure_client_secret;
+            delete this.security_context_fs_group;
             delete this.security_context_run_as_user;
             delete this.security_context_run_as_group;
             delete this.security_context_allow_privilege_escalation;
@@ -128,6 +130,9 @@ export class ContainerImageDefinition extends BaseModel {
         }
         if (data.registry_provider_azure_client_secret != null) {
             this.registry_provider_azure_client_secret = data.registry_provider_azure_client_secret;
+        }
+        if (data.security_context_fs_group != null) {
+            this.security_context_fs_group = data.security_context_fs_group;
         }
         if (data.security_context_run_as_user != null) {
             this.security_context_run_as_user = data.security_context_run_as_user;
