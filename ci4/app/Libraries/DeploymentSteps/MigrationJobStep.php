@@ -3,9 +3,9 @@
 use App\Entities\ContainerImage;
 use App\Entities\DatabaseService;
 use App\Entities\Deployment;
+use App\Entities\DeploymentSpecificationInitContainer;
 use App\Entities\DeploymentSpecificationVolume;
 use App\Entities\DeploymentVolume;
-use App\Entities\Domain;
 use App\Entities\EnvironmentVariable;
 use App\Entities\MigrationJob;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
@@ -15,9 +15,11 @@ use App\Libraries\DeploymentSteps\Helpers\DeploymentStepTriggers;
 use App\Libraries\Kubernetes\KubeAuth;
 use App\Libraries\Kubernetes\KubeHelper;
 use App\Models\ContainerImageModel;
+use App\Models\DeploymentSpecificationInitContainerModel;
 use App\Models\DeploymentSpecificationVolumeModel;
 use App\Models\DeploymentVolumeModel;
 use App\Models\EnvironmentVariableModel;
+use App\Models\InitContainerModel;
 use DebugTool\Data;
 use RenokiCo\PhpK8s\Exceptions\KubernetesAPIException;
 use RenokiCo\PhpK8s\Instances\Container;
@@ -286,11 +288,21 @@ class MigrationJobStep extends BaseDeploymentStep {
         if (strlen($containerImage->security_context_run_as_group) > 0) {
             $container->setAttribute('securityContext.runAsGroup', (int)$containerImage->security_context_run_as_group);
         }
-        if (strlen($containerImage->security_context_fs_group) > 0) {
-            $container->setAttribute('securityContext.fsGroup', (int)$containerImage->security_context_fs_group);
-        }
         $container->setAttribute('securityContext.allowPrivilegeEscalation', (bool)$containerImage->security_context_allow_privilege_escalation);
         $container->setAttribute('securityContext.readOnlyRootFilesystem', (bool)$containerImage->security_context_read_only_root_filesystem);
+
+        // Init Containers
+        $initContainers = [];
+        /** @var DeploymentSpecificationInitContainer $deploymentSpecificationInitContainers */
+        $deploymentSpecificationInitContainers = (new DeploymentSpecificationInitContainerModel())
+            ->includeRelated([InitContainerModel::class, ContainerImageModel::class])
+            ->where('deployment_specification_id', $spec->id)
+            ->where('include_in_migration_job', true)
+            ->orderBy('position', 'asc')
+            ->find();
+        foreach ($deploymentSpecificationInitContainers as $deploymentSpecificationInitContainer) {
+            $initContainers[] = $deploymentSpecificationInitContainer->init_container->toKubernetesResource($deployment);
+        }
 
         $extraEnvVars = [];
         $specEnvVars = $spec->getEnvironmentVariables($deployment);
@@ -358,12 +370,20 @@ class MigrationJobStep extends BaseDeploymentStep {
             ])
             ->neverRestart();
 
+        if (strlen($containerImage->security_context_fs_group) > 0) {
+            $template->setSpec('securityContext.fsGroup', (int)$containerImage->security_context_fs_group);
+        }
+
         if (strlen($containerImage->pull_secret) > 0) {
             $template->setSpec('imagePullSecrets', [
                 [
                     'name' => $containerImage->pull_secret,
                 ],
             ]);
+        }
+
+        if (count($initContainers) > 0) {
+            $template->setInitContainers($initContainers);
         }
 
         if (count($volumes) > 0) {

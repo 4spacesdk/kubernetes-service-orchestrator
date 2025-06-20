@@ -72,9 +72,6 @@ class InitContainer extends Entity {
         if (strlen($this->container_image->security_context_run_as_user) > 0) {
             $container->setAttribute('securityContext.runAsUser', (int)$this->container_image->security_context_run_as_user);
         }
-        if (strlen($this->container_image->security_context_fs_group) > 0) {
-            $container->setAttribute('securityContext.fsGroup', (int)$this->container_image->security_context_fs_group);
-        }
         if (strlen($this->container_image->security_context_run_as_group) > 0) {
             $container->setAttribute('securityContext.runAsGroup', (int)$this->container_image->security_context_run_as_group);
         }

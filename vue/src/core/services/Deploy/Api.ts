@@ -77,6 +77,16 @@ export interface DeploymentSpecGetResponse {
     deploymentSteps?: DeploymentStep[];
 }
 
+export interface DeploymentSpecificationInitContainersRequest {
+    values?: DeploymentSpecificationInitContainersRequestItem[];
+}
+
+export interface DeploymentSpecificationInitContainersRequestItem {
+    initContainerId?: number;
+    position?: number;
+    includeInMigrationJob?: boolean;
+}
+
 export interface DeploymentSpecificationTagsGetResponse {
     tags?: string[];
 }
@@ -1939,7 +1949,7 @@ export class DeploymentSpecificationsUpdateInitContainersPutById extends BaseApi
         return new DeploymentSpecification(data);
     }
 
-    public save(data: IntArrayInterface, next?: (value: DeploymentSpecification) => void) {
+    public save(data: DeploymentSpecificationInitContainersRequest, next?: (value: DeploymentSpecification) => void) {
         return super.executeSave(data, next);
     }
 }

@@ -13,6 +13,7 @@ export class DeploymentSpecificationInitContainerDefinition extends BaseModel {
     init_container_id?: number;
     init_container?: InitContainer;
     position?: number;
+    include_in_migration_job?: boolean;
     id?: number;
     created?: string;
     updated?: string;
@@ -35,6 +36,7 @@ export class DeploymentSpecificationInitContainerDefinition extends BaseModel {
             delete this.init_container_id;
             delete this.init_container;
             delete this.position;
+            delete this.include_in_migration_job;
             delete this.id;
             delete this.created;
             delete this.updated;
@@ -61,6 +63,9 @@ export class DeploymentSpecificationInitContainerDefinition extends BaseModel {
         }
         if (data.position != null) {
             this.position = data.position;
+        }
+        if (data.include_in_migration_job != null) {
+            this.include_in_migration_job = data.include_in_migration_job;
         }
         if (data.id != null) {
             this.id = data.id;

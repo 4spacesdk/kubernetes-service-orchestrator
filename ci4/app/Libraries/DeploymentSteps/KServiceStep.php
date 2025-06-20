@@ -304,9 +304,6 @@ class KServiceStep extends BaseDeploymentStep {
         if (strlen($spec->container_image->security_context_run_as_group) > 0) {
             $container->setAttribute('securityContext.runAsGroup', (int)$spec->container_image->security_context_run_as_group);
         }
-        if (strlen($spec->container_image->security_context_fs_group) > 0) {
-            $container->setAttribute('securityContext.fsGroup', (int)$spec->container_image->security_context_fs_group);
-        }
         $container->setAttribute('securityContext.allowPrivilegeEscalation', (bool)$spec->container_image->security_context_allow_privilege_escalation);
         $container->setAttribute('securityContext.readOnlyRootFilesystem', (bool)$spec->container_image->security_context_read_only_root_filesystem);
 

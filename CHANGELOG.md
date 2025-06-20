@@ -1,9 +1,23 @@
 # Changelog
 
+## v1.5.6 (2025-06-20)
+
+### Fixed bugs
+*
+
+### Enhancements
+* InitContainers can now be added to a migration job 
+
+### Upgrade guide
+1. Deploy new image
+2. Migrate database [(Guide)](https://github.com/4spacesdk/kubernetes-service-orchestrator?tab=readme-ov-file#migrate-database-helm)
+
+
+
 ## v1.5.5 (2025-06-19)
 
 ### Fixed bugs
-* 
+*
 
 ### Enhancements
 * Added `fsGroup` to security context

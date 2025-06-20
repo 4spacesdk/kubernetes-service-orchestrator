@@ -19,6 +19,7 @@ use App\Entities\DeploymentSpecificationServicePort;
 use App\Entities\DeploymentSpecificationInitContainer;
 use App\Interfaces\ClusterRoleRuleList;
 use App\Interfaces\DeploymentAnnotationList;
+use App\Interfaces\DeploymentSpecificationInitContainersRequest;
 use App\Interfaces\DeploymentSpecificationVolumeList;
 use App\Interfaces\EnvironmentVariableList;
 use App\Interfaces\HttpProxyRouteList;
@@ -315,20 +316,23 @@ class DeploymentSpecifications extends ResourceController {
      * @method put
      * @custom true
      * @param int $id
-     * @requestSchema IntArrayInterface
+     * @requestSchema DeploymentSpecificationInitContainersRequest
      * @return void
      */
     public function updateInitContainers(int $id): void {
         $item = new DeploymentSpecification();
         $item->find($id);
         if ($item->exists()) {
-            /** @var IntArrayInterface $body */
+            /** @var DeploymentSpecificationInitContainersRequest $body */
             $body = $this->request->getJSON();
 
             $values = new DeploymentSpecificationInitContainer();
-            $pos = 0;
             $values->all = array_map(
-                fn($initContainerId, $i) => DeploymentSpecificationInitContainer::Create($initContainerId, $pos + $i),
+                fn($item) => DeploymentSpecificationInitContainer::Create(
+                    $item->initContainerId,
+                    $item->position,
+                    $item->includeInMigrationJob
+                ),
                 $body->values,
                 array_keys($body->values)
             );

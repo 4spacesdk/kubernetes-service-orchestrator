@@ -12,6 +12,7 @@ export interface DeploymentSpecificationUpdateInitContainersDialog_Input {
 
 interface Row {
     position: number;
+    includeInMigrationJob: boolean;
     item: InitContainer;
 }
 
@@ -30,6 +31,7 @@ const headers = ref([
     {title: '', key: 'handle', sortable: false, width: 30},
     {title: 'Name', key: 'item.name', sortable: false},
     {title: 'Image', key: 'item.container_image.name', sortable: false},
+    {title: 'Include in Migration Job', key: 'includeInMigrationJob', sortable: false},
     {title: '', key: 'actions', sortable: false},
 ]);
 const isSaving = ref(false);
@@ -61,6 +63,7 @@ function render() {
                     return {
                         position: initContainer.position ?? 0,
                         item: initContainer.init_container!,
+                        includeInMigrationJob: initContainer.include_in_migration_job ?? false,
                     }
                 }) ?? [];
             itemCount.value = rows.value.length;
@@ -84,7 +87,8 @@ function onCreateBtnClicked() {
             Api.initContainers().getById(item.id!)
                 .find(value => rows.value.push({
                     position: rows.value.length,
-                    item: value[0]
+                    item: value[0],
+                    includeInMigrationJob: false,
                 }));
         },
     });
@@ -99,7 +103,8 @@ function onEditRowClicked(row: Row) {
                     const index = rows.value.indexOf(row);
                     rows.value.splice(index, 1, {
                         position: row.position,
-                        item: value[0]
+                        item: value[0],
+                        includeInMigrationJob: row.includeInMigrationJob,
                     });
                 });
         },
@@ -122,16 +127,20 @@ function onSaveBtnClicked() {
         isSaving.value = false;
         return false;
     });
-    api.save({
-            values: rows.value
-                .sort((a, b) => a.position - b.position)
-                .map(row => row.item.id!)
+    api.save(
+        {
+            values: rows.value.map(row => ({
+                initContainerId: row.item.id!,
+                position: row.position ?? 0,
+                includeInMigrationJob: row.includeInMigrationJob
+            }))
         },
         newItem => {
             bus.emit('deploymentSpecificationSaved', newItem);
             isSaving.value = false;
             close();
-        });
+        }
+    );
 }
 
 function onCloseBtnClicked() {
@@ -194,6 +203,13 @@ function onSortChanged(event: CustomEvent) {
                     density="compact">
                     <template v-slot:item.handle="{ item }">
                         <v-icon class="grabbable">fa fa-grip-vertical</v-icon>
+                    </template>
+                    <template v-slot:item.includeInMigrationJob="{ item }">
+                        <v-checkbox
+                            v-model="item.includeInMigrationJob"
+                            density="compact"
+                            hide-details
+                        />
                     </template>
                     <template v-slot:item.actions="{ item }">
                         <div class="d-flex justify-end">
