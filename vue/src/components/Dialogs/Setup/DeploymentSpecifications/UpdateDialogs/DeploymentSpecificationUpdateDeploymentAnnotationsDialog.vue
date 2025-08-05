@@ -4,12 +4,14 @@ import {DeploymentSpecification} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
+import {DeploymentAnnotationLevels} from "@/constants";
 
 export interface DeploymentSpecificationUpdateDeploymentAnnotationsDialog_Input {
     deploymentSpecification: DeploymentSpecification;
 }
 
 interface Row {
+    level: string;
     name: string;
     value: string;
 }
@@ -23,6 +25,7 @@ const isLoading = ref(false);
 const itemCount = ref(0);
 const rows = ref<Row[]>([]);
 const headers = ref([
+    {title: 'Level', key: 'level', sortable: false},
     {title: 'Name', key: 'name', sortable: false},
     {title: 'Value', key: 'value', sortable: false},
     {title: '', key: 'actions', sortable: false},
@@ -53,6 +56,7 @@ function render() {
             rows.value = value[0].deployment_specification_deployment_annotations
                 ?.map(deploymentAnnotation => {
                     return {
+                        level: deploymentAnnotation.level ?? '',
                         name: deploymentAnnotation.name ?? '',
                         value: deploymentAnnotation.value ?? '',
                     }
@@ -73,6 +77,7 @@ function close() {
 
 function onCreateBtnClicked() {
     const newItem = {
+        level: DeploymentAnnotationLevels.Deployment,
         name: '',
         value: '',
     };

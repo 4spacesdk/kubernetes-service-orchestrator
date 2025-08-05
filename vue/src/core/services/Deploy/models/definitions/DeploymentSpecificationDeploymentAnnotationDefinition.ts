@@ -9,6 +9,7 @@ import {BaseModel} from '../BaseModel';
 export class DeploymentSpecificationDeploymentAnnotationDefinition extends BaseModel {
     name?: string;
     value?: string;
+    level?: string;
     deployment_specification_id?: number;
     deployment_specification?: DeploymentSpecification;
     id?: number;
@@ -30,6 +31,7 @@ export class DeploymentSpecificationDeploymentAnnotationDefinition extends BaseM
         if (!patch) {
             delete this.name;
             delete this.value;
+            delete this.level;
             delete this.deployment_specification_id;
             delete this.deployment_specification;
             delete this.id;
@@ -49,6 +51,9 @@ export class DeploymentSpecificationDeploymentAnnotationDefinition extends BaseM
         }
         if (data.value != null) {
             this.value = data.value;
+        }
+        if (data.level != null) {
+            this.level = data.level;
         }
         if (data.deployment_specification_id != null) {
             this.deployment_specification_id = data.deployment_specification_id;

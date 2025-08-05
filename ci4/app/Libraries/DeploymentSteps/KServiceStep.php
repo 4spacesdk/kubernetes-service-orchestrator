@@ -333,6 +333,19 @@ class KServiceStep extends BaseDeploymentStep {
             ]);
         }
 
+        // Annotations
+        $podAnnotations = [
+            'app.kubernetes.io/managed-by' => 'kso',
+        ];
+        /** @var DeploymentSpecificationDeploymentAnnotation $deploymentAnnotation */
+        $deploymentAnnotations = (new DeploymentSpecificationDeploymentAnnotationModel())
+            ->where('level', \DeploymentAnnotationLevels::Pod)
+            ->where('deployment_specification_id', $spec->id)
+            ->find();
+        foreach ($deploymentAnnotations as $deploymentAnnotation) {
+            $podAnnotations[$deploymentAnnotation->name] = $deploymentAnnotation->value;
+        }
+
         // Template
         $template = new Instance();
         $template
@@ -341,9 +354,7 @@ class KServiceStep extends BaseDeploymentStep {
                     'app' => $deployment->name,
                     'role' => 'app',
                 ],
-                'annotations' => [
-                    'app.kubernetes.io/managed-by' => 'kso',
-                ],
+                'annotations' => $podAnnotations,
             ])
             ->setAttribute('spec', [
                 'containers' => [
@@ -416,26 +427,26 @@ class KServiceStep extends BaseDeploymentStep {
             $template->setAttribute('spec.serviceAccountName', $deployment->name);
         }
 
+        // Annotations
+        $annotations = [
+            'app.kubernetes.io/managed-by' => '4spaces.kso',
+        ];
+        /** @var DeploymentSpecificationDeploymentAnnotation $deploymentAnnotation */
+        $deploymentAnnotations = (new DeploymentSpecificationDeploymentAnnotationModel())
+            ->where('level', \DeploymentAnnotationLevels::Deployment)
+            ->where('deployment_specification_id', $spec->id)
+            ->find();
+        foreach ($deploymentAnnotations as $deploymentAnnotation) {
+            $annotations[$deploymentAnnotation->name] = $deploymentAnnotation->value;
+        }
+
         // KNativeService
         $resource = new K8sKNativeService();
         $resource
             ->setName($deployment->name)
             ->setNamespace($deployment->namespace)
-            ->setAnnotations([
-                'app.kubernetes.io/managed-by' => '4spaces.kso',
-            ])
+            ->setAnnotations($annotations)
             ->setAttribute('spec', ['template' => $template->toArray()]);
-
-        // Annotations
-        /** @var DeploymentSpecificationDeploymentAnnotation $deploymentAnnotation */
-        $deploymentAnnotations = (new DeploymentSpecificationDeploymentAnnotationModel())
-            ->where('deployment_specification_id', $spec->id)
-            ->find();
-        foreach ($deploymentAnnotations as $deploymentAnnotation) {
-            $resource->addToAttribute('metadata.annotations', [
-                $deploymentAnnotation->name => $deploymentAnnotation->value
-            ]);
-        }
 
         if ($auth) {
             $auth = new KubeAuth();

@@ -156,6 +156,13 @@ class NetworkTypes {
     ;
 }
 
+class DeploymentAnnotationLevels {
+    const string
+        Deployment = 'deployment',
+        Pod = 'pod'
+    ;
+}
+
 
 /*
  | --------------------------------------------------------------------

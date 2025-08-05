@@ -409,6 +409,19 @@ class DeploymentStep extends BaseDeploymentStep {
             $volumes[] = $volume;
         }
 
+        // Annotations
+        $podAnnotations = [
+            'app.kubernetes.io/managed-by' => 'kso',
+        ];
+        /** @var DeploymentSpecificationDeploymentAnnotation $deploymentAnnotation */
+        $deploymentAnnotations = (new DeploymentSpecificationDeploymentAnnotationModel())
+            ->where('level', \DeploymentAnnotationLevels::Pod)
+            ->where('deployment_specification_id', $spec->id)
+            ->find();
+        foreach ($deploymentAnnotations as $deploymentAnnotation) {
+            $podAnnotations[$deploymentAnnotation->name] = $deploymentAnnotation->value;
+        }
+
         $template = new K8sPod();
         $template
             ->setAttribute('metadata', [
@@ -416,6 +429,7 @@ class DeploymentStep extends BaseDeploymentStep {
                     'app' => $deployment->name,
                     'role' => 'app',
                 ],
+                'annotations' => $podAnnotations,
             ])
             ->setContainers([
                 $container
@@ -450,6 +464,7 @@ class DeploymentStep extends BaseDeploymentStep {
 
         /** @var DeploymentSpecificationDeploymentAnnotation $deploymentAnnotation */
         $deploymentAnnotations = (new DeploymentSpecificationDeploymentAnnotationModel())
+            ->where('level', \DeploymentAnnotationLevels::Deployment)
             ->where('deployment_specification_id', $spec->id)
             ->find();
         foreach ($deploymentAnnotations as $deploymentAnnotation) {

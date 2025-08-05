@@ -209,7 +209,7 @@ function onUpdateVolumesClicked() {
                     @click="onUpdateDeploymentAnnotationsClicked">
                     <v-list-item-title>
                         <v-icon size="small" class="my-auto ml-2">fa fa-tags</v-icon>
-                        <span class="ml-2">Deployment Annotations</span>
+                        <span class="ml-2">Annotations</span>
                     </v-list-item-title>
                 </v-list-item>
 

@@ -302,7 +302,7 @@ class DeploymentSpecifications extends ResourceController {
             $body = $this->request->getJSON();
             $values = new DeploymentSpecificationDeploymentAnnotation();
             $values->all = array_map(
-                fn($data) => DeploymentSpecificationDeploymentAnnotation::Create($data->name, $data->value),
+                fn($data) => DeploymentSpecificationDeploymentAnnotation::Create($data->level, $data->name, $data->value),
                 $body->values
             );
             $item->updateDeploymentAnnotations($values);

@@ -2,19 +2,16 @@
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
 import {VTextField} from "vuetify/components/VTextField";
+import {DeploymentAnnotationLevels} from "@/constants";
 
 export interface DeploymentSpecificationUpdateDeploymentAnnotationDialog_Input {
     deploymentAnnotation: {
+        level: string;
         name: string;
         value: string;
     };
 
     onSaveCallback: () => void;
-}
-
-interface Variable {
-    name: string;
-    code: string;
 }
 
 const props = defineProps<{
@@ -24,8 +21,13 @@ const props = defineProps<{
 
 const used = ref(false);
 const showDialog = ref(false);
+const level = ref('');
 const name = ref('');
 const value = ref('');
+const levelItems = ref([
+    DeploymentAnnotationLevels.Deployment,
+    DeploymentAnnotationLevels.Pod,
+]);
 
 // <editor-fold desc="Functions">
 
@@ -41,6 +43,7 @@ onUnmounted(() => {
 });
 
 function render() {
+    level.value = props.input.deploymentAnnotation.level ?? '';
     name.value = props.input.deploymentAnnotation.name ?? '';
     value.value = props.input.deploymentAnnotation.value ?? '';
     showDialog.value = true;
@@ -56,6 +59,7 @@ function close() {
 // <editor-fold desc="View Binding Functions">
 
 function onSaveBtnClicked() {
+    props.input.deploymentAnnotation.level = level.value;
     props.input.deploymentAnnotation.name = name.value;
     props.input.deploymentAnnotation.value = value.value;
     props.input.onSaveCallback();
@@ -81,6 +85,15 @@ function onCloseBtnClicked() {
             <v-divider/>
             <v-card-text>
                 <v-row>
+                    <v-col cols="12">
+                        <v-select
+                            v-model="level"
+                            variant="outlined"
+                            label="Level"
+                            :items="levelItems"
+                            spellcheck="false"
+                        />
+                    </v-col>
                     <v-col cols="12">
                         <v-text-field
                             v-model="name"

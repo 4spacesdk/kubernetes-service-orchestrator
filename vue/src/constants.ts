@@ -475,3 +475,8 @@ export const DeploymentStepLevels = {
     Workspace: 'workspace',
     Deployment: 'deployment',
 }
+
+export const DeploymentAnnotationLevels = {
+    Deployment: 'deployment',
+    Pod: 'pod'
+}
