@@ -13,6 +13,9 @@ interface Row {
     path: string;
     port: number;
     protocol: string;
+    timeoutPolicyIdle: string;
+    timeoutPolicyResponse: string;
+    timeoutPolicyIdleConnection: string;
 }
 
 const props = defineProps<{ input: DeploymentSpecificationUpdateHttpProxyRoutesDialog_Input, events: DialogEventsInterface }>();
@@ -27,6 +30,9 @@ const headers = ref([
     {title: 'Path', key: 'path', sortable: false},
     {title: 'Port', key: 'port', sortable: false},
     {title: 'Protocol', key: 'protocol', sortable: false},
+    {title: 'Timeout Policy, Idle', key: 'timeoutPolicyIdle', sortable: false},
+    {title: 'Timeout Policy, Response', key: 'timeoutPolicyResponse', sortable: false},
+    {title: 'Timeout Policy, Idle Connection', key: 'timeoutPolicyIdleConnection', sortable: false},
     {title: '', key: 'actions', sortable: false},
 ]);
 const isSaving = ref(false);
@@ -58,6 +64,9 @@ function render() {
                         path: item.path ?? '',
                         port: item.port ?? 0,
                         protocol: item.protocol ?? '',
+                        timeoutPolicyIdle: item.timeout_policy_idle ?? '',
+                        timeoutPolicyResponse: item.timeout_policy_response ?? '',
+                        timeoutPolicyIdleConnection: item.timeout_policy_idle_connection ?? '',
                     }
                 }) ?? [];
             itemCount.value = rows.value.length;
@@ -79,6 +88,9 @@ function onCreateBtnClicked() {
         path: '/',
         port: 80,
         protocol: 'h2c',
+        timeoutPolicyIdle: '',
+        timeoutPolicyResponse: '',
+        timeoutPolicyIdleConnection: '',
     };
     bus.emit('deploymentSpecificationUpdateHttpProxyRoute', {
         httpProxyRoute: newItem,

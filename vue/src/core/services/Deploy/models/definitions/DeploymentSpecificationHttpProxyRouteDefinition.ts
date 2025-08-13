@@ -12,6 +12,9 @@ export class DeploymentSpecificationHttpProxyRouteDefinition extends BaseModel {
     path?: string;
     port?: number;
     protocol?: string;
+    timeout_policy_idle?: string;
+    timeout_policy_response?: string;
+    timeout_policy_idle_connection?: string;
     id?: number;
     created?: string;
     updated?: string;
@@ -34,6 +37,9 @@ export class DeploymentSpecificationHttpProxyRouteDefinition extends BaseModel {
             delete this.path;
             delete this.port;
             delete this.protocol;
+            delete this.timeout_policy_idle;
+            delete this.timeout_policy_response;
+            delete this.timeout_policy_idle_connection;
             delete this.id;
             delete this.created;
             delete this.updated;
@@ -60,6 +66,15 @@ export class DeploymentSpecificationHttpProxyRouteDefinition extends BaseModel {
         }
         if (data.protocol != null) {
             this.protocol = data.protocol;
+        }
+        if (data.timeout_policy_idle != null) {
+            this.timeout_policy_idle = data.timeout_policy_idle;
+        }
+        if (data.timeout_policy_response != null) {
+            this.timeout_policy_response = data.timeout_policy_response;
+        }
+        if (data.timeout_policy_idle_connection != null) {
+            this.timeout_policy_idle_connection = data.timeout_policy_idle_connection;
         }
         if (data.id != null) {
             this.id = data.id;

@@ -167,7 +167,7 @@ function onCloseBtnClicked() {
                         <v-switch
                             v-model="item.enable_contour"
                             variant="outlined"
-                            label="Enable Contor"
+                            label="Enable Contour"
                             density="compact"
                             color="secondary"
                         />

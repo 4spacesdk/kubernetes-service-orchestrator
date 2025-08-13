@@ -10,14 +10,22 @@ use App\Core\Entity;
  * @property string $path
  * @property int $port
  * @property string $protocol
+ * @property string $timeout_policy_idle
+ * @property string $timeout_policy_response
+ * @property string $timeout_policy_idle_connection
  */
 class DeploymentSpecificationHttpProxyRoute extends Entity {
 
-    public static function Create(string $path, int $port, ?string $protocol): DeploymentSpecificationHttpProxyRoute {
+    public static function Create(string $path, int $port, ?string $protocol,
+                                  ?string $timeoutPolicyIdle, ?string $timeoutPolicyResponse,
+                                  ?string $timeoutPolicyIdleConnection): DeploymentSpecificationHttpProxyRoute {
         $item = new DeploymentSpecificationHttpProxyRoute();
         $item->path = $path;
         $item->port = $port;
         $item->protocol = $protocol;
+        $item->timeout_policy_idle = $timeoutPolicyIdle;
+        $item->timeout_policy_response = $timeoutPolicyResponse;
+        $item->timeout_policy_idle_connection = $timeoutPolicyIdleConnection;
         $item->save();
         return $item;
     }

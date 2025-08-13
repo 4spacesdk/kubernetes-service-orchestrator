@@ -1,5 +1,19 @@
 # Changelog
 
+## v1.5.8 (2025-08-13)
+
+### Fixed bugs
+*
+
+### Enhancements
+* Added timeoutPolicy fields for Contour HttpProxy Routes [Issue #55](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/55)
+
+### Upgrade guide
+1. Deploy new image
+2. Migrate database [(Guide)](https://github.com/4spacesdk/kubernetes-service-orchestrator?tab=readme-ov-file#migrate-database-helm)
+
+
+
 ## v1.5.7 (2025-08-05)
 
 ### Fixed bugs

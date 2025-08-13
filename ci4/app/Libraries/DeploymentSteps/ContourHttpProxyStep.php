@@ -286,11 +286,22 @@ class ContourHttpProxyStep extends BaseDeploymentStep {
                                             ? 80 // KNative only listen for ports 80
                                             : (int)$route->port,
                             ]
-                        ]
+                        ],
+                        'timeoutPolicy' => [
+                        ],
                     ];
 
                     if (strlen($route->protocol)) {
                         $item['services'][0]['protocol'] = $route->protocol;
+                    }
+                    if (strlen($route->timeout_policy_idle)) {
+                        $item['timeoutPolicy']['idle'] = $route->timeout_policy_idle;
+                    }
+                    if (strlen($route->timeout_policy_response)) {
+                        $item['timeoutPolicy']['response'] = $route->timeout_policy_response;
+                    }
+                    if (strlen($route->timeout_policy_idle_connection)) {
+                        $item['timeoutPolicy']['idleConnection'] = $route->timeout_policy_idle_connection;
                     }
 
                     switch ($spec->workload_type) {

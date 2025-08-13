@@ -37,6 +37,7 @@ export interface ClusterRoleRuleList {
 }
 
 export interface DeploymentAnnotation {
+    level?: string;
     name?: string;
     value?: string;
 }
@@ -170,6 +171,9 @@ export interface HttpProxyRoute {
     path?: string;
     port?: number;
     protocol?: string;
+    timeoutPolicyIdle?: string;
+    timeoutPolicyResponse?: string;
+    timeoutPolicyIdleConnection?: string;
 }
 
 export interface HttpProxyRouteList {

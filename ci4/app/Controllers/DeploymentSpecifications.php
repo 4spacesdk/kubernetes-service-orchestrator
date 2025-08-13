@@ -442,7 +442,14 @@ class DeploymentSpecifications extends ResourceController {
             $body = $this->request->getJSON();
             $values = new DeploymentSpecificationHttpProxyRoute();
             $values->all = array_map(
-                fn($data) => DeploymentSpecificationHttpProxyRoute::Create($data->path, $data->port, $data->protocol),
+                fn($data) => DeploymentSpecificationHttpProxyRoute::Create(
+                    $data->path,
+                    $data->port,
+                    $data->protocol ?? null,
+                    $data->timeoutPolicyIdle ?? null,
+                    $data->timeoutPolicyResponse ?? null,
+                    $data->timeoutPolicyIdleConnection ?? null,
+                ),
                 $body->values
             );
             $item->updateHttpProxyRoutes($values);
