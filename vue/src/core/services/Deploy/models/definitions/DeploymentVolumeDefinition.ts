@@ -16,6 +16,7 @@ export class DeploymentVolumeDefinition extends BaseModel {
     reclaim_policy?: string;
     nfs_server?: string;
     nfs_path?: string;
+    storage_class?: string;
     id?: number;
     created?: string;
     updated?: string;
@@ -42,6 +43,7 @@ export class DeploymentVolumeDefinition extends BaseModel {
             delete this.reclaim_policy;
             delete this.nfs_server;
             delete this.nfs_path;
+            delete this.storage_class;
             delete this.id;
             delete this.created;
             delete this.updated;
@@ -80,6 +82,9 @@ export class DeploymentVolumeDefinition extends BaseModel {
         }
         if (data.nfs_path != null) {
             this.nfs_path = data.nfs_path;
+        }
+        if (data.storage_class != null) {
+            this.storage_class = data.storage_class;
         }
         if (data.id != null) {
             this.id = data.id;

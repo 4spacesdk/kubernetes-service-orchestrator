@@ -7,6 +7,7 @@
  * @property string $reclaim_policy
  * @property string $nfs_server
  * @property string $nfs_path
+ * @property string $storage_class
  */
 interface DeploymentSpecificationVolume {
 

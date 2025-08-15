@@ -28,6 +28,7 @@ const reclaimPolicyItems = ref([
 ]);
 const nfsServer = ref('');
 const nfsPath = ref('');
+const storageClass = ref('');
 
 // <editor-fold desc="Functions">
 
@@ -50,6 +51,7 @@ function render() {
     reclaimPolicy.value = props.input.volume.reclaim_policy ?? reclaimPolicyItems.value[0];
     nfsServer.value = props.input.volume.nfs_server ?? '';
     nfsPath.value = props.input.volume.nfs_path ?? '';
+    storageClass.value = props.input.volume.storage_class ?? '';
     showDialog.value = true;
 }
 
@@ -70,6 +72,7 @@ function onSaveBtnClicked() {
     props.input.volume.reclaim_policy = reclaimPolicy.value;
     props.input.volume.nfs_server = nfsServer.value;
     props.input.volume.nfs_path = nfsPath.value;
+    props.input.volume.storage_class = storageClass.value;
     props.input.onSaveCallback();
     close();
 }
@@ -157,6 +160,13 @@ function onCloseBtnClicked() {
                             v-model="nfsPath"
                             variant="outlined"
                             label="NFS Path"
+                        />
+                    </v-col>
+                    <v-col cols="6">
+                        <v-text-field
+                            v-model="storageClass"
+                            variant="outlined"
+                            label="Storage Class"
                         />
                     </v-col>
                 </v-row>

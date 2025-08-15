@@ -317,7 +317,7 @@ class KServiceStep extends BaseDeploymentStep {
                 'mountPath' => $deploymentVolume->mount_path,
                 'name' => $deployment->name,
                 'readOnly' => false,
-                'subPath' => $deploymentVolume->sub_path,
+                'subPath' => strlen($deploymentVolume->sub_path) ? $deploymentVolume->sub_path : null,
             ]);
         }
         /** @var DeploymentSpecificationVolume $deploymentSpecificationVolumes */
@@ -329,7 +329,7 @@ class KServiceStep extends BaseDeploymentStep {
                 'mountPath' => $deploymentSpecificationVolume->mount_path,
                 'name' => $deployment->name,
                 'readOnly' => false,
-                'subPath' => $deploymentSpecificationVolume->getCompiledSubPath($deployment),
+                'subPath' => strlen($deploymentSpecificationVolume->getCompiledSubPath($deployment)) ? $deploymentSpecificationVolume->getCompiledSubPath($deployment) : null,
             ]);
         }
 

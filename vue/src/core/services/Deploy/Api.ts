@@ -100,6 +100,7 @@ export interface DeploymentSpecificationVolume {
     reclaim_policy?: string;
     nfs_server?: string;
     nfs_path?: string;
+    storage_class?: string;
 }
 
 export interface DeploymentSpecificationVolumeList {
@@ -125,6 +126,7 @@ export interface DeploymentVolume {
     reclaim_policy?: string;
     nfs_server?: string;
     nfs_path?: string;
+    storage_class?: string;
 }
 
 export interface DeploymentVolumeList {

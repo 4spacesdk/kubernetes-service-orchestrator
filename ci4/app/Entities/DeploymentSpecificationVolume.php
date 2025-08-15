@@ -14,12 +14,13 @@ use App\Core\Entity;
  * @property string $reclaim_policy
  * @property string $nfs_server
  * @property string $nfs_path
+ * @property string $storage_class
  */
 class DeploymentSpecificationVolume extends Entity {
 
     public static function Create(string $mountPath, string $subPath, int $capacity,
                                   string $volumeMode, string $reclaimPolicy,
-                                  string $nfsServer, string $nfcPath): DeploymentSpecificationVolume {
+                                  string $nfsServer, string $nfcPath, string $storageClass): DeploymentSpecificationVolume {
         $item = new DeploymentSpecificationVolume();
         $item->mount_path = $mountPath;
         $item->sub_path = $subPath;
@@ -28,6 +29,7 @@ class DeploymentSpecificationVolume extends Entity {
         $item->reclaim_policy = $reclaimPolicy;
         $item->nfs_server = $nfsServer;
         $item->nfs_path = $nfcPath;
+        $item->storage_class = $storageClass;
         $item->save();
         return $item;
     }

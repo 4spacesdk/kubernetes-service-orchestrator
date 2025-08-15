@@ -272,6 +272,7 @@ class Deployments extends ResourceController {
                     $data->reclaim_policy,
                     $data->nfs_server,
                     $data->nfs_path,
+                    $data->storage_class,
                 ),
                 $body->values
             );

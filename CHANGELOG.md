@@ -1,5 +1,19 @@
 # Changelog
 
+## v1.5.9 (2025-08-15)
+
+### Fixed bugs
+*
+
+### Enhancements
+* Add more flexible storage handling [Issue #56](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/56)
+
+### Upgrade guide
+1. Deploy new image
+2. Migrate database [(Guide)](https://github.com/4spacesdk/kubernetes-service-orchestrator?tab=readme-ov-file#migrate-database-helm)
+
+
+
 ## v1.5.8 (2025-08-13)
 
 ### Fixed bugs

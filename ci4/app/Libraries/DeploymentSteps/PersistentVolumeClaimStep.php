@@ -182,7 +182,7 @@ class PersistentVolumeClaimStep extends BaseDeploymentStep {
                 ->setNamespace($deployment->namespace)
                 ->setCapacity($deploymentVolume->capacity)
                 ->setAccessModes(['ReadWriteMany'])
-                ->setStorageClass('');
+                ->setStorageClass($deploymentVolume->storage_class);
 
             $resources[] = $resource;
         }
@@ -198,7 +198,7 @@ class PersistentVolumeClaimStep extends BaseDeploymentStep {
                 ->setNamespace($deployment->namespace)
                 ->setCapacity($deploymentSpecificationVolume->capacity)
                 ->setAccessModes(['ReadWriteMany'])
-                ->setStorageClass('');
+                ->setStorageClass($deploymentSpecificationVolume->storage_class);
 
             $resources[] = $resource;
         }
