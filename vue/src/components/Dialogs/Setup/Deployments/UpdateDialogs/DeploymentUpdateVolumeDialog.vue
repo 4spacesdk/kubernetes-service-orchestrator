@@ -2,6 +2,7 @@
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
 import {DeploymentVolume} from "@/core/services/Deploy/models";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
+import VariableBtn from "@/components/Modules/Common/VariableBtn.vue";
 
 export interface DeploymentUpdateVolumeDialog_Input {
     volume: DeploymentVolume;
@@ -14,6 +15,10 @@ const props = defineProps<{ input: DeploymentUpdateVolumeDialog_Input, events: D
 const used = ref(false);
 const showDialog = ref(false);
 
+const type = ref('');
+const typeItems = ref([
+    'nfs', 'csi',
+]);
 const mountPath = ref('');
 const subPath = ref('');
 const capacity = ref(0);
@@ -28,6 +33,8 @@ const reclaimPolicyItems = ref([
 const nfsServer = ref('');
 const nfsPath = ref('');
 const storageClass = ref('');
+const csiDriver = ref('');
+const csiVolumeHandle = ref('');
 
 // <editor-fold desc="Functions">
 
@@ -43,6 +50,7 @@ onUnmounted(() => {
 });
 
 function render() {
+    type.value = props.input.volume.type ?? '';
     mountPath.value = props.input.volume.mount_path ?? '';
     subPath.value = props.input.volume.sub_path ?? '';
     capacity.value = props.input.volume.capacity ?? 0;
@@ -51,6 +59,8 @@ function render() {
     nfsServer.value = props.input.volume.nfs_server ?? '';
     nfsPath.value = props.input.volume.nfs_path ?? '';
     storageClass.value = props.input.volume.storage_class ?? '';
+    csiDriver.value = props.input.volume.csi_driver ?? '';
+    csiVolumeHandle.value = props.input.volume.csi_volume_handle ?? '';
     showDialog.value = true;
 }
 
@@ -64,6 +74,7 @@ function close() {
 // <editor-fold desc="View Binding Functions">
 
 function onSaveBtnClicked() {
+    props.input.volume.type = type.value;
     props.input.volume.mount_path = mountPath.value;
     props.input.volume.sub_path = subPath.value;
     props.input.volume.capacity = capacity.value;
@@ -72,6 +83,8 @@ function onSaveBtnClicked() {
     props.input.volume.nfs_server = nfsServer.value;
     props.input.volume.nfs_path = nfsPath.value;
     props.input.volume.storage_class = storageClass.value;
+    props.input.volume.csi_driver = csiDriver.value;
+    props.input.volume.csi_volume_handle = csiVolumeHandle.value;
     props.input.onSaveCallback();
     close();
 }
@@ -95,6 +108,14 @@ function onCloseBtnClicked() {
             <v-divider/>
             <v-card-text>
                 <v-row>
+                    <v-col cols="6">
+                        <v-select
+                            v-model="type"
+                            variant="outlined"
+                            label="Type"
+                            :items="typeItems"
+                        />
+                    </v-col>
                     <v-col cols="6">
                         <v-text-field
                             v-model="mountPath"
@@ -140,14 +161,18 @@ function onCloseBtnClicked() {
                             :items="reclaimPolicyItems"
                         />
                     </v-col>
-                    <v-col cols="6">
+                    <v-col
+                        v-if="type == 'nfs'"
+                        cols="6">
                         <v-text-field
                             v-model="nfsServer"
                             variant="outlined"
                             label="NFS Server"
                         />
                     </v-col>
-                    <v-col cols="6">
+                    <v-col
+                        v-if="type == 'nfs'"
+                        cols="6">
                         <v-text-field
                             v-model="nfsPath"
                             variant="outlined"
@@ -160,6 +185,33 @@ function onCloseBtnClicked() {
                             variant="outlined"
                             label="Storage Class"
                         />
+                    </v-col>
+                    <v-col
+                        v-if="type == 'csi'"
+                        cols="6">
+                        <v-text-field
+                            v-model="csiDriver"
+                            variant="outlined"
+                            label="CSI Driver"
+                            hint="nfs.csi.k8s.io"
+                            persistent-hint
+                        />
+                    </v-col>
+                    <v-col
+                        v-if="type == 'csi'"
+                        cols="6">
+                        <div
+                            class="d-flex"
+                        >
+                            <v-text-field
+                                v-model="csiVolumeHandle"
+                                variant="outlined"
+                                label="CSI Volume Handle"
+                            />
+                            <variable-btn
+                                @add-variable="item => csiVolumeHandle += item"
+                            />
+                        </div>
                     </v-col>
                 </v-row>
             </v-card-text>

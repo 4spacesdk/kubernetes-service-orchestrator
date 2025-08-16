@@ -15,13 +15,18 @@ use App\Core\Entity;
  * @property string $nfs_server
  * @property string $nfs_path
  * @property string $storage_class
+ * @property string $type
+ * @property string $csi_driver
+ * @property string $csi_volume_handle
  */
 class DeploymentVolume extends Entity {
 
-    public static function Create(string $mountPath, string $subPath, int $capacity,
+    public static function Create(string $type, string $mountPath, string $subPath, int $capacity,
                                   string $volumeMode, string $reclaimPolicy,
-                                  string $nfsServer, string $nfcPath, string $storageClass): DeploymentVolume {
+                                  string $nfsServer, string $nfcPath, string $storageClass,
+                                  string $csiDriver, string $csiVolumeHandle): DeploymentVolume {
         $item = new DeploymentVolume();
+        $item->type = $type;
         $item->mount_path = $mountPath;
         $item->sub_path = $subPath;
         $item->capacity = $capacity;
@@ -30,16 +35,18 @@ class DeploymentVolume extends Entity {
         $item->nfs_server = $nfsServer;
         $item->nfs_path = $nfcPath;
         $item->storage_class = $storageClass;
+        $item->csi_driver = $csiDriver;
+        $item->csi_volume_handle = $csiVolumeHandle;
         $item->save();
         return $item;
     }
 
     public function validate(): ?string {
+        if (empty($this->type)) {
+            return 'Missing type';
+        }
         if (empty($this->mount_path)) {
             return 'Missing mount path';
-        }
-        if (empty($this->sub_path)) {
-            return 'Missing sub path';
         }
         if (empty($this->capacity) || $this->capacity <= 0) {
             return 'Missing capacity';
@@ -58,6 +65,10 @@ class DeploymentVolume extends Entity {
         }
 
         return null;
+    }
+
+    public function getCompiledCsiVolumeHandle(Deployment $deployment): string {
+        return EnvironmentVariable::ApplyVariablesToString($this->csi_volume_handle, $deployment);
     }
 
     /**

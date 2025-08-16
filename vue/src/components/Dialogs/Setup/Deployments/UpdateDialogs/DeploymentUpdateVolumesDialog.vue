@@ -18,6 +18,7 @@ const isLoading = ref(false);
 const itemCount = ref(0);
 const rows = ref<DeploymentVolume[]>([]);
 const headers = ref([
+    {title: 'Type', key: 'type', sortable: false},
     {title: 'Capacity', key: 'capacity', sortable: false},
     {title: 'Mount Path', key: 'mount_path', sortable: false},
     {title: '', key: 'actions', sortable: false},

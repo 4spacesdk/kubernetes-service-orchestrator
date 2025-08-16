@@ -475,6 +475,7 @@ class DeploymentSpecifications extends ResourceController {
             $values = new DeploymentSpecificationVolume();
             $values->all = array_map(
                 fn($data) => DeploymentSpecificationVolume::Create(
+                    $data->type,
                     $data->mount_path,
                     $data->sub_path,
                     $data->capacity,
@@ -483,6 +484,8 @@ class DeploymentSpecifications extends ResourceController {
                     $data->nfs_server,
                     $data->nfs_path,
                     $data->storage_class,
+                    $data->csi_driver,
+                    $data->csi_volume_handle,
                 ),
                 $body->values
             );

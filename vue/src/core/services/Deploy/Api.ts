@@ -101,6 +101,9 @@ export interface DeploymentSpecificationVolume {
     nfs_server?: string;
     nfs_path?: string;
     storage_class?: string;
+    type?: string;
+    csi_driver?: string;
+    csi_volume_handle?: string;
 }
 
 export interface DeploymentSpecificationVolumeList {
@@ -127,6 +130,9 @@ export interface DeploymentVolume {
     nfs_server?: string;
     nfs_path?: string;
     storage_class?: string;
+    type?: string;
+    csi_driver?: string;
+    csi_volume_handle?: string;
 }
 
 export interface DeploymentVolumeList {

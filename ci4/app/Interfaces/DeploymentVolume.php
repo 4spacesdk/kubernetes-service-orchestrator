@@ -8,6 +8,9 @@
  * @property string $nfs_server
  * @property string $nfs_path
  * @property string $storage_class
+ * @property string $type
+ * @property string $csi_driver
+ * @property string $csi_volume_handle
  */
 interface DeploymentVolume {
 

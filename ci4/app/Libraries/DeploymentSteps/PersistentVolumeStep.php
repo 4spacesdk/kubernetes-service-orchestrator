@@ -181,11 +181,24 @@ class PersistentVolumeStep extends BaseDeploymentStep {
                 ->setCapacity($deploymentVolume->capacity)
                 ->setSpec('volumeMode', $deploymentVolume->volume_mode)
                 ->setAccessModes(['ReadWriteMany'])
-                ->setSpec('nfs', [
-                    'server' => $deploymentVolume->nfs_server,
-                    'path' => $deploymentVolume->nfs_path,
-                ])
                 ->setSpec('persistentVolumeReclaimPolicy', $deploymentVolume->reclaim_policy);
+
+            switch($deploymentVolume->type) {
+                case 'nfs':
+                    $resource->setSpec('nfs', [
+                        'server' => $deploymentVolume->nfs_server,
+                        'path' => $deploymentVolume->nfs_path,
+                    ]);
+                    break;
+                case 'csi':
+                    if (strlen($deploymentVolume->csi_driver)) {
+                        $resource->setSpec('csi.driver', $deploymentVolume->csi_driver);
+                    }
+                    if (strlen($deploymentVolume->csi_volume_handle)) {
+                        $resource->setSpec('csi.volumeHandle', $deploymentVolume->getCompiledCsiVolumeHandle($deployment));
+                    }
+                    break;
+            }
 
             $resources[] = $resource;
         }
@@ -201,11 +214,24 @@ class PersistentVolumeStep extends BaseDeploymentStep {
                 ->setCapacity($deploymentSpecificationVolume->capacity)
                 ->setSpec('volumeMode', $deploymentSpecificationVolume->volume_mode)
                 ->setAccessModes(['ReadWriteMany'])
-                ->setSpec('nfs', [
-                    'server' => $deploymentSpecificationVolume->nfs_server,
-                    'path' => $deploymentSpecificationVolume->nfs_path,
-                ])
                 ->setSpec('persistentVolumeReclaimPolicy', $deploymentSpecificationVolume->reclaim_policy);
+
+            switch($deploymentSpecificationVolume->type) {
+                case 'nfs':
+                    $resource->setSpec('nfs', [
+                        'server' => $deploymentSpecificationVolume->nfs_server,
+                        'path' => $deploymentSpecificationVolume->nfs_path,
+                    ]);
+                    break;
+                case 'csi':
+                    if (strlen($deploymentSpecificationVolume->csi_driver)) {
+                        $resource->setSpec('csi.driver', $deploymentSpecificationVolume->csi_driver);
+                    }
+                    if (strlen($deploymentSpecificationVolume->csi_volume_handle)) {
+                        $resource->setSpec('csi.volumeHandle', $deploymentSpecificationVolume->getCompiledCsiVolumeHandle($deployment));
+                    }
+                    break;
+            }
 
             $resources[] = $resource;
         }

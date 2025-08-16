@@ -17,6 +17,9 @@ export class DeploymentSpecificationVolumeDefinition extends BaseModel {
     nfs_server?: string;
     nfs_path?: string;
     storage_class?: string;
+    type?: string;
+    csi_driver?: string;
+    csi_volume_handle?: string;
     id?: number;
     created?: string;
     updated?: string;
@@ -44,6 +47,9 @@ export class DeploymentSpecificationVolumeDefinition extends BaseModel {
             delete this.nfs_server;
             delete this.nfs_path;
             delete this.storage_class;
+            delete this.type;
+            delete this.csi_driver;
+            delete this.csi_volume_handle;
             delete this.id;
             delete this.created;
             delete this.updated;
@@ -85,6 +91,15 @@ export class DeploymentSpecificationVolumeDefinition extends BaseModel {
         }
         if (data.storage_class != null) {
             this.storage_class = data.storage_class;
+        }
+        if (data.type != null) {
+            this.type = data.type;
+        }
+        if (data.csi_driver != null) {
+            this.csi_driver = data.csi_driver;
+        }
+        if (data.csi_volume_handle != null) {
+            this.csi_volume_handle = data.csi_volume_handle;
         }
         if (data.id != null) {
             this.id = data.id;

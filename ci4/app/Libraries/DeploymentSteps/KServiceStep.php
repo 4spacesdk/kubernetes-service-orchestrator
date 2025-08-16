@@ -407,6 +407,11 @@ class KServiceStep extends BaseDeploymentStep {
             ]);
         }
 
+        // Pod Security Context
+        if (strlen($spec->container_image->security_context_fs_group) > 0) {
+            $template->setAttribute('spec.securityContext.fsGroup', (int)$spec->container_image->security_context_fs_group);
+        }
+
         // Init Containers
         $initContainers = [];
         /** @var DeploymentSpecificationInitContainer $deploymentSpecificationInitContainers */
