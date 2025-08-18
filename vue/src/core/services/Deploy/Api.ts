@@ -49,6 +49,7 @@ export interface DeploymentAnnotationList {
 export interface DeploymentPackageDeploymentSpecification {
     deploymentSpecification?: DeploymentSpecification;
     defaultEnablePodioNotification?: boolean;
+    defaultImagePullPolicy?: string;
     defaultVersion?: string;
     defaultEnvironment?: string;
     defaultCpuRequest?: number;
@@ -2620,6 +2621,32 @@ export class DeploymentsUpdateVersionPutById extends BaseApi<Deployment> {
     }
 }
 
+export class DeploymentsUpdateImagePullPolicyPutById extends BaseApi<Deployment> {
+
+    public topic = 'Resources.Deployments';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/deployments/${id}/image-pull-policy`;
+    }
+
+    protected convertToResource(data: any): Deployment {
+        return new Deployment(data);
+    }
+
+    public value(value: string): DeploymentsUpdateImagePullPolicyPutById {
+        this.addQueryParameter('value', value);
+        return this;
+    }
+
+    public save(data: any, next?: (value: Deployment) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
 export class DeploymentsUpdateEnvironmentPutById extends BaseApi<Deployment> {
 
     public topic = 'Resources.Deployments';
@@ -2970,6 +2997,10 @@ class Deployments {
 
     public updateVersionPutById(id: number): DeploymentsUpdateVersionPutById {
         return new DeploymentsUpdateVersionPutById(id);
+    }
+
+    public updateImagePullPolicyPutById(id: number): DeploymentsUpdateImagePullPolicyPutById {
+        return new DeploymentsUpdateImagePullPolicyPutById(id);
     }
 
     public updateEnvironmentPutById(id: number): DeploymentsUpdateEnvironmentPutById {

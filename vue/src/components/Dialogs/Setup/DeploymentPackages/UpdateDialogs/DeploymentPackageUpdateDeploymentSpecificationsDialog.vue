@@ -13,6 +13,7 @@ export interface DeploymentPackageUpdateDeploymentSpecificationsDialog_Input {
 interface Row {
     deploymentSpecification: DeploymentSpecification;
     defaultVersion?: string;
+    defaultImagePullPolicy?: string;
     defaultAutoUpdateEnabled?: boolean,
     defaultAutoUpdateTagRegex?: string,
     defaultAutoUpdateRequireApproval?: boolean,
@@ -75,6 +76,7 @@ function render() {
                     return {
                         deploymentSpecification: deploymentSpecificationSettings.deployment_specification!,
                         defaultVersion: deploymentSpecificationSettings.default_version,
+                        defaultImagePullPolicy: deploymentSpecificationSettings.default_image_pull_policy,
                         defaultAutoUpdateEnabled: deploymentSpecificationSettings.default_auto_update_enabled,
                         defaultAutoUpdateTagRegex: deploymentSpecificationSettings.default_auto_update_tag_regex,
                         defaultAutoUpdateRequireApproval: deploymentSpecificationSettings.default_auto_update_require_approval,

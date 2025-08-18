@@ -10,6 +10,7 @@ class DeploymentStepTriggers {
         Deployment_ResourceManagement_Updated = 'deployment-resource-management-updated',
         Deployment_UpdateManagement_Updated = 'deployment-update-management-updated',
         Deployment_Version_Updated = 'deployment-version-updated',
+        Deployment_ImagePullPolicy_Updated = 'deployment-image-pull-policy-updated',
         Workspace_EmailService_Updated = 'workspace-email-service-updated'
     ;
 

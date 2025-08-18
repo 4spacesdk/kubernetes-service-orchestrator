@@ -85,6 +85,24 @@ class Deployments extends ResourceController {
     }
 
     /**
+     * @route /deployments/{id}/image-pull-policy
+     * @method put
+     * @custom true
+     * @param int $id
+     * @parameter string $value parameterType=query
+     * @return void
+     */
+    public function updateImagePullPolicy(int $id): void {
+        $item = new Deployment();
+        $item->find($id);
+        if ($item->exists()) {
+            $item->updateImagePullPolicy($this->request->getGet('value'));
+        }
+        $this->_setResource($item);
+        $this->success();
+    }
+
+    /**
      * @route /deployments/{id}/environment
      * @method put
      * @custom true

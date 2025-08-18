@@ -26,6 +26,7 @@ use DebugTool\Data;
  * @property string $namespace
  * @property string $image
  * @property string $version
+ * @property string $image_pull_policy
  * @property string $environment
  * @property string $status
  * @property string $last_updated
@@ -98,6 +99,7 @@ class Deployment extends Entity {
         $item->name = $name;
         if ($spec->container_image->exists()) {
             $item->image = $spec->container_image->url;
+            $item->image_pull_policy = $spec->container_image->default_image_pull_policy;
         }
         $item->status = \DeploymentStatusTypes::Draft;
         $item->version = $version;
@@ -119,6 +121,13 @@ class Deployment extends Entity {
                 "4spacesdk/kubernetes-service-orchestrator, version {$prevVersion} -> {$this->version} [{$this->last_updated}]"
             );
         }
+    }
+
+    public function updateImagePullPolicy(string $value): void {
+        $this->image_pull_policy = $value;
+        $this->save();
+
+        DeploymentStepHelper::EmitTrigger(DeploymentStepTriggers::Deployment_ImagePullPolicy_Updated, $this);
     }
 
     public function updateEnvironment(string $value): void {

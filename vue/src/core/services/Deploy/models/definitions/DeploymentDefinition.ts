@@ -21,6 +21,7 @@ export class DeploymentDefinition extends BaseModel {
     namespace?: string;
     image?: string;
     version?: string;
+    image_pull_policy?: string;
     environment?: string;
     status?: string;
     last_updated?: string;
@@ -73,6 +74,7 @@ export class DeploymentDefinition extends BaseModel {
             delete this.namespace;
             delete this.image;
             delete this.version;
+            delete this.image_pull_policy;
             delete this.environment;
             delete this.status;
             delete this.last_updated;
@@ -135,6 +137,9 @@ export class DeploymentDefinition extends BaseModel {
         }
         if (data.version != null) {
             this.version = data.version;
+        }
+        if (data.image_pull_policy != null) {
+            this.image_pull_policy = data.image_pull_policy;
         }
         if (data.environment != null) {
             this.environment = data.environment;

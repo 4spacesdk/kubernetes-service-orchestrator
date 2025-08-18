@@ -18,6 +18,7 @@ use App\Core\Entity;
  * @property string $url
  * @property string $pull_secret
  * @property string $default_tag
+ * @property string $default_image_pull_policy
  *
  * # Registry Settings
  * @property bool $registry_subscribe

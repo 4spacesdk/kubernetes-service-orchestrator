@@ -3,13 +3,14 @@ import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch}
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
 import {Api} from "@/core/services/Deploy/Api";
 import {DeploymentSpecification} from "@/core/services/Deploy/models";
-import {WorkloadTypes} from "@/constants";
+import {ImagePullPolicies, WorkloadTypes} from "@/constants";
 
 export interface DeploymentPackageUpdateDeploymentSpecificationDialog_Input {
     settings: {
         deploymentSpecification: DeploymentSpecification,
 
         defaultVersion?: string,
+        defaultImagePullPolicy?: string,
         defaultAutoUpdateEnabled?: boolean,
         defaultAutoUpdateTagRegex?: string,
         defaultAutoUpdateRequireApproval?: boolean,
@@ -37,6 +38,7 @@ const formIsValid = ref<boolean>();
 
 const specifyDefaultVersion = ref<boolean>();
 const defaultVersion = ref<string>();
+const defaultImagePullPolicy = ref<string>();
 const defaultAutoUpdateEnabled = ref<boolean>();
 const defaultAutoUpdateTagRegex = ref<string>();
 const defaultAutoUpdateRequireApproval = ref<boolean>();
@@ -54,6 +56,21 @@ const versionTagItems = ref<string[]>([]);
 
 const environmentItems = ref<string[]>([]);
 const isLoadingEnvironments = ref(false);
+
+const imagePullPolicies = ref([
+    {
+        identifier: ImagePullPolicies.IfNotPresent,
+        name: "If not present",
+    },
+    {
+        identifier: ImagePullPolicies.Always,
+        name: "Always",
+    },
+    {
+        identifier: ImagePullPolicies.Never,
+        name: "Never",
+    },
+]);
 
 const required = ref([
     (value: any) => {
@@ -83,6 +100,7 @@ onUnmounted(() => {
 function render() {
     defaultVersion.value = props.input.settings.defaultVersion ?? '';
     specifyDefaultVersion.value = (defaultVersion.value?.length ?? 0) > 0;
+    defaultImagePullPolicy.value = props.input.settings.defaultImagePullPolicy ?? props.input.settings.deploymentSpecification.container_image?.default_image_pull_policy ?? '';
     defaultAutoUpdateEnabled.value = props.input.settings.defaultAutoUpdateEnabled ?? false;
     defaultAutoUpdateTagRegex.value = props.input.settings.defaultAutoUpdateTagRegex ?? '';
     defaultAutoUpdateRequireApproval.value = props.input.settings.defaultAutoUpdateRequireApproval ?? false;
@@ -129,6 +147,7 @@ function loadVersionTags() {
 
 function onSaveBtnClicked() {
     props.input.settings.defaultVersion = specifyDefaultVersion.value ? defaultVersion.value : undefined;
+    props.input.settings.defaultImagePullPolicy = defaultImagePullPolicy.value;
     props.input.settings.defaultAutoUpdateEnabled = defaultAutoUpdateEnabled.value;
     props.input.settings.defaultAutoUpdateTagRegex = defaultAutoUpdateTagRegex.value;
     props.input.settings.defaultAutoUpdateRequireApproval = defaultAutoUpdateRequireApproval.value;
@@ -175,11 +194,14 @@ function onCloseBtnClicked() {
                                     label="Specify default version"
                                 />
                                 <div
-                                    v-if="specifyDefaultVersion"
-                                    class="px-2"
+                                    class="px-2 pb-2"
                                 >
-                                    <v-row>
-                                        <v-col cols="12">
+                                    <v-row
+                                        dense
+                                    >
+                                        <v-col
+                                            v-if="specifyDefaultVersion" cols="12"
+                                        >
                                             <v-select
                                                 v-model="defaultVersion"
                                                 variant="outlined"
@@ -187,6 +209,18 @@ function onCloseBtnClicked() {
                                                 :rules="required"
                                                 :items="versionTagItems"
                                                 :loading="isLoadingVersionTags"
+                                            />
+                                        </v-col>
+                                        <v-col cols="12">
+                                            <v-select
+                                                v-model="defaultImagePullPolicy"
+                                                :items="imagePullPolicies"
+                                                item-title="name"
+                                                item-value="identifier"
+                                                variant="outlined"
+                                                label="Default Image Pull Policy"
+                                                density="compact"
+                                                hide-details
                                             />
                                         </v-col>
                                     </v-row>

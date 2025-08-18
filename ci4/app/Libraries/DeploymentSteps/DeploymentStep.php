@@ -316,7 +316,7 @@ class DeploymentStep extends BaseDeploymentStep {
         $container
             ->setAttribute('name', $deployment->name)
             ->setImage($spec->container_image->url, $deployment->version)
-            ->setAttribute('imagePullPolicy', 'Always')
+            ->setAttribute('imagePullPolicy', $deployment->image_pull_policy)
             ->addPort(80)
             ->addEnv('ENVIRONMENT', $deployment->environment)
             ->addEnv('BASE_URL', $deployment->getUrl(true, true));

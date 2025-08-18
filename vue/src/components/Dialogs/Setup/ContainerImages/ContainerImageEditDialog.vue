@@ -4,7 +4,12 @@ import {ContainerImage} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
-import {CommitIdentificationMethods, ContainerRegistries, VersionControlProviders} from "@/constants";
+import {
+    CommitIdentificationMethods,
+    ContainerRegistries,
+    ImagePullPolicies,
+    VersionControlProviders
+} from "@/constants";
 import ApiService from "../../../../services/ApiService";
 
 export interface ContainerImageEditDialog_Input {
@@ -43,6 +48,20 @@ const versionControlProviders = ref([
     {
         identifier: VersionControlProviders.GitHub,
         name: "GitHub",
+    },
+]);
+const imagePullPolicies = ref([
+    {
+        identifier: ImagePullPolicies.IfNotPresent,
+        name: "If not present",
+    },
+    {
+        identifier: ImagePullPolicies.Always,
+        name: "Always",
+    },
+    {
+        identifier: ImagePullPolicies.Never,
+        name: "Never",
     },
 ]);
 
@@ -163,11 +182,24 @@ function onCloseBtnClicked() {
                                     density="compact"
                                 />
                             </v-col>
-                            <v-col cols="12">
+                            <v-col cols="6">
                                 <v-text-field
                                     variant="outlined"
                                     v-model="item.default_tag"
                                     label="Default Tag"
+                                    density="compact"
+                                    hide-details
+                                />
+                            </v-col>
+
+                            <v-col cols="6">
+                                <v-select
+                                    v-model="item.default_image_pull_policy"
+                                    :items="imagePullPolicies"
+                                    item-title="name"
+                                    item-value="identifier"
+                                    variant="outlined"
+                                    label="Default Image Pull Policy"
                                     density="compact"
                                     hide-details
                                 />

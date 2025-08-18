@@ -4,7 +4,7 @@ import {Deployment, DeploymentSpecification, Workspace} from "@/core/services/De
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
-import {WorkloadTypes} from "@/constants";
+import {ImagePullPolicies, WorkloadTypes} from "@/constants";
 
 export interface DeploymentCreateDialog_Input {
     spec: DeploymentSpecification;
@@ -28,6 +28,21 @@ const showTags = ref(false);
 const tags = ref<string[]>([]);
 const isLoadingTags = ref(false);
 
+const imagePullPolicies = ref([
+    {
+        identifier: ImagePullPolicies.IfNotPresent,
+        name: "If not present",
+    },
+    {
+        identifier: ImagePullPolicies.Always,
+        name: "Always",
+    },
+    {
+        identifier: ImagePullPolicies.Never,
+        name: "Never",
+    },
+]);
+
 // <editor-fold desc="Functions">
 
 onMounted(() => {
@@ -45,6 +60,7 @@ function render() {
     item.value.name = props.input.spec.name;
     item.value.namespace = props.input.workspace?.namespace ?? '';
     item.value.image = props.input.spec.container_image?.url;
+    item.value.image_pull_policy = props.input.spec.container_image?.default_image_pull_policy;
     item.value.workspace_id = props.input.workspace?.id;
     showTags.value = props.input.spec.container_image_id !== undefined;
     showDialog.value = true;
@@ -244,7 +260,7 @@ function onCloseBtnClicked() {
                             persistent-hint
                             hint="Max 10 characters, lowercase-only"/>
                     </v-col>
-                    <v-col cols="6">
+                    <v-col cols="12">
                         <v-text-field
                             v-model="item.name"
                             variant="outlined"
@@ -266,6 +282,19 @@ function onCloseBtnClicked() {
                             :items="tags"
                             variant="outlined"
                             label="Version"/>
+                    </v-col>
+                    <v-col
+                        v-if="showTags"
+                        cols="6"
+                    >
+                        <v-select
+                            v-model="item.image_pull_policy"
+                            :items="imagePullPolicies"
+                            item-title="name"
+                            item-value="identifier"
+                            variant="outlined"
+                            label="Image Pull Policy"
+                        />
                     </v-col>
                 </v-row>
             </v-card-text>

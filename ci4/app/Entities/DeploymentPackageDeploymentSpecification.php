@@ -12,6 +12,7 @@ use App\Core\Entity;
  *
  * # Settings
  * @property string $default_version
+ * @property string $default_image_pull_policy
  * @property string $default_environment
  * @property int $default_cpu_request
  * @property int $default_cpu_limit
@@ -36,6 +37,7 @@ class DeploymentPackageDeploymentSpecification extends Entity {
         $item = new DeploymentPackageDeploymentSpecification();
         $item->deployment_specification_id = $data->deploymentSpecification->id;
         $item->default_version = $data->defaultVersion ?? null;
+        $item->default_image_pull_policy = $data->defaultImagePullPolicy ?? null;
         $item->default_environment = $data->defaultEnvironment ?? null;
         $item->default_cpu_request = $data->defaultCpuRequest ?? null;
         $item->default_cpu_limit = $data->defaultCpuLimit ?? null;

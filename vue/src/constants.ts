@@ -231,6 +231,9 @@ import type {
 import type {
     DeploymentSpecificationUpdateVolumeDialog_Input
 } from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateVolumeDialog.vue";
+import type {
+    DeploymentUpdateImagePullPolicyDialog_Input
+} from "@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateImagePullPolicyDialog.vue";
 
 export type Events = {
     confirm: ConfirmationDialog_Input;
@@ -246,6 +249,7 @@ export type Events = {
     deploymentCreate: DeploymentCreateDialog_Input;
     deploymentSaved: Deployment | undefined;
     deploymentUpdateVersion: DeploymentUpdateVersionDialog_Input;
+    deploymentUpdateImagePullPolicy: DeploymentUpdateImagePullPolicyDialog_Input;
     deploymentUpdateEnvironment: DeploymentUpdateEnvironmentDialog_Input;
     deploymentUpdateWorkspace: DeploymentUpdateWorkspaceDialog_Input;
     deploymentUpdateDatabaseService: DeploymentUpdateDatabaseServiceDialog_Input;

@@ -61,6 +61,9 @@ bus.on('deploymentUpdateVersion', async input => {
     addComponent((await import('@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateVersionDialog.vue')).default, input);
 });
 
+bus.on('deploymentUpdateImagePullPolicy', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateImagePullPolicyDialog.vue')).default, input);
+});
 bus.on('deploymentUpdateEnvironment', async input => {
     addComponent((await import('@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateEnvironmentDialog.vue')).default, input);
 });

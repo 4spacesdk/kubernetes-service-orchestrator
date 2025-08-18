@@ -15,6 +15,9 @@ const isLoading = ref(false);
 const showUpdateVersion = ref(false);
 const isUpdateVersionEnabled = ref(false);
 
+const showUpdateImagePullPolicy = ref(false);
+const isUpdateImagePullPolicyEnabled = ref(false);
+
 const showUpdateEnvironment = ref(false);
 const isUpdateEnvironmentEnabled = ref(false);
 
@@ -49,6 +52,9 @@ function render() {
     showUpdateVersion.value = spec.value?.workload_type !== WorkloadTypes.CustomResource
     isUpdateVersionEnabled.value = true;
 
+    showUpdateImagePullPolicy.value = spec.value?.workload_type !== WorkloadTypes.CustomResource
+    isUpdateImagePullPolicyEnabled.value = true;
+
     showUpdateEnvironment.value = spec.value?.workload_type !== WorkloadTypes.CustomResource
     isUpdateEnvironmentEnabled.value = true;
 
@@ -75,6 +81,12 @@ function render() {
 
 function onUpdateVersionClicked() {
     bus.emit('deploymentUpdateVersion', {
+        deployment: props.deployment
+    });
+}
+
+function onUpdateImagePullPolicyClicked() {
+    bus.emit('deploymentUpdateImagePullPolicy', {
         deployment: props.deployment
     });
 }
@@ -143,6 +155,16 @@ function onUpdateLabelsClicked() {
                     <v-list-item-title>
                         <v-icon size="small" class="my-auto ml-2">fa fa-code-branch</v-icon>
                         <span class="ml-2">Version</span>
+                    </v-list-item-title>
+                </v-list-item>
+                <v-list-item
+                    v-if="showUpdateImagePullPolicy"
+                    :disabled="!isUpdateImagePullPolicyEnabled"
+                    dense
+                    @click="onUpdateImagePullPolicyClicked">
+                    <v-list-item-title>
+                        <v-icon size="small" class="my-auto ml-2">fa fa-code-pull-request</v-icon>
+                        <span class="ml-2">Image Pull Policy</span>
                     </v-list-item-title>
                 </v-list-item>
                 <v-list-item

@@ -262,7 +262,7 @@ class MigrationJobStep extends BaseDeploymentStep {
         $container
             ->setAttribute('name', $deployment->name)
             ->setImage($containerImage->url, $tag)
-            ->setAttribute('imagePullPolicy', 'Always')
+            ->setAttribute('imagePullPolicy', $deployment->image_pull_policy)
             ->setAttribute('command', [
                 '/bin/sh'
             ])

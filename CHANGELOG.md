@@ -1,5 +1,19 @@
 # Changelog
 
+## v1.5.11 (2025-08-18)
+
+### Fixed bugs
+*
+
+### Enhancements
+* Added option to specify imagePullPolicy at all levels
+
+### Upgrade guide
+1. Deploy new image
+2. Migrate database [(Guide)](https://github.com/4spacesdk/kubernetes-service-orchestrator?tab=readme-ov-file#migrate-database-helm)
+
+
+
 ## v1.5.10 (2025-08-16)
 
 ### Fixed bugs

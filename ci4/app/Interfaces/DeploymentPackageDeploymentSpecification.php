@@ -4,6 +4,7 @@ use App\Entities\DeploymentSpecification;
 /**
  * @property DeploymentSpecification $deploymentSpecification
  * @property ?bool $defaultEnablePodioNotification
+ * @property ?string $defaultImagePullPolicy
  * @property ?string $defaultVersion
  * @property ?string $defaultEnvironment
  * @property ?int $defaultCpuRequest

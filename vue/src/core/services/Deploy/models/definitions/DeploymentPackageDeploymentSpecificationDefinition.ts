@@ -13,6 +13,7 @@ export class DeploymentPackageDeploymentSpecificationDefinition extends BaseMode
     deployment_specification_id?: number;
     deployment_specification?: DeploymentSpecification;
     default_version?: string;
+    default_image_pull_policy?: string;
     default_environment?: string;
     default_cpu_request?: number;
     default_cpu_limit?: number;
@@ -46,6 +47,7 @@ export class DeploymentPackageDeploymentSpecificationDefinition extends BaseMode
             delete this.deployment_specification_id;
             delete this.deployment_specification;
             delete this.default_version;
+            delete this.default_image_pull_policy;
             delete this.default_environment;
             delete this.default_cpu_request;
             delete this.default_cpu_limit;
@@ -83,6 +85,9 @@ export class DeploymentPackageDeploymentSpecificationDefinition extends BaseMode
         }
         if (data.default_version != null) {
             this.default_version = data.default_version;
+        }
+        if (data.default_image_pull_policy != null) {
+            this.default_image_pull_policy = data.default_image_pull_policy;
         }
         if (data.default_environment != null) {
             this.default_environment = data.default_environment;
