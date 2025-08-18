@@ -49,6 +49,7 @@ class DeploymentStep extends BaseDeploymentStep {
             DeploymentStepTriggers::Deployment_ResourceManagement_Updated,
             DeploymentStepTriggers::Deployment_UpdateManagement_Updated,
             DeploymentStepTriggers::Deployment_Version_Updated,
+            DeploymentStepTriggers::Deployment_ImagePullPolicy_Updated,
         ];
     }
 

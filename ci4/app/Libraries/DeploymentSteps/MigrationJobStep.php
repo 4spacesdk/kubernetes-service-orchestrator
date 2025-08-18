@@ -45,6 +45,7 @@ class MigrationJobStep extends BaseDeploymentStep {
     public function getTriggers(): array {
         return [
             DeploymentStepTriggers::Deployment_Version_Updated,
+            DeploymentStepTriggers::Deployment_ImagePullPolicy_Updated,
         ];
     }
 
