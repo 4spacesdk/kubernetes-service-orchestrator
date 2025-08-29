@@ -3,6 +3,7 @@
  */
 import {ContainerImage} from '../ContainerImage';
 import {DeploymentSpecification} from '../DeploymentSpecification';
+import {Deployment} from '../Deployment';
 import {User} from '../User';
 import {Deletion} from '../Deletion';
 import {BaseModel} from '../BaseModel';
@@ -27,6 +28,7 @@ export class K8sCronJobDefinition extends BaseModel {
     container_image_pull_policy?: string;
     include_deployment_environment_variables?: boolean;
     deployment_specifications?: DeploymentSpecification[];
+    deployments?: Deployment[];
     id?: number;
     created?: string;
     updated?: string;
@@ -63,6 +65,7 @@ export class K8sCronJobDefinition extends BaseModel {
             delete this.container_image_pull_policy;
             delete this.include_deployment_environment_variables;
             delete this.deployment_specifications;
+            delete this.deployments;
             delete this.id;
             delete this.created;
             delete this.updated;
@@ -131,6 +134,9 @@ export class K8sCronJobDefinition extends BaseModel {
         }
         if (data.deployment_specifications != null) {
             this.deployment_specifications = data.deployment_specifications.map((i: any) => new DeploymentSpecification(i));
+        }
+        if (data.deployments != null) {
+            this.deployments = data.deployments.map((i: any) => new Deployment(i));
         }
         if (data.id != null) {
             this.id = data.id;

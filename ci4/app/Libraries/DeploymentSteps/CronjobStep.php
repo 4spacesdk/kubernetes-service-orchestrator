@@ -8,6 +8,7 @@ use App\Libraries\DeploymentSteps\Helpers\DeploymentStepLevels;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
 use App\Libraries\Kubernetes\KubeAuth;
 use App\Models\ContainerImageModel;
+use App\Models\DeploymentCronJobModel;
 use App\Models\DeploymentSpecificationCronJobModel;
 use App\Models\EnvironmentVariableModel;
 use App\Models\K8sCronJobModel;
@@ -202,6 +203,16 @@ class CronjobStep extends BaseDeploymentStep {
             ->whereRelated(DeploymentSpecificationCronJobModel::class, 'deployment_specification_id', $spec->id)
             ->orderByRelated(DeploymentSpecificationCronJobModel::class, 'position', 'asc')
             ->find();
+
+        /** @var CronJob $deploymentCronJobs */
+        $deploymentCronJobs = (new K8sCronJobModel())
+            ->includeRelated(ContainerImageModel::class)
+            ->whereRelated(DeploymentCronJobModel::class, 'deployment_id', $deployment->id)
+            ->orderByRelated(DeploymentCronJobModel::class, 'position', 'asc')
+            ->find();
+        foreach ($deploymentCronJobs as $deploymentCronJob) {
+            $cronJobs->add($deploymentCronJob);
+        }
 
         $resources = [];
 

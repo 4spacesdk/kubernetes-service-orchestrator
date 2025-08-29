@@ -61,6 +61,7 @@ use DebugTool\Data;
  * @property DeploymentVolume $deployment_volumes
  * @property MigrationJob $last_migration_jobs
  * @property Label $labels
+ * @property DeploymentCronJob $deployment_cron_jobs
  *
  * OTF
  * @property string $url_external
@@ -231,6 +232,12 @@ class Deployment extends Entity {
         $this->labels->find()->deleteAll();
         $this->save($values);
         $this->labels = $values;
+    }
+
+    public function updateCronJobs(DeploymentCronJob $values): void {
+        $this->deployment_cron_jobs->find()->deleteAll();
+        $this->save($values);
+        $this->deployment_cron_jobs = $values;
     }
 
     public function getInternalUrl(): string {

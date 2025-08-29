@@ -39,6 +39,9 @@ const isUpdateVolumesEnabled = ref(false);
 const showUpdateLabels = ref(false);
 const isUpdateLabelsEnabled = ref(false);
 
+const showUpdateCronJobs = ref(false);
+const isUpdateCronJobsEnabled = ref(false);
+
 onMounted(() => {
     isLoading.value = true;
     Api.deploymentSpecifications().getById(props.deployment.deployment_specification_id!)
@@ -75,6 +78,9 @@ function render() {
 
     showUpdateLabels.value = true;
     isUpdateLabelsEnabled.value = true;
+
+    showUpdateCronJobs.value = spec.value?.enable_cronjob ?? false;
+    isUpdateCronJobsEnabled.value = spec.value?.enable_cronjob ?? false;
 
     isLoading.value = false;
 }
@@ -129,6 +135,12 @@ function onUpdateVolumesClicked() {
 
 function onUpdateLabelsClicked() {
     bus.emit('deploymentUpdateLabels', {
+        deployment: props.deployment
+    });
+}
+
+function onUpdateCronJobsClicked() {
+    bus.emit('deploymentUpdateCronJobs', {
         deployment: props.deployment
     });
 }
@@ -246,6 +258,16 @@ function onUpdateLabelsClicked() {
                     <v-list-item-title>
                         <v-icon size="small" class="my-auto ml-2">fa fa-tags</v-icon>
                         <span class="ml-2">Labels</span>
+                    </v-list-item-title>
+                </v-list-item>
+                <v-list-item
+                    v-if="showUpdateCronJobs"
+                    :disabled="!isUpdateCronJobsEnabled"
+                    dense
+                    @click="onUpdateCronJobsClicked">
+                    <v-list-item-title>
+                        <v-icon size="small" class="my-auto ml-2">fa fa-clock</v-icon>
+                        <span class="ml-2">Cron Jobs</span>
                     </v-list-item-title>
                 </v-list-item>
             </v-list>

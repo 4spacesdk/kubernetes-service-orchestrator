@@ -4,6 +4,7 @@ export {CronJob as CronJob} from "./CronJob";
 export {DatabaseService as DatabaseService} from "./DatabaseService";
 export {Deletion as Deletion} from "./Deletion";
 export {Deployment as Deployment} from "./Deployment";
+export {DeploymentCronJob as DeploymentCronJob} from "./DeploymentCronJob";
 export {DeploymentPackage as DeploymentPackage} from "./DeploymentPackage";
 export {DeploymentPackageDeploymentSpecification as DeploymentPackageDeploymentSpecification} from "./DeploymentPackageDeploymentSpecification";
 export {DeploymentPackageEnvironmentVariable as DeploymentPackageEnvironmentVariable} from "./DeploymentPackageEnvironmentVariable";

@@ -3,19 +3,21 @@
 use RestExtension\Core\Model;
 use RestExtension\ResourceModelInterface;
 
-class K8sCronJobModel extends Model implements ResourceModelInterface {
+class DeploymentCronJobModel extends Model implements ResourceModelInterface {
 
     public $hasOne = [
-        ContainerImageModel::class,
+        K8sCronJobModel::class,
+        DeploymentModel::class,
     ];
 
     public $hasMany = [
-        DeploymentSpecificationCronJobModel::class,
-        DeploymentCronJobModel::class,
+
     ];
 
     public function preRestGet($queryParser, $id) {
-
+        $this
+            ->includeRelated(K8sCronJobModel::class)
+            ->includeRelated([K8sCronJobModel::class, ContainerImageModel::class]);
     }
 
     public function postRestGet($queryParser, $items) {
@@ -38,9 +40,9 @@ class K8sCronJobModel extends Model implements ResourceModelInterface {
 
     }
 
-    public function ignoredRestGetOnRelations(): array {
+    public function ignoredRestGetOnRelations() {
         return [
-            DeploymentSpecificationCronJobModel::class,
+
         ];
     }
 

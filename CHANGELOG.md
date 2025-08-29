@@ -1,5 +1,19 @@
 # Changelog
 
+## v1.5.12 (2025-08-29)
+
+### Fixed bugs
+*
+
+### Enhancements
+* CronJobs can now be added directly to a deployment
+
+### Upgrade guide
+1. Deploy new image
+2. Migrate database [(Guide)](https://github.com/4spacesdk/kubernetes-service-orchestrator?tab=readme-ov-file#migrate-database-helm)
+
+
+
 ## v1.5.11 (2025-08-18)
 
 ### Fixed bugs

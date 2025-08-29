@@ -234,6 +234,9 @@ import type {
 import type {
     DeploymentUpdateImagePullPolicyDialog_Input
 } from "@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateImagePullPolicyDialog.vue";
+import type {
+    DeploymentUpdateCronJobsDialog_Input
+} from "@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateCronJobsDialog.vue";
 
 export type Events = {
     confirm: ConfirmationDialog_Input;
@@ -268,6 +271,7 @@ export type Events = {
     deploymentLogs: DeploymentLogsDialog_Input;
     deploymentUpdateLabels: DeploymentUpdateLabelsDialog_Input;
     deploymentUpdateLabel: DeploymentUpdateLabelDialog_Input;
+    deploymentUpdateCronJobs: DeploymentUpdateCronJobsDialog_Input;
 
     domainCreate: DomainCreateDialog_Input;
     domainEdit: DomainEditDialog_Input;

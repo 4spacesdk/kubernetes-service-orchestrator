@@ -22,6 +22,7 @@ class DeploymentModel extends \RestExtension\Models\UserModel implements Resourc
         AutoUpdateModel::class,
         LabelModel::class,
         DeploymentsLabelModel::class,
+        DeploymentCronJobModel::class,
     ];
 
     public function preRestGet($queryParser, $id) {

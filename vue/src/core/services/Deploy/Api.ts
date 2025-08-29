@@ -2906,6 +2906,27 @@ export class DeploymentsUpdateLabelsPutById extends BaseApi<Deployment> {
     }
 }
 
+export class DeploymentsUpdateCronJobsPutById extends BaseApi<Deployment> {
+
+    public topic = 'Resources.Deployments';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/deployment/${id}/cron-jobs`;
+    }
+
+    protected convertToResource(data: any): Deployment {
+        return new Deployment(data);
+    }
+
+    public save(data: IntArrayInterface, next?: (value: Deployment) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
 export class DeploymentsGetStatusGetById extends BaseApi<Deployment> {
 
     public topic = 'Resources.Deployments';
@@ -3037,6 +3058,10 @@ class Deployments {
 
     public updateLabelsPutById(id: number): DeploymentsUpdateLabelsPutById {
         return new DeploymentsUpdateLabelsPutById(id);
+    }
+
+    public updateCronJobsPutById(id: number): DeploymentsUpdateCronJobsPutById {
+        return new DeploymentsUpdateCronJobsPutById(id);
     }
 
     public getStatusGetById(id: number): DeploymentsGetStatusGetById {

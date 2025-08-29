@@ -2,6 +2,7 @@
 
 use App\Core\ResourceController;
 use App\Entities\Deployment;
+use App\Entities\DeploymentCronJob;
 use App\Entities\DeploymentSpecification;
 use App\Entities\DeploymentVolume;
 use App\Entities\EnvironmentVariable;
@@ -10,6 +11,7 @@ use App\Entities\Workspace;
 use App\Exceptions\ValidationException;
 use App\Interfaces\DeploymentVolumeList;
 use App\Interfaces\EnvironmentVariableList;
+use App\Interfaces\IntArrayInterface;
 use App\Interfaces\LabelList;
 use App\Libraries\DeploymentSteps\BaseDeploymentStep;
 use App\Models\MigrationJobModel;
@@ -323,6 +325,35 @@ class Deployments extends ResourceController {
                 $body->values
             );
             $item->updateLabels($values);
+        }
+        $this->_setResource($item);
+        $this->success();
+    }
+
+    /**
+     * @route /deployment/{id}/cron-jobs
+     * @method put
+     * @custom true
+     * @param int $id
+     * @requestSchema IntArrayInterface
+     * @return void
+     */
+    public function updateCronJobs(int $id): void {
+        $item = new Deployment();
+        $item->find($id);
+        if ($item->exists()) {
+            /** @var IntArrayInterface $body */
+            $body = $this->request->getJSON();
+
+            $values = new DeploymentCronJob();
+            $pos = 0;
+            $values->all = array_map(
+                fn($cronJobId, $i) => DeploymentCronJob::Create($cronJobId, $pos + $i),
+                $body->values,
+                array_keys($body->values)
+            );
+
+            $item->updateCronJobs($values);
         }
         $this->_setResource($item);
         $this->success();

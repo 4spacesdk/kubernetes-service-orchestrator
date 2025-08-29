@@ -8,6 +8,7 @@ import {MigrationJob} from '../MigrationJob';
 import {EnvironmentVariable} from '../EnvironmentVariable';
 import {DeploymentVolume} from '../DeploymentVolume';
 import {Label} from '../Label';
+import {DeploymentCronJob} from '../DeploymentCronJob';
 import {User} from '../User';
 import {Deletion} from '../Deletion';
 import {BaseModel} from '../BaseModel';
@@ -47,6 +48,7 @@ export class DeploymentDefinition extends BaseModel {
     deployment_volumes?: DeploymentVolume[];
     last_migration_jobs?: MigrationJob[];
     labels?: Label[];
+    deployment_cron_jobs?: DeploymentCronJob[];
     url_external?: string;
     url_internal?: string;
     id?: number;
@@ -100,6 +102,7 @@ export class DeploymentDefinition extends BaseModel {
             delete this.deployment_volumes;
             delete this.last_migration_jobs;
             delete this.labels;
+            delete this.deployment_cron_jobs;
             delete this.url_external;
             delete this.url_internal;
             delete this.id;
@@ -215,6 +218,9 @@ export class DeploymentDefinition extends BaseModel {
         }
         if (data.labels != null) {
             this.labels = data.labels.map((i: any) => new Label(i));
+        }
+        if (data.deployment_cron_jobs != null) {
+            this.deployment_cron_jobs = data.deployment_cron_jobs.map((i: any) => new DeploymentCronJob(i));
         }
         if (data.url_external != null) {
             this.url_external = data.url_external;

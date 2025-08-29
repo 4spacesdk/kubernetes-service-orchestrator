@@ -106,6 +106,9 @@ bus.on('deploymentUpdateLabel', async input => {
 bus.on('deploymentUpdateLabels', async input => {
     addComponent((await import('@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateLabelsDialog.vue')).default, input);
 });
+bus.on('deploymentUpdateCronJobs', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateCronJobsDialog.vue')).default, input);
+});
 
 
 bus.on('migrationJobList', async input => {

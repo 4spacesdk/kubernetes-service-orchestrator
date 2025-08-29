@@ -34,6 +34,7 @@ use App\Core\Entity;
  *
  * Many
  * @property DeploymentSpecification $deployment_specifications
+ * @property Deployment $deployments
  */
 class K8sCronJob extends Entity {
 
