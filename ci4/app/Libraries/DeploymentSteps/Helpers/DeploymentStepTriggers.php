@@ -11,6 +11,7 @@ class DeploymentStepTriggers {
         Deployment_UpdateManagement_Updated = 'deployment-update-management-updated',
         Deployment_Version_Updated = 'deployment-version-updated',
         Deployment_ImagePullPolicy_Updated = 'deployment-image-pull-policy-updated',
+        Deployment_KNativeMinScale_Updated = 'deployment-knative-min-scale-updated',
         Workspace_EmailService_Updated = 'workspace-email-service-updated'
     ;
 

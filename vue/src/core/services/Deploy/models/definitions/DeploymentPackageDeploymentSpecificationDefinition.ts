@@ -3,6 +3,7 @@
  */
 import {DeploymentPackage} from '../DeploymentPackage';
 import {DeploymentSpecification} from '../DeploymentSpecification';
+import {KNativeMinScaleSchedule} from '../KNativeMinScaleSchedule';
 import {User} from '../User';
 import {Deletion} from '../Deletion';
 import {BaseModel} from '../BaseModel';
@@ -22,9 +23,11 @@ export class DeploymentPackageDeploymentSpecificationDefinition extends BaseMode
     default_replicas?: number;
     default_knative_concurrency_limit_soft?: number;
     default_knative_concurrency_limit_hard?: number;
+    default_knative_scheduled_minscale_is_enabled?: boolean;
     default_auto_update_enabled?: boolean;
     default_auto_update_tag_regex?: string;
     default_auto_update_require_approval?: boolean;
+    k_native_min_scale_schedules?: KNativeMinScaleSchedule[];
     id?: number;
     created?: string;
     updated?: string;
@@ -56,9 +59,11 @@ export class DeploymentPackageDeploymentSpecificationDefinition extends BaseMode
             delete this.default_replicas;
             delete this.default_knative_concurrency_limit_soft;
             delete this.default_knative_concurrency_limit_hard;
+            delete this.default_knative_scheduled_minscale_is_enabled;
             delete this.default_auto_update_enabled;
             delete this.default_auto_update_tag_regex;
             delete this.default_auto_update_require_approval;
+            delete this.k_native_min_scale_schedules;
             delete this.id;
             delete this.created;
             delete this.updated;
@@ -113,6 +118,9 @@ export class DeploymentPackageDeploymentSpecificationDefinition extends BaseMode
         if (data.default_knative_concurrency_limit_hard != null) {
             this.default_knative_concurrency_limit_hard = data.default_knative_concurrency_limit_hard;
         }
+        if (data.default_knative_scheduled_minscale_is_enabled != null) {
+            this.default_knative_scheduled_minscale_is_enabled = data.default_knative_scheduled_minscale_is_enabled;
+        }
         if (data.default_auto_update_enabled != null) {
             this.default_auto_update_enabled = data.default_auto_update_enabled;
         }
@@ -121,6 +129,9 @@ export class DeploymentPackageDeploymentSpecificationDefinition extends BaseMode
         }
         if (data.default_auto_update_require_approval != null) {
             this.default_auto_update_require_approval = data.default_auto_update_require_approval;
+        }
+        if (data.k_native_min_scale_schedules != null) {
+            this.k_native_min_scale_schedules = data.k_native_min_scale_schedules.map((i: any) => new KNativeMinScaleSchedule(i));
         }
         if (data.id != null) {
             this.id = data.id;

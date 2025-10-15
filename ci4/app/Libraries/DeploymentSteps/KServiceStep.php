@@ -8,6 +8,7 @@ use App\Entities\DeploymentSpecificationVolume;
 use App\Entities\DeploymentVolume;
 use App\Entities\Domain;
 use App\Entities\EnvironmentVariable;
+use App\Entities\KNativeMinScaleSchedule;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepLevels;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
@@ -47,6 +48,7 @@ class KServiceStep extends BaseDeploymentStep {
             DeploymentStepTriggers::Deployment_ResourceManagement_Updated,
             DeploymentStepTriggers::Deployment_UpdateManagement_Updated,
             DeploymentStepTriggers::Deployment_Version_Updated,
+            DeploymentStepTriggers::Deployment_KNativeMinScale_Updated,
             DeploymentStepTriggers::Deployment_ImagePullPolicy_Updated,
         ];
     }
@@ -308,36 +310,41 @@ class KServiceStep extends BaseDeploymentStep {
         $container->setAttribute('securityContext.allowPrivilegeEscalation', (bool)$spec->container_image->security_context_allow_privilege_escalation);
         $container->setAttribute('securityContext.readOnlyRootFilesystem', (bool)$spec->container_image->security_context_read_only_root_filesystem);
 
-        // Volume Mounts
-        /** @var DeploymentVolume $deploymentVolumes */
-        $deploymentVolumes = (new DeploymentVolumeModel())
-            ->where('deployment_id', $deployment->id)
-            ->find();
-        foreach ($deploymentVolumes as $deploymentVolume) {
-            $container->addToAttribute('volumeMounts', [
-                'mountPath' => $deploymentVolume->mount_path,
-                'name' => $deployment->name,
-                'readOnly' => false,
-                'subPath' => strlen($deploymentVolume->sub_path) ? $deploymentVolume->sub_path : null,
-            ]);
-        }
-        /** @var DeploymentSpecificationVolume $deploymentSpecificationVolumes */
-        $deploymentSpecificationVolumes = (new DeploymentSpecificationVolumeModel())
-            ->where('deployment_specification_id', $spec->id)
-            ->find();
-        foreach ($deploymentSpecificationVolumes as $deploymentSpecificationVolume) {
-            $container->addToAttribute('volumeMounts', [
-                'mountPath' => $deploymentSpecificationVolume->mount_path,
-                'name' => $deployment->name,
-                'readOnly' => false,
-                'subPath' => strlen($deploymentSpecificationVolume->getCompiledSubPath($deployment)) ? $deploymentSpecificationVolume->getCompiledSubPath($deployment) : null,
-            ]);
+        if ($spec->enable_volumes) {
+            // Volume Mounts
+            /** @var DeploymentVolume $deploymentVolumes */
+            $deploymentVolumes = (new DeploymentVolumeModel())
+                ->where('deployment_id', $deployment->id)
+                ->find();
+            foreach ($deploymentVolumes as $deploymentVolume) {
+                $container->addToAttribute('volumeMounts', [
+                    'mountPath' => $deploymentVolume->mount_path,
+                    'name' => $deployment->name,
+                    'readOnly' => false,
+                    'subPath' => strlen($deploymentVolume->sub_path) ? $deploymentVolume->sub_path : null,
+                ]);
+            }
+            /** @var DeploymentSpecificationVolume $deploymentSpecificationVolumes */
+            $deploymentSpecificationVolumes = (new DeploymentSpecificationVolumeModel())
+                ->where('deployment_specification_id', $spec->id)
+                ->find();
+            foreach ($deploymentSpecificationVolumes as $deploymentSpecificationVolume) {
+                $container->addToAttribute('volumeMounts', [
+                    'mountPath' => $deploymentSpecificationVolume->mount_path,
+                    'name' => $deployment->name,
+                    'readOnly' => false,
+                    'subPath' => strlen($deploymentSpecificationVolume->getCompiledSubPath($deployment)) ? $deploymentSpecificationVolume->getCompiledSubPath($deployment) : null,
+                ]);
+            }
         }
 
         // Annotations
         $podAnnotations = [
             'app.kubernetes.io/managed-by' => 'kso',
+            'autoscaling.knative.dev/minScale' => KNativeMinScaleSchedule::GetCurrentValueForDeployment($deployment),
         ];
+
+        // Let the deployment step override the annotations
         /** @var DeploymentSpecificationDeploymentAnnotation $deploymentAnnotation */
         $deploymentAnnotations = (new DeploymentSpecificationDeploymentAnnotationModel())
             ->where('level', \DeploymentAnnotationLevels::Pod)
@@ -363,30 +370,32 @@ class KServiceStep extends BaseDeploymentStep {
                 ],
             ]);
 
-        // Volumes
-        foreach ($deploymentVolumes as $deploymentVolume) {
-            $template->addToAttribute('spec.volumes', [
+        if ($spec->enable_volumes) {
+            // Volumes
+            foreach ($deploymentVolumes as $deploymentVolume) {
+                $template->addToAttribute('spec.volumes', [
 //                'configMap' => [],
 //                'emptyDir' => [],
-                'name' => $deployment->name,
-                'persistentVolumeClaim' => [
-                    'claimName' => $deployment->name,
-                ],
+                    'name' => $deployment->name,
+                    'persistentVolumeClaim' => [
+                        'claimName' => $deployment->name,
+                    ],
 //                'projected' => [],
 //                'secret' => [],
-            ]);
-        }
-        foreach ($deploymentSpecificationVolumes as $deploymentSpecificationVolume) {
-            $template->addToAttribute('spec.volumes', [
+                ]);
+            }
+            foreach ($deploymentSpecificationVolumes as $deploymentSpecificationVolume) {
+                $template->addToAttribute('spec.volumes', [
 //                'configMap' => [],
 //                'emptyDir' => [],
-                'name' => $deployment->name,
-                'persistentVolumeClaim' => [
-                    'claimName' => $deployment->name,
-                ],
+                    'name' => $deployment->name,
+                    'persistentVolumeClaim' => [
+                        'claimName' => $deployment->name,
+                    ],
 //                'projected' => [],
 //                'secret' => [],
-            ]);
+                ]);
+            }
         }
 
         // Container Concurrency

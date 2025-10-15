@@ -1,5 +1,19 @@
 # Changelog
 
+## v1.6.0 (?)
+
+### Fixed bugs
+* Added missing option for knativeConcurrencyLimitSoft and knativeConcurrencyLimitHard on deployment resource management
+
+### Enhancements
+* Scheduled minScale management for Knative Services [Issue #58](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/58)
+
+### Upgrade guide
+1. Deploy new image
+2. Migrate database [(Guide)](https://github.com/4spacesdk/kubernetes-service-orchestrator?tab=readme-ov-file#migrate-database-helm)
+
+
+
 ## v1.5.12 (2025-08-29)
 
 ### Fixed bugs

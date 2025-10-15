@@ -25,6 +25,7 @@ interface Row {
     defaultReplicas?: number;
     defaultKnativeConcurrencyLimitSoft?: number;
     defaultKnativeConcurrencyLimitHard?: number;
+    defaultKnativeScheduledMinScaleIds: number[];
 }
 
 interface CreateItem {
@@ -69,7 +70,7 @@ function render() {
     isLoading.value = true;
     Api.deploymentPackages().get()
         .where('id', props.input.deploymentPackage.id!)
-        .include('deployment_package_deployment_specification?include=deployment_specification')
+        .include(`deployment_package_deployment_specification?include=${encodeURIComponent('deployment_specification,k_native_min_scale_schedule')}`)
         .find(value => {
             rows.value = value[0].deployment_package_deployment_specifications
                 ?.map(deploymentSpecificationSettings => {
@@ -88,6 +89,7 @@ function render() {
                         defaultReplicas: deploymentSpecificationSettings.default_replicas,
                         defaultKnativeConcurrencyLimitSoft: deploymentSpecificationSettings.default_knative_concurrency_limit_soft,
                         defaultKnativeConcurrencyLimitHard: deploymentSpecificationSettings.default_knative_concurrency_limit_hard,
+                        defaultKnativeScheduledMinScaleIds: deploymentSpecificationSettings.k_native_min_scale_schedules?.map(k => k.id!) ?? [],
                     }
                 })
                 ?.sort((a, b) => a.deploymentSpecification.name?.localeCompare(b.deploymentSpecification.name ?? '') ?? 0)
@@ -125,6 +127,7 @@ function close() {
 function onCreateItemBtnClicked(createItem: CreateItem) {
     const newItem = {
         deploymentSpecification: createItem.deploymentSpecification,
+        defaultKnativeScheduledMinScaleIds: [],
     };
     switch (createItem.deploymentSpecification.workload_type) {
         case WorkloadTypes.Deployment:
@@ -150,6 +153,16 @@ function onEditRowClicked(row: Row) {
         settings: row,
         onSaveCallback: () => {
 
+        }
+    });
+}
+
+function onEditRowKNativeMinScaleSchedulesClicked(row: Row) {
+    bus.emit('deploymentPackageUpdateDeploymentSpecificationKNativeMinScaleSchedules', {
+        deploymentSpecificationName: row.deploymentSpecification.name,
+        knativeMinScaleScheduleIds: row.defaultKnativeScheduledMinScaleIds,
+        onSaveCallback: (ids: number[]) => {
+            row.defaultKnativeScheduledMinScaleIds = ids;
         }
     });
 }
@@ -266,6 +279,13 @@ function onCloseBtnClicked() {
                                 @click="onEditRowClicked(item)">
                                 <v-icon>fa fa-pen</v-icon>
                                 <v-tooltip activator="parent" location="bottom">Edit</v-tooltip>
+                            </v-btn>
+                            <v-btn
+                                v-if="item.deploymentSpecification.workload_type == WorkloadTypes.KNativeService"
+                                variant="plain" color="primary" size="small"
+                                @click="onEditRowKNativeMinScaleSchedulesClicked(item)">
+                                <v-icon>fa fa-clock</v-icon>
+                                <v-tooltip activator="parent" location="bottom">Default KNative Min Scale Schedules</v-tooltip>
                             </v-btn>
                             <v-btn
                                 variant="plain"

@@ -9,6 +9,7 @@ use App\Libraries\ZMQ\ZMQProxy;
 use App\Models\DeploymentModel;
 use App\Models\DeploymentPackageDeploymentSpecificationModel;
 use App\Models\DeploymentPackageEnvironmentVariableModel;
+use App\Models\KNativeMinScaleScheduleModel;
 use App\Models\WorkspaceModel;
 use DebugTool\Data;
 use Google\ApiCore\ApiException;
@@ -187,6 +188,7 @@ class Workspace extends Entity {
                 $deployment->replicas = $deploymentPackageDeploymentSpecification->default_replicas;
                 $deployment->knative_concurrency_limit_soft = $deploymentPackageDeploymentSpecification->default_knative_concurrency_limit_soft;
                 $deployment->knative_concurrency_limit_hard = $deploymentPackageDeploymentSpecification->default_knative_concurrency_limit_hard;
+                $deployment->knative_scheduled_minscale_is_enabled = $deploymentPackageDeploymentSpecification->default_knative_scheduled_minscale_is_enabled;
                 break;
             case \WorkloadTypes::CustomResource:
                 break;
@@ -214,6 +216,17 @@ class Workspace extends Entity {
         foreach ($deploymentSpecification->labels as $label) {
             $newLabel = Label::Create($label->name, $label->value);
             $newLabel->save($deployment);
+        }
+
+        if ($deployment->knative_scheduled_minscale_is_enabled) {
+            if (!$deploymentPackageDeploymentSpecification->k_native_min_scale_schedules->exists()) {
+                $deploymentPackageDeploymentSpecification->k_native_min_scale_schedules->find();
+            }
+            foreach ($deploymentPackageDeploymentSpecification->k_native_min_scale_schedules as $kNativeMinScaleSchedule) {
+                $kNativeMinScaleSchedule->id = null;
+                $kNativeMinScaleSchedule->save();
+                $deployment->save($kNativeMinScaleSchedule);
+            }
         }
 
         return $deployment;

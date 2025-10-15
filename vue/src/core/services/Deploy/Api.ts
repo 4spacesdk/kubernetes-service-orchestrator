@@ -10,6 +10,7 @@ import {Domain} from "./models";
 import {EmailService} from "./models";
 import {InitContainer} from "./models";
 import {K8sCronJob} from "./models";
+import {KNativeMinScaleSchedule} from "./models";
 import {OAuthClient} from "./models";
 import {PodioIntegration} from "./models";
 import {PostUpdateAction} from "./models";
@@ -62,6 +63,7 @@ export interface DeploymentPackageDeploymentSpecification {
     defaultAutoUpdateEnabled?: boolean;
     defaultAutoUpdateTagRegex?: string;
     defaultAutoUpdateRequireApproval?: boolean;
+    defaultKnativeScheduledMinScaleIds?: number[];
 }
 
 export interface DeploymentPackageDeploymentSpecificationList {
@@ -2802,6 +2804,16 @@ export class DeploymentsUpdateResourceManagementPutById extends BaseApi<Deployme
         return this;
     }
 
+    public knativeConcurrencyLimitSoft(value: number): DeploymentsUpdateResourceManagementPutById {
+        this.addQueryParameter('knativeConcurrencyLimitSoft', value);
+        return this;
+    }
+
+    public knativeConcurrencyLimitHard(value: number): DeploymentsUpdateResourceManagementPutById {
+        this.addQueryParameter('knativeConcurrencyLimitHard', value);
+        return this;
+    }
+
     public save(data: any, next?: (value: Deployment) => void) {
         return super.executeSave(data, next);
     }
@@ -2916,6 +2928,27 @@ export class DeploymentsUpdateCronJobsPutById extends BaseApi<Deployment> {
     public constructor(id: number) {
         super();
         this.uri = `/deployment/${id}/cron-jobs`;
+    }
+
+    protected convertToResource(data: any): Deployment {
+        return new Deployment(data);
+    }
+
+    public save(data: IntArrayInterface, next?: (value: Deployment) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class DeploymentsUpdateKNativeMinScaleSchedulesPutById extends BaseApi<Deployment> {
+
+    public topic = 'Resources.Deployments';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/deployments/${id}/knative-min-scale-schedules`;
     }
 
     protected convertToResource(data: any): Deployment {
@@ -3062,6 +3095,10 @@ class Deployments {
 
     public updateCronJobsPutById(id: number): DeploymentsUpdateCronJobsPutById {
         return new DeploymentsUpdateCronJobsPutById(id);
+    }
+
+    public updateKNativeMinScaleSchedulesPutById(id: number): DeploymentsUpdateKNativeMinScaleSchedulesPutById {
+        return new DeploymentsUpdateKNativeMinScaleSchedulesPutById(id);
     }
 
     public getStatusGetById(id: number): DeploymentsGetStatusGetById {
@@ -4250,6 +4287,255 @@ class K8sCronJobs {
 
     public deleteById(id: number): K8sCronJobsDeleteById {
         return new K8sCronJobsDeleteById(id);
+    }
+
+}
+
+
+export class KNativeMinScaleSchedulesGet extends BaseApi<KNativeMinScaleSchedule> {
+
+    public topic = 'Resources.KNativeMinScaleSchedules';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/k_native_min_scale_schedules`;
+    }
+
+    protected convertToResource(data: any): KNativeMinScaleSchedule {
+        return new KNativeMinScaleSchedule(data);
+    }
+
+    public where(name: string, value: any): KNativeMinScaleSchedulesGet {
+        this.filter().where(name, value);
+        return this;
+    }
+
+    public whereEquals(name: string, value: any): KNativeMinScaleSchedulesGet {
+        this.filter().whereEquals(name, value);
+        return this;
+    }
+
+    public whereIn(name: string, value: any[]): KNativeMinScaleSchedulesGet {
+        this.filter().whereIn(name, value);
+        return this;
+    }
+
+    public whereInArray(name: string, value: any[]): KNativeMinScaleSchedulesGet {
+        this.filter().whereInArray(name, value);
+        return this;
+    }
+
+    public whereNot(name: string, value: any): KNativeMinScaleSchedulesGet {
+        this.filter().whereNot(name, value);
+        return this;
+    }
+
+    public whereNotIn(name: string, value: any[]): KNativeMinScaleSchedulesGet {
+        this.filter().whereNotIn(name, value);
+        return this;
+    }
+
+    public whereGreaterThan(name: string, value: any): KNativeMinScaleSchedulesGet {
+        this.filter().whereGreaterThan(name, value);
+        return this;
+    }
+
+    public whereGreaterThanOrEqual(name: string, value: any): KNativeMinScaleSchedulesGet {
+        this.filter().whereGreaterThanOrEqual(name, value);
+        return this;
+    }
+
+    public whereLessThan(name: string, value: any): KNativeMinScaleSchedulesGet {
+        this.filter().whereLessThan(name, value);
+        return this;
+    }
+
+    public whereLessThanOrEqual(name: string, value: any): KNativeMinScaleSchedulesGet {
+        this.filter().whereLessThanOrEqual(name, value);
+        return this;
+    }
+
+    public search(name: string, value: any): KNativeMinScaleSchedulesGet {
+        this.filter().search(name, value);
+        return this;
+    }
+
+    public include(name: string): KNativeMinScaleSchedulesGet {
+        this.getInclude().include(name);
+        return this;
+    }
+
+    public orderBy(name: string, direction: string): KNativeMinScaleSchedulesGet {
+        this.ordering().orderBy(name, direction);
+        return this;
+    }
+
+    public orderAsc(name: string): KNativeMinScaleSchedulesGet {
+        this.ordering().orderAsc(name);
+        return this;
+    }
+
+    public orderDesc(name: string): KNativeMinScaleSchedulesGet {
+        this.ordering().orderDesc(name);
+        return this;
+    }
+
+    public limit(value: number): KNativeMinScaleSchedulesGet {
+        this.limitValue = value;
+        return this;
+    }
+
+    public offset(value: number): KNativeMinScaleSchedulesGet {
+        this.offsetValue = value;
+        return this;
+    }
+
+    public count(next?: (value: number) => void) {
+        return this.executeCount(next);
+    }
+
+    public find(next?: (value: KNativeMinScaleSchedule[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class KNativeMinScaleSchedulesGetById extends BaseApi<KNativeMinScaleSchedule> {
+
+    public topic = 'Resources.KNativeMinScaleSchedules';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/k_native_min_scale_schedules/${id}`;
+    }
+
+    protected convertToResource(data: any): KNativeMinScaleSchedule {
+        return new KNativeMinScaleSchedule(data);
+    }
+
+    public include(name: string): KNativeMinScaleSchedulesGetById {
+        this.getInclude().include(name);
+        return this;
+    }
+
+    public find(next?: (value: KNativeMinScaleSchedule[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class KNativeMinScaleSchedulesPost extends BaseApi<KNativeMinScaleSchedule> {
+
+    public topic = 'Resources.KNativeMinScaleSchedules';
+    protected method = 'post';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/k_native_min_scale_schedules`;
+    }
+
+    protected convertToResource(data: any): KNativeMinScaleSchedule {
+        return new KNativeMinScaleSchedule(data);
+    }
+
+    public save(data: KNativeMinScaleSchedule, next?: (value: KNativeMinScaleSchedule) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class KNativeMinScaleSchedulesPatchById extends BaseApi<KNativeMinScaleSchedule> {
+
+    public topic = 'Resources.KNativeMinScaleSchedules';
+    protected method = 'patch';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/k_native_min_scale_schedules/${id}`;
+    }
+
+    protected convertToResource(data: any): KNativeMinScaleSchedule {
+        return new KNativeMinScaleSchedule(data);
+    }
+
+    public save(data: KNativeMinScaleSchedule, next?: (value: KNativeMinScaleSchedule) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class KNativeMinScaleSchedulesPatch extends BaseApi<KNativeMinScaleSchedule> {
+
+    public topic = 'Resources.KNativeMinScaleSchedules';
+    protected method = 'patch';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/k_native_min_scale_schedules`;
+    }
+
+    protected convertToResource(data: any): KNativeMinScaleSchedule {
+        return new KNativeMinScaleSchedule(data);
+    }
+
+    public save(data: KNativeMinScaleSchedule, next?: (value: KNativeMinScaleSchedule) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class KNativeMinScaleSchedulesDeleteById extends BaseApi<KNativeMinScaleSchedule> {
+
+    public topic = 'Resources.KNativeMinScaleSchedules';
+    protected method = 'delete';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/k_native_min_scale_schedules/${id}`;
+    }
+
+    protected convertToResource(data: any): KNativeMinScaleSchedule {
+        return new KNativeMinScaleSchedule(data);
+    }
+
+    public delete(next?: (value: KNativeMinScaleSchedule) => void) {
+        return super.executeDelete(next);
+    }
+}
+
+class KNativeMinScaleSchedules {
+
+    public get(): KNativeMinScaleSchedulesGet {
+        return new KNativeMinScaleSchedulesGet();
+    }
+
+    public getById(id: number): KNativeMinScaleSchedulesGetById {
+        return new KNativeMinScaleSchedulesGetById(id);
+    }
+
+    public post(): KNativeMinScaleSchedulesPost {
+        return new KNativeMinScaleSchedulesPost();
+    }
+
+    public patchById(id: number): KNativeMinScaleSchedulesPatchById {
+        return new KNativeMinScaleSchedulesPatchById(id);
+    }
+
+    public patch(): KNativeMinScaleSchedulesPatch {
+        return new KNativeMinScaleSchedulesPatch();
+    }
+
+    public deleteById(id: number): KNativeMinScaleSchedulesDeleteById {
+        return new KNativeMinScaleSchedulesDeleteById(id);
     }
 
 }
@@ -7308,6 +7594,10 @@ export class Api {
 
     public static k8sCronJobs(): K8sCronJobs {
         return new K8sCronJobs();
+    }
+
+    public static kNativeMinScaleSchedules(): KNativeMinScaleSchedules {
+        return new KNativeMinScaleSchedules();
     }
 
     public static kubernetes(): Kubernetes {

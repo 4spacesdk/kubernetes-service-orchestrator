@@ -34,6 +34,7 @@ export {EnvironmentVariable as EnvironmentVariable} from "./EnvironmentVariable"
 export {InitContainer as InitContainer} from "./InitContainer";
 export {InitContainerEnvironmentVariable as InitContainerEnvironmentVariable} from "./InitContainerEnvironmentVariable";
 export {K8sCronJob as K8sCronJob} from "./K8sCronJob";
+export {KNativeMinScaleSchedule as KNativeMinScaleSchedule} from "./KNativeMinScaleSchedule";
 export {Label as Label} from "./Label";
 export {MigrationJob as MigrationJob} from "./MigrationJob";
 export {OAuthClient as OAuthClient} from "./OAuthClient";

@@ -17,6 +17,7 @@ use App\Entities\DeploymentSpecification;
  * @property ?bool $defaultAutoUpdateEnabled
  * @property ?string $defaultAutoUpdateTagRegex
  * @property ?bool $defaultAutoUpdateRequireApproval
+ * @property int[] $defaultKnativeScheduledMinScaleIds
  */
 interface DeploymentPackageDeploymentSpecification {
 

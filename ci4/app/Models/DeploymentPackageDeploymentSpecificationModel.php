@@ -11,7 +11,11 @@ class DeploymentPackageDeploymentSpecificationModel extends Model implements Res
     ];
 
     public $hasMany = [
-
+        KNativeMinScaleScheduleModel::class => [
+            'joinTable' => 'deployment_package_ds_knative_min_scale_schedules',
+            'joinSelfAs' => 'deployment_package_deployment_specification_id',
+            'joinOtherAs' => 'knative_min_scale_schedule_id',
+        ],
     ];
 
     public function preRestGet($queryParser, $id) {

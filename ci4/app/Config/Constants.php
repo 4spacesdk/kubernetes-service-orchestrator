@@ -5,7 +5,8 @@ class CronJobIds {
         CleanupGoogleContainerRegistry = 1, // Removed in v1.5.0
         RunKeelHooks = 2, // Removed in v0.1.18
         PullContainerRegistries = 3,
-        CheckCertificateExpiry = 4
+        CheckCertificateExpiry = 4,
+        CheckKNativeMinScaleSchedules = 5
     ;
 }
 

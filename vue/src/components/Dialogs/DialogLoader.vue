@@ -109,6 +109,9 @@ bus.on('deploymentUpdateLabels', async input => {
 bus.on('deploymentUpdateCronJobs', async input => {
     addComponent((await import('@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateCronJobsDialog.vue')).default, input);
 });
+bus.on('deploymentUpdateKNativeMinScaleSchedules', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateKNativeMinScaleSchedulesDialog.vue')).default, input);
+});
 
 
 bus.on('migrationJobList', async input => {
@@ -271,6 +274,9 @@ bus.on('deploymentPackageUpdateDeploymentSpecification', async input => {
 bus.on('deploymentPackageUpdateDeploymentSpecifications', async input => {
     addComponent((await import('@/components/Dialogs/Setup/DeploymentPackages/UpdateDialogs/DeploymentPackageUpdateDeploymentSpecificationsDialog.vue')).default, input);
 });
+bus.on('deploymentPackageUpdateDeploymentSpecificationKNativeMinScaleSchedules', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/DeploymentPackages/UpdateDialogs/DeploymentPackageUpdateDeploymentSpecificationKNativeMinScaleSchedulesDialog.vue')).default, input);
+});
 bus.on('deploymentPackageUpdateEnvironmentVariables', async input => {
     addComponent((await import('@/components/Dialogs/Setup/DeploymentPackages/UpdateDialogs/DeploymentPackageUpdateEnvironmentVariablesDialog.vue')).default, input);
 });
@@ -323,6 +329,10 @@ bus.on('postUpdateActionUpdateCondition', async input => {
 
 bus.on('cronJobEdit', async input => {
     addComponent((await import('@/components/Dialogs/Setup/CronJobs/CronJobEditDialog.vue')).default, input);
+});
+
+bus.on('knativeMinScaleScheduleEdit', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/KNativeMinScaleSchedules/KNativeMinScaleScheduleEditDialog.vue')).default, input);
 });
 
 

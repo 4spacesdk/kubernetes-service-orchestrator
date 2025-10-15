@@ -51,6 +51,7 @@ use DebugTool\Data;
  * @property int $replicas
  * @property int $knative_concurrency_limit_soft
  * @property int $knative_concurrency_limit_hard
+ * @property bool $knative_scheduled_minscale_is_enabled
  *
  * # Migration Job
  * @property int $last_migration_job_id
@@ -62,6 +63,7 @@ use DebugTool\Data;
  * @property MigrationJob $last_migration_jobs
  * @property Label $labels
  * @property DeploymentCronJob $deployment_cron_jobs
+ * @property KNativeMinScaleSchedule $k_native_min_scale_schedules
  *
  * OTF
  * @property string $url_external
@@ -138,6 +140,10 @@ class Deployment extends Entity {
         DeploymentStepHelper::EmitTrigger(DeploymentStepTriggers::Deployment_Environment_Updated, $this);
     }
 
+    public function updateKNativeMinScale(int $value): void {
+        DeploymentStepHelper::EmitTrigger(DeploymentStepTriggers::Deployment_KNativeMinScale_Updated, $this);
+    }
+
     public function updateWorkspaceId(int $value): void {
         $this->workspace_id = $value;
         $this->save();
@@ -151,12 +157,14 @@ class Deployment extends Entity {
 
     public function updateResourceManagement(int $cpuLimit, int $cpuRequest,
                                              int $memoryLimit, int $memoryRequest,
-                                             int $replicas): void {
+                                             int $replicas, int $knativeConcurrencyLimitSoft, $knativeConcurrencyLimitHard): void {
         $this->cpu_limit = $cpuLimit;
         $this->cpu_request = $cpuRequest;
         $this->memory_limit = $memoryLimit;
         $this->memory_request = $memoryRequest;
         $this->replicas = $replicas;
+        $this->knative_concurrency_limit_soft = $knativeConcurrencyLimitSoft;
+        $this->knative_concurrency_limit_hard = $knativeConcurrencyLimitHard;
         $this->save();
 
         DeploymentStepHelper::EmitTrigger(DeploymentStepTriggers::Deployment_ResourceManagement_Updated, $this);
@@ -238,6 +246,15 @@ class Deployment extends Entity {
         $this->deployment_cron_jobs->find()->deleteAll();
         $this->save($values);
         $this->deployment_cron_jobs = $values;
+    }
+
+    public function updateKNativeMinScaleSchedules(KNativeMinScaleSchedule $values): void {
+        $this->k_native_min_scale_schedules->find();
+        foreach ($this->k_native_min_scale_schedules as $k_native_min_scale_schedule) {
+            $this->delete($k_native_min_scale_schedule);
+        }
+        $this->save($values);
+        $this->k_native_min_scale_schedules = $values;
     }
 
     public function getInternalUrl(): string {

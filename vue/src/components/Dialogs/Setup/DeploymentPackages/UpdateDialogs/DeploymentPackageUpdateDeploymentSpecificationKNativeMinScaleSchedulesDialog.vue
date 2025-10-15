@@ -1,21 +1,23 @@
 <script setup lang="ts">
-import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
-import {DeploymentSpecification, K8sCronJob} from "@/core/services/Deploy/models";
+import {computed, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
+import {KNativeMinScaleSchedule} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
 
-export interface DeploymentSpecificationUpdateCronJobsDialog_Input {
-    deploymentSpecification: DeploymentSpecification;
+export interface DeploymentPackageUpdateDeploymentSpecificationKNativeMinScaleSchedulesDialog_Input {
+    deploymentSpecificationName: string;
+    knativeMinScaleScheduleIds: number[];
+
+    onSaveCallback?: (knativeMinScaleScheduleIds: number[]) => void;
 }
 
 interface Row {
-    position: number;
-    item: K8sCronJob;
+    item: KNativeMinScaleSchedule;
 }
 
 const props = defineProps<{
-    input: DeploymentSpecificationUpdateCronJobsDialog_Input,
+    input: DeploymentPackageUpdateDeploymentSpecificationKNativeMinScaleSchedulesDialog_Input,
     events: DialogEventsInterface
 }>();
 
@@ -27,9 +29,10 @@ const itemCount = ref(0);
 const rows = ref<Row[]>([]);
 const headers = ref([
     {title: '', key: 'handle', sortable: false, width: 30},
-    {title: 'Name', key: 'item.name', sortable: false},
-    {title: 'Schedule', key: 'item.schedule', sortable: false},
-    {title: 'Image', key: 'item.container_image.name', sortable: false},
+    {title: 'Priority', key: 'item.priority', sortable: false},
+    {title: 'Min scale', key: 'item.min_scale', sortable: false},
+    {title: 'Cron', key: 'item.cron_expression', sortable: false},
+    {title: 'Description', key: 'item.description', sortable: false},
     {title: '', key: 'actions', sortable: false},
 ]);
 const isSaving = ref(false);
@@ -51,18 +54,11 @@ function render() {
     showDialog.value = true;
 
     isLoading.value = true;
-    Api.deploymentSpecifications().get()
-        .where('id', props.input.deploymentSpecification.id!)
-        .include('deployment_specification_cron_job')
-        .find(value => {
-            rows.value = value[0].deployment_specification_cron_jobs
-                ?.sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
-                ?.map(cronJob => {
-                    return {
-                        position: cronJob.position ?? 0,
-                        item: cronJob.k8s_cron_job!,
-                    }
-                }) ?? [];
+    Api.kNativeMinScaleSchedules().get()
+        .whereIn('id', props.input.knativeMinScaleScheduleIds)
+        .orderAsc('priority')
+        .find(values => {
+            rows.value = values.map(value => ({item: value}));
             itemCount.value = rows.value.length;
             isLoading.value = false;
         });
@@ -78,30 +74,20 @@ function close() {
 // <editor-fold desc="View Binding Functions">
 
 function onCreateBtnClicked() {
-    bus.emit('cronJobEdit', {
-        cronJob: K8sCronJob.CreateDefault(),
-        onSaveCallback: (item: K8sCronJob) => {
-            Api.k8sCronJobs().getById(item.id!)
-                .find(value => rows.value.push({
-                    position: rows.value.length,
-                    item: value[0]
-                }));
+    bus.emit('knativeMinScaleScheduleEdit', {
+        knativeMinScaleSchedule: KNativeMinScaleSchedule.CreateDefault(rows.value.length + 1),
+        onSaveCallback: (item: KNativeMinScaleSchedule) => {
+            rows.value.push({item: item});
         },
     });
 }
 
 function onEditRowClicked(row: Row) {
-    bus.emit('cronJobEdit', {
-        cronJob: row.item,
-        onSaveCallback: (item: K8sCronJob) => {
-            Api.k8sCronJobs().getById(item.id!)
-                .find(value => {
-                    const index = rows.value.indexOf(row);
-                    rows.value.splice(index, 1, {
-                        position: row.position,
-                        item: value[0]
-                    });
-                });
+    bus.emit('knativeMinScaleScheduleEdit', {
+        knativeMinScaleSchedule: row.item,
+        onSaveCallback: (item: KNativeMinScaleSchedule) => {
+            const index = rows.value.indexOf(row);
+            rows.value.splice(index, 1, {item: item});
         },
     });
 }
@@ -111,27 +97,10 @@ function onDeleteRowClicked(row: Row) {
 }
 
 function onSaveBtnClicked() {
-    isSaving.value = true;
-    const api = Api.deploymentSpecifications().updateCronJobsPutById(props.input.deploymentSpecification.id!);
-    api.setErrorHandler(response => {
-        if (response.error) {
-            bus.emit('toast', {
-                text: response.error
-            });
-        }
-        isSaving.value = false;
-        return false;
-    });
-    api.save({
-            values: rows.value
-                .sort((a, b) => a.position - b.position)
-                .map(row => row.item.id!)
-        },
-        newItem => {
-            bus.emit('deploymentSpecificationSaved', newItem);
-            isSaving.value = false;
-            close();
-        });
+    if (props.input.onSaveCallback) {
+        props.input.onSaveCallback(rows.value.map(row => row.item.id!));
+    }
+    close();
 }
 
 function onCloseBtnClicked() {
@@ -142,12 +111,18 @@ function onSortChanged(event: CustomEvent) {
     const oldIndex = event.detail.oldIndex;
     const newIndex = event.detail.newIndex;
 
-    const copy = [...rows.value].sort((a, b) => a.position - b.position);
+    const copy = [...rows.value].sort((a, b) => a.item.priority! - b.item.priority!);
     const movedItem = copy.splice(oldIndex, 1)[0];
     copy.splice(newIndex, 0, movedItem);
 
-    let pos = 0;
-    copy.forEach(item => item.position = pos++);
+    let pos = 1;
+    copy.forEach(item => item.item.priority = pos++);
+
+    // Save
+    rows.value.forEach(row => {
+        Api.kNativeMinScaleSchedules().patchById(row.item.id!)
+            .save({priority: row.item.priority} as any);
+    });
 }
 
 // </editor-fold>
@@ -165,8 +140,8 @@ function onSortChanged(event: CustomEvent) {
             class="w-100 h-100">
             <v-card-title>
                 <div class="d-flex w-100">
-                    <span class="my-auto">Cron Jobs</span>
-                    <v-chip class="my-auto mx-auto">{{ props.input.deploymentSpecification.name }}</v-chip>
+                    <span class="my-auto">KNative Min Scale Schedules</span>
+                    <v-chip class="my-auto mx-auto">{{ props.input.deploymentSpecificationName }}</v-chip>
 
                     <div class="my-auto ml-auto d-flex justify-end gap-1">
                         <v-btn
@@ -197,19 +172,6 @@ function onSortChanged(event: CustomEvent) {
                     </template>
                     <template v-slot:item.actions="{ item }">
                         <div class="d-flex justify-end">
-                            <!--                            <v-menu-->
-                            <!--                                min-width="250">-->
-                            <!--                                <template v-slot:activator="{ props }">-->
-                            <!--                                    <v-btn-->
-                            <!--                                        v-bind="props"-->
-                            <!--                                        variant="plain" color="primary" size="small" icon>-->
-                            <!--                                        <v-icon>fa fa-cog</v-icon>-->
-                            <!--                                        <v-tooltip activator="parent" location="bottom">Settings</v-tooltip>-->
-                            <!--                                    </v-btn>-->
-                            <!--                                </template>-->
-                            <!--                                <init-container-edit-button-->
-                            <!--                                    :init-container="item.item"/>-->
-                            <!--                            </v-menu>-->
                             <v-btn
                                 variant="plain" color="primary" size="small" icon
                                 @click="onEditRowClicked(item)">

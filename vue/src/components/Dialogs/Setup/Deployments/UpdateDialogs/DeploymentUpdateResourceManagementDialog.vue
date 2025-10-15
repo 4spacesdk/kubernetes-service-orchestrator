@@ -62,7 +62,9 @@ function onSaveBtnClicked() {
         .cpuRequest(cpuRequest.value!)
         .memoryLimit(memoryLimit.value!)
         .memoryRequest(memoryRequest.value!)
-        .replicas(replicas.value!);
+        .replicas(replicas.value!)
+        .knativeConcurrencyLimitSoft(knativeConcurrencyLimitSoft.value!)
+        .knativeConcurrencyLimitHard(knativeConcurrencyLimitHard.value!);
     api.setErrorHandler(response => {
         if (response.error) {
             bus.emit('toast', {
@@ -72,6 +74,13 @@ function onSaveBtnClicked() {
         return false;
     });
     api.save(null, newItem => {
+        props.input.deployment.cpu_limit = cpuLimit.value!;
+        props.input.deployment.cpu_request = cpuRequest.value!;
+        props.input.deployment.memory_limit = memoryLimit.value!;
+        props.input.deployment.memory_request = memoryRequest.value!;
+        props.input.deployment.replicas = replicas.value!;
+        props.input.deployment.knative_concurrency_limit_soft = knativeConcurrencyLimitSoft.value!;
+        props.input.deployment.knative_concurrency_limit_hard = knativeConcurrencyLimitHard.value!;
         bus.emit('deploymentSaved', newItem);
         close();
     });

@@ -27,6 +27,9 @@ const isUpdateDatabaseServiceEnabled = ref(false);
 const showUpdateResourceManagement = ref(false);
 const isUpdateResourceManagementEnabled = ref(false);
 
+const showUpdateKNativeMinScaleSchedules = ref(false);
+const isUpdateKNativeMinScaleSchedulesEnabled = ref(false);
+
 const showUpdateUpdateManagement = ref(false);
 const isUpdateUpdateManagementEnabled = ref(false);
 
@@ -66,6 +69,9 @@ function render() {
 
     showUpdateResourceManagement.value = spec.value?.workload_type !== WorkloadTypes.CustomResource
     isUpdateResourceManagementEnabled.value = true;
+
+    showUpdateKNativeMinScaleSchedules.value = spec.value?.workload_type === WorkloadTypes.KNativeService
+    isUpdateKNativeMinScaleSchedulesEnabled.value = true;
 
     showUpdateUpdateManagement.value = spec.value?.workload_type !== WorkloadTypes.CustomResource
     isUpdateUpdateManagementEnabled.value = true;
@@ -111,6 +117,12 @@ function onUpdateDatabaseServiceClicked() {
 
 function onUpdateResourceManagementClicked() {
     bus.emit('deploymentUpdateResourceManagement', {
+        deployment: props.deployment
+    });
+}
+
+function onUpdateKNativeMinScaleSchedulesClicked() {
+    bus.emit('deploymentUpdateKNativeMinScaleSchedules', {
         deployment: props.deployment
     });
 }
@@ -218,6 +230,16 @@ function onUpdateCronJobsClicked() {
                     <v-list-item-title>
                         <v-icon size="small" class="my-auto ml-2">fa fa-plug-circle-bolt</v-icon>
                         <span class="ml-2">Resource Management</span>
+                    </v-list-item-title>
+                </v-list-item>
+                <v-list-item
+                    v-if="showUpdateKNativeMinScaleSchedules"
+                    :disabled="!isUpdateKNativeMinScaleSchedulesEnabled"
+                    dense
+                    @click="onUpdateKNativeMinScaleSchedulesClicked">
+                    <v-list-item-title>
+                        <v-icon size="small" class="my-auto ml-2">fa fa-clock</v-icon>
+                        <span class="ml-2">KNative Min Scale Schedules</span>
                     </v-list-item-title>
                 </v-list-item>
                 <v-list-item

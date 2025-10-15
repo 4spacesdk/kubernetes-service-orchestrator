@@ -23,6 +23,11 @@ class DeploymentModel extends \RestExtension\Models\UserModel implements Resourc
         LabelModel::class,
         DeploymentsLabelModel::class,
         DeploymentCronJobModel::class,
+        KNativeMinScaleScheduleModel::class => [
+            'joinTable' => 'deployments_knative_min_scale_schedules',
+            'joinSelfAs' => 'deployment_id',
+            'joinOtherAs' => 'knative_min_scale_schedule_id',
+        ],
     ];
 
     public function preRestGet($queryParser, $id) {

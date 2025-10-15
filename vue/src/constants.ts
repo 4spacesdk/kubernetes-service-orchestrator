@@ -12,7 +12,7 @@ import {
     DatabaseService,
     Deployment, DeploymentPackage, DeploymentSpecification,
     Domain,
-    EmailService, InitContainer, K8sCronJob, OAuthClient, PodioIntegration, PostUpdateAction,
+    EmailService, InitContainer, K8sCronJob, KNativeMinScaleSchedule, OAuthClient, PodioIntegration, PostUpdateAction,
     User, Webhook,
     Workspace
 } from "@/core/services/Deploy/models";
@@ -237,6 +237,15 @@ import type {
 import type {
     DeploymentUpdateCronJobsDialog_Input
 } from "@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateCronJobsDialog.vue";
+import type {
+    DeploymentPackageUpdateDeploymentSpecificationKNativeMinScaleSchedulesDialog_Input
+} from "@/components/Dialogs/Setup/DeploymentPackages/UpdateDialogs/DeploymentPackageUpdateDeploymentSpecificationKNativeMinScaleSchedulesDialog.vue";
+import type {
+    KNativeMinScaleScheduleEditDialog_Input
+} from "@/components/Dialogs/Setup/KNativeMinScaleSchedules/KNativeMinScaleScheduleEditDialog.vue";
+import type {
+    DeploymentUpdateKNativeMinScaleSchedulesDialog_Input
+} from "@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateKNativeMinScaleSchedulesDialog.vue";
 
 export type Events = {
     confirm: ConfirmationDialog_Input;
@@ -272,6 +281,7 @@ export type Events = {
     deploymentUpdateLabels: DeploymentUpdateLabelsDialog_Input;
     deploymentUpdateLabel: DeploymentUpdateLabelDialog_Input;
     deploymentUpdateCronJobs: DeploymentUpdateCronJobsDialog_Input;
+    deploymentUpdateKNativeMinScaleSchedules: DeploymentUpdateKNativeMinScaleSchedulesDialog_Input;
 
     domainCreate: DomainCreateDialog_Input;
     domainEdit: DomainEditDialog_Input;
@@ -346,6 +356,7 @@ export type Events = {
     deploymentPackageEditDialog_closed: DeploymentPackage | undefined;
     deploymentPackageUpdateDeploymentSpecification: DeploymentPackageUpdateDeploymentSpecificationDialog_Input;
     deploymentPackageUpdateDeploymentSpecifications: DeploymentPackageUpdateDeploymentSpecificationsDialog_Input;
+    deploymentPackageUpdateDeploymentSpecificationKNativeMinScaleSchedules: DeploymentPackageUpdateDeploymentSpecificationKNativeMinScaleSchedulesDialog_Input
     deploymentPackageUpdateEnvironmentVariables: DeploymentPackageUpdateEnvironmentVariablesDialog_Input;
     deploymentPackageUpdateEnvironmentVariable: DeploymentPackageUpdateEnvironmentVariableDialog_Input;
     deploymentPackageUpdateLabels: DeploymentPackageUpdateLabelsDialog_Input;
@@ -379,6 +390,10 @@ export type Events = {
     cronJobEdit: CronJobEditDialog_Input;
     cronJobSaved: K8sCronJob | undefined;
     cronJobEditDialog_closed: K8sCronJob | undefined;
+
+    knativeMinScaleScheduleEdit: KNativeMinScaleScheduleEditDialog_Input;
+    knativeMinScaleScheduleSaved: KNativeMinScaleSchedule | undefined;
+    knativeMinScaleScheduleEditDialog_closed: KNativeMinScaleSchedule | undefined;
 
 }
 

@@ -9,6 +9,7 @@ import {EnvironmentVariable} from '../EnvironmentVariable';
 import {DeploymentVolume} from '../DeploymentVolume';
 import {Label} from '../Label';
 import {DeploymentCronJob} from '../DeploymentCronJob';
+import {KNativeMinScaleSchedule} from '../KNativeMinScaleSchedule';
 import {User} from '../User';
 import {Deletion} from '../Deletion';
 import {BaseModel} from '../BaseModel';
@@ -42,6 +43,7 @@ export class DeploymentDefinition extends BaseModel {
     replicas?: number;
     knative_concurrency_limit_soft?: number;
     knative_concurrency_limit_hard?: number;
+    knative_scheduled_minscale_is_enabled?: boolean;
     last_migration_job_id?: number;
     last_migration_job?: MigrationJob;
     environment_variables?: EnvironmentVariable[];
@@ -49,6 +51,7 @@ export class DeploymentDefinition extends BaseModel {
     last_migration_jobs?: MigrationJob[];
     labels?: Label[];
     deployment_cron_jobs?: DeploymentCronJob[];
+    k_native_min_scale_schedules?: KNativeMinScaleSchedule[];
     url_external?: string;
     url_internal?: string;
     id?: number;
@@ -96,6 +99,7 @@ export class DeploymentDefinition extends BaseModel {
             delete this.replicas;
             delete this.knative_concurrency_limit_soft;
             delete this.knative_concurrency_limit_hard;
+            delete this.knative_scheduled_minscale_is_enabled;
             delete this.last_migration_job_id;
             delete this.last_migration_job;
             delete this.environment_variables;
@@ -103,6 +107,7 @@ export class DeploymentDefinition extends BaseModel {
             delete this.last_migration_jobs;
             delete this.labels;
             delete this.deployment_cron_jobs;
+            delete this.k_native_min_scale_schedules;
             delete this.url_external;
             delete this.url_internal;
             delete this.id;
@@ -201,6 +206,9 @@ export class DeploymentDefinition extends BaseModel {
         if (data.knative_concurrency_limit_hard != null) {
             this.knative_concurrency_limit_hard = data.knative_concurrency_limit_hard;
         }
+        if (data.knative_scheduled_minscale_is_enabled != null) {
+            this.knative_scheduled_minscale_is_enabled = data.knative_scheduled_minscale_is_enabled;
+        }
         if (data.last_migration_job_id != null) {
             this.last_migration_job_id = data.last_migration_job_id;
         }
@@ -221,6 +229,9 @@ export class DeploymentDefinition extends BaseModel {
         }
         if (data.deployment_cron_jobs != null) {
             this.deployment_cron_jobs = data.deployment_cron_jobs.map((i: any) => new DeploymentCronJob(i));
+        }
+        if (data.k_native_min_scale_schedules != null) {
+            this.k_native_min_scale_schedules = data.k_native_min_scale_schedules.map((i: any) => new KNativeMinScaleSchedule(i));
         }
         if (data.url_external != null) {
             this.url_external = data.url_external;

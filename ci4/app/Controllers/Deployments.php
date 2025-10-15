@@ -6,6 +6,7 @@ use App\Entities\DeploymentCronJob;
 use App\Entities\DeploymentSpecification;
 use App\Entities\DeploymentVolume;
 use App\Entities\EnvironmentVariable;
+use App\Entities\KNativeMinScaleSchedule;
 use App\Entities\Label;
 use App\Entities\Workspace;
 use App\Exceptions\ValidationException;
@@ -14,6 +15,7 @@ use App\Interfaces\EnvironmentVariableList;
 use App\Interfaces\IntArrayInterface;
 use App\Interfaces\LabelList;
 use App\Libraries\DeploymentSteps\BaseDeploymentStep;
+use App\Models\KNativeMinScaleScheduleModel;
 use App\Models\MigrationJobModel;
 use DebugTool\Data;
 use Google\ApiCore\ApiException;
@@ -197,6 +199,8 @@ class Deployments extends ResourceController {
      * @parameter int $memoryLimit parameterType=query
      * @parameter int $memoryRequest parameterType=query
      * @parameter int $replicas parameterType=query
+     * @parameter int $knativeConcurrencyLimitSoft parameterType=query
+     * @parameter int $knativeConcurrencyLimitHard parameterType=query
      * @return void
      */
     public function updateResourceManagement(int $id): void {
@@ -208,7 +212,9 @@ class Deployments extends ResourceController {
                 $this->request->getGet('cpuRequest'),
                 $this->request->getGet('memoryLimit'),
                 $this->request->getGet('memoryRequest'),
-                $this->request->getGet('replicas')
+                $this->request->getGet('replicas'),
+                $this->request->getGet('knativeConcurrencyLimitSoft'),
+                $this->request->getGet('knativeConcurrencyLimitHard'),
             );
         }
         $this->_setResource($item);
@@ -354,6 +360,35 @@ class Deployments extends ResourceController {
             );
 
             $item->updateCronJobs($values);
+        }
+        $this->_setResource($item);
+        $this->success();
+    }
+
+    /**
+     * @route /deployments/{id}/knative-min-scale-schedules
+     * @method put
+     * @custom true
+     * @param int $id
+     * @requestSchema IntArrayInterface
+     * @return void
+     */
+    public function updateKNativeMinScaleSchedules(int $id): void {
+        $item = new Deployment();
+        $item->find($id);
+        if ($item->exists()) {
+            /** @var IntArrayInterface $body */
+            $body = $this->request->getJSON();
+
+            if (isset($body->values) && is_array($body->values) && count($body->values) > 0) {
+                $values = (new KNativeMinScaleScheduleModel())
+                    ->whereIn('id', $body->values)
+                    ->find();
+            } else {
+                $values = new KNativeMinScaleSchedule();
+            }
+
+            $item->updateKNativeMinScaleSchedules($values);
         }
         $this->_setResource($item);
         $this->success();
