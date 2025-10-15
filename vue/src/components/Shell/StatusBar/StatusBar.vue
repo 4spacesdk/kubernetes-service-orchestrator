@@ -42,6 +42,12 @@ function onReloadBtnClicked() {
     getStatus();
 }
 
+function onVersionBtnClicked() {
+    if (version.value != '_VERSION_') {
+        window.open('https://github.com/4spacesdk/kubernetes-service-orchestrator/releases/tag/' + version.value, '_blank');
+    }
+}
+
 </script>
 
 <template>
@@ -51,7 +57,13 @@ function onReloadBtnClicked() {
         sticky
         app
     >
-        <small>{{ version }}</small>
+        <v-btn
+            @click="onVersionBtnClicked"
+            variant="text"
+            size="small"
+        >
+            <small>{{ version }}</small>
+        </v-btn>
 
         <div
             class="ml-auto d-flex"

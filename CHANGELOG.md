@@ -8,6 +8,7 @@
 
 ### Enhancements
 * Scheduled minScale management for Knative Services [Issue #58](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/58)
+* Add a link to the GitHub release (with changelog) from the webUI [Issue #52](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/52)
 
 ### Upgrade guide
 1. Deploy new image
