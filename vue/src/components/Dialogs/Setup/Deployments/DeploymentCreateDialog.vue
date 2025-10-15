@@ -265,7 +265,7 @@ function onCloseBtnClicked() {
                             v-model="item.name"
                             variant="outlined"
                             :rules="[
-                                v => /^[a-z0-9]{1,61}$/.test(v) || 'Invalid format'
+                                v => /^[a-z0-9-]{1,61}$/.test(v) || 'Invalid format'
                             ]"
                             label="Name"
                             clearable

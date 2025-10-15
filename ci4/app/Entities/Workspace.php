@@ -130,7 +130,7 @@ class Workspace extends Entity {
      * @throws \Google\ApiCore\ValidationException
      * @throws ApiException
      */
-    public function addDeployment(DeploymentSpecification $deploymentSpecification, ?string $version): ?Deployment {
+    public function addDeployment(DeploymentSpecification $deploymentSpecification, ?string $name, ?string $version): ?Deployment {
         // Check if this spec is part of the workspace deployment package
         /** @var DeploymentPackageDeploymentSpecification $deploymentPackageDeploymentSpecification */
         $deploymentPackageDeploymentSpecification = (new DeploymentPackageDeploymentSpecificationModel())
@@ -138,9 +138,9 @@ class Workspace extends Entity {
             ->where('deployment_specification_id', $deploymentSpecification->id)
             ->find();
         if ($deploymentPackageDeploymentSpecification->exists()) {
-            return $this->createDeploymentFromPackage($deploymentPackageDeploymentSpecification, $version);
+            return $this->createDeploymentFromPackage($deploymentPackageDeploymentSpecification, $name, $version);
         } else {
-            $deployment = $this->prepareDeploymentFromSpecification($deploymentSpecification, $version);
+            $deployment = $this->prepareDeploymentFromSpecification($deploymentSpecification, $name, $version);
             $deployment->save();
             return $deployment;
         }
@@ -153,13 +153,13 @@ class Workspace extends Entity {
      * @throws ApiException
      * @throws \Google\ApiCore\ValidationException
      */
-    public function createDeploymentFromPackage(DeploymentPackageDeploymentSpecification $deploymentPackageDeploymentSpecification, ?string $version = null): Deployment {
+    public function createDeploymentFromPackage(DeploymentPackageDeploymentSpecification $deploymentPackageDeploymentSpecification, ?string $name = null, ?string $version = null): Deployment {
         if (!$deploymentPackageDeploymentSpecification->deployment_specification->exists()) {
             $deploymentPackageDeploymentSpecification->deployment_specification->find();
         }
         $deploymentSpecification = $deploymentPackageDeploymentSpecification->deployment_specification;
 
-        $deployment = $this->prepareDeploymentFromSpecification($deploymentSpecification);
+        $deployment = $this->prepareDeploymentFromSpecification($deploymentSpecification, $name);
 
         switch ($deploymentSpecification->workload_type) {
             default:
@@ -235,12 +235,12 @@ class Workspace extends Entity {
     /**
      * @throws ValidationException
      */
-    public function prepareDeploymentFromSpecification(DeploymentSpecification $specification, ?string $version = null): Deployment {
+    public function prepareDeploymentFromSpecification(DeploymentSpecification $specification, ?string $name = null, ?string $version = null): Deployment {
         $deployment = Deployment::Prepare(
             $specification,
             $this->namespace,
             $this->id,
-            $specification->name ?? '',
+            $name ?? $specification->name ?? '',
             $version ?? '',
         );
 

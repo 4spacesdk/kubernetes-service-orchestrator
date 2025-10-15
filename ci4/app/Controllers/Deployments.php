@@ -50,7 +50,11 @@ class Deployments extends ResourceController {
 
         try {
             if ($workspace->exists()) {
-                $item = $workspace->addDeployment($deploymentSpecification, $this->request->getGet('version') ?? null);
+                $item = $workspace->addDeployment(
+                    $deploymentSpecification,
+                    $this->request->getGet('name') ?? null,
+                    $this->request->getGet('version') ?? null
+                );
             } else {
                 $item = Deployment::Prepare(
                     $deploymentSpecification,
@@ -445,23 +449,23 @@ class Deployments extends ResourceController {
         $spec = $item->findDeploymentSpecification();
 
         $result = $spec->toArray();
-        $result['deploymentSteps'] = array_map(fn (BaseDeploymentStep $step) => $step->toArray(), $spec->getDeploymentSteps($item));
+        $result['deploymentSteps'] = array_map(fn(BaseDeploymentStep $step) => $step->toArray(), $spec->getDeploymentSteps($item));
 
         Data::set('resource', $result);
         $this->success();
     }
 
     /**
-     * @ignore true
      * @return void
+     * @ignore true
      */
     public function post() {
     }
 
     /**
-     * @ignore true
      * @param $id
      * @return void
+     * @ignore true
      */
     public function put($id = 0) {
     }

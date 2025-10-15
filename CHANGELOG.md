@@ -4,6 +4,7 @@
 
 ### Fixed bugs
 * Added missing option for knativeConcurrencyLimitSoft and knativeConcurrencyLimitHard on deployment resource management
+* "Create Deployment for Workspace"-dialog issue with name input [Issue #57](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/57)
 
 ### Enhancements
 * Scheduled minScale management for Knative Services [Issue #58](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/58)

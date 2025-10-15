@@ -76,6 +76,7 @@ class Workspaces extends ResourceController {
         try {
             $deployment = $item->addDeployment(
                 $deploymentSpecification,
+                $this->request->getGet('name') ?? null,
                 $this->request->getGet('version') ?? null
             );
             $this->_setResource($deployment);

@@ -159,7 +159,7 @@ function onEditRowClicked(row: Row) {
 
 function onEditRowKNativeMinScaleSchedulesClicked(row: Row) {
     bus.emit('deploymentPackageUpdateDeploymentSpecificationKNativeMinScaleSchedules', {
-        deploymentSpecificationName: row.deploymentSpecification.name,
+        deploymentSpecificationName: row.deploymentSpecification.name ?? '',
         knativeMinScaleScheduleIds: row.defaultKnativeScheduledMinScaleIds,
         onSaveCallback: (ids: number[]) => {
             row.defaultKnativeScheduledMinScaleIds = ids;
