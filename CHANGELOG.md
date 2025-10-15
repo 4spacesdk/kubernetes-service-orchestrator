@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.6.1 (2025-10-15)
+
+### Fixed bugs
+* Deployment `knative_scheduled_minscale_is_enabled` did not get set correctly
+
+### Enhancements
+* 
+
+### Upgrade guide
+1. Deploy new image
+
+
+
 ## v1.6.0 (2025-10-15)
 
 ### Fixed bugs

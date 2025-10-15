@@ -253,6 +253,8 @@ class Deployment extends Entity {
         foreach ($this->k_native_min_scale_schedules as $k_native_min_scale_schedule) {
             $this->delete($k_native_min_scale_schedule);
         }
+        $this->knative_scheduled_minscale_is_enabled = $values->count() > 0;
+        $this->save();
         $this->save($values);
         $this->k_native_min_scale_schedules = $values;
     }
