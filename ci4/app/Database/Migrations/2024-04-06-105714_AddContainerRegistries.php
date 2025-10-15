@@ -32,6 +32,7 @@ class AddContainerRegistries extends Migration {
 
         $job = new CronJob();
         $job->find(\CronJobIds::PullContainerRegistries);
+        $job->name = 'app:pull_container_registries';
         $job->schedule = '* * * * *';
         $job->command = 'app:pull_container_registries';
         $job->duplicates = 1;

@@ -20,6 +20,7 @@ class AddDomainCertificateMonitoring extends Migration {
 
         $job = new CronJob();
         $job->find(\CronJobIds::CheckCertificateExpiry);
+        $job->name = 'app:check-certificate-expiry';
         $job->schedule = '00 07 * * *';
         $job->command = 'app:check-certificate-expiry';
         $job->duplicates = 1;

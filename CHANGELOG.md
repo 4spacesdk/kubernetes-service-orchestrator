@@ -1,12 +1,26 @@
 # Changelog
 
+## v1.6.2 (2025-10-15)
+
+### Fixed bugs
+* Added names to cronjobs to fix collision in Jobby
+
+### Enhancements
+*
+
+### Upgrade guide
+1. Deploy new image
+2. Migrate database [(Guide)](https://github.com/4spacesdk/kubernetes-service-orchestrator?tab=readme-ov-file#migrate-database-helm)
+
+
+
 ## v1.6.1 (2025-10-15)
 
 ### Fixed bugs
 * Deployment `knative_scheduled_minscale_is_enabled` did not get set correctly
 
 ### Enhancements
-* 
+*
 
 ### Upgrade guide
 1. Deploy new image

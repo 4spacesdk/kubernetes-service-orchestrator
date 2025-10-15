@@ -43,6 +43,7 @@ class AddKNativeMinScaleSchedules extends Migration {
 
         $job = new CronJob();
         $job->find(\CronJobIds::CheckKNativeMinScaleSchedules);
+        $job->name = 'app:check-knative-min-scale-schedules';
         $job->schedule = '* * * * *';
         $job->command = 'app:check-knative-min-scale-schedules';
         $job->duplicates = 1;
