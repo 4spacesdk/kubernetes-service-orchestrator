@@ -1,6 +1,6 @@
 # Changelog
 
-## v1.6.0 (?)
+## v1.6.0 (2025-10-15)
 
 ### Fixed bugs
 * Added missing option for knativeConcurrencyLimitSoft and knativeConcurrencyLimitHard on deployment resource management
