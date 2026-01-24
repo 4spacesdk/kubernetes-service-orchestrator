@@ -72,8 +72,8 @@ RUN docker-php-ext-enable gd
 RUN cp /usr/local/etc/php/conf.d/docker-php-ext-gd.ini /etc/php83/conf.d/gd.ini
 
 # SQLSRV (MSSQL Driver)
-RUN wget https://download.microsoft.com/download/8/6/8/868e5fc4-7bfe-494d-8f9d-115cbcdb52ae/msodbcsql18_18.1.2.1-1_amd64.apk && \
-  wget https://download.microsoft.com/download/8/6/8/868e5fc4-7bfe-494d-8f9d-115cbcdb52ae/mssql-tools18_18.1.1.1-1_amd64.apk && \
+RUN wget --no-check-certificate https://download.microsoft.com/download/8/6/8/868e5fc4-7bfe-494d-8f9d-115cbcdb52ae/msodbcsql18_18.1.2.1-1_amd64.apk && \
+  wget --no-check-certificate https://download.microsoft.com/download/8/6/8/868e5fc4-7bfe-494d-8f9d-115cbcdb52ae/mssql-tools18_18.1.1.1-1_amd64.apk && \
   apk add --allow-untrusted msodbcsql18_18.1.2.1-1_amd64.apk && \
   apk add --allow-untrusted mssql-tools18_18.1.1.1-1_amd64.apk && \
   apk add --no-cache --virtual .persistent-deps freetds && \
