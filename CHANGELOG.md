@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.6.3 (2026-01-24)
+
+### Fixed bugs
+* 
+
+### Enhancements
+* Allow for database port to be configured by environment variable 
+
+### Upgrade guide
+1. Deploy new image
+
+
+
 ## v1.6.2 (2025-10-15)
 
 ### Fixed bugs
