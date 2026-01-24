@@ -33,7 +33,7 @@ deployment:
   # You need to provide a MySQL database
   database:
     host: ""
-    port: 3306
+    port: "3306"
     name: ""
     user: ""
     pass: ""
