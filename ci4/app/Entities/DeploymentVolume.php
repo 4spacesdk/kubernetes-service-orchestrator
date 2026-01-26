@@ -57,11 +57,23 @@ class DeploymentVolume extends Entity {
         if (empty($this->reclaim_policy)) {
             return 'Missing reclaim policy';
         }
-        if (empty($this->nfs_server)) {
-            return 'Missing nfs server';
-        }
-        if (empty($this->nfs_path)) {
-            return 'Missing nfs path';
+        switch ($this->type) {
+            case 'nfs':
+                if (empty($this->nfs_server)) {
+                    return 'Missing nfs server';
+                }
+                if (empty($this->nfs_path)) {
+                    return 'Missing nfs path';
+                }
+                break;
+            case 'csi':
+                if (empty($this->csi_driver)) {
+                    return 'Missing csi_driver';
+                }
+                if (empty($this->csi_volume_handle)) {
+                    return 'Missing csi_volume_handle';
+                }
+                break;
         }
 
         return null;

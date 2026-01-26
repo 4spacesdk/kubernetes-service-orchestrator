@@ -1,12 +1,25 @@
 # Changelog
 
+## v1.7.0 (2026-01-26)
+
+### Fixed bugs
+* Fix Volume validation for "nfs_server" and "nfs_path" [Issue #61](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/61)
+
+### Enhancements
+* Updated `4spacesdk/ci4authextension` from v1.2.1 to v1.2.2
+
+### Upgrade guide
+1. Deploy new image
+
+
+
 ## v1.6.3 (2026-01-24)
 
 ### Fixed bugs
-* 
+*
 
 ### Enhancements
-* Allow for database port to be configured by environment variable 
+* Allow for database port to be configured by environment variable
 
 ### Upgrade guide
 1. Deploy new image

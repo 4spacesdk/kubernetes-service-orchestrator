@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "95d001575ad933e606f7a0e511c6571b",
+    "content-hash": "2ede22592430d347ed2aa4fb448e2285",
     "packages": [
         {
             "name": "4spacesdk/ci4authextension",
-            "version": "v1.2.1",
+            "version": "v1.2.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/4spacesdk/CI4AuthExtension.git",
-                "reference": "e11b728d520106c5728f73f6deeeec988a48963e"
+                "reference": "8708dc28e7f20846b2ab68473dc617ef3916a130"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/4spacesdk/CI4AuthExtension/zipball/e11b728d520106c5728f73f6deeeec988a48963e",
-                "reference": "e11b728d520106c5728f73f6deeeec988a48963e",
+                "url": "https://api.github.com/repos/4spacesdk/CI4AuthExtension/zipball/8708dc28e7f20846b2ab68473dc617ef3916a130",
+                "reference": "8708dc28e7f20846b2ab68473dc617ef3916a130",
                 "shasum": ""
             },
             "require": {
@@ -25,7 +25,7 @@
                 "bshaffer/oauth2-server-php": "v1.14.1",
                 "ext-openssl": "*",
                 "kelvinmo/simplejwt": "^0.5.3",
-                "php": ">=7.2"
+                "php": ">=7.4"
             },
             "type": "library",
             "autoload": {
@@ -46,9 +46,9 @@
             "description": "Easy OAuth2 integration with CodeIgniter 4",
             "support": {
                 "issues": "https://github.com/4spacesdk/CI4AuthExtension/issues",
-                "source": "https://github.com/4spacesdk/CI4AuthExtension/tree/v1.2.1"
+                "source": "https://github.com/4spacesdk/CI4AuthExtension/tree/v1.2.2"
             },
-            "time": "2024-12-02T04:06:39+00:00"
+            "time": "2026-01-26T09:28:55+00:00"
         },
         {
             "name": "4spacesdk/ci4debugtool",

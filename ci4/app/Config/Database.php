@@ -85,7 +85,7 @@ class Database extends Config
 
         $this->default['DSN'] = getenv('DB_DSN') ? getenv('DB_DSN') : '';
         $this->default['hostname'] = getenv('DB_HOST');
-        $this->default['port'] = getenv('DB_PORT') ? getenv('DB_PORT') : 3306;
+        $this->default['port'] = getenv('DB_PORT') ? (int)getenv('DB_PORT') : 3306;
         $this->default['database'] = getenv('DB_NAME');
         $this->default['username'] = getenv('DB_USER');
         $this->default['password'] = getenv('DB_PASS');
