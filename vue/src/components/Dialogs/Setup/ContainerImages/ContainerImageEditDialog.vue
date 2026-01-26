@@ -35,6 +35,10 @@ const containerRegistries = ref([
         identifier: ContainerRegistries.AzureContainerRegistry,
         name: "Azure Container Registry",
     },
+    {
+        identifier: ContainerRegistries.Harbor,
+        name: "Harbor",
+    },
 ]);
 
 const commitIdentificationMethods = ref([
@@ -473,6 +477,70 @@ function onCloseBtnClicked() {
                                                 label="Client Secret (Application secret)"
                                                 density="compact"
                                                 hide-details
+                                            />
+                                        </v-col>
+
+                                        <v-col
+                                            cols="12"
+                                            v-if="item.registry_provider == ContainerRegistries.Harbor"
+                                        >
+                                            <div class="border pa-2">
+                                                KSO integrates with Harbor to perform following tasks
+                                                <ul class="ml-5">
+                                                    <li>Fetch available image tags</li>
+                                                    <li>React on new image tags through registry webhooks</li>
+                                                </ul>
+                                                <br>
+                                                To enable these features, you need to provide harbor following info and
+                                                setup a webhook
+                                                <ul class="ml-5">
+                                                    <li>Notify Type: http</li>
+                                                    <li>Payload Format: Default</li>
+                                                    <li>Event Type: Artifact pushed</li>
+                                                    <li>Endpoint URL: {{
+                                                            ApiService.apiAxios!.defaults.baseURL + "/auto-updates/webhooks/harbor"
+                                                        }}
+                                                    </li>
+                                                </ul>
+                                                <br>
+                                            </div>
+                                        </v-col>
+                                        <v-col
+                                            cols="12"
+                                            v-if="item.registry_provider == ContainerRegistries.Harbor"
+                                        >
+                                            <v-text-field
+                                                variant="outlined"
+                                                v-model="item.registry_provider_harbor_url"
+                                                label="Registry URL"
+                                                density="compact"
+                                                hide-details
+                                                hint="Base URL of your Harbor registry"
+                                                persistent-hint
+                                            />
+                                        </v-col>
+                                        <v-col
+                                            cols="12"
+                                            v-if="item.registry_provider == ContainerRegistries.Harbor"
+                                        >
+                                            <v-text-field
+                                                variant="outlined"
+                                                v-model="item.registry_provider_harbor_username"
+                                                label="Robot username"
+                                                hint="Eg. robot$kso"
+                                                persistent-hint
+                                                density="compact"
+                                            />
+                                        </v-col>
+                                        <v-col
+                                            cols="12"
+                                            v-if="item.registry_provider == ContainerRegistries.Harbor"
+                                        >
+                                            <v-text-field
+                                                variant="outlined"
+                                                v-model="item.registry_provider_harbor_password"
+                                                label="Robot token"
+                                                density="compact"
                                             />
                                         </v-col>
 

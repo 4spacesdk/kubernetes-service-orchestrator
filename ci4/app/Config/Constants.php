@@ -98,7 +98,8 @@ class MigrationVerificationTypes {
 class ContainerRegistries {
     const string
         ArtifactContainerRegistry = 'artifact-container-registry',
-        AzureContainerRegistry = 'azure-container-registry';
+        AzureContainerRegistry = 'azure-container-registry',
+        Harbor = 'harbor';
 }
 
 class CommitIdentificationMethods {

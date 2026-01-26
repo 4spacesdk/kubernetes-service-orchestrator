@@ -21,6 +21,9 @@ export class ContainerImageDefinition extends BaseModel {
     registry_provider_azure_tenant?: string;
     registry_provider_azure_client_id?: string;
     registry_provider_azure_client_secret?: string;
+    registry_provider_harbor_url?: string;
+    registry_provider_harbor_username?: string;
+    registry_provider_harbor_password?: string;
     security_context_fs_group?: string;
     security_context_run_as_user?: string;
     security_context_run_as_group?: string;
@@ -66,6 +69,9 @@ export class ContainerImageDefinition extends BaseModel {
             delete this.registry_provider_azure_tenant;
             delete this.registry_provider_azure_client_id;
             delete this.registry_provider_azure_client_secret;
+            delete this.registry_provider_harbor_url;
+            delete this.registry_provider_harbor_username;
+            delete this.registry_provider_harbor_password;
             delete this.security_context_fs_group;
             delete this.security_context_run_as_user;
             delete this.security_context_run_as_group;
@@ -135,6 +141,15 @@ export class ContainerImageDefinition extends BaseModel {
         }
         if (data.registry_provider_azure_client_secret != null) {
             this.registry_provider_azure_client_secret = data.registry_provider_azure_client_secret;
+        }
+        if (data.registry_provider_harbor_url != null) {
+            this.registry_provider_harbor_url = data.registry_provider_harbor_url;
+        }
+        if (data.registry_provider_harbor_username != null) {
+            this.registry_provider_harbor_username = data.registry_provider_harbor_username;
+        }
+        if (data.registry_provider_harbor_password != null) {
+            this.registry_provider_harbor_password = data.registry_provider_harbor_password;
         }
         if (data.security_context_fs_group != null) {
             this.security_context_fs_group = data.security_context_fs_group;

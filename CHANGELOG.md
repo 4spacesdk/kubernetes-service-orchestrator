@@ -8,9 +8,11 @@
 ### Enhancements
 * Updated `4spacesdk/ci4authextension` from v1.2.1 to v1.2.2
 * Add `database.port` as env var variable [Issue #59](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/59)
+* Add support for image repository "Harbor" [Issue #60](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/60)
 
 ### Upgrade guide
 1. Deploy new image
+2. Migrate database [(Guide)](https://github.com/4spacesdk/kubernetes-service-orchestrator?tab=readme-ov-file#migrate-database-helm)
 
 
 

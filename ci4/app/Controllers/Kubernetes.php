@@ -4,6 +4,7 @@ use App\Libraries\Kubernetes\KubeAuth;
 use App\Libraries\Kubernetes\KubeHelper;
 use App\Libraries\Kubernetes\KubeLog;
 use DebugTool\Data;
+use GuzzleHttp\Exception\ConnectException;
 use PHPUnit\Exception;
 use RenokiCo\PhpK8s\Exceptions\KubernetesAPIException;
 use RenokiCo\PhpK8s\Kinds\K8sNode;

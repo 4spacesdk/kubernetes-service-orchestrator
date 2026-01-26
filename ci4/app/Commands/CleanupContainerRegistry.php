@@ -44,6 +44,9 @@ class CleanupContainerRegistry extends BaseCommand {
                     case \ContainerRegistries::AzureContainerRegistry:
                         // Azure will clean up automatically
                         break;
+                    case \ContainerRegistries::Harbor:
+                        // Azure will clean up automatically
+                        break;
                 }
             }
         } catch (\Exception $e) {

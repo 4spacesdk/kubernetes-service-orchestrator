@@ -450,6 +450,7 @@ export const RbacPermissions = {
 export const ContainerRegistries = {
     ArtifactContainerRegistry: 'artifact-container-registry',
     AzureContainerRegistry: 'azure-container-registry',
+    Harbor: 'harbor',
 };
 
 export const CommitIdentificationMethods = {

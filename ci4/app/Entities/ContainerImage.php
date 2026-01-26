@@ -5,6 +5,7 @@ use App\Libraries\CommitIdentificationMethods\EnvironmentVariableCommitIdentific
 use App\Libraries\ContainerRegistries\AzureContainerRegistry;
 use App\Libraries\ContainerRegistries\BaseContainerRegistry;
 use App\Libraries\ContainerRegistries\GoogleCloudArtifactRegistry;
+use App\Libraries\ContainerRegistries\HarborRegistry;
 use App\Libraries\GoogleCloud\GoogleCloudPubSub;
 use App\Libraries\Kubernetes\KubeHelper;
 use App\Libraries\VersionControlSystems\BaseVersionControlSystem;
@@ -31,6 +32,9 @@ use App\Core\Entity;
  * @property string $registry_provider_azure_tenant
  * @property string $registry_provider_azure_client_id
  * @property string $registry_provider_azure_client_secret
+ * @property string $registry_provider_harbor_url
+ * @property string $registry_provider_harbor_username
+ * @property string $registry_provider_harbor_password
  *
  * # Security Context
  * @property string $security_context_fs_group
@@ -89,6 +93,8 @@ class ContainerImage extends Entity {
                 return new GoogleCloudArtifactRegistry($this);
             case \ContainerRegistries::AzureContainerRegistry:
                 return new AzureContainerRegistry($this);
+            case \ContainerRegistries::Harbor:
+                return new HarborRegistry($this);
         }
         return null;
     }

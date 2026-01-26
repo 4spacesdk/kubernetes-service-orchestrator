@@ -54,6 +54,37 @@ class AutoUpdates extends ResourceController {
     }
 
     /**
+     * @route /auto-updates/webhooks/harbor
+     * @method post
+     * @custom true
+     * @return void
+     */
+    public function webhooksHarbor(): void {
+        $payload = $this->request->getJSON(true);
+        Data::debug($payload);
+
+        $eventType = strtoupper($payload['type'] ?? '');
+        if ($eventType === 'PUSH_ARTIFACT') {
+            $resource = $payload['event_data']['resources'][0] ?? [];
+            $resourceUrl = $resource['resource_url']; // Eg. 651p8071.c1.de1.container-registry.ovh.net/taksinto/backend/api:hotfix
+            $tag = $resource['tag'];
+
+            if (!empty($resourceUrl)) {
+                $image = substr($resourceUrl, 0, strrpos($resourceUrl, ':'));
+
+                AutoUpdate::CheckForUpdates($image, $tag);
+
+                ZMQProxy::getInstance()->send(
+                    Events::AutoUpdate_Created(),
+                    (new ChangeEvent(null, []))->toArray()
+                );
+            }
+        }
+
+        $this->success();
+    }
+
+    /**
      * @ignore true
      * @param $id
      * @return void
