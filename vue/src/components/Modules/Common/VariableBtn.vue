@@ -27,6 +27,10 @@ const variables = ref<Variable[]>([
         code: "${database.host}"
     },
     {
+        name: "Database Port",
+        code: "${database.port}"
+    },
+    {
         name: "Database Name",
         code: "${database.name}"
     },

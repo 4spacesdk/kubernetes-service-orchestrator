@@ -45,6 +45,7 @@ class EnvironmentVariable extends Entity {
             fn(string $value) => str_replace('${namespace}', $deployment->namespace, $value),
 
             fn(string $value) => str_replace('${database.host}', $deployment->database_service->host, $value),
+            fn(string $value) => str_replace('${database.port}', $deployment->database_service->port, $value),
             fn(string $value) => str_replace('${database.name}', $deployment->database_name, $value),
             fn(string $value) => str_replace('${database.user}', $deployment->database_service->getDatabaseUser($deployment->database_user), $value),
             fn(string $value) => str_replace('${database.pass}', $deployment->database_pass, $value),
