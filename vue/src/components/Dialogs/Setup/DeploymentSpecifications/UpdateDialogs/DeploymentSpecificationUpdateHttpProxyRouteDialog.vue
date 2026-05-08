@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
+import {NetworkTypes} from "@/constants";
 
 export interface DeploymentSpecificationUpdateHttpProxyRoutePathDialog_Input {
+    networkType: string;
     httpProxyRoute: {
         path: string;
         port: number;
@@ -106,7 +108,7 @@ function onCloseBtnClicked() {
         >
             <v-card
                 class="w-100 h-100">
-                <v-card-title>Http Proxy Route</v-card-title>
+                <v-card-title>{{ props.input.networkType === NetworkTypes.GatewayApi ? 'Http Route' : 'Http Proxy Route' }}</v-card-title>
                 <v-divider/>
                 <v-card-text>
                     <v-row>
@@ -129,7 +131,7 @@ function onCloseBtnClicked() {
                                 :rules="rules.required"
                             />
                         </v-col>
-                        <v-col cols="6">
+                        <v-col cols="6" v-if="props.input.networkType === NetworkTypes.Contour">
                             <v-select
                                 v-model="protocol"
                                 variant="outlined"
@@ -140,7 +142,7 @@ function onCloseBtnClicked() {
                                 persistent-hint
                             />
                         </v-col>
-                        <v-col cols="6">
+                        <v-col cols="6" v-if="props.input.networkType === NetworkTypes.Contour">
                             <v-text-field
                                 v-model="timeoutPolicyIdle"
                                 variant="outlined"
@@ -150,7 +152,7 @@ function onCloseBtnClicked() {
                                 persistent-hint
                             />
                         </v-col>
-                        <v-col cols="6">
+                        <v-col cols="6" v-if="props.input.networkType === NetworkTypes.Contour">
                             <v-text-field
                                 v-model="timeoutPolicyResponse"
                                 variant="outlined"
@@ -160,7 +162,7 @@ function onCloseBtnClicked() {
                                 persistent-hint
                             />
                         </v-col>
-                        <v-col cols="6">
+                        <v-col cols="6" v-if="props.input.networkType === NetworkTypes.Contour">
                             <v-text-field
                                 v-model="timeoutPolicyIdleConnection"
                                 variant="outlined"

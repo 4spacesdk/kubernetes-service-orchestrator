@@ -163,10 +163,6 @@ class MigrationJobStep extends BaseDeploymentStep {
             return 'Missing Namespace';
         }
 
-        $ingressStep = new IngressStep();
-        if ($ingressStep->getStatus($deployment) != DeploymentStepHelper::Ingress_Found) {
-            return 'Missing Ingress';
-        }
         return null;
     }
 

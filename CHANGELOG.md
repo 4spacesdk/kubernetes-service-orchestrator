@@ -1,5 +1,19 @@
 # Changelog
 
+## v1.8.0 (?)
+
+### Fixed bugs
+* 
+
+### Enhancements
+* Add support for envoy-gateway [Issue #62](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/62)
+
+### Upgrade guide
+1. Deploy new image
+2. Migrate database [(Guide)](https://github.com/4spacesdk/kubernetes-service-orchestrator?tab=readme-ov-file#migrate-database-helm)
+
+
+
 ## v1.7.0 (2026-01-26)
 
 ### Fixed bugs

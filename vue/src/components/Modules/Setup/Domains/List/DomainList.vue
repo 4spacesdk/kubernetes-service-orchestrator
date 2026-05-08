@@ -43,6 +43,7 @@ onMounted(() => {
             sortable: false
         }] : []),
         ...(System.Instance.is_network_contour_supported ? [{title: 'Contour', key: 'contour', sortable: false}] : []),
+        ...(System.Instance.is_network_gateway_api_supported ? [{title: 'Gateway', key: 'gateway', sortable: false}] : []),
         {title: '', key: 'actions', sortable: false},
     ];
 });
@@ -67,7 +68,8 @@ function getItems(doItems = true, doCount = false) {
     isLoading.value = true;
 
     // Prepare API call
-    const api = Api.domains().get();
+    const api = Api.domains().get()
+        .include('gateway');
 
     if (searchValue.value?.length) {
         api
@@ -187,6 +189,9 @@ function onCertificateClicked(item: Row) {
             </template>
             <template v-slot:item.contour="{ item }">
                 <span v-if="item.domain.enable_contour">Enabled</span>
+            </template>
+            <template v-slot:item.gateway="{ item }">
+                <span v-if="item.domain.gateway">{{ item.domain.gateway.name }}</span>
             </template>
 
             <template v-slot:item.certificate="{ item }">

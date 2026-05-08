@@ -111,6 +111,12 @@ function render() {
             name: 'Contour',
         });
     }
+    if (System.Instance.is_network_gateway_api_supported) {
+        networkTypes.value.push({
+            identifier: NetworkTypes.GatewayApi,
+            name: 'Gateway Api',
+        });
+    }
 }
 
 function renderIsCustomMigrationImage() {

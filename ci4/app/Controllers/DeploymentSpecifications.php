@@ -192,8 +192,8 @@ class DeploymentSpecifications extends ResourceController {
                     $data->proxySendTimeout,
                     $data->sslRedirect,
                     $data->enableTls,
-                    $data->paths,
-                    $data->annotations
+                    $data->paths ?? [],
+                    $data->annotations ?? []
                 ),
                 $body->values
             );

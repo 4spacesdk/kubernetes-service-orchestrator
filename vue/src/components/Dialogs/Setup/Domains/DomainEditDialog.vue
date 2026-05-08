@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
-import {Domain, System} from "@/core/services/Deploy/models";
+import {Domain, Gateway, System} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
@@ -18,6 +18,8 @@ const isLoading = ref(false);
 const item = ref<Domain>(new Domain());
 const showIstio = ref(false);
 const showContour = ref(false);
+const showGatewayApi = ref(false);
+const gateways = ref<Gateway[]>([]);
 
 // <editor-fold desc="Functions">
 
@@ -35,6 +37,13 @@ onUnmounted(() => {
 function render() {
     showIstio.value = System.Instance.is_network_istio_supported ?? false;
     showContour.value = System.Instance.is_network_contour_supported ?? false;
+    showGatewayApi.value = System.Instance.is_network_gateway_api_supported ?? false;
+
+    if (showGatewayApi.value) {
+        Api.gateways().get().orderAsc('name').find(items => {
+            gateways.value = items;
+        });
+    }
 
     if (props.input.domain.exists()) {
         isLoading.value = true;
@@ -60,6 +69,9 @@ function close() {
 // <editor-fold desc="View Binding Functions">
 
 function onSaveBtnClicked() {
+    item.value.gateway = undefined;
+    item.value.workspaces = undefined;
+
     Api.domains().patchById(item.value.id!)
         .save(item.value!, newItem => {
             bus.emit('domainSaved', newItem);
@@ -182,6 +194,33 @@ function onCloseBtnClicked() {
                             label="Contour ingress class name"
                             hint="Default: contour-external"
                             persistent-hint
+                        />
+                    </v-col>
+                    <v-col
+                        v-if="showGatewayApi"
+                        cols="12"
+                    >
+                        <v-select
+                            variant="outlined"
+                            v-model="item.gateway_id"
+                            label="Gateway"
+                            :items="gateways"
+                            item-title="name"
+                            item-value="id"
+                            clearable
+                        />
+                    </v-col>
+                    <v-col
+                        v-if="showGatewayApi"
+                        cols="12"
+                    >
+                        <v-switch
+                            v-model="item.https_redirect"
+                            variant="outlined"
+                            label="HTTPS Redirect (Gateway API)"
+                            density="compact"
+                            color="secondary"
+                            hide-details
                         />
                     </v-col>
                 </v-row>

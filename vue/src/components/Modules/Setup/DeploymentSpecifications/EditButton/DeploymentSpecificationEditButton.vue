@@ -49,7 +49,7 @@ function render() {
     showUpdateIngresses.value = (props.deploymentSpecification.enable_external_access ?? false)
         && props.deploymentSpecification.network_type == NetworkTypes.NginxIngress;
     showUpdateHttpProxyRoutes.value = (props.deploymentSpecification.enable_external_access ?? false)
-        && props.deploymentSpecification.network_type == NetworkTypes.Contour;
+        && [NetworkTypes.Contour, NetworkTypes.GatewayApi].includes(props.deploymentSpecification.network_type ?? '');
     showUpdateServicePorts.value = (props.deploymentSpecification.enable_internal_access ?? false)
         && props.deploymentSpecification.workload_type !== WorkloadTypes.KNativeService;
     showUpdateServiceAnnotations.value = (props.deploymentSpecification.enable_internal_access ?? false)

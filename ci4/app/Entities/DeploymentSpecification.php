@@ -8,6 +8,7 @@ use App\Libraries\DeploymentSteps\CronjobStep;
 use App\Libraries\DeploymentSteps\CustomResourceStep;
 use App\Libraries\DeploymentSteps\DatabaseStep;
 use App\Libraries\DeploymentSteps\DeploymentStep;
+use App\Libraries\DeploymentSteps\GatewayHttpRouteStep;
 use App\Libraries\DeploymentSteps\IngressStep;
 use App\Libraries\DeploymentSteps\IstioVirtualServiceStep;
 use App\Libraries\DeploymentSteps\KServiceStep;
@@ -100,6 +101,7 @@ class DeploymentSpecification extends Entity {
             // Level: Workspace
             NamespaceStep::class,
             ContourHttpProxyStep::class,
+            GatewayHttpRouteStep::class,
 
             // Level: Deployment
             DatabaseStep::class,
@@ -160,6 +162,9 @@ class DeploymentSpecification extends Entity {
                     break;
                 case \NetworkTypes::Contour:
                     $steps[] = new ContourHttpProxyStep();
+                    break;
+                case \NetworkTypes::GatewayApi:
+                    $steps[] = new GatewayHttpRouteStep();
                     break;
             }
         }

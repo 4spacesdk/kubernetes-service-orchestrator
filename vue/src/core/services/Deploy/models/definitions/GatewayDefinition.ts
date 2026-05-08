@@ -1,15 +1,16 @@
 /**
  * Created by ModelParser
  */
+import {Domain} from '../Domain';
 import {User} from '../User';
 import {Deletion} from '../Deletion';
 import {BaseModel} from '../BaseModel';
 
-export class SystemDefinition extends BaseModel {
-    is_network_nginx_ingress_supported?: boolean;
-    is_network_istio_supported?: boolean;
-    is_network_contour_supported?: boolean;
-    is_network_gateway_api_supported?: boolean;
+export class GatewayDefinition extends BaseModel {
+    name?: string;
+    gateway_class_name?: string;
+    namespace?: string;
+    domains?: Domain[];
     id?: number;
     created?: string;
     updated?: string;
@@ -27,10 +28,10 @@ export class SystemDefinition extends BaseModel {
 
     public populate(data?: any, patch = false) {
         if (!patch) {
-            delete this.is_network_nginx_ingress_supported;
-            delete this.is_network_istio_supported;
-            delete this.is_network_contour_supported;
-            delete this.is_network_gateway_api_supported;
+            delete this.name;
+            delete this.gateway_class_name;
+            delete this.namespace;
+            delete this.domains;
             delete this.id;
             delete this.created;
             delete this.updated;
@@ -43,17 +44,17 @@ export class SystemDefinition extends BaseModel {
         }
 
         if (!data) return;
-        if (data.is_network_nginx_ingress_supported != null) {
-            this.is_network_nginx_ingress_supported = data.is_network_nginx_ingress_supported;
+        if (data.name != null) {
+            this.name = data.name;
         }
-        if (data.is_network_istio_supported != null) {
-            this.is_network_istio_supported = data.is_network_istio_supported;
+        if (data.gateway_class_name != null) {
+            this.gateway_class_name = data.gateway_class_name;
         }
-        if (data.is_network_contour_supported != null) {
-            this.is_network_contour_supported = data.is_network_contour_supported;
+        if (data.namespace != null) {
+            this.namespace = data.namespace;
         }
-        if (data.is_network_gateway_api_supported != null) {
-            this.is_network_gateway_api_supported = data.is_network_gateway_api_supported;
+        if (data.domains != null) {
+            this.domains = data.domains.map((i: any) => new Domain(i));
         }
         if (data.id != null) {
             this.id = data.id;

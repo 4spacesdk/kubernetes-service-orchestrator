@@ -7,14 +7,14 @@
 ### Look for scripts in the root `package.json` file
 ### Build Docker and run it
 * `Setup: docker composer up`, this will take a couple of minutes
-### Install backend & frontend dependencies
+### Install backend and frontend dependencies
 * `Setup: install composer dependencies`
 * `Setup: install npm dependencies`
 ### Setup backend database
 * `Setup: migrate`
 ### Start and login
 * Serve frontend: `Run: serve vue (:8951)`
-* Go to url: `http://localhost:8951/app`
+* Go to url: `http://localhost:8951/app/`
 * Login with credentials admin@4spaces.dk / admin
 * Create your own credentials and delete the admin user
 

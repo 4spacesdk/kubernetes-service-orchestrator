@@ -14,6 +14,9 @@ use App\Core\Entity;
  * @property string $contour_ingress_class_name
  * @property bool $has_certificate_monitoring
  * @property int $certificate_monitoring_days_before_expiry
+ * @property int $gateway_id
+ * @property Gateway $gateway
+ * @property bool $https_redirect
  *
  * Many
  * @property Workspace $workspaces

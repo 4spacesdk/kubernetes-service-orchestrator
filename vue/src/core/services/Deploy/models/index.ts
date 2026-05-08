@@ -31,6 +31,7 @@ export {DeploymentsLabel as DeploymentsLabel} from "./DeploymentsLabel";
 export {Domain as Domain} from "./Domain";
 export {EmailService as EmailService} from "./EmailService";
 export {EnvironmentVariable as EnvironmentVariable} from "./EnvironmentVariable";
+export {Gateway as Gateway} from "./Gateway";
 export {InitContainer as InitContainer} from "./InitContainer";
 export {InitContainerEnvironmentVariable as InitContainerEnvironmentVariable} from "./InitContainerEnvironmentVariable";
 export {K8sCronJob as K8sCronJob} from "./K8sCronJob";

@@ -10,6 +10,7 @@ use App\Libraries\DeploymentSteps\CronjobStep;
 use App\Libraries\DeploymentSteps\CustomResourceStep;
 use App\Libraries\DeploymentSteps\DatabaseStep;
 use App\Libraries\DeploymentSteps\DeploymentStep;
+use App\Libraries\DeploymentSteps\GatewayHttpRouteStep;
 use App\Libraries\DeploymentSteps\IngressStep;
 use App\Libraries\DeploymentSteps\IstioVirtualServiceStep;
 use App\Libraries\DeploymentSteps\KServiceStep;
@@ -22,6 +23,7 @@ use App\Libraries\DeploymentSteps\RoleStep;
 use App\Libraries\DeploymentSteps\ServiceAccountStep;
 use App\Libraries\DeploymentSteps\ServiceStep;
 use App\Models\DeploymentModel;
+use DebugTool\Data;
 
 class DeploymentStepHelper {
 
@@ -93,6 +95,11 @@ class DeploymentStepHelper {
         ContourHttpProxy_Found = 'found';
 
     const string
+        GatewayHttpRoute_Error = 'error',
+        GatewayHttpRoute_NotFound = 'not-found',
+        GatewayHttpRoute_Found = 'found';
+
+    const string
         Cronjob_NotFound = 'not-found',
         Cronjob_Found = 'found';
 
@@ -115,6 +122,7 @@ class DeploymentStepHelper {
         return match ($identifier) {
             DeploymentSteps::Namespace => new NamespaceStep(),
             DeploymentSteps::ContourHttpProxy => new ContourHttpProxyStep(),
+            DeploymentSteps::GatewayHttpRoute => new GatewayHttpRouteStep(),
 
             DeploymentSteps::Database => new DatabaseStep(),
             DeploymentSteps::ServiceAccount => new ServiceAccountStep(),

@@ -8,6 +8,7 @@ use App\Core\Entity;
  * @property bool $is_network_nginx_ingress_supported
  * @property bool $is_network_istio_supported
  * @property bool $is_network_contour_supported
+ * @property bool $is_network_gateway_api_supported
  */
 class System extends Entity {
 

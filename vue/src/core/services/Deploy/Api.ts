@@ -8,6 +8,7 @@ import {Deployment} from "./models";
 import {MigrationJob} from "./models";
 import {Domain} from "./models";
 import {EmailService} from "./models";
+import {Gateway} from "./models";
 import {InitContainer} from "./models";
 import {K8sCronJob} from "./models";
 import {KNativeMinScaleSchedule} from "./models";
@@ -602,6 +603,27 @@ export class AutoUpdatesWebhooksAzureContainerRegistryPost extends BaseApi<AutoU
     }
 }
 
+export class AutoUpdatesWebhooksHarborPost extends BaseApi<AutoUpdate> {
+
+    public topic = 'Resources.AutoUpdates';
+    protected method = 'post';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/auto-updates/webhooks/harbor`;
+    }
+
+    protected convertToResource(data: any): AutoUpdate {
+        return new AutoUpdate(data);
+    }
+
+    public save(data: any, next?: (value: AutoUpdate) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
 class AutoUpdates {
 
     public get(): AutoUpdatesGet {
@@ -626,6 +648,10 @@ class AutoUpdates {
 
     public webhooksAzureContainerRegistryPost(): AutoUpdatesWebhooksAzureContainerRegistryPost {
         return new AutoUpdatesWebhooksAzureContainerRegistryPost();
+    }
+
+    public webhooksHarborPost(): AutoUpdatesWebhooksHarborPost {
+        return new AutoUpdatesWebhooksHarborPost();
     }
 
 }
@@ -3764,6 +3790,455 @@ class Environments {
 
     public getGet(): EnvironmentsGetGet {
         return new EnvironmentsGetGet();
+    }
+
+}
+
+
+export class GatewaysGet extends BaseApi<Gateway> {
+
+    public topic = 'Resources.Gateways';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/gateways`;
+    }
+
+    protected convertToResource(data: any): Gateway {
+        return new Gateway(data);
+    }
+
+    public where(name: string, value: any): GatewaysGet {
+        this.filter().where(name, value);
+        return this;
+    }
+
+    public whereEquals(name: string, value: any): GatewaysGet {
+        this.filter().whereEquals(name, value);
+        return this;
+    }
+
+    public whereIn(name: string, value: any[]): GatewaysGet {
+        this.filter().whereIn(name, value);
+        return this;
+    }
+
+    public whereInArray(name: string, value: any[]): GatewaysGet {
+        this.filter().whereInArray(name, value);
+        return this;
+    }
+
+    public whereNot(name: string, value: any): GatewaysGet {
+        this.filter().whereNot(name, value);
+        return this;
+    }
+
+    public whereNotIn(name: string, value: any[]): GatewaysGet {
+        this.filter().whereNotIn(name, value);
+        return this;
+    }
+
+    public whereGreaterThan(name: string, value: any): GatewaysGet {
+        this.filter().whereGreaterThan(name, value);
+        return this;
+    }
+
+    public whereGreaterThanOrEqual(name: string, value: any): GatewaysGet {
+        this.filter().whereGreaterThanOrEqual(name, value);
+        return this;
+    }
+
+    public whereLessThan(name: string, value: any): GatewaysGet {
+        this.filter().whereLessThan(name, value);
+        return this;
+    }
+
+    public whereLessThanOrEqual(name: string, value: any): GatewaysGet {
+        this.filter().whereLessThanOrEqual(name, value);
+        return this;
+    }
+
+    public search(name: string, value: any): GatewaysGet {
+        this.filter().search(name, value);
+        return this;
+    }
+
+    public include(name: string): GatewaysGet {
+        this.getInclude().include(name);
+        return this;
+    }
+
+    public orderBy(name: string, direction: string): GatewaysGet {
+        this.ordering().orderBy(name, direction);
+        return this;
+    }
+
+    public orderAsc(name: string): GatewaysGet {
+        this.ordering().orderAsc(name);
+        return this;
+    }
+
+    public orderDesc(name: string): GatewaysGet {
+        this.ordering().orderDesc(name);
+        return this;
+    }
+
+    public limit(value: number): GatewaysGet {
+        this.limitValue = value;
+        return this;
+    }
+
+    public offset(value: number): GatewaysGet {
+        this.offsetValue = value;
+        return this;
+    }
+
+    public count(next?: (value: number) => void) {
+        return this.executeCount(next);
+    }
+
+    public find(next?: (value: Gateway[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class GatewaysGetById extends BaseApi<Gateway> {
+
+    public topic = 'Resources.Gateways';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/gateways/${id}`;
+    }
+
+    protected convertToResource(data: any): Gateway {
+        return new Gateway(data);
+    }
+
+    public include(name: string): GatewaysGetById {
+        this.getInclude().include(name);
+        return this;
+    }
+
+    public find(next?: (value: Gateway[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class GatewaysPost extends BaseApi<Gateway> {
+
+    public topic = 'Resources.Gateways';
+    protected method = 'post';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/gateways`;
+    }
+
+    protected convertToResource(data: any): Gateway {
+        return new Gateway(data);
+    }
+
+    public save(data: Gateway, next?: (value: Gateway) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class GatewaysPutById extends BaseApi<Gateway> {
+
+    public topic = 'Resources.Gateways';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/gateways/${id}`;
+    }
+
+    protected convertToResource(data: any): Gateway {
+        return new Gateway(data);
+    }
+
+    public save(data: Gateway, next?: (value: Gateway) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class GatewaysPut extends BaseApi<Gateway> {
+
+    public topic = 'Resources.Gateways';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/gateways`;
+    }
+
+    protected convertToResource(data: any): Gateway {
+        return new Gateway(data);
+    }
+
+    public save(data: Gateway, next?: (value: Gateway) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class GatewaysPatchById extends BaseApi<Gateway> {
+
+    public topic = 'Resources.Gateways';
+    protected method = 'patch';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/gateways/${id}`;
+    }
+
+    protected convertToResource(data: any): Gateway {
+        return new Gateway(data);
+    }
+
+    public save(data: Gateway, next?: (value: Gateway) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class GatewaysPatch extends BaseApi<Gateway> {
+
+    public topic = 'Resources.Gateways';
+    protected method = 'patch';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/gateways`;
+    }
+
+    protected convertToResource(data: any): Gateway {
+        return new Gateway(data);
+    }
+
+    public save(data: Gateway, next?: (value: Gateway) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class GatewaysDeleteById extends BaseApi<Gateway> {
+
+    public topic = 'Resources.Gateways';
+    protected method = 'delete';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/gateways/${id}`;
+    }
+
+    protected convertToResource(data: any): Gateway {
+        return new Gateway(data);
+    }
+
+    public delete(next?: (value: Gateway) => void) {
+        return super.executeDelete(next);
+    }
+}
+
+export class GatewaysGetPreviewGetById extends BaseApi<StringInterface> {
+
+    public topic = 'Resources.StringInterfaces';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/gateways/${id}/preview`;
+    }
+
+    protected convertToResource(data: any): StringInterface {
+        return data;
+    }
+
+    public find(next?: (value: StringInterface[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class GatewaysDeployPutById extends BaseApi<Gateway> {
+
+    public topic = 'Resources.Gateways';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/gateways/${id}/deploy`;
+    }
+
+    protected convertToResource(data: any): Gateway {
+        return new Gateway(data);
+    }
+
+    public save(data: any, next?: (value: Gateway) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class GatewaysTerminatePutById extends BaseApi<Gateway> {
+
+    public topic = 'Resources.Gateways';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/gateways/${id}/terminate`;
+    }
+
+    protected convertToResource(data: any): Gateway {
+        return new Gateway(data);
+    }
+
+    public save(data: any, next?: (value: Gateway) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class GatewaysGetStatusGetById extends BaseApi<StringInterface> {
+
+    public topic = 'Resources.StringInterfaces';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/gateways/${id}/status`;
+    }
+
+    protected convertToResource(data: any): StringInterface {
+        return data;
+    }
+
+    public find(next?: (value: StringInterface[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class GatewaysGetKubernetesEventsGetById extends BaseApi<StringInterface> {
+
+    public topic = 'Resources.StringInterfaces';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/gateways/${id}/kubernetes-events`;
+    }
+
+    protected convertToResource(data: any): StringInterface {
+        return data;
+    }
+
+    public find(next?: (value: StringInterface[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class GatewaysGetKubernetesStatusGetById extends BaseApi<StringInterface> {
+
+    public topic = 'Resources.StringInterfaces';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/gateways/${id}/kubernetes-status`;
+    }
+
+    protected convertToResource(data: any): StringInterface {
+        return data;
+    }
+
+    public find(next?: (value: StringInterface[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+class Gateways {
+
+    public get(): GatewaysGet {
+        return new GatewaysGet();
+    }
+
+    public getById(id: number): GatewaysGetById {
+        return new GatewaysGetById(id);
+    }
+
+    public post(): GatewaysPost {
+        return new GatewaysPost();
+    }
+
+    public putById(id: number): GatewaysPutById {
+        return new GatewaysPutById(id);
+    }
+
+    public put(): GatewaysPut {
+        return new GatewaysPut();
+    }
+
+    public patchById(id: number): GatewaysPatchById {
+        return new GatewaysPatchById(id);
+    }
+
+    public patch(): GatewaysPatch {
+        return new GatewaysPatch();
+    }
+
+    public deleteById(id: number): GatewaysDeleteById {
+        return new GatewaysDeleteById(id);
+    }
+
+    public getPreviewGetById(id: number): GatewaysGetPreviewGetById {
+        return new GatewaysGetPreviewGetById(id);
+    }
+
+    public deployPutById(id: number): GatewaysDeployPutById {
+        return new GatewaysDeployPutById(id);
+    }
+
+    public terminatePutById(id: number): GatewaysTerminatePutById {
+        return new GatewaysTerminatePutById(id);
+    }
+
+    public getStatusGetById(id: number): GatewaysGetStatusGetById {
+        return new GatewaysGetStatusGetById(id);
+    }
+
+    public getKubernetesEventsGetById(id: number): GatewaysGetKubernetesEventsGetById {
+        return new GatewaysGetKubernetesEventsGetById(id);
+    }
+
+    public getKubernetesStatusGetById(id: number): GatewaysGetKubernetesStatusGetById {
+        return new GatewaysGetKubernetesStatusGetById(id);
     }
 
 }
@@ -7586,6 +8061,10 @@ export class Api {
 
     public static environments(): Environments {
         return new Environments();
+    }
+
+    public static gateways(): Gateways {
+        return new Gateways();
     }
 
     public static initContainers(): InitContainers {

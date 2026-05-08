@@ -1,16 +1,27 @@
 <script setup lang="ts">
-import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
-import {Domain, Workspace} from "@/core/services/Deploy/models";
-import {Api} from "@/core/services/Deploy/Api";
+import {
+    computed,
+    defineComponent,
+    onMounted,
+    onUnmounted,
+    reactive,
+    ref,
+    watch,
+} from "vue";
+import { Domain, Workspace } from "@/core/services/Deploy/models";
+import { Api } from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
-import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
-import {DeploymentStatusTypes} from "@/constants";
+import type { DialogEventsInterface } from "@/components/Dialogs/DialogEventsInterface";
+import { DeploymentStatusTypes } from "@/constants";
 
 export interface WorkspaceUpdateIngressDialog_Input {
     workspace: Workspace;
 }
 
-const props = defineProps<{ input: WorkspaceUpdateIngressDialog_Input, events: DialogEventsInterface }>();
+const props = defineProps<{
+    input: WorkspaceUpdateIngressDialog_Input;
+    events: DialogEventsInterface;
+}>();
 
 const used = ref(false);
 const showDialog = ref(false);
@@ -20,9 +31,6 @@ const domains = ref<Domain[]>([]);
 const isLoadingDomains = ref(false);
 const subdomain = ref<string>();
 const aliases = ref<string>();
-const isDomainEnaled = ref(false);
-const isSubdomainEnabled = ref(false);
-const isAliasEnabled = ref(false);
 
 // <editor-fold desc="Functions">
 
@@ -34,22 +42,18 @@ onMounted(() => {
     render();
 });
 
-onUnmounted(() => {
-});
+onUnmounted(() => {});
 
 function render() {
     domainId.value = props.input.workspace.domain_id;
-    subdomain.value = props.input.workspace.subdomain ?? '';
-    aliases.value = props.input.workspace.aliases ?? '';
-    const deploymentStatus = props.input.workspace.status;
-    isDomainEnaled.value = deploymentStatus === DeploymentStatusTypes.Draft;
-    isSubdomainEnabled.value = deploymentStatus === DeploymentStatusTypes.Draft;
-    isAliasEnabled.value = true;
+    subdomain.value = props.input.workspace.subdomain ?? "";
+    aliases.value = props.input.workspace.aliases ?? "";
     showDialog.value = true;
     isLoadingDomains.value = true;
 
-    Api.domains().get()
-        .find(items => {
+    Api.domains()
+        .get()
+        .find((items) => {
             domains.value = items;
             isLoadingDomains.value = false;
         });
@@ -65,20 +69,21 @@ function close() {
 // <editor-fold desc="View Binding Functions">
 
 function onSaveBtnClicked() {
-    const api = Api.workspaces().updateIngressPutById(props.input.workspace.id!)
+    const api = Api.workspaces()
+        .updateIngressPutById(props.input.workspace.id!)
         .domainId(domainId.value!)
         .subdomain(subdomain.value!)
-        .aliases(aliases.value!)
-    api.setErrorHandler(response => {
+        .aliases(aliases.value!);
+    api.setErrorHandler((response) => {
         if (response.error) {
-            bus.emit('toast', {
-                text: response.error
+            bus.emit("toast", {
+                text: response.error,
             });
         }
         return false;
     });
-    api.save(null, newItem => {
-        bus.emit('workspaceSaved', newItem);
+    api.save(null, (newItem) => {
+        bus.emit("workspaceSaved", newItem);
         close();
     });
 
@@ -90,63 +95,42 @@ function onCloseBtnClicked() {
 }
 
 // </editor-fold>
-
 </script>
 
 <template>
-    <v-dialog
-        persistent
-        width="60vw"
-        v-model="showDialog">
-        <v-card
-            class="w-100 h-100">
+    <v-dialog persistent width="60vw" v-model="showDialog">
+        <v-card class="w-100 h-100">
             <v-card-title>Workspace</v-card-title>
-            <v-divider/>
+            <v-divider />
             <v-card-text>
-                <v-row
-                    dense>
+                <v-row dense>
                     <v-col cols="12">
-                        <v-tooltip
-                            :disabled="isDomainEnaled"
-                            location="bottom">
-                            <template v-slot:activator="{ props }">
-                                <div
-                                    v-bind="props">
-                                    <v-select
-                                        v-model="domainId"
-                                        :disabled="!isDomainEnaled"
-                                        :loading="isLoadingDomains"
-                                        :items="domains"
-                                        item-title="name"
-                                        item-value="id"
-                                        variant="outlined"
-                                        label="Domains"/>
-                                </div>
-                            </template>
-                            Only available during setup
-                        </v-tooltip>
+                        <v-select
+                            v-model="domainId"
+                            :loading="isLoadingDomains"
+                            :items="domains"
+                            item-title="name"
+                            item-value="id"
+                            variant="outlined"
+                            label="Domains"
+                        />
                     </v-col>
                     <v-col cols="12">
-                        <v-tooltip
-                            :disabled="isSubdomainEnabled"
-                            location="bottom">
-                            <template v-slot:activator="{ props }">
-                                <div
-                                    v-bind="props">
-                                    <v-text-field
-                                        v-model="subdomain"
-                                        :disabled="!isSubdomainEnabled"
-                                        variant="outlined"
-                                        label="Subdomain"
-                                        :rules="[
-                                            v => v.length === 0 || /[A-Za-z0-9](?:[A-Za-z0-9\-]{0,61}[A-Za-z0-9])?/.test(v) || 'Invalid format'
-                                        ]"
-                                        persistent-hint
-                                        hint="Max 63 characters, must begin with an alpha-numeric"/>
-                                </div>
-                            </template>
-                            Only available during setup
-                        </v-tooltip>
+                        <v-text-field
+                            v-model="subdomain"
+                            variant="outlined"
+                            label="Subdomain"
+                            :rules="[
+                                (v) =>
+                                    v.length === 0 ||
+                                    /[A-Za-z0-9](?:[A-Za-z0-9\-]{0,61}[A-Za-z0-9])?/.test(
+                                        v
+                                    ) ||
+                                    'Invalid format',
+                            ]"
+                            persistent-hint
+                            hint="Max 63 characters, must begin with an alpha-numeric"
+                        />
                     </v-col>
                     <v-col cols="12">
                         <v-text-field
@@ -154,18 +138,20 @@ function onCloseBtnClicked() {
                             variant="outlined"
                             label="Aliases"
                             persistent-hint
-                            hint="Comma-seperated: itk,1tk"/>
+                            hint="Comma-seperated: itk,1tk"
+                        />
                     </v-col>
                 </v-row>
             </v-card-text>
-            <v-divider/>
+            <v-divider />
             <v-card-actions>
-                <v-spacer/>
+                <v-spacer />
                 <v-btn
                     variant="tonal"
                     color="grey"
                     prepend-icon="fa fa-circle-xmark"
-                    @click="onCloseBtnClicked">
+                    @click="onCloseBtnClicked"
+                >
                     Close
                 </v-btn>
 
@@ -174,7 +160,8 @@ function onCloseBtnClicked() {
                     variant="tonal"
                     prepend-icon="fa fa-check"
                     color="green"
-                    @click="onSaveBtnClicked">
+                    @click="onSaveBtnClicked"
+                >
                     Save
                 </v-btn>
             </v-card-actions>
@@ -182,6 +169,4 @@ function onCloseBtnClicked() {
     </v-dialog>
 </template>
 
-<style scoped>
-
-</style>
+<style scoped></style>

@@ -2,15 +2,14 @@
 
 use RestExtension\ResourceModelInterface;
 
-class DomainModel extends \RestExtension\Models\UserModel implements ResourceModelInterface {
+class GatewayModel extends \RestExtension\Models\UserModel implements ResourceModelInterface {
 
     public $hasOne = [
         DeletionModel::class,
-        GatewayModel::class,
     ];
 
     public $hasMany = [
-        WorkspaceModel::class,
+        DomainModel::class,
     ];
 
     public function preRestGet($queryParser, $id) {

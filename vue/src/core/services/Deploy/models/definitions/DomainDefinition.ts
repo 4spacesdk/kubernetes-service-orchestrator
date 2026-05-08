@@ -1,6 +1,7 @@
 /**
  * Created by ModelParser
  */
+import {Gateway} from '../Gateway';
 import {Workspace} from '../Workspace';
 import {Deployment} from '../Deployment';
 import {User} from '../User';
@@ -17,6 +18,9 @@ export class DomainDefinition extends BaseModel {
     contour_ingress_class_name?: string;
     has_certificate_monitoring?: boolean;
     certificate_monitoring_days_before_expiry?: number;
+    gateway_id?: number;
+    gateway?: Gateway;
+    https_redirect?: boolean;
     workspaces?: Workspace[];
     deployments?: Deployment[];
     id?: number;
@@ -45,6 +49,9 @@ export class DomainDefinition extends BaseModel {
             delete this.contour_ingress_class_name;
             delete this.has_certificate_monitoring;
             delete this.certificate_monitoring_days_before_expiry;
+            delete this.gateway_id;
+            delete this.gateway;
+            delete this.https_redirect;
             delete this.workspaces;
             delete this.deployments;
             delete this.id;
@@ -85,6 +92,15 @@ export class DomainDefinition extends BaseModel {
         }
         if (data.certificate_monitoring_days_before_expiry != null) {
             this.certificate_monitoring_days_before_expiry = data.certificate_monitoring_days_before_expiry;
+        }
+        if (data.gateway_id != null) {
+            this.gateway_id = data.gateway_id;
+        }
+        if (data.gateway != null) {
+            this.gateway = new Gateway(data.gateway);
+        }
+        if (data.https_redirect != null) {
+            this.https_redirect = data.https_redirect;
         }
         if (data.workspaces != null) {
             this.workspaces = data.workspaces.map((i: any) => new Workspace(i));

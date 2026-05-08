@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
-import {Domain, System} from "@/core/services/Deploy/models";
+import {Domain, Gateway, System} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
@@ -15,6 +15,10 @@ const used = ref(false);
 const showDialog = ref(false);
 
 const item = ref<Domain>(Domain.Create());
+const showIstio = ref(false);
+const showContour = ref(false);
+const showGatewayApi = ref(false);
+const gateways = ref<Gateway[]>([]);
 
 // <editor-fold desc="Functions">
 
@@ -30,6 +34,16 @@ onUnmounted(() => {
 });
 
 function render() {
+    showIstio.value = System.Instance.is_network_istio_supported ?? false;
+    showContour.value = System.Instance.is_network_contour_supported ?? false;
+    showGatewayApi.value = System.Instance.is_network_gateway_api_supported ?? false;
+
+    if (showGatewayApi.value) {
+        Api.gateways().get().orderAsc('name').find(items => {
+            gateways.value = items;
+        });
+    }
+
     showDialog.value = true;
 }
 
@@ -127,6 +141,69 @@ function onCloseBtnClicked() {
                                 />
                             </v-col>
                         </v-row>
+                    </v-col>
+                    <v-col
+                        v-if="showIstio"
+                        cols="6"
+                    >
+                        <v-switch
+                            v-model="item.enable_istio_gateway"
+                            variant="outlined"
+                            label="Enable Istio Gateway"
+                            density="compact"
+                            color="secondary"
+                        />
+                    </v-col>
+                    <v-col
+                        v-if="showContour"
+                        cols="6"
+                    >
+                        <v-switch
+                            v-model="item.enable_contour"
+                            variant="outlined"
+                            label="Enable Contour"
+                            density="compact"
+                            color="secondary"
+                        />
+                    </v-col>
+                    <v-col
+                        v-if="showContour && item.enable_contour"
+                        cols="6"
+                    >
+                        <v-text-field
+                            variant="outlined"
+                            v-model="item.contour_ingress_class_name"
+                            label="Contour ingress class name"
+                            hint="Default: contour-external"
+                            persistent-hint
+                        />
+                    </v-col>
+                    <v-col
+                        v-if="showGatewayApi"
+                        cols="12"
+                    >
+                        <v-select
+                            variant="outlined"
+                            v-model="item.gateway_id"
+                            label="Gateway"
+                            :items="gateways"
+                            item-title="name"
+                            item-value="id"
+                            clearable
+                        />
+                    </v-col>
+                    <v-col
+                        v-if="showGatewayApi"
+                        cols="12"
+                    >
+                        <v-switch
+                            v-model="item.https_redirect"
+                            variant="outlined"
+                            label="HTTPS Redirect (Gateway API)"
+                            density="compact"
+                            color="secondary"
+                            hide-details
+                        />
                     </v-col>
                 </v-row>
             </v-card-text>

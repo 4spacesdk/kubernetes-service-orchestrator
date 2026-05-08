@@ -25,6 +25,7 @@ class DeletionModel extends Model {
         WorkspaceModel::class,
         DeploymentVolumeModel::class,
         PodioIntegrationModel::class,
+        GatewayModel::class,
     ];
 
 }

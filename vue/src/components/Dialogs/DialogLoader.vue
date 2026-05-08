@@ -43,6 +43,18 @@ bus.on('domainEdit', async input => {
     addComponent((await import('@/components/Dialogs/Setup/Domains/DomainEditDialog.vue')).default, input);
 });
 
+bus.on('gatewayCreate', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/Gateways/GatewayEditDialog.vue')).default, input);
+});
+
+bus.on('gatewayEdit', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/Gateways/GatewayEditDialog.vue')).default, input);
+});
+
+bus.on('gatewayResourcePreview', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/Gateways/GatewayResourcePreviewDialog.vue')).default, input);
+});
+
 bus.on('databaseServiceEdit', async input => {
     addComponent((await import('@/components/Dialogs/Setup/DatabaseServices/DatabaseServiceEditDialog.vue')).default, input);
 });

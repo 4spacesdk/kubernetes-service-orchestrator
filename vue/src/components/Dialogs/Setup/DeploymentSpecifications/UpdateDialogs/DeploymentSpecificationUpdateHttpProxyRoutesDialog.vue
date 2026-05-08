@@ -4,6 +4,7 @@ import {DeploymentSpecification} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
+import {NetworkTypes} from "@/constants";
 
 export interface DeploymentSpecificationUpdateHttpProxyRoutesDialog_Input {
     deploymentSpecification: DeploymentSpecification;
@@ -26,15 +27,25 @@ const showDialog = ref(false);
 const isLoading = ref(false);
 const itemCount = ref(0);
 const rows = ref<Row[]>([]);
-const headers = ref([
-    {title: 'Path', key: 'path', sortable: false},
-    {title: 'Port', key: 'port', sortable: false},
-    {title: 'Protocol', key: 'protocol', sortable: false},
-    {title: 'Timeout Policy, Idle', key: 'timeoutPolicyIdle', sortable: false},
-    {title: 'Timeout Policy, Response', key: 'timeoutPolicyResponse', sortable: false},
-    {title: 'Timeout Policy, Idle Connection', key: 'timeoutPolicyIdleConnection', sortable: false},
-    {title: '', key: 'actions', sortable: false},
-]);
+const headers = computed(() => {
+    const items = [
+        {title: 'Path', key: 'path', sortable: false},
+        {title: 'Port', key: 'port', sortable: false},
+    ];
+
+    if (props.input.deploymentSpecification.network_type === NetworkTypes.Contour) {
+        items.push(
+            {title: 'Protocol', key: 'protocol', sortable: false},
+            {title: 'Timeout Policy, Idle', key: 'timeoutPolicyIdle', sortable: false},
+            {title: 'Timeout Policy, Response', key: 'timeoutPolicyResponse', sortable: false},
+            {title: 'Timeout Policy, Idle Connection', key: 'timeoutPolicyIdleConnection', sortable: false},
+        );
+    }
+
+    items.push({title: '', key: 'actions', sortable: false});
+
+    return items;
+});
 const isSaving = ref(false);
 
 // <editor-fold desc="Functions">
@@ -87,12 +98,13 @@ function onCreateBtnClicked() {
     const newItem = {
         path: '/',
         port: 80,
-        protocol: 'h2c',
+        protocol: props.input.deploymentSpecification.network_type === NetworkTypes.Contour ? 'h2c' : '',
         timeoutPolicyIdle: '',
         timeoutPolicyResponse: '',
         timeoutPolicyIdleConnection: '',
     };
     bus.emit('deploymentSpecificationUpdateHttpProxyRoute', {
+        networkType: props.input.deploymentSpecification.network_type ?? '',
         httpProxyRoute: newItem,
         onSaveCallback: () => rows.value.push(newItem),
     });
@@ -100,6 +112,7 @@ function onCreateBtnClicked() {
 
 function onEditRowClicked(row: Row) {
     bus.emit('deploymentSpecificationUpdateHttpProxyRoute', {
+        networkType: props.input.deploymentSpecification.network_type ?? '',
         httpProxyRoute: row,
         onSaveCallback: () => {
 
@@ -151,7 +164,7 @@ function onCloseBtnClicked() {
             class="w-100 h-100">
             <v-card-title>
                 <div class="d-flex w-100">
-                    <span class="my-auto">Http Proxy Routes</span>
+                    <span class="my-auto">{{ props.input.deploymentSpecification.network_type === NetworkTypes.GatewayApi ? 'Http Routes' : 'Http Proxy Routes' }}</span>
                     <v-chip class="my-auto mx-auto">{{ props.input.deploymentSpecification.name }}</v-chip>
 
                     <div class="my-auto ml-auto d-flex justify-end gap-1">

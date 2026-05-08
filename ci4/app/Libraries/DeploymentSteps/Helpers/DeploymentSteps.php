@@ -5,7 +5,8 @@ class DeploymentSteps {
     // Level: Workspace
     const string
         Namespace = 'namespace',
-        ContourHttpProxy = 'contour-http-proxy'
+        ContourHttpProxy = 'contour-http-proxy',
+        GatewayHttpRoute = 'gateway-http-route'
     ;
 
     // Level: Deployment

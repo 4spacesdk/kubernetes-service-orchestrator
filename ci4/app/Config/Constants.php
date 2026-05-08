@@ -154,7 +154,8 @@ class NetworkTypes {
     const string
         NginxIngress = 'nginx-ingress',
         Istio = 'istio',
-        Contour = 'contour'
+        Contour = 'contour',
+        GatewayApi = 'gateway-api'
     ;
 }
 

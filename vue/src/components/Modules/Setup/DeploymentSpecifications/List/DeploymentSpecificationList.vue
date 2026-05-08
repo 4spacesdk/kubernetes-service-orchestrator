@@ -19,7 +19,7 @@ const headers = ref([
     {title: 'Workload Type', key: 'workload_type', sortable: false},
     {title: 'Network Type', key: 'network_type', sortable: false},
     {title: 'Database', key: 'enable_database', sortable: false},
-    {title: 'Ingress', key: 'ingress', sortable: false},
+    {title: 'Domain', key: 'domain', sortable: false},
     {title: 'RBAC', key: 'enable_rbac', sortable: false},
     {title: '', key: 'actions', sortable: false},
 ]);
@@ -197,7 +197,7 @@ function onEditItemBtnClicked(item: DeploymentSpecification) {
             <template v-slot:item.enable_database="{ item }">
                 <v-icon v-if="item.enable_database">fa fa-check</v-icon>
             </template>
-            <template v-slot:item.ingress="{ item }">
+            <template v-slot:item.domain="{ item }">
                 <span v-if="item.domain_tls">{{ item.domain_tls }}://{{ item.domain_prefix }}?{{ item.domain_suffix}}</span>
             </template>
             <template v-slot:item.enable_rbac="{ item }">
