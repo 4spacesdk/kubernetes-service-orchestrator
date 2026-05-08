@@ -18,7 +18,12 @@ interface Row {
 const itemCount = ref(0);
 const rows = ref<Row[]>([]);
 const headers = ref<
-    { title: string; key: string; sortable: boolean; align?: string }[]
+    {
+        title: string;
+        key: string;
+        sortable: boolean;
+        align?: "end" | "center" | "start" | undefined;
+    }[]
 >([]);
 const isLoading = ref(true);
 const options = ref({});
