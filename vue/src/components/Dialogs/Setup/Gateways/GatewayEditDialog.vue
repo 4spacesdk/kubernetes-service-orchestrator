@@ -95,7 +95,7 @@ function onCloseBtnClicked() {
                             variant="outlined"
                             v-model="item.gateway_class_name"
                             label="Gateway Class Name"
-                            placeholder="envoy"
+                            placeholder="eg"
                             hint="The name of the GatewayClass that should manage this Gateway (e.g. 'envoy')"
                             persistent-hint
                             :loading="isLoading"
@@ -106,7 +106,7 @@ function onCloseBtnClicked() {
                             variant="outlined"
                             v-model="item.namespace"
                             label="Namespace"
-                            placeholder="envoy-gateway-system"
+                            placeholder="envoy-gateway"
                             hint="The namespace where the Gateway resource should be deployed"
                             persistent-hint
                             :loading="isLoading"
