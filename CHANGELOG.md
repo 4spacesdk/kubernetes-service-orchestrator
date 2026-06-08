@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.8.1 (2026-06-08)
+
+### Fixed bugs
+* Fix a bug related to the GitHub App integration installation url
+
+### Enhancements
+* 
+
+### Upgrade guide
+1. Deploy new image
+
+
+
 ## v1.8.0 (2026-06-08)
 
 ### Fixed bugs
