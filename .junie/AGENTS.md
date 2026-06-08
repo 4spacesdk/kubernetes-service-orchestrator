@@ -44,6 +44,7 @@ The system allows for the configuration of complex deployments via a user-friend
 - Use Type Hinting for all functions and methods (PHP 8 features).
 - **Migrations**: Every time you change the database structure, create a new file in `ci4/app/Database/Migrations`. Use `php spark migrate` to run them.
 - **Entities**: Use CodeIgniter Entities to represent rows from the database to keep models clean.
+- **Routes**: Do NOT add routes to `ci4/app/Config/Routes.php`. Instead, define them in migrations using `ApiRoute` (e.g., `ApiRoute::quick(...)` or `ApiRoute::public(...)`).
 
 ### Frontend (Vue/TS)
 - Use TypeScript for all new code.

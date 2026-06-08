@@ -6,7 +6,7 @@ export default ([
         name: 'System',
         component: SystemPage,
         meta: {
-            title: 'Email Services',
+            title: 'System',
         }
     },
 ]);

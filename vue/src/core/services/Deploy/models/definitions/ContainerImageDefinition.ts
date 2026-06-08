@@ -32,8 +32,6 @@ export class ContainerImageDefinition extends BaseModel {
     version_control_enabled?: boolean;
     version_control_provider?: string;
     version_control_repository_name?: string;
-    version_control_provider_github_auth_token?: string;
-    version_control_provider_github_auth_user?: string;
     commit_identification_enabled?: boolean;
     commit_identification_method?: string;
     commit_identification_environment_variable_name?: string;
@@ -80,8 +78,6 @@ export class ContainerImageDefinition extends BaseModel {
             delete this.version_control_enabled;
             delete this.version_control_provider;
             delete this.version_control_repository_name;
-            delete this.version_control_provider_github_auth_token;
-            delete this.version_control_provider_github_auth_user;
             delete this.commit_identification_enabled;
             delete this.commit_identification_method;
             delete this.commit_identification_environment_variable_name;
@@ -174,12 +170,6 @@ export class ContainerImageDefinition extends BaseModel {
         }
         if (data.version_control_repository_name != null) {
             this.version_control_repository_name = data.version_control_repository_name;
-        }
-        if (data.version_control_provider_github_auth_token != null) {
-            this.version_control_provider_github_auth_token = data.version_control_provider_github_auth_token;
-        }
-        if (data.version_control_provider_github_auth_user != null) {
-            this.version_control_provider_github_auth_user = data.version_control_provider_github_auth_user;
         }
         if (data.commit_identification_enabled != null) {
             this.commit_identification_enabled = data.commit_identification_enabled;

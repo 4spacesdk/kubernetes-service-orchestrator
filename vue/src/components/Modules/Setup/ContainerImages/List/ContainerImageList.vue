@@ -4,6 +4,7 @@ import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import {ContainerImage} from "@/core/services/Deploy/models";
 import debounce from "lodash.debounce";
+import { VersionControlProviders } from "@/constants";
 
 const emit = defineEmits<{
     (e: 'onItemEditClicked', item: ContainerImage): void
@@ -148,6 +149,18 @@ function deleteItem(item: ContainerImage) {
             @update:options="options = $event; getItems()">
             <template v-slot:item.registry_provider="{ item }">
                 <span v-if="item.registry_subscribe">{{ item.registry_provider }}</span>
+            </template>
+            <template v-slot:item.version_control_provider="{ item }">
+                <span v-if="item.version_control_enabled">
+                    {{ item.version_control_provider }}
+                    <v-tooltip
+                        v-if="item.version_control_provider === VersionControlProviders.GitHub && item.version_control_repository_name"
+                        activator="parent"
+                        location="bottom"
+                    >
+                        {{ item.version_control_repository_name }}
+                    </v-tooltip>
+                </span>
             </template>
             <template v-slot:item.actions="{ item }">
                 <div class="d-flex justify-end gap-1">

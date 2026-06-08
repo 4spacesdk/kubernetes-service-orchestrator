@@ -9,6 +9,13 @@ use App\Core\Entity;
  * @property bool $is_network_istio_supported
  * @property bool $is_network_contour_supported
  * @property bool $is_network_gateway_api_supported
+ * @property int $github_app_id
+ * @property string $github_app_client_id
+ * @property string $github_app_client_secret
+ * @property string $github_app_private_key
+ * @property string $github_app_webhook_secret
+ * @property string $github_app_slug
+ * @property int $github_app_installation_id
  */
 class System extends Entity {
 

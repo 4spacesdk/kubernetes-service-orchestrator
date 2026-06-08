@@ -10,6 +10,13 @@ export class SystemDefinition extends BaseModel {
     is_network_istio_supported?: boolean;
     is_network_contour_supported?: boolean;
     is_network_gateway_api_supported?: boolean;
+    github_app_id?: number;
+    github_app_client_id?: string;
+    github_app_client_secret?: string;
+    github_app_private_key?: string;
+    github_app_webhook_secret?: string;
+    github_app_slug?: string;
+    github_app_installation_id?: number;
     id?: number;
     created?: string;
     updated?: string;
@@ -31,6 +38,13 @@ export class SystemDefinition extends BaseModel {
             delete this.is_network_istio_supported;
             delete this.is_network_contour_supported;
             delete this.is_network_gateway_api_supported;
+            delete this.github_app_id;
+            delete this.github_app_client_id;
+            delete this.github_app_client_secret;
+            delete this.github_app_private_key;
+            delete this.github_app_webhook_secret;
+            delete this.github_app_slug;
+            delete this.github_app_installation_id;
             delete this.id;
             delete this.created;
             delete this.updated;
@@ -54,6 +68,27 @@ export class SystemDefinition extends BaseModel {
         }
         if (data.is_network_gateway_api_supported != null) {
             this.is_network_gateway_api_supported = data.is_network_gateway_api_supported;
+        }
+        if (data.github_app_id != null) {
+            this.github_app_id = data.github_app_id;
+        }
+        if (data.github_app_client_id != null) {
+            this.github_app_client_id = data.github_app_client_id;
+        }
+        if (data.github_app_client_secret != null) {
+            this.github_app_client_secret = data.github_app_client_secret;
+        }
+        if (data.github_app_private_key != null) {
+            this.github_app_private_key = data.github_app_private_key;
+        }
+        if (data.github_app_webhook_secret != null) {
+            this.github_app_webhook_secret = data.github_app_webhook_secret;
+        }
+        if (data.github_app_slug != null) {
+            this.github_app_slug = data.github_app_slug;
+        }
+        if (data.github_app_installation_id != null) {
+            this.github_app_installation_id = data.github_app_installation_id;
         }
         if (data.id != null) {
             this.id = data.id;

@@ -47,8 +47,6 @@ use App\Core\Entity;
  * @property bool $version_control_enabled
  * @property string $version_control_provider
  * @property string $version_control_repository_name
- * @property string $version_control_provider_github_auth_token
- * @property string $version_control_provider_github_auth_user
  *
  * # Commit Identification
  * @property bool $commit_identification_enabled

@@ -1,16 +1,19 @@
 # Changelog
 
-## v1.8.0 (?)
+## v1.8.0 (2026-06-08)
 
 ### Fixed bugs
 * 
 
 ### Enhancements
+* Add support for GitHub App integration via manifests
+  * Removed legacy GitHub Personal Access Token (PAT) authentication. Users are now required to use GitHub Apps.
 * Add support for envoy-gateway [Issue #62](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/62)
 
 ### Upgrade guide
 1. Deploy new image
 2. Migrate database [(Guide)](https://github.com/4spacesdk/kubernetes-service-orchestrator?tab=readme-ov-file#migrate-database-helm)
+3. If using GitHub integration for container images: Install GitHub App and connect existing container images
 
 
 

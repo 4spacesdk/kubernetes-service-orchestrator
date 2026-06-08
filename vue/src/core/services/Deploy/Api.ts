@@ -4244,6 +4244,111 @@ class Gateways {
 }
 
 
+export class GithubAppManifestGet extends BaseApi<any> {
+
+    public topic = 'UnknownResource';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/githubapp/manifest`;
+    }
+
+    protected convertToResource(data: any): any {
+        return data;
+    }
+
+    public find(next?: (value: any[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class GithubAppCallbackGet extends BaseApi<any> {
+
+    public topic = 'UnknownResource';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/githubapp/callback`;
+    }
+
+    protected convertToResource(data: any): any {
+        return data;
+    }
+
+    public find(next?: (value: any[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class GithubAppPost_installGet extends BaseApi<any> {
+
+    public topic = 'UnknownResource';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/githubapp/post-install`;
+    }
+
+    protected convertToResource(data: any): any {
+        return data;
+    }
+
+    public find(next?: (value: any[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class GithubAppRepositoriesGet extends BaseApi<any> {
+
+    public topic = 'UnknownResource';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/githubapp/repositories`;
+    }
+
+    protected convertToResource(data: any): any {
+        return data;
+    }
+
+    public find(next?: (value: any[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+class GithubApp {
+
+    public manifestGet(): GithubAppManifestGet {
+        return new GithubAppManifestGet();
+    }
+
+    public callbackGet(): GithubAppCallbackGet {
+        return new GithubAppCallbackGet();
+    }
+
+    public post_installGet(): GithubAppPost_installGet {
+        return new GithubAppPost_installGet();
+    }
+
+    public repositoriesGet(): GithubAppRepositoriesGet {
+        return new GithubAppRepositoriesGet();
+    }
+
+}
+
+
 export class InitContainersGet extends BaseApi<InitContainer> {
 
     public topic = 'Resources.InitContainers';
@@ -8065,6 +8170,10 @@ export class Api {
 
     public static gateways(): Gateways {
         return new Gateways();
+    }
+
+    public static githubApp(): GithubApp {
+        return new GithubApp();
     }
 
     public static initContainers(): InitContainers {

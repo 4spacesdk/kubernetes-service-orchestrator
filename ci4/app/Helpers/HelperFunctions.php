@@ -112,7 +112,7 @@ if (!function_exists('datetimezone')) {
 if (!function_exists('getFrontendUrl')) {
 
     function getFrontendUrl(?string $path = null): string {
-        if (str_contains(base_url(), 'localhost')) {
+        if (str_contains(base_url(), 'localhost') || str_contains(base_url(), getenv('DEV_REMOTE_BASE_URL'))) {
             $url = 'http://localhost:8951';
         } else {
             $url = str_replace('/api', '', base_url());
