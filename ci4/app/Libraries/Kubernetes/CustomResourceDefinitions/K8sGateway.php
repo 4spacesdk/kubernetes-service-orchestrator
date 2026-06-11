@@ -63,6 +63,24 @@ class K8sGateway extends K8sResource implements InteractsWithK8sCluster {
                     'allowedRoutes' => [
                         'namespaces' => ['from' => 'All']
                     ],
+                    'hostname' => "{$domain->name}",
+                ];
+                $listeners[] = [
+                    'name' => 'https-wildcard-' . str_replace('.', '-', $domain->name),
+                    'port' => 443,
+                    'protocol' => 'HTTPS',
+                    'tls' => [
+                        'mode' => 'Terminate',
+                        'certificateRefs' => [
+                            [
+                                'name' => $domain->certificate_name,
+                                'namespace' => $domain->certificate_namespace ?: $gatewayEntity->namespace,
+                            ]
+                        ]
+                    ],
+                    'allowedRoutes' => [
+                        'namespaces' => ['from' => 'All']
+                    ],
                     'hostname' => "*.{$domain->name}",
                 ];
             }
