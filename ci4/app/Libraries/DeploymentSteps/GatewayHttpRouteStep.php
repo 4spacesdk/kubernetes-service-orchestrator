@@ -257,7 +257,7 @@ class GatewayHttpRouteStep extends BaseDeploymentStep {
             ];
 
             if ($domain->https_redirect) {
-                $parentRef['sectionName'] = 'https-' . str_replace('.', '-', $domain->name);
+                $parentRef['sectionName'] = 'https-wildcard-' . str_replace('.', '-', $domain->name);
             }
 
             $resource->setAttribute('spec', [

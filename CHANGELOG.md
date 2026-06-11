@@ -1,9 +1,22 @@
 # Changelog
 
+## v1.8.3 (2026-06-11)
+
+### Fixed bugs
+* Wrong parentRef in HttpRoute
+
+### Enhancements
+* 
+
+### Upgrade guide
+1. Deploy new image
+
+
+
 ## v1.8.2 (2026-06-11)
 
 ### Fixed bugs
-* 
+*
 
 ### Enhancements
 * Now using both base domain and wildcard for gateway listeners
