@@ -1,6 +1,7 @@
 <?php namespace App\Entities;
 
 use App\Core\Entity;
+use App\Entities\GatewayAddress;
 
 /**
  * Class Gateway
@@ -11,7 +12,14 @@ use App\Core\Entity;
  *
  * Many
  * @property Domain $domains
+ * @property GatewayAddress $gateway_addresses
  */
 class Gateway extends Entity {
+
+    public function updateGatewayAddresses(GatewayAddress $values): void {
+        $this->gateway_addresses->find()->deleteAll();
+        $this->save($values);
+        $this->gateway_addresses = $values;
+    }
 
 }

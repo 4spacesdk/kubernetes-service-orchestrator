@@ -86,10 +86,25 @@ class K8sGateway extends K8sResource implements InteractsWithK8sCluster {
             }
         }
 
-        return $this->setAttribute('spec', [
+        $addresses = [];
+        $gatewayEntity->gateway_addresses->find();
+        foreach ($gatewayEntity->gateway_addresses as $address) {
+            $addresses[] = [
+                'type' => $address->type,
+                'value' => $address->value,
+            ];
+        }
+
+        $spec = [
             'gatewayClassName' => $gatewayEntity->gateway_class_name,
             'listeners' => $listeners,
-        ]);
+        ];
+
+        if (!empty($addresses)) {
+            $spec['addresses'] = $addresses;
+        }
+
+        return $this->setAttribute('spec', $spec);
     }
 
 }

@@ -1,12 +1,26 @@
 # Changelog
 
+## v1.8.4 (2026-07-14)
+
+### Fixed bugs
+* 
+
+### Enhancements
+* Add Gateway spec.addresses [Issue #66](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/66)
+
+### Upgrade guide
+1. Deploy new image
+2. Migrate database [(Guide)](https://github.com/4spacesdk/kubernetes-service-orchestrator?tab=readme-ov-file#migrate-database-helm)
+
+
+
 ## v1.8.3 (2026-06-11)
 
 ### Fixed bugs
 * Wrong parentRef in HttpRoute
 
 ### Enhancements
-* 
+*
 
 ### Upgrade guide
 1. Deploy new image

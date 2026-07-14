@@ -1,16 +1,12 @@
 <?php namespace App\Models;
 
+use App\Entities\GatewayAddress;
 use RestExtension\ResourceModelInterface;
 
-class GatewayModel extends \RestExtension\Models\UserModel implements ResourceModelInterface {
+class GatewayAddressModel extends \RestExtension\Models\UserModel implements ResourceModelInterface {
 
     public $hasOne = [
-        DeletionModel::class,
-    ];
-
-    public $hasMany = [
-        DomainModel::class,
-        GatewayAddressModel::class,
+        GatewayModel::class,
     ];
 
     public function preRestGet($queryParser, $id) {

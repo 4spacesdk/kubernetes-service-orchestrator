@@ -32,3 +32,9 @@ ci4/writable/**/*.sqlite
 php_errors.log
 telepresence.log
 ci4/public/debug.log
+/.junie/memory/errors.md
+/.junie/memory/feedback.md
+/.junie/memory/language.json
+/.junie/memory/memory.version
+/.junie/memory/tasks.md
+/.junie/plans/add-gateway-addresses-support.md

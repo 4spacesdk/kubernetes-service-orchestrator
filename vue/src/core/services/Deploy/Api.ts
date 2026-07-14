@@ -179,6 +179,15 @@ export interface EnvironmentsGetResponse {
     name?: string;
 }
 
+export interface GatewayAddress {
+    type?: string;
+    value?: string;
+}
+
+export interface GatewayAddressList {
+    values?: GatewayAddress[];
+}
+
 export interface HttpProxyRoute {
     path?: string;
     port?: number;
@@ -4183,6 +4192,27 @@ export class GatewaysGetKubernetesStatusGetById extends BaseApi<StringInterface>
     }
 }
 
+export class GatewaysUpdateGatewayAddressesPutById extends BaseApi<Gateway> {
+
+    public topic = 'Resources.Gateways';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/gateways/${id}/gateway-addresses`;
+    }
+
+    protected convertToResource(data: any): Gateway {
+        return new Gateway(data);
+    }
+
+    public save(data: GatewayAddressList, next?: (value: Gateway) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
 class Gateways {
 
     public get(): GatewaysGet {
@@ -4239,6 +4269,10 @@ class Gateways {
 
     public getKubernetesStatusGetById(id: number): GatewaysGetKubernetesStatusGetById {
         return new GatewaysGetKubernetesStatusGetById(id);
+    }
+
+    public updateGatewayAddressesPutById(id: number): GatewaysUpdateGatewayAddressesPutById {
+        return new GatewaysUpdateGatewayAddressesPutById(id);
     }
 
 }

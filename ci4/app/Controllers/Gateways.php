@@ -2,6 +2,8 @@
 
 use App\Core\ResourceController;
 use App\Entities\Gateway;
+use App\Entities\GatewayAddress;
+use App\Interfaces\GatewayAddressList;
 use App\Libraries\GatewaySteps\GatewayStep;
 use App\Libraries\Kubernetes\KubeHelper;
 use App\Models\GatewayModel;
@@ -148,6 +150,45 @@ class Gateways extends ResourceController {
 
         $step = new GatewayStep();
         Data::set('resource', ['value' => $step->getKubernetesStatus($gateway)]);
+        $this->success();
+    }
+
+    /**
+     * @route /gateways/{id}/gateway-addresses
+     * @method put
+     * @custom true
+     * @param int $id
+     * @requestSchema GatewayAddressList
+     * @return void
+     */
+    public function updateGatewayAddresses(int $id): void {
+        $item = new Gateway();
+        $item->find($id);
+        if ($item->exists()) {
+            /** @var GatewayAddressList $body */
+            $body = $this->request->getJSON();
+
+            $addresses = [];
+            foreach ($body->values as $data) {
+                $address = new GatewayAddress();
+                $address->type = $data->type;
+                $address->value = $data->value;
+                if ($error = $address->validate()) {
+                    $this->fail($error);
+                    return;
+                }
+                $addresses[] = $address;
+            }
+
+            $values = new GatewayAddress();
+            foreach ($addresses as $address) {
+                $address->save();
+            }
+            $values->all = $addresses;
+
+            $item->updateGatewayAddresses($values);
+        }
+        $this->_setResource($item);
         $this->success();
     }
 
