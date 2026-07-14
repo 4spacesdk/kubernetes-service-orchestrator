@@ -243,30 +243,41 @@ class GatewayHttpRouteStep extends BaseDeploymentStep {
         $resources = [];
 
         foreach ($fqdns as $fqdn => $deployments) {
-            $resource = new K8sHttpRoute();
-            $resource
-                ->setName($fqdn)
-                ->setNamespace($workspace->namespace)
-                ->setAnnotations([
-                    'app.kubernetes.io/managed-by' => '4spaces.kso',
+            $rules = $this->getHttpRouteRules($deployments);
+            $ruleChunks = array_chunk($rules, 16);
+
+            foreach ($ruleChunks as $index => $chunk) {
+                $resource = new K8sHttpRoute();
+
+                $name = $fqdn;
+                if ($index > 0) {
+                    $name .= '-' . $index;
+                }
+
+                $resource
+                    ->setName($name)
+                    ->setNamespace($workspace->namespace)
+                    ->setAnnotations([
+                        'app.kubernetes.io/managed-by' => '4spaces.kso',
+                    ]);
+
+                $parentRef = [
+                    'name' => $gateway->name,
+                    'namespace' => $gateway->namespace,
+                ];
+
+                if ($domain->https_redirect) {
+                    $parentRef['sectionName'] = 'https-wildcard-' . str_replace('.', '-', $domain->name);
+                }
+
+                $resource->setAttribute('spec', [
+                    'parentRefs' => [$parentRef],
+                    'hostnames' => [$fqdn],
+                    'rules' => $chunk,
                 ]);
 
-            $parentRef = [
-                'name' => $gateway->name,
-                'namespace' => $gateway->namespace,
-            ];
-
-            if ($domain->https_redirect) {
-                $parentRef['sectionName'] = 'https-wildcard-' . str_replace('.', '-', $domain->name);
+                $resources[] = $resource;
             }
-
-            $resource->setAttribute('spec', [
-                'parentRefs' => [$parentRef],
-                'hostnames' => [$fqdn],
-                'rules' => $this->getHttpRouteRules($deployments),
-            ]);
-
-            $resources[] = $resource;
         }
 
         if ($auth) {

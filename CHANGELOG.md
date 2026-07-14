@@ -1,9 +1,22 @@
 # Changelog
 
+## v1.8.5 (2026-07-14)
+
+### Fixed bugs
+*
+
+### Enhancements
+* Implemented sharding on HTTPRoute rules (caused by limit of 16 rules)
+
+### Upgrade guide
+1. Deploy new image
+
+
+
 ## v1.8.4 (2026-07-14)
 
 ### Fixed bugs
-* 
+*
 
 ### Enhancements
 * Add Gateway spec.addresses [Issue #66](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/66)
