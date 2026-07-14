@@ -32,6 +32,7 @@ use App\Core\Entity;
  * @property string $aliases
  * @property int $database_service_id
  * @property DatabaseService $database_service
+ * @property string $status
  *
  * Many
  * @property Deployment $deployments
@@ -305,17 +306,82 @@ class Workspace extends Entity {
     }
 
     public function checkStatus(): void {
+        $oldStatus = $this->status;
+
         /** @var Deployment $deployments */
         $deployments = (new DeploymentModel())
             ->where('workspace_id', $this->id)
             ->find();
+
+        $newStatus = \WorkspaceStatusTypes::Draft;
+
+        $hasError = false;
+        $hasDeploying = false;
+        $allActive = true;
+        $anyDraft = false;
+
         foreach ($deployments as $deployment) {
-            $deployment->checkStatus();
+            if ($deployment->status == \DeploymentStatusTypes::Error) {
+                $hasError = true;
+            }
+            if ($deployment->status == \DeploymentStatusTypes::Deploying) {
+                $hasDeploying = true;
+            }
+            if ($deployment->status == \DeploymentStatusTypes::Active) {
+                // Keep allActive true if this is active
+            } else {
+                $allActive = false;
+            }
+            if ($deployment->status == \DeploymentStatusTypes::Draft) {
+                $anyDraft = true;
+            }
+            if ($deployment->status == \DeploymentStatusTypes::Inactive) {
+                $anyDraft = true;
+            }
         }
-        $this->deployments = $deployments;
+
+        if ($deployments->count() == 0) {
+            $allActive = false;
+        }
+
+        if ($hasError) {
+            $newStatus = \WorkspaceStatusTypes::Error;
+        } else if ($hasDeploying) {
+            $newStatus = \WorkspaceStatusTypes::Deploying;
+        } else if ($allActive) {
+            $newStatus = \WorkspaceStatusTypes::Active;
+        } else if ($oldStatus == \WorkspaceStatusTypes::Inactive && $anyDraft) {
+            $newStatus = \WorkspaceStatusTypes::Inactive;
+        } else if ($anyDraft) {
+            $newStatus = \WorkspaceStatusTypes::Draft;
+        }
+
+        if ($oldStatus != $newStatus) {
+            $this->updateStatus($newStatus);
+        }
+    }
+
+    public function updateStatus(string $newStatus): void {
+        $this->status = $newStatus;
+        $this->save();
+
+        $next = $this->toArray();
+        /** @var Deployment $deployments */
+        $deployments = (new DeploymentModel())
+            ->where('workspace_id', $this->id)
+            ->find();
+        $next['deployments'] = $deployments->allToArray();
+
+        ZMQProxy::getInstance()->send(
+            Events::Workspace_Changed_Status($this->id),
+            (new ChangeEvent(null, $next))->toArray()
+        );
     }
 
     public function deploy(): ?string {
+        $this->status = \WorkspaceStatusTypes::Deploying;
+        $this->save();
+
         /** @var Deployment $deployments */
         $deployments = (new DeploymentModel())
             ->where('workspace_id', $this->id)
@@ -334,10 +400,14 @@ class Workspace extends Entity {
             (new ChangeEvent(null, $this->getClone()->toArray()))->toArray()
         );
 
+        $this->checkStatus();
+
         return count($allErrors) ? implode("\n", $allErrors) : null;
     }
 
     public function terminate(): ?string {
+        $this->updateStatus(\WorkspaceStatusTypes::Inactive);
+
         /** @var Deployment $deployments */
         $deployments = (new DeploymentModel())
             ->where('workspace_id', $this->id)
@@ -349,6 +419,8 @@ class Workspace extends Entity {
             if ($errors) {
                 $allErrors[] = "<strong>{$deployment->name}</strong><br>{$errors}<br>";
             }
+
+            $deployment->updateStatus(\DeploymentStatusTypes::Inactive, false);
         }
         $this->deployments = $deployments;
 
@@ -356,6 +428,8 @@ class Workspace extends Entity {
             Events::Workspace_Terminated(),
             (new ChangeEvent(null, $this->getClone()->toArray()))->toArray()
         );
+
+        $this->checkStatus();
 
         return count($allErrors) ? implode("\n", $allErrors) : null;
     }

@@ -60,7 +60,7 @@ class ZMQ extends Controller {
                 sleep(5); // TODO Wait for job to be finished.
                 $deployment = new Deployment();
                 $deployment->find($changeEvent->next['deployment_id']);
-                $deployment->checkStatus();
+                $deployment->checkStatus(true);
                 break;
         }
 

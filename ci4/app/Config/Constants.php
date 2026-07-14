@@ -27,6 +27,15 @@ class DeploymentStatusTypes {
     const string Draft = 'draft';
     const string Deploying = 'deploying';
     const string Active = 'active';
+    const string Inactive = 'inactive';
+    const string Error = 'error';
+}
+
+class WorkspaceStatusTypes {
+    const string Draft = 'draft';
+    const string Deploying = 'deploying';
+    const string Active = 'active';
+    const string Inactive = 'inactive';
     const string Error = 'error';
 }
 

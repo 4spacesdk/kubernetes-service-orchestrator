@@ -145,7 +145,7 @@ class DeploymentStepHelper {
     }
 
     public static function EmitTrigger(string $trigger, Deployment $deployment, ?string $reason = null): ?string {
-        $deployment->checkStatus();
+        $deployment->checkStatus(false);
         if ($deployment->status == \DeploymentStatusTypes::Draft) {
             return "Deployment still in draft mode";
         }
@@ -159,7 +159,7 @@ class DeploymentStepHelper {
                 }
             }
         }
-        $deployment->checkStatus();
+        $deployment->checkStatus(true);
         return null;
     }
 

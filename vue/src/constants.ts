@@ -278,6 +278,15 @@ export const DeploymentStatusTypes = {
     Draft: "draft",
     Deploying: "deploying",
     Active: "active",
+    Inactive: "inactive",
+    Error: "error",
+};
+
+export const WorkspaceStatusTypes = {
+    Draft: "draft",
+    Deploying: "deploying",
+    Active: "active",
+    Inactive: "inactive",
     Error: "error",
 };
 

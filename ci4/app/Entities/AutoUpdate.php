@@ -6,6 +6,7 @@ use App\Libraries\ZMQ\Events;
 use App\Libraries\ZMQ\ZMQProxy;
 use App\Models\AutoUpdateModel;
 use App\Models\DeploymentModel;
+use App\Models\WorkspaceModel;
 use DebugTool\Data;
 use App\Core\Entity;
 use DeploymentStatusTypes;
@@ -27,6 +28,7 @@ class AutoUpdate extends Entity {
     public static function CheckForUpdates(string $image, string $tag): void {
         /** @var Deployment $deployments */
         $deployments = (new DeploymentModel())
+            ->includeRelated(WorkspaceModel::class)
             ->where('auto_update_enabled', true)
             ->where('image', $image)
             ->whereIn('status', [
@@ -37,6 +39,9 @@ class AutoUpdate extends Entity {
             ->find();
 
         foreach ($deployments as $deployment) {
+            if ($deployment->workspace->status == \WorkspaceStatusTypes::Inactive) {
+                continue;
+            }
             if (preg_match("/{$deployment->auto_update_tag_regex}$/", $tag)) {
                 Data::debug('update', $deployment->name, $deployment->namespace, 'with', $image, $tag);
 
@@ -75,6 +80,12 @@ class AutoUpdate extends Entity {
 
         $deployment = new Deployment();
         $deployment->find($this->deployment_id);
+
+        if ($deployment->workspace->status == \WorkspaceStatusTypes::Inactive) {
+            Data::debug('Skip rollout because workspace is inactive');
+            return;
+        }
+
         $deployment->updateVersion($this->next_tag);
 
         $postUpdateActionHelper = new PostUpdateActionHelper($deployment);

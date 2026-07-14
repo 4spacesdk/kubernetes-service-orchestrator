@@ -3,6 +3,7 @@
 use App\Entities\Deployment;
 use App\Libraries\Kubernetes\KubeHelper;
 use DebugTool\Data;
+use DeploymentStatusTypes;
 
 abstract class BaseDeploymentStep {
 
@@ -60,6 +61,7 @@ abstract class BaseDeploymentStep {
             return $error;
         }
         try {
+            $deployment->updateStatus(DeploymentStatusTypes::Deploying, true);
             $this->startDeployCommand($deployment, $reason);
         } catch (\Exception $e) {
             return KubeHelper::PrintException($e);

@@ -7,6 +7,7 @@
 
 ### Enhancements
 * Add Gateway spec.addresses [Issue #66](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/66)
+* Enhanced status detection for deployments and workspaces
 
 ### Upgrade guide
 1. Deploy new image

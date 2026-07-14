@@ -125,7 +125,7 @@ class DeploymentSteps extends \App\Core\BaseController {
             return;
         }
 
-        $deployment->checkStatus();
+        $deployment->checkStatus(true);
 
         Data::set('resource', $step);
         $this->success();
@@ -161,7 +161,7 @@ class DeploymentSteps extends \App\Core\BaseController {
             $this->fail(KubeHelper::PrintException($e));
         }
 
-        $deployment->checkStatus();
+        $deployment->checkStatus(true);
 
         Data::set('resource', $step);
         $this->success();

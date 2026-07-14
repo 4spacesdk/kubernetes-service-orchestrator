@@ -159,7 +159,7 @@ class CustomResourceStep extends BaseDeploymentStep {
     private function getResource(Deployment $deployment, bool $auth = false): K8sResource {
         $yaml = yaml_parse(EnvironmentVariable::ApplyVariablesToString($deployment->findDeploymentSpecification()->custom_resource, $deployment));
 
-        Data::debug($yaml);
+//        Data::debug($yaml);
 
         $resource = new K8sCustomResource(null, $yaml);
 

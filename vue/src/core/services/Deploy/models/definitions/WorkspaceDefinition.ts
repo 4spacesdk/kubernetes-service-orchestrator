@@ -26,6 +26,7 @@ export class WorkspaceDefinition extends BaseModel {
     aliases?: string;
     database_service_id?: number;
     database_service?: DatabaseService;
+    status?: string;
     deployments?: Deployment[];
     labels?: Label[];
     id?: number;
@@ -59,6 +60,7 @@ export class WorkspaceDefinition extends BaseModel {
             delete this.aliases;
             delete this.database_service_id;
             delete this.database_service;
+            delete this.status;
             delete this.deployments;
             delete this.labels;
             delete this.id;
@@ -114,6 +116,9 @@ export class WorkspaceDefinition extends BaseModel {
         }
         if (data.database_service != null) {
             this.database_service = new DatabaseService(data.database_service);
+        }
+        if (data.status != null) {
+            this.status = data.status;
         }
         if (data.deployments != null) {
             this.deployments = data.deployments.map((i: any) => new Deployment(i));

@@ -1,6 +1,7 @@
 <?php namespace App\Controllers;
 
 use App\Core\ResourceController;
+use App\Entities\Deployment;
 use App\Entities\DeploymentPackage;
 use App\Entities\DeploymentPackageDeploymentSpecification;
 use App\Entities\DeploymentSpecification;
@@ -8,6 +9,7 @@ use App\Entities\Label;
 use App\Entities\Workspace;
 use App\Exceptions\ValidationException;
 use App\Interfaces\LabelList;
+use App\Models\DeploymentModel;
 use App\Models\DeploymentPackageDeploymentSpecificationModel;
 use App\Models\MigrationJobModel;
 use Google\ApiCore\ApiException;
@@ -232,6 +234,16 @@ class Workspaces extends ResourceController {
         $item = new Workspace();
         $item->find($id);
         if ($item->exists()) {
+
+            /** @var Deployment $deployments */
+            $deployments = (new DeploymentModel())
+                ->where('workspace_id', $item->id)
+                ->find();
+            foreach ($deployments as $deployment) {
+                $deployment->checkStatus(false);
+            }
+            $item->deployments = $deployments;
+
             $item->checkStatus();
         }
         $this->_setResource($item);

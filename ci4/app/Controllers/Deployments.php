@@ -409,7 +409,7 @@ class Deployments extends ResourceController {
         $item = new Deployment();
         $item->find($id);
         if ($item->exists()) {
-            $item->checkStatus();
+            $item->checkStatus(true);
         }
         $this->_setResource($item);
         $this->success();

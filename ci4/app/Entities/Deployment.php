@@ -212,7 +212,7 @@ class Deployment extends Entity {
         DeploymentStepHelper::EmitTrigger(DeploymentStepTriggers::Deployment_Volume_Updated, $this);
     }
 
-    public function updateStatus(string $value): void {
+    public function updateStatus(string $value, bool $cascadeWorkspace): void {
         if ($this->status != $value) {
             $this->status = $value;
             $this->save();
@@ -222,16 +222,8 @@ class Deployment extends Entity {
                 (new ChangeEvent(null, $this->toArray()))->toArray()
             );
 
-            if ($this->workspace_id) {
-                /** @var Workspace $workspace */
-                $workspace = (new WorkspaceModel())
-                    ->where('id', $this->workspace_id)
-                    ->find();
-                $workspace->deployments->find();
-                ZMQProxy::getInstance()->send(
-                    Events::Workspace_Changed_Status($this->workspace_id),
-                    (new ChangeEvent(null, $workspace->toArray()))->toArray()
-                );
+            if ($cascadeWorkspace && $this->workspace_id) {
+                $this->workspace->checkStatus();
             }
         }
     }
@@ -275,7 +267,12 @@ class Deployment extends Entity {
         return $this->findDeploymentSpecification()->getUrl($this->workspace->subdomain, $domain, $includeTls, $includeSuffix);
     }
 
-    public function checkStatus(): void {
+    public function checkStatus(bool $cascadeWorkspaceCheck): void {
+        // If set inactive, must explicitly be activated again
+        if ($this->status === \DeploymentStatusTypes::Inactive) {
+            return;
+        }
+
         $spec = $this->findDeploymentSpecification();
         $steps = $spec->getDeploymentSteps($this);
 
@@ -289,7 +286,7 @@ class Deployment extends Entity {
         }
 
         if ($hasInvalidStep) {
-            $this->updateStatus(\DeploymentStatusTypes::Draft);
+            $this->updateStatus(\DeploymentStatusTypes::Draft, $cascadeWorkspaceCheck);
             return;
         }
 
@@ -306,11 +303,11 @@ class Deployment extends Entity {
         }
 
         if ($hasFailedStep) {
-            $this->updateStatus(\DeploymentStatusTypes::Deploying);
+            $this->updateStatus(\DeploymentStatusTypes::Deploying, $cascadeWorkspaceCheck);
             return;
         }
 
-        $this->updateStatus(\DeploymentStatusTypes::Active);
+        $this->updateStatus(\DeploymentStatusTypes::Active, $cascadeWorkspaceCheck);
     }
 
     public function deployAllSteps(): ?string {
@@ -322,7 +319,7 @@ class Deployment extends Entity {
                 $allErrors[] = "<strong>{$step->getName()}</strong>: {$errors}";
             }
         }
-        $this->checkStatus();
+        $this->checkStatus(false);
 
         ZMQProxy::getInstance()->send(
             Events::Deployment_Deployed(),
@@ -341,7 +338,7 @@ class Deployment extends Entity {
                 $allErrors[] = "<strong>{$step->getName()}</strong>: {$errors}";
             }
         }
-        $this->checkStatus();
+        $this->checkStatus(false);
 
         ZMQProxy::getInstance()->send(
             Events::Deployment_Terminated(),
