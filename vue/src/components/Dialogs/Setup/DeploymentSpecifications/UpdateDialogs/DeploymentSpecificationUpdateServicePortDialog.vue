@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
-import {DeploymentSpecification} from "@/core/services/Deploy/models";
-import {NetworkTypes} from "@/constants";
+import {DeploymentSpecification, System} from "@/core/services/Deploy/models";
+import {HealthCheckTypes, HostingProviders, NetworkTypes} from "@/constants";
 
 export interface DeploymentSpecificationUpdateServicePortDialog_Input {
     deploymentSpecification: DeploymentSpecification;
@@ -11,6 +11,8 @@ export interface DeploymentSpecificationUpdateServicePortDialog_Input {
         name?: string;
         port?: number;
         targetPort?: number;
+        healthCheckType?: string;
+        healthCheckPath?: string;
     };
 
     onSaveCallback: () => void;
@@ -26,14 +28,22 @@ const showDialog = ref(false);
 const formIsValid = ref(false);
 const showProtocol = ref(false);
 const showTargetPort = ref(false);
+const showHealthCheck = ref(false);
 
 const protocolItems = ref([
     'TCP', 'UDP', 'SCTP',
+]);
+const healthCheckItems = ref([
+    {title: 'Default (let GKE decide)', value: ''},
+    {title: 'HTTP', value: HealthCheckTypes.Http},
+    {title: 'TCP - for ports that do not speak HTTP, eg. websockets', value: HealthCheckTypes.Tcp},
 ]);
 const protocol = ref('');
 const name = ref('');
 const port = ref<number>();
 const targetPort = ref<number>();
+const healthCheckType = ref('');
+const healthCheckPath = ref('');
 
 const rules = {
     required: [
@@ -63,10 +73,16 @@ function render() {
     showProtocol.value = true;
     showTargetPort.value = true;
 
+    // A HealthCheckPolicy is only acted on by a GKE Gateway, so there is nothing to configure elsewhere.
+    showHealthCheck.value = System.Instance.hosting_provider === HostingProviders.Gke
+        && props.input.deploymentSpecification.network_type === NetworkTypes.GatewayApi;
+
     protocol.value = props.input.servicePort.protocol ?? protocolItems.value[0];
     name.value = props.input.servicePort.name ?? '';
     port.value = props.input.servicePort.port;
     targetPort.value = props.input.servicePort.targetPort;
+    healthCheckType.value = props.input.servicePort.healthCheckType ?? '';
+    healthCheckPath.value = props.input.servicePort.healthCheckPath ?? '';
     showDialog.value = true;
 }
 
@@ -84,6 +100,10 @@ function onSaveBtnClicked() {
     props.input.servicePort.name = name.value;
     props.input.servicePort.port = port.value!;
     props.input.servicePort.targetPort = targetPort.value!;
+    props.input.servicePort.healthCheckType = healthCheckType.value;
+    props.input.servicePort.healthCheckPath = healthCheckType.value === HealthCheckTypes.Http
+        ? healthCheckPath.value
+        : '';
     props.input.onSaveCallback();
     close();
 }
@@ -147,6 +167,30 @@ function onCloseBtnClicked() {
                                 label="Target Port"
                                 :rules="rules.required"
                                 type="number"
+                            />
+                        </v-col>
+                        <v-col
+                            v-if="showHealthCheck"
+                            cols="6">
+                            <v-select
+                                v-model="healthCheckType"
+                                variant="outlined"
+                                label="Health Check"
+                                :items="healthCheckItems"
+                                hint="A single TCP port forces the whole service onto a TCP health check, since one policy covers every port"
+                                persistent-hint
+                            />
+                        </v-col>
+                        <v-col
+                            v-if="showHealthCheck && healthCheckType === HealthCheckTypes.Http"
+                            cols="6">
+                            <v-text-field
+                                v-model="healthCheckPath"
+                                variant="outlined"
+                                label="Health Check Path"
+                                placeholder="/"
+                                hint="Request path GKE probes. Defaults to /"
+                                persistent-hint
                             />
                         </v-col>
                     </v-row>

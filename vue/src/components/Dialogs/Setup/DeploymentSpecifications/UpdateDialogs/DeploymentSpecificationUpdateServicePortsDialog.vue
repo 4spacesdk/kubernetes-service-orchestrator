@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
-import {DeploymentSpecification} from "@/core/services/Deploy/models";
+import {DeploymentSpecification, System} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
-import {NetworkTypes} from "@/constants";
+import {HealthCheckTypes, HostingProviders, NetworkTypes} from "@/constants";
 
 export interface DeploymentSpecificationUpdateServicePortsDialog_Input {
     deploymentSpecification: DeploymentSpecification;
@@ -15,6 +15,8 @@ interface Row {
     name?: string;
     port?: number;
     targetPort?: number;
+    healthCheckType?: string;
+    healthCheckPath?: string;
 }
 
 interface Header {
@@ -33,6 +35,29 @@ const itemCount = ref(0);
 const rows = ref<Row[]>([]);
 const headers = ref<Header[]>([]);
 const isSaving = ref(false);
+const showHealthCheck = ref(false);
+
+/**
+ * One HealthCheckPolicy covers every port of the service, so a port that cannot answer HTTP drags the
+ * whole service onto a TCP check. Spell the outcome out rather than letting it surprise people later.
+ */
+const healthCheckSummary = computed(() => {
+    if (!showHealthCheck.value) {
+        return null;
+    }
+
+    const types = rows.value.map(row => row.healthCheckType);
+    if (types.includes(HealthCheckTypes.Tcp)) {
+        return types.includes(HealthCheckTypes.Http)
+            ? 'TCP health check for the whole service. The HTTP ports are covered by it too, so their path is ignored.'
+            : 'TCP health check for the whole service.';
+    }
+    if (types.includes(HealthCheckTypes.Http)) {
+        const path = rows.value.find(row => row.healthCheckType === HealthCheckTypes.Http && row.healthCheckPath)?.healthCheckPath;
+        return `HTTP health check for the whole service, on ${path ?? '/'}.`;
+    }
+    return 'No HealthCheckPolicy. GKE falls back to its default HTTP check, which a websocket port will fail.';
+});
 
 // <editor-fold desc="Functions">
 
@@ -50,13 +75,19 @@ onUnmounted(() => {
 function render() {
     showDialog.value = true;
 
+    showHealthCheck.value = System.Instance.hosting_provider === HostingProviders.Gke
+        && props.input.deploymentSpecification.network_type === NetworkTypes.GatewayApi;
+
     headers.value = [
         {title: 'Protocol', key: 'protocol', sortable: false},
         {title: 'Name', key: 'name', sortable: false},
         {title: 'Port', key: 'port', sortable: false},
         {title: 'Target Port', key: 'targetPort', sortable: false},
-        {title: '', key: 'actions', sortable: false},
     ];
+    if (showHealthCheck.value) {
+        headers.value.push({title: 'Health Check', key: 'healthCheckType', sortable: false});
+    }
+    headers.value.push({title: '', key: 'actions', sortable: false});
 
     isLoading.value = true;
     Api.deploymentSpecifications().get()
@@ -70,6 +101,8 @@ function render() {
                         name: servicePort.name ?? '',
                         port: servicePort.port,
                         targetPort: servicePort.target_port,
+                        healthCheckType: servicePort.health_check_type ?? '',
+                        healthCheckPath: servicePort.health_check_path ?? '',
                     }
                 }) ?? [];
             itemCount.value = rows.value.length;
@@ -175,6 +208,13 @@ function onCloseBtnClicked() {
                     :items-per-page="-1"
                     class="table"
                     density="compact">
+                    <template v-slot:item.healthCheckType="{ item }">
+                        <span v-if="item.healthCheckType === HealthCheckTypes.Tcp">TCP</span>
+                        <span v-else-if="item.healthCheckType === HealthCheckTypes.Http">
+                            HTTP {{ item.healthCheckPath || '/' }}
+                        </span>
+                        <span v-else class="text-disabled">Default</span>
+                    </template>
                     <template v-slot:item.actions="{ item }">
                         <div class="d-flex justify-end gap-1">
                             <v-btn
@@ -193,6 +233,15 @@ function onCloseBtnClicked() {
                         </div>
                     </template>
                 </v-data-table-server>
+
+                <v-alert
+                    v-if="healthCheckSummary"
+                    class="mt-2"
+                    type="info"
+                    variant="tonal"
+                    density="compact">
+                    {{ healthCheckSummary }}
+                </v-alert>
             </v-card-text>
             <v-divider/>
             <v-card-actions>

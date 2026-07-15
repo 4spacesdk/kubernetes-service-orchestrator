@@ -158,7 +158,9 @@ class DeploymentSpecifications extends ResourceController {
                     $data->protocol,
                     $data->name,
                     $data->port,
-                    $data->targetPort ?? $data->port
+                    $data->targetPort ?? $data->port,
+                    $data->healthCheckType ?? null,
+                    $data->healthCheckPath ?? null
                 ),
                 $body->values
             );

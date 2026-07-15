@@ -2,7 +2,7 @@
 import { useRoute, useRouter } from "vue-router";
 import { computed, defineComponent, onMounted, reactive, ref, watch } from "vue";
 import { System } from "@/core/services/Deploy/models";
-import { NetworkTypes } from "@/constants";
+import { HostingProviderItems, NetworkTypes } from "@/constants";
 import { Api } from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import ApiService from "@/services/ApiService";
@@ -134,6 +134,21 @@ function onConfirmGithubAppCreation() {
                     multiple
                     density="compact"
                     hide-details
+                />
+            </v-col>
+            <v-col cols="6">
+                <v-combobox
+                    v-model="value.hosting_provider"
+                    :items="HostingProviderItems"
+                    item-title="title"
+                    item-value="value"
+                    :return-object="false"
+                    label="Hosting Provider"
+                    hint="Pick one, or type your own. GKE enables a HealthCheckPolicy for services behind a GKE Gateway."
+                    persistent-hint
+                    variant="outlined"
+                    density="compact"
+                    clearable
                 />
             </v-col>
             <v-col cols="12">

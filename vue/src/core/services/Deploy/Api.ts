@@ -367,6 +367,8 @@ export interface ServicePort {
     name?: string;
     port?: number;
     targetPort?: number;
+    healthCheckType?: string;
+    healthCheckPath?: string;
 }
 
 export interface ServicePortList {

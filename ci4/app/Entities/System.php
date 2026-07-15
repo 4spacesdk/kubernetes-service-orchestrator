@@ -9,6 +9,7 @@ use App\Core\Entity;
  * @property bool $is_network_istio_supported
  * @property bool $is_network_contour_supported
  * @property bool $is_network_gateway_api_supported
+ * @property string $hosting_provider
  * @property int $github_app_id
  * @property string $github_app_client_id
  * @property string $github_app_client_secret

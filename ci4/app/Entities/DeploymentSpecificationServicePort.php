@@ -11,15 +11,20 @@ use App\Core\Entity;
  * @property string $name
  * @property int $port
  * @property int $target_port
+ * @property string $health_check_type
+ * @property string $health_check_path
  */
 class DeploymentSpecificationServicePort extends Entity {
 
-    public static function Create(string $protocol, string $name, int $port, int $targetPort): DeploymentSpecificationServicePort {
+    public static function Create(string $protocol, string $name, int $port, int $targetPort,
+                                  ?string $healthCheckType = null, ?string $healthCheckPath = null): DeploymentSpecificationServicePort {
         $item = new DeploymentSpecificationServicePort();
         $item->protocol = $protocol;
         $item->name = $name;
         $item->port = $port;
         $item->target_port = $targetPort;
+        $item->health_check_type = $healthCheckType;
+        $item->health_check_path = $healthCheckPath;
         $item->save();
         return $item;
     }

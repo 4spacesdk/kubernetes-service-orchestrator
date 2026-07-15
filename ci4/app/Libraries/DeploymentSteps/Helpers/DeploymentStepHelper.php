@@ -11,6 +11,7 @@ use App\Libraries\DeploymentSteps\CustomResourceStep;
 use App\Libraries\DeploymentSteps\DatabaseStep;
 use App\Libraries\DeploymentSteps\DeploymentStep;
 use App\Libraries\DeploymentSteps\GatewayHttpRouteStep;
+use App\Libraries\DeploymentSteps\HealthCheckPolicyStep;
 use App\Libraries\DeploymentSteps\IngressStep;
 use App\Libraries\DeploymentSteps\IstioVirtualServiceStep;
 use App\Libraries\DeploymentSteps\KServiceStep;
@@ -82,6 +83,12 @@ class DeploymentStepHelper {
         Service_Found = 'found';
 
     const string
+        HealthCheckPolicy_NotFound = 'not-found',
+        HealthCheckPolicy_Found = 'found',
+        HealthCheckPolicy_NotFoundNotExpected = 'not-found-not-expected',
+        HealthCheckPolicy_FoundNotExpected = 'found-not-expected';
+
+    const string
         Ingress_NotFound = 'not-found',
         Ingress_Found = 'found';
 
@@ -137,6 +144,7 @@ class DeploymentStepHelper {
             DeploymentSteps::Deployment => new DeploymentStep(),
             DeploymentSteps::KService => new KServiceStep(),
             DeploymentSteps::Service => new ServiceStep(),
+            DeploymentSteps::HealthCheckPolicy => new HealthCheckPolicyStep(),
             DeploymentSteps::Ingress => new IngressStep(),
             DeploymentSteps::IstioVirtualService => new IstioVirtualServiceStep(),
             DeploymentSteps::Migration => new MigrationJobStep(),

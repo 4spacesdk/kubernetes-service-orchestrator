@@ -9,6 +9,7 @@ use App\Libraries\DeploymentSteps\CustomResourceStep;
 use App\Libraries\DeploymentSteps\DatabaseStep;
 use App\Libraries\DeploymentSteps\DeploymentStep;
 use App\Libraries\DeploymentSteps\GatewayHttpRouteStep;
+use App\Libraries\DeploymentSteps\HealthCheckPolicyStep;
 use App\Libraries\DeploymentSteps\IngressStep;
 use App\Libraries\DeploymentSteps\IstioVirtualServiceStep;
 use App\Libraries\DeploymentSteps\KServiceStep;
@@ -116,6 +117,7 @@ class DeploymentSpecification extends Entity {
             DeploymentStep::class,
             KServiceStep::class,
             ServiceStep::class,
+            HealthCheckPolicyStep::class,
             IngressStep::class,
             IstioVirtualServiceStep::class,
             MigrationJobStep::class,
@@ -173,6 +175,14 @@ class DeploymentSpecification extends Entity {
                 case \WorkloadTypes::Deployment:
                 case \WorkloadTypes::DaemonSet:
                     $steps[] = new ServiceStep();
+
+                    // A HealthCheckPolicy targets a Service, and only a GKE Gateway acts on one. The step
+                    // itself stays inert until a service port asks for a health check.
+                    if ($this->enable_external_access
+                        && $this->network_type == \NetworkTypes::GatewayApi
+                        && System::Get()->hosting_provider == \HostingProviders::Gke) {
+                        $steps[] = new HealthCheckPolicyStep();
+                    }
                     break;
                 case \WorkloadTypes::KNativeService:
                     // KNative Service is handling Service

@@ -382,6 +382,29 @@ export const NetworkTypes = {
     GatewayApi: "gateway-api",
 };
 
+export const HostingProviders = {
+    Gke: "gke",
+    Eks: "eks",
+    Aks: "aks",
+    DigitalOcean: "digitalocean",
+    Openshift: "openshift",
+    SelfHosted: "self-hosted",
+};
+
+export const HostingProviderItems = [
+    {title: "Google Kubernetes Engine (GKE)", value: HostingProviders.Gke},
+    {title: "Amazon Elastic Kubernetes Service (EKS)", value: HostingProviders.Eks},
+    {title: "Azure Kubernetes Service (AKS)", value: HostingProviders.Aks},
+    {title: "DigitalOcean Kubernetes", value: HostingProviders.DigitalOcean},
+    {title: "OpenShift", value: HostingProviders.Openshift},
+    {title: "Self hosted", value: HostingProviders.SelfHosted},
+];
+
+export const HealthCheckTypes = {
+    Http: "http",
+    Tcp: "tcp",
+};
+
 export const DeploymentStepLevels = {
     Workspace: "workspace",
     Deployment: "deployment",

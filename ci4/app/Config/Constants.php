@@ -168,6 +168,28 @@ class NetworkTypes {
     ;
 }
 
+/**
+ * The hosting provider is free text, so an installation can name a provider we do not know about.
+ * These are the well known ones. Only Gke changes behavior today by enabling the HealthCheckPolicy step.
+ */
+class HostingProviders {
+    const string
+        Gke = 'gke',
+        Eks = 'eks',
+        Aks = 'aks',
+        DigitalOcean = 'digitalocean',
+        Openshift = 'openshift',
+        SelfHosted = 'self-hosted'
+    ;
+}
+
+class HealthCheckTypes {
+    const string
+        Http = 'http',
+        Tcp = 'tcp'
+    ;
+}
+
 class DeploymentAnnotationLevels {
     const string
         Deployment = 'deployment',

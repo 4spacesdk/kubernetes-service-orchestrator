@@ -10,6 +10,7 @@ export class SystemDefinition extends BaseModel {
     is_network_istio_supported?: boolean;
     is_network_contour_supported?: boolean;
     is_network_gateway_api_supported?: boolean;
+    hosting_provider?: string;
     github_app_id?: number;
     github_app_client_id?: string;
     github_app_client_secret?: string;
@@ -38,6 +39,7 @@ export class SystemDefinition extends BaseModel {
             delete this.is_network_istio_supported;
             delete this.is_network_contour_supported;
             delete this.is_network_gateway_api_supported;
+            delete this.hosting_provider;
             delete this.github_app_id;
             delete this.github_app_client_id;
             delete this.github_app_client_secret;
@@ -68,6 +70,9 @@ export class SystemDefinition extends BaseModel {
         }
         if (data.is_network_gateway_api_supported != null) {
             this.is_network_gateway_api_supported = data.is_network_gateway_api_supported;
+        }
+        if (data.hosting_provider != null) {
+            this.hosting_provider = data.hosting_provider;
         }
         if (data.github_app_id != null) {
             this.github_app_id = data.github_app_id;

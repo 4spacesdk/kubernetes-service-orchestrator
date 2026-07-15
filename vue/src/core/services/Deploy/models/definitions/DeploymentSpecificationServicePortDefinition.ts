@@ -13,6 +13,8 @@ export class DeploymentSpecificationServicePortDefinition extends BaseModel {
     name?: string;
     port?: number;
     target_port?: number;
+    health_check_type?: string;
+    health_check_path?: string;
     id?: number;
     created?: string;
     updated?: string;
@@ -36,6 +38,8 @@ export class DeploymentSpecificationServicePortDefinition extends BaseModel {
             delete this.name;
             delete this.port;
             delete this.target_port;
+            delete this.health_check_type;
+            delete this.health_check_path;
             delete this.id;
             delete this.created;
             delete this.updated;
@@ -65,6 +69,12 @@ export class DeploymentSpecificationServicePortDefinition extends BaseModel {
         }
         if (data.target_port != null) {
             this.target_port = data.target_port;
+        }
+        if (data.health_check_type != null) {
+            this.health_check_type = data.health_check_type;
+        }
+        if (data.health_check_path != null) {
+            this.health_check_path = data.health_check_path;
         }
         if (data.id != null) {
             this.id = data.id;

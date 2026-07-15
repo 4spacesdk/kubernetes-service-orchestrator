@@ -1,5 +1,25 @@
 # Changelog
 
+## v1.8.6 (2026-07-15)
+
+### Fixed bugs
+* GKE Gateway reported ports that do not speak HTTP, such as websocket ports unhealthy. A GKE Gateway derives one health check per (Service, port) referenced from an HTTPRoute, and the default check is an HTTP GET which a websocket port can never answer.
+
+### Enhancements
+* Service ports can now declare a health check type (HTTP with a request path, or TCP). On a GKE cluster, kso generates a `HealthCheckPolicy` (networking.gke.io/v1) for services behind a GKE Gateway. A HealthCheckPolicy has no per-port selector, so a single TCP port puts the whole service on a TCP check, which is the only configuration that keeps an HTTP port and a websocket port healthy at the same time.
+* New system setting `Hosting Provider`. The well-known providers can be picked from a list, and anything else can be typed in. Only `gke` changes behavior today, by enabling the health check configuration.
+
+### Upgrade guide
+1. Deploy new image
+2. Run migrations [(Guide)](https://github.com/4spacesdk/kubernetes-service-orchestrator?tab=readme-ov-file#migrate-database-helm)
+3. Set `Hosting Provider` under Setup -> System
+4. On GKE, grant kso's service account access to `healthcheckpolicies.networking.gke.io` (get, list, create, update, delete). Without it the deploy step fails with a 403. See the install chart in `4spacesdk/helm-charts`.
+
+### Notes
+* Existing deployments are unaffected until a service port is given a health check type. Until then no HealthCheckPolicy is generated, and GKE keeps using its default health check.
+
+
+
 ## v1.8.5 (2026-07-14)
 
 ### Fixed bugs
