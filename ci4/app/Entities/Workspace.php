@@ -306,6 +306,10 @@ class Workspace extends Entity {
     }
 
     public function checkStatus(): void {
+        if (!$this->exists()) {
+            return;
+        }
+
         $oldStatus = $this->status;
 
         /** @var Deployment $deployments */

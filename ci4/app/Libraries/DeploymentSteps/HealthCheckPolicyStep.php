@@ -131,10 +131,12 @@ class HealthCheckPolicyStep extends BaseDeploymentStep {
     public function startDeployCommand(Deployment $deployment, ?string $reason = null): void {
         $resource = $this->getResource($deployment, true);
 
-        if ($this->getPolicyType($deployment)) {
+        // Decide from the built object, not a fresh getPolicyType() call: re-deriving it here could
+        // disagree with what getResource() built and apply a spec-less policy, which the API rejects.
+        if ($resource->getAttribute('spec')) {
             $resource->createOrUpdate();
         } else if ($resource->exists()) {
-            // The spec no longer asks for a policy, so hand the Service back to GKE's default health check.
+            // No port asks for a policy, so hand the Service back to GKE's default health check.
             $resource->synced();
             $resource->delete();
         }

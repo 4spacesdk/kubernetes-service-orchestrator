@@ -1,5 +1,18 @@
 # Changelog
 
+## v1.8.7 (2026-07-15)
+
+### Fixed bugs
+* Deploying a deployment created an empty workspace. When a deployment's status cascaded to its workspace, the workspace relation was an unloaded, id-less entity, and the status update saved it as a brand new row.
+
+### Enhancements
+* 
+
+### Upgrade guide
+1. Deploy new image
+
+
+
 ## v1.8.6 (2026-07-15)
 
 ### Fixed bugs

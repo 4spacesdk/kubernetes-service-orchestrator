@@ -223,7 +223,12 @@ class Deployment extends Entity {
             );
 
             if ($cascadeWorkspace && $this->workspace_id) {
-                $this->workspace->checkStatus();
+                if (!$this->workspace->exists()) {
+                    $this->workspace->find();
+                }
+                if ($this->workspace->exists()) {
+                    $this->workspace->checkStatus();
+                }
             }
         }
     }
