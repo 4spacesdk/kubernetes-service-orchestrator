@@ -12,18 +12,10 @@ This service enables interaction with the Kubernetes API and facilitates the eff
 ### Create `values.yaml` file
 For a complete set of options see [link](https://github.com/4spacesdk/helm-charts/blob/master/charts/kubernetes-service-orchestrator/values.yaml)
 ```
-ingress:
-  className: nginx
-  enabled: true
-  hosts:
-    - host: chart-example.local
-      paths:
-        - path: /
-          pathType: ImplementationSpecific
-  tls:
-    - secretName: chart-example-tls
-      hosts:
-        - chart-example.local
+# Select a cloud provider. This will enable provider-specific resources.
+# "gke" also grants kso RBAC to manage HealthCheckPolicies (networking.gke.io) for the
+# services it orchestrates, so non-HTTP ports such as websockets stay healthy behind a GKE Gateway.
+provider: ""          # "gke" | "aks" | "eks" | ""
 
 deployment:
 
@@ -60,6 +52,34 @@ deployment:
 #  env:
 #    - name: ""
 #      value: ""
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: { }
+  # kubernetes.io/ingress.class: nginx
+  # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: [ ]
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+gatewayapi:
+  enabled: false
+  annotations: {}
+  labels: {}
+  parentRefs: []
+#    - name: gateway-external
+#      namespace: gateway-system
+  hosts:
+    - chart-example.local
+  healthCheckPolicy:
+    enabled: true
 
 resources:
   limits:
