@@ -6,6 +6,7 @@ use DebugTool\Data;
 use Firebase\JWT\JWT;
 use Github\AuthMethod;
 use Github\Client;
+use Github\ResultPager;
 
 class GithubApp extends \App\Core\BaseController {
 
@@ -146,22 +147,27 @@ class GithubApp extends \App\Core\BaseController {
 
             /** @var \Github\Api\Apps $appsApi */
             $appsApi = $client->api('apps');
-            $repositories = $appsApi->listRepositories();
+            $paginator = new ResultPager($client);
+            $response = $paginator->fetch($appsApi, 'listRepositories');
+            
+            $repositories = $response['repositories'] ?? [];
+            while ($paginator->hasNext()) {
+                $response = $paginator->fetchNext();
+                $repositories = array_merge($repositories, $response['repositories'] ?? []);
+            }
             
             $result = [];
-            if (isset($repositories['repositories'])) {
-                foreach ($repositories['repositories'] as $repo) {
-                    // Skip archived repositories
-                    if (isset($repo['archived']) && $repo['archived']) {
-                        continue;
-                    }
-                    
-                    $result[] = [
-                        'id' => $repo['id'],
-                        'full_name' => $repo['full_name'],
-                        'name' => $repo['name'],
-                    ];
+            foreach ($repositories as $repo) {
+                // Skip archived repositories
+                if (isset($repo['archived']) && $repo['archived']) {
+                    continue;
                 }
+                
+                $result[] = [
+                    'id' => $repo['id'],
+                    'full_name' => $repo['full_name'],
+                    'name' => $repo['name'],
+                ];
             }
 
             // Sort by name
