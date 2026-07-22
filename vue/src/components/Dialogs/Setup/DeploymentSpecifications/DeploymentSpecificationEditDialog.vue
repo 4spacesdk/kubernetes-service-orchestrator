@@ -389,6 +389,17 @@ function onVariableClicked(text: string) {
                                             persistent-hint
                                             hint="Comma-seperated: itk,1tk"/>
                                     </v-col>
+                                    <v-col
+                                        v-if="item.network_type == NetworkTypes.GatewayApi"
+                                        cols="6">
+                                        <v-text-field
+                                            variant="outlined"
+                                            type="number"
+                                            v-model.number="item.gateway_backend_timeout"
+                                            label="Backend timeout (seconds)"
+                                            persistent-hint
+                                            hint="GKE Gateway only. Empty keeps the GCP default of 30s"/>
+                                    </v-col>
                                 </v-row>
                             </div>
                         </v-card>

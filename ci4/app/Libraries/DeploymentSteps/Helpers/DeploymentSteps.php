@@ -25,6 +25,7 @@ class DeploymentSteps {
         KService = 'kservice',
         Service = 'service',
         HealthCheckPolicy = 'health-check-policy',
+        GcpBackendPolicy = 'gcp-backend-policy',
         Ingress = 'ingress',
         IstioVirtualService = 'istio-virtual-service',
         Migration = 'migration';

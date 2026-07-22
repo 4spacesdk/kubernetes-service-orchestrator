@@ -18,7 +18,7 @@ KUBERNETES_MY_NAMESPACE=
 GCLOUD_PROJECT_ID=
 GCLOUD_LOCATION=
 GCLOUD_CLUSTER=
-## Base64-encoded (base64 gcloud-service-account.json | tr -d "\n")
+## Base64-encoded (base64 -i gcloud-service-account.json | tr -d "\n")
 GCLOUD_SERVICE_KEY_FILE=
 
 # Development Tools

@@ -36,6 +36,7 @@ export class DeploymentSpecificationDefinition extends BaseModel {
     enable_rbac?: boolean;
     enable_volumes?: boolean;
     network_type?: string;
+    gateway_backend_timeout?: number;
     domain_tls?: string;
     domain_prefix?: string;
     domain_suffix?: string;
@@ -94,6 +95,7 @@ export class DeploymentSpecificationDefinition extends BaseModel {
             delete this.enable_rbac;
             delete this.enable_volumes;
             delete this.network_type;
+            delete this.gateway_backend_timeout;
             delete this.domain_tls;
             delete this.domain_prefix;
             delete this.domain_suffix;
@@ -168,6 +170,9 @@ export class DeploymentSpecificationDefinition extends BaseModel {
         }
         if (data.network_type != null) {
             this.network_type = data.network_type;
+        }
+        if (data.gateway_backend_timeout != null) {
+            this.gateway_backend_timeout = data.gateway_backend_timeout;
         }
         if (data.domain_tls != null) {
             this.domain_tls = data.domain_tls;

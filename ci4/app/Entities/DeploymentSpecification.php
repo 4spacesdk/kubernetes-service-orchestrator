@@ -9,6 +9,7 @@ use App\Libraries\DeploymentSteps\CustomResourceStep;
 use App\Libraries\DeploymentSteps\DatabaseStep;
 use App\Libraries\DeploymentSteps\DeploymentStep;
 use App\Libraries\DeploymentSteps\GatewayHttpRouteStep;
+use App\Libraries\DeploymentSteps\GcpBackendPolicyStep;
 use App\Libraries\DeploymentSteps\HealthCheckPolicyStep;
 use App\Libraries\DeploymentSteps\IngressStep;
 use App\Libraries\DeploymentSteps\IstioVirtualServiceStep;
@@ -51,6 +52,7 @@ use App\Core\Entity;
  *
  * # Network
  * @property string $network_type
+ * @property int $gateway_backend_timeout
  *
  * # Domain settings
  * @property string $domain_tls
@@ -118,6 +120,7 @@ class DeploymentSpecification extends Entity {
             KServiceStep::class,
             ServiceStep::class,
             HealthCheckPolicyStep::class,
+            GcpBackendPolicyStep::class,
             IngressStep::class,
             IstioVirtualServiceStep::class,
             MigrationJobStep::class,
@@ -182,6 +185,10 @@ class DeploymentSpecification extends Entity {
                         && $this->network_type == \NetworkTypes::GatewayApi
                         && System::Get()->hosting_provider == \HostingProviders::Gke) {
                         $steps[] = new HealthCheckPolicyStep();
+
+                        // A GCPBackendPolicy also targets the Service and is likewise GKE-only. It stays
+                        // inert until the specification sets a gateway_backend_timeout.
+                        $steps[] = new GcpBackendPolicyStep();
                     }
                     break;
                 case \WorkloadTypes::KNativeService:

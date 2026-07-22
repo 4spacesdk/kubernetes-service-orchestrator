@@ -1,5 +1,20 @@
 # Changelog
 
+## v1.8.9 (2026-07-22)
+
+### Enhancements
+* Deployment specifications can now set a `Backend timeout (seconds)`. On a GKE cluster, kso generates a `GCPBackendPolicy` (networking.gke.io/v1) for services behind a GKE Gateway, raising the GCP backend service response timeout above its 30s default. Without it, any request that runs longer than 30s is cut off once it goes through the Gateway, even though the same request succeeds pod-to-pod.
+
+### Upgrade guide
+1. Deploy new image
+2. Run migrations [(Guide)](https://github.com/4spacesdk/kubernetes-service-orchestrator?tab=readme-ov-file#migrate-database-helm)
+3. On GKE, grant kso's service account access to `gcpbackendpolicies.networking.gke.io` (get, list, create, update, delete). Without it the deploy step fails with a 403. See the install chart in `4spacesdk/helm-charts`.
+
+### Notes
+* Existing deployments are unaffected until a specification is given a backend timeout. Until then no GCPBackendPolicy is generated, and GKE keeps using its default 30s backend timeout.
+
+
+
 ## v1.8.8 (2026-07-16)
 
 ### Fixed bugs
