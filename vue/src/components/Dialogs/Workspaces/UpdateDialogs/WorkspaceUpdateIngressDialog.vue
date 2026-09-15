@@ -100,7 +100,7 @@ function onCloseBtnClicked() {
 <template>
     <v-dialog persistent width="60vw" v-model="showDialog">
         <v-card class="w-100 h-100">
-            <v-card-title>Workspace</v-card-title>
+            <v-card-title>Domain</v-card-title>
             <v-divider />
             <v-card-text>
                 <v-row dense>
@@ -138,7 +138,7 @@ function onCloseBtnClicked() {
                             variant="outlined"
                             label="Aliases"
                             persistent-hint
-                            hint="Comma-seperated: itk,1tk"
+                            hint="Comma-separated subdomains or hostnames on the domain: 4spaces.dk,kso. Redirects (301) to the workspace hostname. Gateway API only"
                         />
                     </v-col>
                 </v-row>

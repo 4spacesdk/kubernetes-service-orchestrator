@@ -295,8 +295,66 @@ class Workspace extends Entity {
 
         $this->domain_id = $domainId;
         $this->subdomain = $subdomain;
-        $this->aliases = $aliases;
+        $this->aliases = implode(',', self::ParseAliases($aliases, $subdomain, $domain));
         $this->save();
+    }
+
+    /**
+     * Hostnames that redirect to this workspace
+     * @return string[]
+     */
+    public function getAliasHostnames(): array {
+        if (!$this->domain->exists()) {
+            $this->domain->find();
+        }
+        $hostnames = [];
+        foreach (explode(',', $this->aliases ?? '') as $alias) {
+            $alias = strtolower(trim($alias));
+            if (strlen($alias) == 0) {
+                continue;
+            }
+            $hostnames[] = self::AliasToHostname($alias, $this->domain);
+        }
+        return array_values(array_unique($hostnames));
+    }
+
+    /**
+     * Aliases are comma-separated. Each alias is either a subdomain or a hostname on the domain
+     * @return string[]
+     * @throws ValidationException
+     */
+    private static function ParseAliases(string $aliases, string $subdomain, Domain $domain): array {
+        $domainName = strtolower($domain->name);
+        $primaryHostname = strtolower($subdomain) . '.' . $domainName;
+        $result = [];
+        foreach (explode(',', $aliases) as $alias) {
+            $alias = strtolower(trim($alias));
+            if (strlen($alias) == 0) {
+                continue;
+            }
+            if (str_contains($alias, '.') && $alias !== $domainName && !str_ends_with($alias, '.' . $domainName)) {
+                throw new ValidationException("Alias \"{$alias}\" must be a subdomain or a hostname on {$domainName}");
+            }
+            $hostname = self::AliasToHostname($alias, $domain);
+            if (!preg_match('/^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9-]+$/', $hostname)) {
+                throw new ValidationException("Alias \"{$alias}\" is not a valid hostname");
+            }
+            if ($hostname === $primaryHostname) {
+                throw new ValidationException("Alias \"{$alias}\" is the same as the workspace hostname");
+            }
+            if (!in_array($alias, $result)) {
+                $result[] = $alias;
+            }
+        }
+        return $result;
+    }
+
+    private static function AliasToHostname(string $alias, Domain $domain): string {
+        $domainName = strtolower($domain->name);
+        if ($alias === $domainName || str_ends_with($alias, '.' . $domainName)) {
+            return $alias;
+        }
+        return $alias . '.' . $domainName;
     }
 
     public function updateLabels(Label $values): void {

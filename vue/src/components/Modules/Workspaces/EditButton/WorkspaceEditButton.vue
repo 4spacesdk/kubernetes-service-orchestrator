@@ -139,8 +139,8 @@ function onUpdateLabelsClicked() {
                     dense
                     @click="onUpdateIngressClicked">
                     <v-list-item-title>
-                        <v-icon size="small" class="my-auto ml-2">fa fa-code-merge</v-icon>
-                        <span class="ml-2">Ingress</span>
+                        <v-icon size="small" class="my-auto ml-2">fa fa-globe</v-icon>
+                        <span class="ml-2">Domain</span>
                     </v-list-item-title>
                 </v-list-item>
 

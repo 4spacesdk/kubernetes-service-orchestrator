@@ -128,7 +128,7 @@ class Workspaces extends ResourceController {
                 $item->updateIngress(
                     $this->request->getGet('domainId'),
                     $this->request->getGet('subdomain'),
-                    $this->request->getGet('aliases')
+                    $this->request->getGet('aliases') ?? ''
                 );
             } catch (ValidationException $e) {
                 $this->fail($e->getMessage());

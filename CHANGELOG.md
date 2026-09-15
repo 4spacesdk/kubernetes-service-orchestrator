@@ -1,5 +1,22 @@
 # Changelog
 
+## v1.8.10 (2026-09-15)
+
+### Fixed bugs
+* A workspace served on the apex hostname of a domain with `https_redirect` was attached to the wildcard listener, which does not match the apex. The HTTPRoute now attaches to the apex listener.
+
+### Enhancements
+* Workspace aliases redirect (301) to the workspace hostname on Gateway API. An alias is either a subdomain or a hostname on the workspace domain. The `Gateway HTTP Route` step creates an HTTPRoute with a `RequestRedirect` per alias, and deletes redirects for removed aliases on the next deploy.
+* The workspace menu item `Ingress` is renamed `Domain`, since it also applies to Gateway API.
+
+### Upgrade guide
+1. Deploy new image
+2. Run migrations [(Guide)](https://github.com/4spacesdk/kubernetes-service-orchestrator?tab=readme-ov-file#migrate-database-helm)
+3. kso needs `list` on `httproutes.gateway.networking.k8s.io` to find redirects for removed aliases. The install chart in `4spacesdk/helm-charts` now grants kso access to `gateways`, `httproutes` and `referencegrants` (gateway.networking.k8s.io).
+4. Deploy the `Gateway HTTP Route` step on workspaces with aliases.
+
+
+
 ## v1.8.9 (2026-07-22)
 
 ### Enhancements

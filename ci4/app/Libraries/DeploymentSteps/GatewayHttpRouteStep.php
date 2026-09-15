@@ -2,6 +2,7 @@
 
 use App\Entities\Deployment;
 use App\Entities\Domain;
+use App\Entities\Gateway;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepLevels;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
@@ -14,6 +15,9 @@ use RenokiCo\PhpK8s\Exceptions\KubernetesAPIException;
 use RenokiCo\PhpK8s\Kinds\K8sEvent;
 
 class GatewayHttpRouteStep extends BaseDeploymentStep {
+
+    private const string AliasRedirectPrefix = 'kso-alias-redirect-';
+    private const string AliasRedirectLabel = '4spaces.kso/alias-redirect';
 
     public function getIdentifier(): string {
         return DeploymentSteps::GatewayHttpRoute;
@@ -154,6 +158,7 @@ class GatewayHttpRouteStep extends BaseDeploymentStep {
         foreach ($resources as $resource) {
             $resource->createOrUpdate();
         }
+        $this->deleteStaleAliasRedirects($deployment, $resources);
     }
 
     public function startTerminateCommand(Deployment $deployment): void {
@@ -161,6 +166,30 @@ class GatewayHttpRouteStep extends BaseDeploymentStep {
         foreach ($resources as $resource) {
             $resource->synced();
             $resource->delete();
+        }
+        $this->deleteStaleAliasRedirects($deployment, $resources);
+    }
+
+    /**
+     * Alias redirects are labeled with the workspace id, so redirects for removed aliases can be found and deleted
+     * @param K8sHttpRoute[] $keep
+     * @throws KubernetesAPIException
+     */
+    private function deleteStaleAliasRedirects(Deployment $deployment, array $keep): void {
+        $workspace = $deployment->workspace;
+        $keepNames = array_map(fn(K8sHttpRoute $resource) => $resource->getName(), $keep);
+
+        $auth = new KubeAuth();
+        $cluster = $auth->authenticate();
+
+        $existing = (new K8sHttpRoute())
+            ->onCluster($cluster)
+            ->setNamespace($workspace->namespace)
+            ->all(['labelSelector' => self::AliasRedirectLabel . '=' . $workspace->id]);
+        foreach ($existing as $resource) {
+            if (!in_array($resource->getName(), $keepNames)) {
+                $resource->delete();
+            }
         }
     }
 
@@ -261,23 +290,48 @@ class GatewayHttpRouteStep extends BaseDeploymentStep {
                         'app.kubernetes.io/managed-by' => '4spaces.kso',
                     ]);
 
-                $parentRef = [
-                    'name' => $gateway->name,
-                    'namespace' => $gateway->namespace,
-                ];
-
-                if ($domain->https_redirect) {
-                    $parentRef['sectionName'] = 'https-wildcard-' . str_replace('.', '-', $domain->name);
-                }
-
                 $resource->setAttribute('spec', [
-                    'parentRefs' => [$parentRef],
+                    'parentRefs' => [$this->getParentRef($gateway, $domain, $fqdn)],
                     'hostnames' => [$fqdn],
                     'rules' => $chunk,
                 ]);
 
                 $resources[] = $resource;
             }
+        }
+
+        $primaryHostname = "{$workspace->subdomain}.{$domain->name}";
+        foreach ($workspace->getAliasHostnames() as $alias) {
+            $resource = new K8sHttpRoute();
+            $resource
+                ->setName(self::AliasRedirectPrefix . $alias)
+                ->setNamespace($workspace->namespace)
+                ->setLabels([
+                    self::AliasRedirectLabel => (string)$workspace->id,
+                ])
+                ->setAnnotations([
+                    'app.kubernetes.io/managed-by' => '4spaces.kso',
+                ]);
+
+            $resource->setAttribute('spec', [
+                'parentRefs' => [$this->getParentRef($gateway, $domain, $alias)],
+                'hostnames' => [$alias],
+                'rules' => [
+                    [
+                        'filters' => [
+                            [
+                                'type' => 'RequestRedirect',
+                                'requestRedirect' => [
+                                    'hostname' => $primaryHostname,
+                                    'statusCode' => 301,
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ]);
+
+            $resources[] = $resource;
         }
 
         if ($auth) {
@@ -289,6 +343,22 @@ class GatewayHttpRouteStep extends BaseDeploymentStep {
         }
 
         return $resources;
+    }
+
+    private function getParentRef(Gateway $gateway, Domain $domain, string $hostname): array {
+        $parentRef = [
+            'name' => $gateway->name,
+            'namespace' => $gateway->namespace,
+        ];
+
+        // With https redirect the route attaches to the https listener only. The http listener is served by the gateway redirect route.
+        // A wildcard listener does not match the apex hostname, so the apex needs its own listener.
+        if ($domain->https_redirect) {
+            $listener = strtolower($hostname) === strtolower($domain->name) ? 'https-' : 'https-wildcard-';
+            $parentRef['sectionName'] = $listener . str_replace('.', '-', $domain->name);
+        }
+
+        return $parentRef;
     }
 
     private function getHttpRouteRules(Deployment $deployments): array {
