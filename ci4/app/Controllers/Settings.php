@@ -14,7 +14,9 @@ class Settings extends \App\Core\BaseController {
 
     public function index() {
         $data = [
-            'system' => System::Get()->toArray(),
+            // Never return the whole System entity here. This endpoint is served without
+            // authentication, and the entity holds the GitHub App credentials.
+            'system' => System::Get()->toPublicArray(),
             'pushServiceUrl' => env('ZMQ_EXTERNAL_URL'),
             'certManagerIssuerDefaultName' => env('CERT_MANAGER_ISSUER_DEFAULT_NAME'),
             'imagePullSecretDefaultName' => env('IMAGE_PULL_SECRET_DEFAULT_NAME'),

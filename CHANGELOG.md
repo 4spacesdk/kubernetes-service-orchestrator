@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.8.11 (2026-09-16)
+
+### Enhancements
+* Security-related improvements
+
+### Upgrade guide
+1. Deploy new image
+
+
+
 ## v1.8.10 (2026-09-15)
 
 ### Fixed bugs
