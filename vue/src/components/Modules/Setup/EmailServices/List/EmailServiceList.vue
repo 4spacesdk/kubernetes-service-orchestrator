@@ -4,6 +4,7 @@ import {EmailService} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import debounce from "lodash.debounce";
+import { CopyNameStrategy, duplicateEntity } from "@/helpers/DuplicateEntity";
 
 const emit = defineEmits<{
     (e: 'onItemEditClicked', item: EmailService): void
@@ -91,6 +92,16 @@ function onEditItemBtnClicked(item: EmailService) {
     emit('onItemEditClicked', item);
 }
 
+function onDuplicateItemBtnClicked(item: EmailService) {
+    // Read the row again rather than copying what the table holds, so fields the list
+    // does not ask for still make it into the copy.
+    Api.emailServices().getById(item.id!).find(items => {
+        bus.emit('emailServiceEdit', {
+            emailService: duplicateEntity(items[0], EmailService, CopyNameStrategy.Label),
+        });
+    });
+}
+
 function onDeleteItemBtnClicked(item: EmailService) {
     bus.emit('confirm', {
         body: `Do you want to delete <strong>${item.name}</strong>?`,
@@ -151,6 +162,10 @@ function onDeleteItemBtnClicked(item: EmailService) {
                     <v-btn variant="plain" color="primary" size="small" @click="onEditItemBtnClicked(item)">
                         <v-icon>fa fa-pen</v-icon>
                         <v-tooltip activator="parent" location="bottom">Edit</v-tooltip>
+                    </v-btn>
+                    <v-btn variant="plain" color="primary" size="small" @click="onDuplicateItemBtnClicked(item)">
+                        <v-icon>fa fa-clone</v-icon>
+                        <v-tooltip activator="parent" location="bottom">Duplicate</v-tooltip>
                     </v-btn>
                     <v-btn variant="plain" color="red" size="small" @click="onDeleteItemBtnClicked(item)">
                         <v-icon>fa fa-trash</v-icon>

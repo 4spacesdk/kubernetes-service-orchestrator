@@ -4,6 +4,7 @@ import { Api } from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import { Gateway } from "@/core/services/Deploy/models";
 import debounce from "lodash.debounce";
+import { CopyNameStrategy, duplicateEntity } from "@/helpers/DuplicateEntity";
 
 const emit = defineEmits<{
     (e: "onItemEditClicked", item: Gateway): void;
@@ -130,6 +131,24 @@ function createItem() {
 function onEditItemBtnClicked(item: Row) {
     bus.emit("gatewayEdit", {
         gateway: item.gateway,
+    });
+}
+
+function onDuplicateItemBtnClicked(item: Row) {
+    // Read the row again rather than copying what the table holds, so fields the list
+    // does not ask for still make it into the copy. A gateway name has to stay a valid
+    // DNS-1123 label, so the copy is suffixed rather than labelled.
+    Api.gateways().getById(item.gateway.id!).find(items => {
+        const copy = duplicateEntity(items[0], Gateway, CopyNameStrategy.Identifier);
+
+        // Addresses are not copied. An address names one concrete cluster address, such as
+        // a reserved static ip, and two gateways cannot both hold it - the copy needs its
+        // own. Leaving them out also keeps the copy clear of the double write described in
+        // GatewayEditDialog, where a posted address relation is written again by
+        // updateGatewayAddresses.
+        copy.gateway_addresses = undefined;
+
+        bus.emit("gatewayEdit", { gateway: copy });
     });
 }
 
@@ -438,6 +457,19 @@ function onAddressClicked(address: string) {
                         <v-icon>fa fa-pen</v-icon>
                         <v-tooltip activator="parent" location="bottom"
                             >Edit</v-tooltip
+                        >
+                    </v-btn>
+
+                    <v-btn
+                        variant="plain"
+                        color="primary"
+                        size="x-small"
+                        icon
+                        @click="onDuplicateItemBtnClicked(item)"
+                    >
+                        <v-icon>fa fa-clone</v-icon>
+                        <v-tooltip activator="parent" location="bottom"
+                            >Duplicate</v-tooltip
                         >
                     </v-btn>
 

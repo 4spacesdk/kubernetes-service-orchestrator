@@ -87,14 +87,22 @@ function onSaveBtnClicked() {
             });
     }
 
+    // The addresses belong to updateGatewayAddresses below, which replaces the whole set.
+    // Sending them here as well makes the gateway call write address rows that the very
+    // next call soft deletes again - on a create, where they carry no id yet, that is a
+    // row written and discarded per address. Leaving the relation out of the payload also
+    // leaves it untouched on a patch, since relations are only applied when present.
+    const payload = new Gateway(JSON.parse(JSON.stringify(item.value)));
+    payload.gateway_addresses = undefined;
+
     if (item.value.exists()) {
         Api.gateways().patchById(item.value.id!)
-            .save(item.value!, newItem => {
+            .save(payload, newItem => {
                 saveAddresses(newItem);
             });
     } else {
         Api.gateways().post()
-            .save(item.value!, newItem => {
+            .save(payload, newItem => {
                 saveAddresses(newItem);
             });
     }

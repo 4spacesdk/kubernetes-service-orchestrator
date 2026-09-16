@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+### Fixed bugs
+* Creating a gateway wrote its addresses twice
+
+### Enhancements
+* Duplicate button on Container Images, Domains, Gateways, Database Services and Email Services
+
+### Upgrade guide
+1. Deploy new image
+
+
+
 ## v1.8.11 (2026-09-16)
 
 ### Enhancements

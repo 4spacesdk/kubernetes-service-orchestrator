@@ -4,6 +4,7 @@ import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import {Domain, System} from "@/core/services/Deploy/models";
 import debounce from "lodash.debounce";
+import { CopyNameStrategy, duplicateEntity } from "@/helpers/DuplicateEntity";
 import DomainEditButton from "@/components/Modules/Setup/Domains/EditButton/DomainEditButton.vue";
 import DateView from "@/components/Modules/Common/DateView.vue";
 
@@ -99,7 +100,24 @@ function getItems(doItems = true, doCount = false) {
 // <editor-fold desc="View functions">
 
 function createItem() {
-    bus.emit('domainCreate', Domain.Create());
+    bus.emit('domainCreate', {});
+}
+
+function onDuplicateItemBtnClicked(item: Row) {
+    // Read the row again rather than copying what the table holds, so fields the list
+    // does not ask for still make it into the copy.
+    Api.domains().getById(item.domain.id!).find(items => {
+        const copy = duplicateEntity(items[0], Domain, CopyNameStrategy.Clear);
+
+        // Relations are not part of a copy. The gateway is picked again in the dialog,
+        // and workspaces belong to the original domain.
+        copy.gateway = undefined;
+        copy.workspaces = undefined;
+
+        // A domain name cannot be derived from another domain name, so the field is left
+        // empty and the dialog opens with the cursor work still to do.
+        bus.emit('domainCreate', { domain: copy });
+    });
 }
 
 function onEditItemBtnClicked(item: Row) {
@@ -273,6 +291,13 @@ function onCertificateClicked(item: Row) {
                         @click="onEditItemBtnClicked(item)">
                         <v-icon>fa fa-pen</v-icon>
                         <v-tooltip activator="parent" location="bottom">Edit</v-tooltip>
+                    </v-btn>
+
+                    <v-btn
+                        variant="plain" color="primary" size="small" icon
+                        @click="onDuplicateItemBtnClicked(item)">
+                        <v-icon>fa fa-clone</v-icon>
+                        <v-tooltip activator="parent" location="bottom">Duplicate</v-tooltip>
                     </v-btn>
 
                     <v-btn

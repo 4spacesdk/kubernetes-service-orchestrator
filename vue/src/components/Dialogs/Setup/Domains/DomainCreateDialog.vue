@@ -6,7 +6,11 @@ import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
 
 export interface DomainCreateDialog_Input {
-
+    /**
+     * Optional starting point, used when duplicating an existing domain. Leave it out to
+     * start from a blank domain.
+     */
+    domain?: Domain;
 }
 
 const props = defineProps<{ input: DomainCreateDialog_Input, events: DialogEventsInterface }>();
@@ -27,6 +31,9 @@ onMounted(() => {
         return;
     }
     used.value = true;
+    if (props.input.domain) {
+        item.value = props.input.domain;
+    }
     render();
 });
 

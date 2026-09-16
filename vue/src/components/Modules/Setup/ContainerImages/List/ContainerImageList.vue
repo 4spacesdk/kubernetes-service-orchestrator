@@ -5,6 +5,7 @@ import bus from "@/plugins/bus";
 import {ContainerImage} from "@/core/services/Deploy/models";
 import debounce from "lodash.debounce";
 import { VersionControlProviders } from "@/constants";
+import { CopyNameStrategy, duplicateEntity } from "@/helpers/DuplicateEntity";
 
 const emit = defineEmits<{
     (e: 'onItemEditClicked', item: ContainerImage): void
@@ -92,6 +93,16 @@ function onEditItemBtnClicked(item: ContainerImage) {
     });
 }
 
+function onDuplicateItemBtnClicked(item: ContainerImage) {
+    // Read the row again rather than copying what the table holds, so fields the list
+    // does not ask for still make it into the copy.
+    Api.containerImages().getById(item.id!).find(items => {
+        bus.emit('containerImageEdit', {
+            containerImage: duplicateEntity(items[0], ContainerImage, CopyNameStrategy.Label),
+        });
+    });
+}
+
 function deleteItem(item: ContainerImage) {
     bus.emit('confirm', {
         body: `Do you want to delete <strong>${item.name}</strong>?`,
@@ -170,6 +181,13 @@ function deleteItem(item: ContainerImage) {
                         @click="onEditItemBtnClicked(item)">
                         <v-icon>fa fa-pen</v-icon>
                         <v-tooltip activator="parent" location="bottom">Edit</v-tooltip>
+                    </v-btn>
+
+                    <v-btn
+                        variant="plain" color="primary" size="small" icon
+                        @click="onDuplicateItemBtnClicked(item)">
+                        <v-icon>fa fa-clone</v-icon>
+                        <v-tooltip activator="parent" location="bottom">Duplicate</v-tooltip>
                     </v-btn>
 
                     <v-btn
