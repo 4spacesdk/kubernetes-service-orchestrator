@@ -38,11 +38,17 @@ class TestCase extends CIUnitTestCase {
     private ?string $expectedRejection = null;
 
     public function tearDown(): void {
-        $this->failOnAnUnhandledRejection();
-
-        parent::tearDown();
-
-        $this->restoreTheExceptionHandler();
+        // A failed expectation throws, and the handler is put back regardless - otherwise
+        // the failure also reports the test as risky, and the real cause is harder to see.
+        try {
+            $this->failOnAnUnhandledRejection();
+        } finally {
+            try {
+                parent::tearDown();
+            } finally {
+                $this->restoreTheExceptionHandler();
+            }
+        }
     }
 
     /**

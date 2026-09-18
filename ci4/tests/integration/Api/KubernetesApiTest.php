@@ -172,11 +172,15 @@ class KubernetesApiTest extends ClusterControllerTestCase {
      *
      * The expectation below is what makes the rejection visible at all - see
      * `TestCase::failOnAnUnhandledRejection()`.
+     *
+     * It matches the status line, not the body. pawl builds the message from what it has
+     * read when the headers end, so `container not found` is only in it when the body came
+     * in the same packet - which it does locally and did not in Cloud Build.
      */
     public function testExecAgainstAPodThatIsNotRunningAnswersSuccessWithNothingInIt(): void {
         $this->namespaceExists();
         $this->pod('api', ['app' => 'api', 'role' => 'app']);
-        $this->expectUnhandledRejection('container not found');
+        $this->expectUnhandledRejection('500 Internal Server Error');
 
         $body = $this->decode($this->signedIn()->put(
             "kubernetes/namespaces/{$this->testNamespace}/pods/api/containers/app/exec?command=" . urlencode('echo hello')
