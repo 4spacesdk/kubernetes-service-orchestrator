@@ -1411,6 +1411,27 @@ export class DeploymentPackagesDeleteById extends BaseApi<DeploymentPackage> {
     }
 }
 
+export class DeploymentPackagesDuplicatePostById extends BaseApi<DeploymentPackage> {
+
+    public topic = 'Resources.DeploymentPackages';
+    protected method = 'post';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/deployment-packages/${id}/duplicate`;
+    }
+
+    protected convertToResource(data: any): DeploymentPackage {
+        return new DeploymentPackage(data);
+    }
+
+    public save(data: any, next?: (value: DeploymentPackage) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
 export class DeploymentPackagesUpdateDeploymentSpecificationsPutById extends BaseApi<DeploymentPackage> {
 
     public topic = 'Resources.DeploymentPackages';
@@ -1534,6 +1555,10 @@ class DeploymentPackages {
 
     public deleteById(id: number): DeploymentPackagesDeleteById {
         return new DeploymentPackagesDeleteById(id);
+    }
+
+    public duplicatePostById(id: number): DeploymentPackagesDuplicatePostById {
+        return new DeploymentPackagesDuplicatePostById(id);
     }
 
     public updateDeploymentSpecificationsPutById(id: number): DeploymentPackagesUpdateDeploymentSpecificationsPutById {
@@ -1772,6 +1797,27 @@ export class DeploymentSpecificationsDeleteById extends BaseApi<DeploymentSpecif
 
     public delete(next?: (value: DeploymentSpecification) => void) {
         return super.executeDelete(next);
+    }
+}
+
+export class DeploymentSpecificationsDuplicatePostById extends BaseApi<DeploymentSpecification> {
+
+    public topic = 'Resources.DeploymentSpecifications';
+    protected method = 'post';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/deployment-specifications/${id}/duplicate`;
+    }
+
+    protected convertToResource(data: any): DeploymentSpecification {
+        return new DeploymentSpecification(data);
+    }
+
+    public save(data: any, next?: (value: DeploymentSpecification) => void) {
+        return super.executeSave(data, next);
     }
 }
 
@@ -2135,6 +2181,10 @@ class DeploymentSpecifications {
 
     public deleteById(id: number): DeploymentSpecificationsDeleteById {
         return new DeploymentSpecificationsDeleteById(id);
+    }
+
+    public duplicatePostById(id: number): DeploymentSpecificationsDuplicatePostById {
+        return new DeploymentSpecificationsDuplicatePostById(id);
     }
 
     public getTagsGetById(id: number): DeploymentSpecificationsGetTagsGetById {

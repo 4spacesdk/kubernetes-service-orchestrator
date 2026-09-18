@@ -101,6 +101,20 @@ function onDeleteItemBtnClicked(item: DeploymentPackage) {
     });
 }
 
+function onDuplicateItemBtnClicked(item: DeploymentPackage) {
+    // The copy is made and saved by the server, children and all - they are edited in
+    // dialogs of their own, which need a saved row. It is then read again the way the
+    // list reads it, so the edit dialog gets the relations it shows.
+    Api.deploymentPackages().duplicatePostById(item.id!).save(null, copy => {
+        bus.emit('deploymentPackageSaved');
+        Api.deploymentPackages().getById(copy.id!).find(items => {
+            bus.emit('deploymentPackageEdit', {
+                deploymentPackage: items[0],
+            });
+        });
+    });
+}
+
 function onEditItemBtnClicked(item: DeploymentPackage) {
     bus.emit('deploymentPackageEdit', {
         deploymentPackage: item
@@ -178,6 +192,13 @@ function onEditItemBtnClicked(item: DeploymentPackage) {
                         @click="onEditItemBtnClicked(item)">
                         <v-icon>fa fa-pen</v-icon>
                         <v-tooltip activator="parent" location="bottom">Edit</v-tooltip>
+                    </v-btn>
+
+                    <v-btn
+                        variant="plain" color="primary" size="small" icon
+                        @click="onDuplicateItemBtnClicked(item)">
+                        <v-icon>fa fa-clone</v-icon>
+                        <v-tooltip activator="parent" location="bottom">Duplicate</v-tooltip>
                     </v-btn>
 
                     <v-btn

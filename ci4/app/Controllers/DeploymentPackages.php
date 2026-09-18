@@ -19,6 +19,27 @@ use App\Models\WorkspaceModel;
 class DeploymentPackages extends ResourceController {
 
     /**
+     * A saved copy, with everything it is made of. See DeploymentPackage::duplicate() for what
+     * is and is not part of that.
+     *
+     * @route /deployment-packages/{id}/duplicate
+     * @method post
+     * @custom true
+     * @param int $id
+     * @return void
+     */
+    public function duplicate(int $id): void {
+        $item = new DeploymentPackage();
+        $item->find($id);
+        if (!$item->exists()) {
+            $this->fail('unknown deployment package');
+            return;
+        }
+        $this->_setResource($item->duplicate());
+        $this->success();
+    }
+
+    /**
      * @route /deployment-packages/{id}/deployment-specifications
      * @method put
      * @custom true

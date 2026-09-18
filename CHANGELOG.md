@@ -10,9 +10,12 @@
 * A custom resource whose manifest named no namespace was applied to `default` rather than to the workspace it belongs to
 * Every gateway endpoint crashed on an unknown id instead of reporting it
 * Creating, deleting or reading a domain's Istio gateway failed with "Class not found" on Linux
+* The pod list showed a pod that was not yet on a node as created on 1970-01-01
+* The shell's output kept a carriage return on every line but the last, and could gain empty lines, depending on how the output arrived
 
 ### Enhancements
 * Duplicate button on Container Images, Domains, Gateways, Database Services and Email Services
+* Duplicate button on Deployment Specifications and Deployment Packages, copying everything they are made of
 * Added unit and database test suites, covering workspace status, auto updates, the commands, the helpers and the whole controller layer, and the HTTPRoute, HealthCheckPolicy and GCPBackendPolicy manifests
 * Added an integration suite that deploys to a throwaway k3s cluster, covering what eleven deployment steps apply, report and terminate - including the Gateway API, Contour and Istio resources, which are validated against the real schemas
 * Upgraded the runtime: PHP 8.3 to 8.5, Alpine 3.20 to 3.24, CodeIgniter 4.4 to 4.7, and the three 4spaces extensions. MySQL in development compose went from 5.7 to 8.0

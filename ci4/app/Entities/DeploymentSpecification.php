@@ -309,6 +309,76 @@ class DeploymentSpecification extends Entity {
     }
 
 
+    /**
+     * The child collections that are copied row by row. Each row belongs to this
+     * specification alone. The init containers, post update actions and cron jobs among
+     * them are links to shared entities, so the links are copied and the entities are not.
+     *
+     * Not copied: `deployments`, because a copy is a new recipe, not new running
+     * deployments, and the packages the original is in. The ingresses and the labels are
+     * handled on their own below.
+     */
+    private const DuplicatedCollections = [
+        'deployment_specification_post_commands',
+        'deployment_specification_environment_variables',
+        'deployment_specification_service_ports',
+        'deployment_specification_cluster_role_rules',
+        'deployment_specification_role_rules',
+        'deployment_specification_service_annotations',
+        'deployment_specification_deployment_annotations',
+        'deployment_specification_quick_commands',
+        'deployment_specification_init_containers',
+        'deployment_specification_post_update_actions',
+        'deployment_specification_cron_jobs',
+        'deployment_specification_http_proxy_routes',
+        'deployment_specification_volumes',
+    ];
+
+    /**
+     * A saved copy of this specification and everything it is made of. All of it or none.
+     */
+    public function duplicate(): DeploymentSpecification {
+        return self::inTransaction(function () {
+            $copy = $this->getCopy();
+            $copy->name = "{$this->name} (copy)";
+            $copy->save();
+
+            foreach (self::DuplicatedCollections as $collection) {
+                foreach ($this->{$collection}->find() as $row) {
+                    $rowCopy = $row->getCopy();
+                    $rowCopy->deployment_specification_id = $copy->id;
+                    $rowCopy->save();
+                }
+            }
+
+            // An ingress has children of its own.
+            foreach ($this->deployment_specification_ingresses->find() as $ingress) {
+                /** @var DeploymentSpecificationIngress $ingress */
+                $ingressCopy = $ingress->getCopy();
+                $ingressCopy->deployment_specification_id = $copy->id;
+                $ingressCopy->save();
+
+                foreach (['deployment_specification_ingress_rule_paths', 'deployment_specification_ingress_annotations'] as $collection) {
+                    foreach ($ingress->{$collection}->find() as $row) {
+                        $rowCopy = $row->getCopy();
+                        $rowCopy->deployment_specification_ingress_id = $ingressCopy->id;
+                        $rowCopy->save();
+                    }
+                }
+            }
+
+            // New label rows rather than new links: `updateLabels()` deletes the rows
+            // themselves, so a shared label would disappear from the original.
+            $labels = new Label();
+            foreach ($this->labels->find() as $label) {
+                $labels->add(Label::Create($label->name, $label->value));
+            }
+            $copy->save($labels);
+
+            return $copy;
+        });
+    }
+
     // <editor-fold desc="Update methods">
 
     public function updatePostCommands(DeploymentSpecificationPostCommand $values): void {

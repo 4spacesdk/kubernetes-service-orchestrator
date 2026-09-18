@@ -7,7 +7,7 @@ import {Deletion} from '../Deletion';
 import {BaseModel} from '../BaseModel';
 
 export class DeploymentSpecificationServicePortDefinition extends BaseModel {
-    deploymennt_specification_id?: number;
+    deployment_specification_id?: number;
     deployment_specification?: DeploymentSpecification;
     protocol?: string;
     name?: string;
@@ -32,7 +32,7 @@ export class DeploymentSpecificationServicePortDefinition extends BaseModel {
 
     public populate(data?: any, patch = false) {
         if (!patch) {
-            delete this.deploymennt_specification_id;
+            delete this.deployment_specification_id;
             delete this.deployment_specification;
             delete this.protocol;
             delete this.name;
@@ -52,8 +52,8 @@ export class DeploymentSpecificationServicePortDefinition extends BaseModel {
         }
 
         if (!data) return;
-        if (data.deploymennt_specification_id != null) {
-            this.deploymennt_specification_id = data.deploymennt_specification_id;
+        if (data.deployment_specification_id != null) {
+            this.deployment_specification_id = data.deployment_specification_id;
         }
         if (data.deployment_specification != null) {
             this.deployment_specification = new DeploymentSpecification(data.deployment_specification);

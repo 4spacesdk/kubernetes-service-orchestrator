@@ -21,6 +21,50 @@ use App\Core\Entity;
  */
 class DeploymentPackage extends Entity {
 
+    /**
+     * A saved copy of this package, pointing at the same specifications. All of it or none.
+     *
+     * The specifications are not copied - a package is a selection of them, with defaults -
+     * and neither are the workspaces made from it. The min scale schedules a specification
+     * row uses are shared entities, so the copy links to the same ones.
+     *
+     * `name` is free text. `namespace` is the start of every namespace a workspace made
+     * from the package gets, so it keeps a form Kubernetes accepts.
+     */
+    public function duplicate(): DeploymentPackage {
+        return self::inTransaction(function () {
+            $copy = $this->getCopy();
+            $copy->name = "{$this->name} (copy)";
+            if (strlen((string) $this->namespace)) {
+                $copy->namespace = "{$this->namespace}-copy";
+            }
+            $copy->save();
+
+            foreach ($this->deployment_package_environment_variables->find() as $variable) {
+                $variableCopy = $variable->getCopy();
+                $variableCopy->deployment_package_id = $copy->id;
+                $variableCopy->save();
+            }
+
+            foreach ($this->deployment_package_deployment_specifications->find() as $row) {
+                /** @var DeploymentPackageDeploymentSpecification $row */
+                $rowCopy = $row->getCopy();
+                $rowCopy->deployment_package_id = $copy->id;
+                $rowCopy->save();
+                $rowCopy->save($row->k_native_min_scale_schedules->find());
+            }
+
+            // New label rows, for the reason given in DeploymentSpecification::duplicate().
+            $labels = new Label();
+            foreach ($this->labels->find() as $label) {
+                $labels->add(Label::Create($label->name, $label->value));
+            }
+            $copy->save($labels);
+
+            return $copy;
+        });
+    }
+
     public function updateDeploymentSpecifications(DeploymentPackageDeploymentSpecification $values): void {
         $this->deployment_package_deployment_specifications->find()->deleteAll();
         $this->save($values);
