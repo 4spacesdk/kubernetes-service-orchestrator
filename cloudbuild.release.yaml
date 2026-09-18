@@ -57,13 +57,24 @@ steps:
 
         wait
 
+        # Over TCP and with a real query, not `mysqladmin ping` on the socket: while the image
+        # initialises it runs a temporary server that only listens on the socket, and ping
+        # answers yes to that - even when the password is refused. The tests reach the
+        # database over TCP, which is only open once initialisation is done.
         echo "Waiting for MySQL"
+        db_up=0
         for i in $$(seq 1 60); do
-          if docker exec kso-test-db mysqladmin ping -uroot -proot --silent 2>/dev/null; then
+          if docker exec kso-test-db mysql -h127.0.0.1 --protocol=tcp -uroot -proot -e 'SELECT 1' deploy_tests >/dev/null 2>&1; then
+            db_up=1
             break
           fi
           sleep 2
         done
+        if [ "$$db_up" = "0" ]; then
+          echo "MySQL never became ready."
+          docker logs --tail 50 kso-test-db
+          exit 1
+        fi
 
         # --entrypoint: the image's entrypoint starts apache and ignores any command given
         # to it, so without this the container would serve http until the build times out.
