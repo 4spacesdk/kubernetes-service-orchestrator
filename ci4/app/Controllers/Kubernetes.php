@@ -47,7 +47,10 @@ class Kubernetes extends \App\Core\BaseController {
                         'namespace' => $pod->getNamespace(),
                         'pod' => $pod->getName(),
                         'container' => $container->getName(),
-                        'created' => date('Y-m-d H:i:s', strtotime_($pod->getStatus('startTime'))),
+                        // A pod the scheduler has not placed yet has no startTime.
+                        'created' => date('Y-m-d H:i:s', strtotime_(
+                            $pod->getStatus('startTime') ?? $pod->getAttribute('metadata.creationTimestamp')
+                        )),
                         'status' => $pod->getStatus('phase'),
                     ];
                 }

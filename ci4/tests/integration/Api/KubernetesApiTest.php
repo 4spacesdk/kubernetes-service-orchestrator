@@ -86,6 +86,35 @@ class KubernetesApiTest extends ClusterControllerTestCase {
     }
 
     /**
+     * A pod gets its startTime when it is placed on a node, and until then it has none. That
+     * is every pod for the first moment after it is created, and one that cannot be placed
+     * stays that way. Without a fallback the whole list failed, and outside the tests showed
+     * 1970-01-01. A node selector nothing matches keeps the pod unplaced for as long as the
+     * test needs.
+     */
+    public function testAPodNotYetOnANodeIsListedWithItsCreationTime(): void {
+        $this->namespaceExists();
+        $this->cluster()->call(
+            'POST',
+            "/api/v1/namespaces/{$this->testNamespace}/pods",
+            json_encode([
+                'apiVersion' => 'v1',
+                'kind' => 'Pod',
+                'metadata' => ['name' => 'unplaced', 'namespace' => $this->testNamespace],
+                'spec' => [
+                    'nodeSelector' => ['kso-test/no-such-node' => 'true'],
+                    'containers' => [['name' => 'app', 'image' => 'example.invalid/nothing:1']],
+                ],
+            ])
+        );
+
+        $body = $this->decode($this->signedIn()->get("kubernetes/namespaces/{$this->testNamespace}/pods"));
+
+        $this->assertSame('OK', $body['status']);
+        $this->assertSame(date('Y-m-d'), substr($body['resources'][0]['created'], 0, 10));
+    }
+
+    /**
      * A namespace that is not there is an ordinary answer, not an error: the workspace page
      * asks for pods before the namespace step has run.
      */
