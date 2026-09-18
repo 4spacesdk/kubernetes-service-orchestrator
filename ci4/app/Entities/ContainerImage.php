@@ -6,7 +6,7 @@ use App\Libraries\ContainerRegistries\AzureContainerRegistry;
 use App\Libraries\ContainerRegistries\BaseContainerRegistry;
 use App\Libraries\ContainerRegistries\GoogleCloudArtifactRegistry;
 use App\Libraries\ContainerRegistries\HarborRegistry;
-use App\Libraries\GoogleCloud\GoogleCloudPubSub;
+use App\Libraries\GoogleCloud\GcrSubscription;
 use App\Libraries\Kubernetes\KubeHelper;
 use App\Libraries\VersionControlSystems\BaseVersionControlSystem;
 use App\Libraries\VersionControlSystems\GithubVersionControl;
@@ -74,11 +74,17 @@ class ContainerImage extends Entity {
             && $this->registry_subscribe && strlen($this->registry_provider)) {
             switch ($this->registry_provider) {
                 case \ContainerRegistries::ArtifactContainerRegistry:
-                    $googleCloudPubSub = new GoogleCloudPubSub($this->registry_provider_gcloud_project, $this->registry_provider_gcloud_credentials);
-                    $googleCloudPubSub->ensureTopic('gcr');
-                    $googleCloudPubSub->ensureSubscription(
-                        'gcr',
-                        str_replace(' ', '_', strtolower(getenv('PROJECT_NAME'))) . '.kso-' . KubeHelper::GetMyHostname() . '.' . KubeHelper::GetMyNamespace()
+                    $pubSub = service('integrations')->pubSub();
+                    $pubSub->ensureTopic(
+                        $this->registry_provider_gcloud_project,
+                        $this->registry_provider_gcloud_credentials,
+                        GcrSubscription::TOPIC
+                    );
+                    $pubSub->ensureSubscription(
+                        $this->registry_provider_gcloud_project,
+                        $this->registry_provider_gcloud_credentials,
+                        GcrSubscription::TOPIC,
+                        GcrSubscription::name()
                     );
                     break;
             }
@@ -86,15 +92,7 @@ class ContainerImage extends Entity {
     }
 
     public function getContainerRegistry(): ?BaseContainerRegistry {
-        switch ($this->registry_provider) {
-            case \ContainerRegistries::ArtifactContainerRegistry:
-                return new GoogleCloudArtifactRegistry($this);
-            case \ContainerRegistries::AzureContainerRegistry:
-                return new AzureContainerRegistry($this);
-            case \ContainerRegistries::Harbor:
-                return new HarborRegistry($this);
-        }
-        return null;
+        return service('integrations')->containerRegistry($this);
     }
 
     public function getTags(): array {
@@ -106,19 +104,11 @@ class ContainerImage extends Entity {
     }
 
     public function getVersionControlSystem(): ?BaseVersionControlSystem {
-        switch ($this->version_control_provider) {
-            case \VersionControlProviders::GitHub:
-                return new GithubVersionControl($this);
-        }
-        return null;
+        return service('integrations')->versionControlSystem($this);
     }
 
     public function getCommitIdentification(): ?BaseCommitIdentificationMethod {
-        switch ($this->commit_identification_method) {
-            case \CommitIdentificationMethods::EnvironmentVariable:
-                return new EnvironmentVariableCommitIdentification($this);
-        }
-        return null;
+        return service('integrations')->commitIdentification($this);
     }
 
     /**

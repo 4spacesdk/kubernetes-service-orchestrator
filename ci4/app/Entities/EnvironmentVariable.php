@@ -42,29 +42,29 @@ class EnvironmentVariable extends Entity {
         }
 
         $modifiers = [
-            fn(string $value) => str_replace('${namespace}', $deployment->namespace, $value),
+            fn(string $value) => str_replace('${namespace}', (string) $deployment->namespace, $value),
 
-            fn(string $value) => str_replace('${database.host}', $deployment->database_service->host, $value),
-            fn(string $value) => str_replace('${database.port}', $deployment->database_service->port, $value),
-            fn(string $value) => str_replace('${database.name}', $deployment->database_name, $value),
-            fn(string $value) => str_replace('${database.user}', $deployment->database_service->getDatabaseUser($deployment->database_user), $value),
-            fn(string $value) => str_replace('${database.pass}', $deployment->database_pass, $value),
+            fn(string $value) => str_replace('${database.host}', (string) $deployment->database_service->host, $value),
+            fn(string $value) => str_replace('${database.port}', (string) $deployment->database_service->port, $value),
+            fn(string $value) => str_replace('${database.name}', (string) $deployment->database_name, $value),
+            fn(string $value) => str_replace('${database.user}', (string) $deployment->database_service->getDatabaseUser($deployment->database_user), $value),
+            fn(string $value) => str_replace('${database.pass}', (string) $deployment->database_pass, $value),
 
-            fn(string $value) => str_replace('${emailService.host}', $deployment->workspace->email_service->host, $value),
-            fn(string $value) => str_replace('${emailService.port}', $deployment->workspace->email_service->port, $value),
-            fn(string $value) => str_replace('${emailService.user}', $deployment->workspace->email_service->user, $value),
-            fn(string $value) => str_replace('${emailService.pass}', $deployment->workspace->email_service->pass, $value),
-            fn(string $value) => str_replace('${emailService.sender}', $deployment->workspace->email_service->from, $value),
+            fn(string $value) => str_replace('${emailService.host}', (string) $deployment->workspace->email_service->host, $value),
+            fn(string $value) => str_replace('${emailService.port}', (string) $deployment->workspace->email_service->port, $value),
+            fn(string $value) => str_replace('${emailService.user}', (string) $deployment->workspace->email_service->user, $value),
+            fn(string $value) => str_replace('${emailService.pass}', (string) $deployment->workspace->email_service->pass, $value),
+            fn(string $value) => str_replace('${emailService.sender}', (string) $deployment->workspace->email_service->from, $value),
 
-            fn(string $value) => str_replace('${domain.host}', $deployment->workspace->domain->name, $value),
+            fn(string $value) => str_replace('${domain.host}', (string) $deployment->workspace->domain->name, $value),
 
-            fn(string $value) => str_replace('${deployment.name}', $deployment->name, $value),
+            fn(string $value) => str_replace('${deployment.name}', (string) $deployment->name, $value),
 
-            fn(string $value) => str_replace('${workspace.id}', $deployment->workspace->id, $value),
-            fn(string $value) => str_replace('${workspace.name}', $deployment->workspace->namespace, $value),
-            fn(string $value) => str_replace('${workspace.subdomain}', $deployment->workspace->subdomain, $value),
+            fn(string $value) => str_replace('${workspace.id}', (string) $deployment->workspace->id, $value),
+            fn(string $value) => str_replace('${workspace.name}', (string) $deployment->workspace->namespace, $value),
+            fn(string $value) => str_replace('${workspace.subdomain}', (string) $deployment->workspace->subdomain, $value),
 
-            fn(string $value) => str_replace('${migration.job.name}', $deployment->name, $value),
+            fn(string $value) => str_replace('${migration.job.name}', (string) $deployment->name, $value),
         ];
 
         foreach ($modifiers as $fn) {

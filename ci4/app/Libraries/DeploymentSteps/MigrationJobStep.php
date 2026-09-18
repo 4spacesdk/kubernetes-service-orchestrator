@@ -121,18 +121,29 @@ class MigrationJobStep extends BaseDeploymentStep {
      */
     public function getStatus(Deployment $deployment): string {
         $resource = $this->getResource($deployment, true);
-        if ($resource->exists()) {
-            /** @var K8sJob $resource */
-            $resource = $resource->get();
-            $completionTime = $resource->getStatus('completionTime');
-            $startTime = $resource->getStatus('startTime');
-            if ($completionTime) {
-                return DeploymentStepHelper::MigrationJob_Completed;
-            }
-            return DeploymentStepHelper::MigrationJob_Running;
-        } else {
+        if (!$resource->exists()) {
             return DeploymentStepHelper::MigrationJob_NotFound;
         }
+
+        try {
+            /** @var K8sJob $resource */
+            $resource = $resource->get();
+        } catch (KubernetesAPIException $e) {
+            // Asking whether it is there and then asking for it are two calls, and a job
+            // being cleaned up disappears between them - which is the ordinary case right
+            // after a terminate. A status call is not the place to throw about that.
+            if ($e->getCode() === KubeHelper::NotFoundCode) {
+                return DeploymentStepHelper::MigrationJob_NotFound;
+            }
+
+            throw $e;
+        }
+
+        if ($resource->getStatus('completionTime')) {
+            return DeploymentStepHelper::MigrationJob_Completed;
+        }
+
+        return DeploymentStepHelper::MigrationJob_Running;
     }
 
     public function validateDeployCommand(Deployment $deployment): ?string {
@@ -239,7 +250,7 @@ class MigrationJobStep extends BaseDeploymentStep {
     /**
      * @throws \Exception
      */
-    private function getResource(Deployment $deployment, bool $auth = false): K8sJob {
+    protected function getResource(Deployment $deployment, bool $auth = false): K8sJob {
         $spec = $deployment->findDeploymentSpecification();
 
         $containerImage = new ContainerImage();

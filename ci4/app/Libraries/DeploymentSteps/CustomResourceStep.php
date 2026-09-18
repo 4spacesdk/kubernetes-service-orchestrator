@@ -120,7 +120,7 @@ class CustomResourceStep extends BaseDeploymentStep {
 
     public function startDeployCommand(Deployment $deployment, ?string $reason = null): void {
         $resource = $this->getResource($deployment, true);
-        $resource->createOrUpdate();
+        $this->apply($resource);
     }
 
     public function startTerminateCommand(Deployment $deployment): void {
@@ -156,12 +156,23 @@ class CustomResourceStep extends BaseDeploymentStep {
     /**
      * @throws \Exception
      */
-    private function getResource(Deployment $deployment, bool $auth = false): K8sResource {
+    protected function getResource(Deployment $deployment, bool $auth = false): K8sResource {
         $yaml = yaml_parse(EnvironmentVariable::ApplyVariablesToString($deployment->findDeploymentSpecification()->custom_resource, $deployment));
 
 //        Data::debug($yaml);
 
         $resource = new K8sCustomResource(null, $yaml);
+
+        // A manifest that does not say where it goes goes to the workspace it belongs to.
+        // php-k8s would otherwise fall back to its own default, which is the literal
+        // namespace `default` - so every workspace's resource landed in one namespace
+        // shared by the cluster, under the same name, and the last one deployed won.
+        //
+        // A manifest that *does* name a namespace is still honoured, including one outside
+        // the workspace. See SEC-15.
+        if (!isset($yaml['metadata']['namespace'])) {
+            $resource->setNamespace($deployment->namespace);
+        }
 
         if ($auth) {
             $auth = new KubeAuth();

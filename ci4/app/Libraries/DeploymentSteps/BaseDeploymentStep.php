@@ -45,6 +45,17 @@ abstract class BaseDeploymentStep {
      */
     abstract public function startTerminateCommand(Deployment $deployment): void;
 
+    /**
+     * Send a resource to the cluster. Every step applies through here.
+     *
+     * Retries a 409 - see `KubeHelper::Apply()` for why one arrives at all.
+     *
+     * @throws \RenokiCo\PhpK8s\Exceptions\KubernetesAPIException
+     */
+    protected function apply(\RenokiCo\PhpK8s\Kinds\K8sResource $resource): void {
+        KubeHelper::Apply($resource);
+    }
+
     abstract public function getKubernetesEvents(Deployment $deployment): array;
 
     abstract public function getKubernetesStatus(Deployment $deployment): array;

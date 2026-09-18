@@ -156,7 +156,7 @@ class IngressStep extends BaseDeploymentStep {
     public function startDeployCommand(Deployment $deployment, ?string $reason = null): void {
         $resources = $this->getResources($deployment, true);
         foreach ($resources as $resource) {
-            $resource->createOrUpdate();
+            $this->apply($resource);
         }
     }
 
@@ -209,7 +209,7 @@ class IngressStep extends BaseDeploymentStep {
      * @return K8sIngress[]
      * @throws \Exception
      */
-    private function getResources(Deployment $deployment, bool $auth = false): array {
+    protected function getResources(Deployment $deployment, bool $auth = false): array {
         $spec = $deployment->findDeploymentSpecification();
 
         if ($deployment->workspace_id && !$deployment->workspace->exists()) {

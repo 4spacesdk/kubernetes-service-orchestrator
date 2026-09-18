@@ -142,7 +142,7 @@ class PersistentVolumeStep extends BaseDeploymentStep {
     public function startDeployCommand(Deployment $deployment, ?string $reason = null): void {
         $resources = $this->getResources($deployment, true);
         foreach ($resources as $resource) {
-            $resource->createOrUpdate();
+            $this->apply($resource);
         }
     }
 
@@ -166,7 +166,7 @@ class PersistentVolumeStep extends BaseDeploymentStep {
      * @return K8sPersistentVolume[]
      * @throws \Exception
      */
-    private function getResources(Deployment $deployment, bool $auth = false): array {
+    protected function getResources(Deployment $deployment, bool $auth = false): array {
         /** @var DeploymentVolume $deploymentVolumes */
         $deploymentVolumes = (new DeploymentVolumeModel())
             ->where('deployment_id', $deployment->id)

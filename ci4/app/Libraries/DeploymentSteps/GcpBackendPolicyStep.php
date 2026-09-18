@@ -132,7 +132,7 @@ class GcpBackendPolicyStep extends BaseDeploymentStep {
         // Decide from the built object, not a fresh getTimeout() call: re-deriving it here could
         // disagree with what getResource() built and apply a spec-less policy, which the API rejects.
         if ($resource->getAttribute('spec')) {
-            $resource->createOrUpdate();
+            $this->apply($resource);
         } else if ($resource->exists()) {
             // No timeout is configured any more, so hand the backend service back to GKE's default.
             $resource->synced();
@@ -220,7 +220,7 @@ class GcpBackendPolicyStep extends BaseDeploymentStep {
      *
      * @throws \Exception
      */
-    private function getResource(Deployment $deployment, bool $auth = false): K8sGCPBackendPolicy {
+    protected function getResource(Deployment $deployment, bool $auth = false): K8sGCPBackendPolicy {
         $resource = new K8sGCPBackendPolicy();
         $resource
             ->setName($deployment->name)

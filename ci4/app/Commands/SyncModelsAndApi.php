@@ -5,6 +5,13 @@ use DebugTool\Data;
 use OrmExtension\ModelParser\ModelParser;
 use RestExtension\ApiParser\ApiParser;
 
+/**
+ * Not measured: this is a developer command that regenerates the TypeScript client and then
+ * moves the generated files into `vue/src` with `mv` and `rm -rf`. Running it from a test would
+ * rewrite source files in the working tree, so there is nothing here we want a test to exercise.
+ *
+ * @codeCoverageIgnore
+ */
 class SyncModelsAndApi extends BaseCommand {
 
     public $group           = 'dev';

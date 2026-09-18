@@ -19,6 +19,13 @@ class GithubVersionControl extends BaseVersionControlSystem {
         $this->authenticateAsInstallation();
     }
 
+    /**
+     * Not measured: this is the network call itself. What kso decides before and after
+     * it is tested through the fake behind `BaseVersionControlSystem` - see the strategy note in the
+     * test setup. Marking it keeps the coverage number about code we chose to test.
+     *
+     * @codeCoverageIgnore
+     */
     private function authenticateAsInstallation(): void {
         $system = System::Get();
         $appId = $system->github_app_id;
@@ -55,6 +62,13 @@ class GithubVersionControl extends BaseVersionControlSystem {
         return ['', $this->containerImage->version_control_repository_name];
     }
 
+    /**
+     * Not measured: this is the network call itself. What kso decides before and after
+     * it is tested through the fake behind `BaseVersionControlSystem` - see the strategy note in the
+     * test setup. Marking it keeps the coverage number about code we chose to test.
+     *
+     * @codeCoverageIgnore
+     */
     public function getCommitMessage(string $shortSha): string {
         try {
             [$owner, $repoName] = $this->getOwnerAndRepo();
@@ -75,6 +89,13 @@ class GithubVersionControl extends BaseVersionControlSystem {
         return '';
     }
 
+    /**
+     * Not measured: this is the network call itself. What kso decides before and after
+     * it is tested through the fake behind `BaseVersionControlSystem` - see the strategy note in the
+     * test setup. Marking it keeps the coverage number about code we chose to test.
+     *
+     * @codeCoverageIgnore
+     */
     public function getCommitUrl(string $shortSha): string {
         try {
             [$owner, $repoName] = $this->getOwnerAndRepo();

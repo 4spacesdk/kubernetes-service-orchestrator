@@ -196,7 +196,7 @@ class DeploymentStep extends BaseDeploymentStep {
         $template->setAnnotations($annotations);
         $resource->setTemplate($template);
 
-        $resource->createOrUpdate();
+        $this->apply($resource);
     }
 
     public function startTerminateCommand(Deployment $deployment): void {
@@ -307,7 +307,7 @@ class DeploymentStep extends BaseDeploymentStep {
     /**
      * @throws \Exception
      */
-    private function getResource(Deployment $deployment, bool $auth = false): K8sDeployment {
+    protected function getResource(Deployment $deployment, bool $auth = false): K8sDeployment {
         $spec = $deployment->findDeploymentSpecification();
 
         if (!$spec->container_image->exists()) {

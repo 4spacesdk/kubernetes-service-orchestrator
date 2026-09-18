@@ -360,7 +360,7 @@ class Deployment extends Entity {
         return $this->deployment_specification;
     }
 
-    public function toArray(bool $onlyChanged = false, bool $cast = true, bool $recursive = false, array $fieldsFilter = null): array {
+    public function toArray(bool $onlyChanged = false, bool $cast = true, bool $recursive = false, ?array $fieldsFilter = null): array {
         $item = parent::toArray($onlyChanged, $cast, $recursive, $fieldsFilter);
 
         if (isset($this->url_external)) {

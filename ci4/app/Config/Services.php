@@ -19,6 +19,19 @@ use CodeIgniter\Config\BaseService;
  */
 class Services extends BaseService
 {
+    /**
+     * Resolves the registry, version control and commit identification a container image
+     * uses. A service so that tests can replace it; see IntegrationFactory.
+     */
+    public static function integrations($getShared = true): \App\Libraries\Integrations\IntegrationFactory
+    {
+        if ($getShared) {
+            return static::getSharedInstance('integrations');
+        }
+
+        return new \App\Libraries\Integrations\IntegrationFactory();
+    }
+
     /*
      * public static function example($getShared = true)
      * {

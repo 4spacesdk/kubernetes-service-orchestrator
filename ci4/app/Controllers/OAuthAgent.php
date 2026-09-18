@@ -36,7 +36,6 @@ class OAuthAgent extends \App\Core\BaseController {
         $raw = curl_exec($ch);
         $response = json_decode($raw, true);
         $curlError = curl_error($ch);
-        curl_close($ch);
 
         // Error handling
         if (is_null($response) || !isset($response['access_token'])) {
@@ -90,7 +89,6 @@ class OAuthAgent extends \App\Core\BaseController {
         $raw = curl_exec($ch);
         $response = json_decode($raw, true);
         $curlError = curl_error($ch);
-        curl_close($ch);
 
         // Error handling
         if (is_null($response) || !isset($response['access_token'])) {

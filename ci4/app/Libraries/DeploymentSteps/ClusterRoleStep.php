@@ -129,7 +129,7 @@ class ClusterRoleStep extends BaseDeploymentStep {
     public function startDeployCommand(Deployment $deployment, ?string $reason = null): void {
         $resource = $this->getResource($deployment, true);
         if (count($resource->getRules())) {
-            $resource->createOrUpdate();
+            $this->apply($resource);
         }
     }
 
@@ -152,7 +152,7 @@ class ClusterRoleStep extends BaseDeploymentStep {
     /**
      * @throws \Exception
      */
-    private function getResource(Deployment $deployment, bool $auth = false): K8sClusterRole {
+    protected function getResource(Deployment $deployment, bool $auth = false): K8sClusterRole {
         $spec = $deployment->findDeploymentSpecification();
 
         $resource = new K8sClusterRole();

@@ -3,8 +3,7 @@
 use App\Entities\AutoUpdate;
 use App\Entities\ContainerImage;
 use App\Entities\CronJob;
-use App\Libraries\GoogleCloud\GoogleCloudPubSub;
-use App\Libraries\Kubernetes\KubeHelper;
+use App\Libraries\GoogleCloud\GcrSubscription;
 use App\Libraries\ZMQ\ChangeEvent;
 use App\Libraries\ZMQ\Events;
 use App\Libraries\ZMQ\ZMQProxy;
@@ -62,30 +61,44 @@ class PullContainerRegistries extends BaseCommand {
             \DebugTool\Data::debug($e->getMessage());
         }
 
+        // Not measured: a PUSH socket with nobody listening blocks on send, and nothing
+        // listens in a test container. Reaching this would hang the build rather than
+        // assert anything.
+        // @codeCoverageIgnoreStart
         if ($hasCreatedAutoUpdate) {
             ZMQProxy::getInstance()->send(
                 Events::AutoUpdate_Created(),
                 (new ChangeEvent(null, []))->toArray()
             );
         }
+        // @codeCoverageIgnoreEnd
 
         $job->last_log = json_encode(Data::getDebugger(), JSON_PRETTY_PRINT);
         $job->save();
     }
 
-    private function runAcrProjects($acrProjects): bool {
+    /**
+     * Protected rather than private so a test can reach it: `run()` around it sleeps for
+     * ten seconds and writes cron job rows, and this is the part that decides anything.
+     *
+     * @param array<string, string> $acrProjects project => service account key
+     */
+    protected function runAcrProjects($acrProjects): bool {
         $hasCreatedAutoUpdate = false;
+        $pubSub = service('integrations')->pubSub();
+
         foreach ($acrProjects as $project => $credentials) {
-            $googleCloudPubSub = new GoogleCloudPubSub($project, $credentials);
-            $messages = $googleCloudPubSub->pull(
-                'gcr',
-                str_replace(' ', '_', strtolower(getenv('PROJECT_NAME'))) . '.kso-' . KubeHelper::GetMyHostname() . '.' . KubeHelper::GetMyNamespace()
+            $messages = $pubSub->pull(
+                $project,
+                $credentials,
+                GcrSubscription::TOPIC,
+                GcrSubscription::name()
             );
             Data::debug(count($messages), 'for', $project);
 
             foreach ($messages as $message) {
-                Data::debug($message->data());
-                $data = json_decode($message->data(), true);
+                Data::debug($message);
+                $data = json_decode($message, true);
                 switch ($data['action']) {
                     case 'DELETE':
                         Data::debug('tag deleted, ignore');

@@ -208,7 +208,7 @@ class KServiceStep extends BaseDeploymentStep {
         $annotations['4spaces.kso/update-time'] = date('Y-m-d H:i:s');
         $resource->setAttribute('spec.template.metadata.annotations', $annotations);
 
-        $resource->createOrUpdate();
+        $this->apply($resource);
     }
 
     public function startTerminateCommand(Deployment $deployment): void {
@@ -244,7 +244,7 @@ class KServiceStep extends BaseDeploymentStep {
     /**
      * @throws \Exception
      */
-    private function getResource(Deployment $deployment, bool $auth = false): K8sKNativeService {
+    protected function getResource(Deployment $deployment, bool $auth = false): K8sKNativeService {
         $spec = $deployment->findDeploymentSpecification();
 
         if (!$spec->container_image->exists()) {

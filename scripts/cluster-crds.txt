@@ -1,0 +1,32 @@
+# Custom resource definitions the throwaway test cluster needs, one url per line.
+#
+# Only the definitions, never the controllers. The question a cluster test answers is
+# whether the api server accepts the manifest kso built and hands the resource back - and
+# that is decided by the CRD's own schema. Nothing here routes a packet, and nothing needs
+# to: an HTTPProxy with no Contour running is still validated by Contour's schema.
+#
+# Versions are pinned. An upgrade is a deliberate edit here, and the tests are what say
+# whether kso still fits the new schema.
+#
+# Gateway API - Gateway and HTTPRoute on v1, ReferenceGrant on v1beta1.
+https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.2.1/standard-install.yaml
+
+# Contour - HTTPProxy on projectcontour.io/v1.
+https://raw.githubusercontent.com/projectcontour/contour/v1.30.1/examples/contour/01-crds.yaml
+
+# Istio - VirtualService on networking.istio.io/v1. Applied server side because the
+# generated bundle is larger than the annotation a client side apply would have to store.
+https://raw.githubusercontent.com/istio/istio/1.24.2/manifests/charts/base/files/crd-all.gen.yaml
+
+# Knative Serving - the KService step's `serving.knative.dev/v1` Service. Only the
+# definitions; nothing here runs a revision.
+https://github.com/knative/serving/releases/download/knative-v1.16.0/serving-crds.yaml
+
+# cert-manager - the Certificate kso asks for on a domain's behalf.
+https://github.com/cert-manager/cert-manager/releases/download/v1.16.2/cert-manager.crds.yaml
+
+# GKE's own policies. Google publishes the definitions; the controller that acts on them
+# is GKE itself, so a test can say the manifest was accepted and no more - see the note in
+# the backlog about where schema validation ends.
+https://raw.githubusercontent.com/GoogleCloudPlatform/gke-gateway-api/v1.4.0/config/crd/networking.gke.io_gcpbackendpolicies.yaml
+https://raw.githubusercontent.com/GoogleCloudPlatform/gke-gateway-api/v1.4.0/config/crd/networking.gke.io_healthcheckpolicies.yaml

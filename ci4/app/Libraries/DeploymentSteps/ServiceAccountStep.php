@@ -115,7 +115,7 @@ class ServiceAccountStep extends BaseDeploymentStep {
 
     public function startDeployCommand(Deployment $deployment, ?string $reason = null): void {
         $resource = $this->getResource($deployment, true);
-        $resource->createOrUpdate();
+        $this->apply($resource);
     }
 
     public function startTerminateCommand(Deployment $deployment): void {
@@ -135,7 +135,7 @@ class ServiceAccountStep extends BaseDeploymentStep {
     /**
      * @throws \Exception
      */
-    private function getResource(Deployment $deployment, bool $auth = false): K8sServiceAccount {
+    protected function getResource(Deployment $deployment, bool $auth = false): K8sServiceAccount {
         $resource = new K8sServiceAccount();
         $resource
             ->setName($deployment->name)

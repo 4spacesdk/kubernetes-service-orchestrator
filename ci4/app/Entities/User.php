@@ -102,7 +102,7 @@ class User extends \RestExtension\Entities\User {
     }
 
     public function hasMFASecret(): bool {
-        return strlen($this->mfa_secret_hash) > 0;
+        return strlen((string) $this->mfa_secret_hash) > 0;
     }
 
     public function updateMFASecret(string $value): void {
@@ -155,7 +155,7 @@ class User extends \RestExtension\Entities\User {
         $this->save();
     }
 
-    public function toArray(bool $onlyChanged = false, bool $cast = true, bool $recursive = false, array $fieldsFilter = null): array {
+    public function toArray(bool $onlyChanged = false, bool $cast = true, bool $recursive = false, ?array $fieldsFilter = null): array {
         $item = parent::toArray($onlyChanged, $cast, $recursive, $fieldsFilter);
         $item['has_mfa_secret_hash'] = $this->hasMFASecret();
         return $item;

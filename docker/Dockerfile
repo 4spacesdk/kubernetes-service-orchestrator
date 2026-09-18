@@ -16,7 +16,7 @@ RUN npm run build
 
 
 # PHP DeploymentSpecs can be found at https://hub.docker.com/_/php/
-FROM php:8.3.12-alpine3.20
+FROM php:8.5.10-alpine3.24
 
 # Install OS dependencies
 RUN apk add --update  \
@@ -26,6 +26,7 @@ RUN apk add --update  \
     libjpeg-turbo-dev \
     libpng-dev \
     icu-dev \
+    gmp-dev \
     imagemagick \
     imagemagick-dev \
     libwebp-dev \
@@ -40,9 +41,9 @@ RUN apk add --update  \
     curl-dev \
     yaml-dev \
     linux-headers \
-    php83-apache2 php83-mbstring php83-session php83-json php83-tokenizer php83-mysqli php83-pdo php83-pdo_mysql php83-intl \
-    php83-curl php83-pecl-yaml php83-calendar php83-posix php83-zip php83-xml php83-simplexml php83-xmlwriter php83-ctype \
-    php83-pecl-imagick php83-gd php83-bcmath \
+    php85-apache2 php85-mbstring php85-session php85-json php85-tokenizer php85-mysqli php85-pdo php85-pdo_mysql php85-intl \
+    php85-curl php85-pecl-yaml php85-calendar php85-posix php85-zip php85-xml php85-simplexml php85-xmlwriter php85-ctype \
+    php85-pecl-imagick php85-gd php85-bcmath \
     # Alpine
     autoconf \
     gcc make g++ \
@@ -57,7 +58,7 @@ RUN apk add --update  \
     go
 
 RUN docker-php-ext-configure intl
-RUN docker-php-ext-install mysqli pdo pdo_mysql intl zip pcntl soap sockets calendar posix ctype
+RUN docker-php-ext-install mysqli pdo pdo_mysql intl zip pcntl soap sockets calendar posix ctype gmp
 RUN docker-php-ext-enable pdo_mysql intl posix
 RUN docker-php-ext-configure calendar
 
@@ -69,28 +70,41 @@ RUN docker-php-ext-configure gd \
       --with-jpeg=/usr/include/
 RUN docker-php-ext-install -j$(nproc) bcmath gd
 RUN docker-php-ext-enable gd
-RUN cp /usr/local/etc/php/conf.d/docker-php-ext-gd.ini /etc/php83/conf.d/gd.ini
+RUN cp /usr/local/etc/php/conf.d/docker-php-ext-gd.ini /etc/php85/conf.d/gd.ini
 
 # SQLSRV (MSSQL Driver)
-RUN wget --no-check-certificate https://download.microsoft.com/download/8/6/8/868e5fc4-7bfe-494d-8f9d-115cbcdb52ae/msodbcsql18_18.1.2.1-1_amd64.apk && \
-  wget --no-check-certificate https://download.microsoft.com/download/8/6/8/868e5fc4-7bfe-494d-8f9d-115cbcdb52ae/mssql-tools18_18.1.1.1-1_amd64.apk && \
-  apk add --allow-untrusted msodbcsql18_18.1.2.1-1_amd64.apk && \
-  apk add --allow-untrusted mssql-tools18_18.1.1.1-1_amd64.apk && \
-  apk add --no-cache --virtual .persistent-deps freetds && \
-  apk add --no-cache --virtual .build-deps $PHPIZE_DEPS unixodbc-dev freetds-dev && \
-  docker-php-source extract && \
-  docker-php-ext-install pdo_dblib && \
-  pecl install sqlsrv pdo_sqlsrv && \
-  docker-php-ext-enable pdo_sqlsrv && \
-  docker-php-ext-enable --ini-name 30-sqlsrv.ini sqlsrv && \
-  docker-php-ext-enable --ini-name 35-pdo_sqlsrv.ini pdo_sqlsrv && \
-  apk del .build-deps && \
-  rm msodbcsql18_18.1.2.1-1_amd64.apk && \
-  rm mssql-tools18_18.1.1.1-1_amd64.apk
-RUN cp /usr/local/etc/php/conf.d/30-sqlsrv.ini /etc/php83/conf.d/sqlsrv.ini
-RUN cp /usr/local/etc/php/conf.d/docker-php-ext-pdo_sqlsrv.ini /etc/php83/conf.d/pdo_sqlsrv.ini
-RUN cp /usr/local/lib/php/extensions/no-debug-non-zts-20230831/sqlsrv.so /usr/lib/php83/modules/sqlsrv.so
-RUN cp /usr/local/lib/php/extensions/no-debug-non-zts-20230831/pdo_sqlsrv.so /usr/lib/php83/modules/pdo_sqlsrv.so
+#
+# Microsoft publishes these packages for x86_64 only - there is no arm64 Alpine build of
+# msodbcsql18. An image built on arm64 therefore has no MSSQL driver and cannot provision
+# a database service whose driver is mssql. Everything else is identical, and the images
+# that ship are built for amd64.
+#
+# Without this the whole build fails on Apple Silicon the moment the layer is not cached,
+# which is what used to happen.
+ARG TARGETARCH
+RUN if [ "$TARGETARCH" = "amd64" ] || [ -z "$TARGETARCH" ]; then \
+    wget --no-check-certificate https://download.microsoft.com/download/8/6/8/868e5fc4-7bfe-494d-8f9d-115cbcdb52ae/msodbcsql18_18.1.2.1-1_amd64.apk && \
+    wget --no-check-certificate https://download.microsoft.com/download/8/6/8/868e5fc4-7bfe-494d-8f9d-115cbcdb52ae/mssql-tools18_18.1.1.1-1_amd64.apk && \
+    apk add --allow-untrusted msodbcsql18_18.1.2.1-1_amd64.apk && \
+    apk add --allow-untrusted mssql-tools18_18.1.1.1-1_amd64.apk && \
+    apk add --no-cache --virtual .persistent-deps freetds && \
+    apk add --no-cache --virtual .build-deps $PHPIZE_DEPS unixodbc-dev freetds-dev && \
+    docker-php-source extract && \
+    docker-php-ext-install pdo_dblib && \
+    pecl install sqlsrv pdo_sqlsrv && \
+    docker-php-ext-enable pdo_sqlsrv && \
+    docker-php-ext-enable --ini-name 30-sqlsrv.ini sqlsrv && \
+    docker-php-ext-enable --ini-name 35-pdo_sqlsrv.ini pdo_sqlsrv && \
+    apk del .build-deps && \
+    rm msodbcsql18_18.1.2.1-1_amd64.apk && \
+    rm mssql-tools18_18.1.1.1-1_amd64.apk && \
+    cp /usr/local/etc/php/conf.d/30-sqlsrv.ini /etc/php85/conf.d/sqlsrv.ini && \
+    cp /usr/local/etc/php/conf.d/docker-php-ext-pdo_sqlsrv.ini /etc/php85/conf.d/pdo_sqlsrv.ini && \
+    cp /usr/local/lib/php/extensions/no-debug-non-zts-20250925/sqlsrv.so /usr/lib/php85/modules/sqlsrv.so && \
+    cp /usr/local/lib/php/extensions/no-debug-non-zts-20250925/pdo_sqlsrv.so /usr/lib/php85/modules/pdo_sqlsrv.so ; \
+  else \
+    echo "Skipping the MSSQL driver: Microsoft ships no arm64 Alpine package." ; \
+  fi
 
 # ZMQ Server
 RUN wget https://github.com/zeromq/zeromq4-1/releases/download/v4.1.8/zeromq-4.1.8.tar.gz \
@@ -104,21 +118,49 @@ RUN wget https://github.com/zeromq/zeromq4-1/releases/download/v4.1.8/zeromq-4.1
      && rm -fr zeromq-4.1.4.tar.gz zeromq-4.1.8/
 
 # ZMQ PHP Extension
-RUN git clone https://github.com/zeromq/php-zmq.git \
+#
+# Built from remicollet's fork rather than zeromq/php-zmq, because upstream does not
+# compile on PHP 8.5: zend_exception_get_default was removed, and XtOffsetOf no longer
+# resolves. The fix is zeromq/php-zmq#240, four files and sixteen lines, open since
+# July 2025 and unmerged - upstream's last commit is from January 2025 and it has an
+# open "Project Status" issue.
+#
+# Pinned to a commit so a rebuild produces the same extension. Move back to upstream
+# when the pull request lands.
+RUN git clone https://github.com/remicollet/php-zmq.git \
  && cd php-zmq \
+ && git checkout 4f7780d8 \
  && phpize && ./configure \
  && make \
  && make install \
  && cd .. \
  && rm -fr php-zmq
 RUN docker-php-ext-enable zmq
-RUN cp /usr/local/etc/php/conf.d/docker-php-ext-zmq.ini /etc/php83/conf.d/50_zmq.ini
-RUN cp /usr/local/lib/php/extensions/no-debug-non-zts-20230831/zmq.so /usr/lib/php83/modules/zmq.so
+RUN cp /usr/local/etc/php/conf.d/docker-php-ext-zmq.ini /etc/php85/conf.d/50_zmq.ini
+RUN cp /usr/local/lib/php/extensions/no-debug-non-zts-20250925/zmq.so /usr/lib/php85/modules/zmq.so
 
 # yaml_parse
 RUN pear config-set php_ini /etc/php7/php.ini
 RUN pecl channel-update pecl.php.net
-RUN pecl install yaml-2.2.2 && docker-php-ext-enable yaml
+# 2.3.0 rather than 2.2.2: the older release includes ext/standard/php_smart_string.h,
+# which PHP 8.5 no longer ships.
+RUN pecl install yaml-2.3.0 && docker-php-ext-enable yaml
+
+# Code coverage for the test suites.
+#
+# PCOV rather than Xdebug: it only measures coverage, and it is an order of magnitude
+# faster at it. Xdebug would also give step debugging in PhpStorm, which is worth having -
+# but that is a separate decision and a separate extension to install, not a reason to put
+# a debugger in the image that ships.
+#
+# Switched off in the ini, so it costs nothing on a production request. The test scripts
+# turn it on per run with `-d pcov.enabled=1`. `pcov.directory` keeps it from instrumenting
+# vendor code, which is most of what makes it fast.
+RUN pecl install pcov && docker-php-ext-enable pcov
+RUN { \
+      echo "pcov.enabled=0"; \
+      echo "pcov.directory=/var/www/html/ci4/app"; \
+    } > /usr/local/etc/php/conf.d/docker-php-ext-pcov-defaults.ini
 
 # Install gke-auth
 ARG GKE_AUTH_ENABLED=false
@@ -159,7 +201,10 @@ COPY docker/apache/index.php $APP_HOME
 RUN chown -R www-data:www-data /var/www
 
 # Install componser dependencies
-RUN cd $APP_HOME/ci4 && composer install
+# ext-sqlsrv is required in composer.json but absent on arm64, see the SQLSRV layer above.
+RUN cd $APP_HOME/ci4 && \
+  if [ "$TARGETARCH" = "amd64" ] || [ -z "$TARGETARCH" ]; then composer install; \
+  else composer install --ignore-platform-req=ext-sqlsrv; fi
 RUN cd $APP_HOME/zmq-client && composer install
 RUN cd $APP_HOME/zmq-server && composer install
 

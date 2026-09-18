@@ -138,7 +138,7 @@ class IstioVirtualServiceStep extends BaseDeploymentStep {
 
     public function startDeployCommand(Deployment $deployment, ?string $reason = null): void {
         $resource = $this->getResource($deployment, true);
-        $resource->createOrUpdate();
+        $this->apply($resource);
     }
 
     public function startTerminateCommand(Deployment $deployment): void {
@@ -181,7 +181,7 @@ class IstioVirtualServiceStep extends BaseDeploymentStep {
     /**
      * @throws \Exception
      */
-    private function getResource(Deployment $deployment, bool $auth = false): K8sIstioVirtualService {
+    protected function getResource(Deployment $deployment, bool $auth = false): K8sIstioVirtualService {
         if ($deployment->workspace_id && !$deployment->workspace->exists()) {
             $deployment->workspace->find();
         }

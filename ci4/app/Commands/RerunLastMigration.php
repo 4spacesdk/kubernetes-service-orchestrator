@@ -4,10 +4,14 @@ use CodeIgniter\CLI\BaseCommand;
 use CodeIgniter\CLI\CLI;
 use Config\Database;
 use DebugTool\Data;
-use SharedTools\ZMQ\ChangeEvent;
-use SharedTools\ZMQ\Events;
-use SharedTools\ZMQ\ZMQProxy;
 
+/**
+ * Not measured: this is a developer command that drops the newest row from `migrations` and
+ * migrates again. Running it from a test would change the schema of the test database underneath
+ * the suite, which the drift guard then reports. It is a hand tool, not behaviour we cover.
+ *
+ * @codeCoverageIgnore
+ */
 class RerunLastMigration extends BaseCommand {
 
     public $group           = 'app';

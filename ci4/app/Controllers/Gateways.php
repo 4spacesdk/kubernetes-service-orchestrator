@@ -21,7 +21,7 @@ class Gateways extends ResourceController {
     public function getPreview(int $id): void {
         /** @var Gateway $gateway */
         $gateway = (new GatewayModel())->find($id);
-        if (!$gateway) {
+        if (!$gateway->exists()) {
             $this->fail('unknown gateway');
             return;
         }
@@ -48,7 +48,7 @@ class Gateways extends ResourceController {
     public function deploy(int $id): void {
         /** @var Gateway $gateway */
         $gateway = (new GatewayModel())->find($id);
-        if (!$gateway) {
+        if (!$gateway->exists()) {
             $this->fail('unknown gateway');
             return;
         }
@@ -74,7 +74,7 @@ class Gateways extends ResourceController {
     public function terminate(int $id): void {
         /** @var Gateway $gateway */
         $gateway = (new GatewayModel())->find($id);
-        if (!$gateway) {
+        if (!$gateway->exists()) {
             $this->fail('unknown gateway');
             return;
         }
@@ -101,7 +101,7 @@ class Gateways extends ResourceController {
     public function getStatus(int $id): void {
         /** @var Gateway $gateway */
         $gateway = (new GatewayModel())->find($id);
-        if (!$gateway) {
+        if (!$gateway->exists()) {
             $this->fail('unknown gateway');
             return;
         }
@@ -123,7 +123,7 @@ class Gateways extends ResourceController {
     public function getKubernetesEvents(int $id): void {
         /** @var Gateway $gateway */
         $gateway = (new GatewayModel())->find($id);
-        if (!$gateway) {
+        if (!$gateway->exists()) {
             $this->fail('unknown gateway');
             return;
         }
@@ -143,7 +143,7 @@ class Gateways extends ResourceController {
     public function getKubernetesStatus(int $id): void {
         /** @var Gateway $gateway */
         $gateway = (new GatewayModel())->find($id);
-        if (!$gateway) {
+        if (!$gateway->exists()) {
             $this->fail('unknown gateway');
             return;
         }

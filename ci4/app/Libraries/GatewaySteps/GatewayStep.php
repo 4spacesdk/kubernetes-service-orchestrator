@@ -43,7 +43,7 @@ class GatewayStep {
     public function deploy(Gateway $gateway): void {
         $resources = $this->getAllResources($gateway);
         foreach ($resources as $resource) {
-            $resource->createOrUpdate();
+            KubeHelper::Apply($resource);
         }
     }
 
@@ -73,14 +73,12 @@ class GatewayStep {
             return [];
         }
 
-        $auth = new KubeAuth();
-        $cluster = $auth->authenticate();
-
-        return $cluster->event()
-            ->where('involvedObject.kind', 'Gateway')
-            ->where('involvedObject.name', $gateway->name)
-            ->where('involvedObject.namespace', $gateway->namespace)
-            ->all()
+        // `getEvents()`, as every deployment step does it. This used to build the same
+        // filter by hand with `->where(...)`, and php-k8s has no such method: its `__call`
+        // falls through to `return $this`, so all three filters were silently nothing. The
+        // list then came from the default namespace, and a gateway's event panel showed
+        // the cluster's node events instead of its own.
+        return $resource->getEvents()
             ->map(fn(K8sEvent $event) => [
                 'type' => $event->getAttribute('type'),
                 'reason' => $event->getAttribute('reason'),

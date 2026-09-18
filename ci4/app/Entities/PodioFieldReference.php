@@ -27,25 +27,20 @@ class PodioFieldReference extends Entity {
         return $item;
     }
 
+    /**
+     * The value of this field on the item the url points at.
+     *
+     * The url is a Podio task link; everything after `items/` is the id. A url without
+     * that segment is not handled - see FEAT-11.
+     */
     public function getFieldValue(string $url): ?string {
         if (!$this->podio_integration->exists()) {
             $this->podio_integration->find();
         }
 
         [$_, $itemId] = explode('items/', $url);
-        try {
-            $client = new \PodioClient($this->podio_integration->client_id, $this->podio_integration->client_secret);
-            $client->authenticate_with_app($this->podio_integration->app_id, $this->podio_integration->app_token);
-            $podioItem = \PodioItem::get_by_app_item_id($client, $this->podio_integration->app_id, $itemId);
-            foreach ($podioItem->fields as &$field) {
-                if ($field->field_id == $this->field_id) {
-                    return is_array($field->values) ? (count($field->values) ? $field->values[0]['id'] : '') : $field->values;
-                }
-            }
-        } catch (\Exception $e) {
-            Data::debug(get_class($this), $e);
-        }
-        return null;
+
+        return service('integrations')->podio()->fieldValue($this->podio_integration, $this->field_id, $itemId);
     }
 
     /**

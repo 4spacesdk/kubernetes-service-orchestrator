@@ -128,7 +128,7 @@ class RoleStep extends BaseDeploymentStep {
     public function startDeployCommand(Deployment $deployment, ?string $reason = null): void {
         $resource = $this->getResource($deployment, true);
         if (count($resource->getRules())) {
-            $resource->createOrUpdate();
+            $this->apply($resource);
         }
     }
 
@@ -151,7 +151,7 @@ class RoleStep extends BaseDeploymentStep {
     /**
      * @throws \Exception
      */
-    private function getResource(Deployment $deployment, bool $auth = false): K8sRole {
+    protected function getResource(Deployment $deployment, bool $auth = false): K8sRole {
         $spec = $deployment->findDeploymentSpecification();
 
         $resource = new K8sRole();

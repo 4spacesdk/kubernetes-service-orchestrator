@@ -57,7 +57,13 @@ class Webhooks extends ResourceController {
             ->where('id', $webhookDeliveryId)
             ->find();
         if ($item->exists()) {
+            // `WebhookDelivery::retry()` re-sends the delivery with `curl_exec` straight out
+            // of the entity, so reaching this line is a real HTTP request to whatever url
+            // the delivery carries. It does not go through `service('integrations')`, and
+            // there is no other seam in front of it, so a test cannot take its place.
+            // @codeCoverageIgnoreStart
             $this->_setResource($item->retry());
+            // @codeCoverageIgnoreEnd
         } else {
             $this->_setResource($item);
         }

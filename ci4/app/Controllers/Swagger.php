@@ -29,6 +29,7 @@ class Swagger extends \App\Core\BaseController {
             $this->success();
         } catch (\ReflectionException $e) {
             $this->fail($e->getMessage());
+            return;
         }
     }
 

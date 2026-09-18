@@ -66,7 +66,11 @@ use RestExtension\RestRequest;
 
     public function postInitController() {
         if (ENVIRONMENT != 'production' && extension_loaded('newrelic')) {
+            // Not measured: the newrelic extension is not in the image and will not be, so
+            // the guard above is false on every run and the call cannot be reached.
+            // @codeCoverageIgnoreStart
             newrelic_ignore_transaction();
+            // @codeCoverageIgnoreEnd
         }
 
         if (RestRequest::getInstance()->userId) {
@@ -95,11 +99,22 @@ use RestExtension\RestRequest;
         $this->printResponse($code);
     }
 
+    /**
+     * An error response, sent the same way `success()` sends a successful one.
+     *
+     * This used to end with `exit`, which ended the PHP process. That worked - the body is
+     * captured by CodeIgniter's output buffer either way - but it skipped the framework's
+     * shutdown, so `post_system` never ran and RestExtension never wrote its access log
+     * entry. Error responses were the ones missing from it.
+     *
+     * Because the process no longer dies here, **every caller has to return straight
+     * after**. Otherwise the method carries on with whatever it was refusing to do, and a
+     * second `success()` appends a second JSON document to the same body.
+     */
     private function printResponse($code) {
         $this->response->setStatusCode($code);
         $this->response->setJSON(Data::getStore());
         $this->response->send();
-        exit;
     }
 
 }

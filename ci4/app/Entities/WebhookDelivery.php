@@ -71,7 +71,6 @@ class WebhookDelivery extends Entity {
         $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
         $this->response_headers = substr($response, 0, $headerSize);
         $this->response_body = substr($response, $headerSize);
-        curl_close($ch);
         $this->save();
     }
 

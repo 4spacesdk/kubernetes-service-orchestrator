@@ -126,7 +126,7 @@ class ServiceStep extends BaseDeploymentStep {
 
     public function startDeployCommand(Deployment $deployment, ?string $reason = null): void {
         $resource = $this->getResource($deployment, true);
-        $resource->createOrUpdate();
+        $this->apply($resource);
     }
 
     public function startTerminateCommand(Deployment $deployment): void {
@@ -146,7 +146,7 @@ class ServiceStep extends BaseDeploymentStep {
     /**
      * @throws \Exception
      */
-    private function getResource(Deployment $deployment, bool $auth = false): K8sService {
+    protected function getResource(Deployment $deployment, bool $auth = false): K8sService {
         $spec = $deployment->findDeploymentSpecification();
 
         $resource = new K8sService();

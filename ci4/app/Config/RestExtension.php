@@ -47,6 +47,12 @@ class RestExtension extends BaseConfig {
      */
     public $enableUsageReporting    = TRUE;
 
+    /*
+     * Which database group RestExtension reads from. Null means the default group.
+     * Tests point it at the test group, see App\TestCase.
+     */
+    public ?string $databaseGroupName = null;
+
 
     /**
      * Apply function to authenticate $request.

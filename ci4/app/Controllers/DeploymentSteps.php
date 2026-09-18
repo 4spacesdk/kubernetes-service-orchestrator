@@ -159,6 +159,7 @@ class DeploymentSteps extends \App\Core\BaseController {
             $step->startTerminateCommand($deployment);
         } catch (\Exception $e) {
             $this->fail(KubeHelper::PrintException($e));
+            return;
         }
 
         $deployment->checkStatus(true);

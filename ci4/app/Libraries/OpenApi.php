@@ -14,7 +14,7 @@ class OpenApi {
      * @return array
      * @throws \ReflectionException
      */
-    public static function run(string $scope = null): array {
+    public static function run(?string $scope = null): array {
         $json = [
             'contact' => [
                 'name' => getenv('PROJECT_NAME'),

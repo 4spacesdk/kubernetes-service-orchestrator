@@ -4,12 +4,26 @@
 
 ### Fixed bugs
 * Creating a gateway wrote its addresses twice
+* Deploying a workspace while it was still rolling out could fail with a `409 Conflict` and leave the deployment half applied. Every step now retries a conflict
+* Asking for a migration job's status while it was being cleaned up failed instead of reporting that it was gone
+* A gateway's Kubernetes events panel listed the whole cluster's events instead of the gateway's own
+* A custom resource whose manifest named no namespace was applied to `default` rather than to the workspace it belongs to
+* Every gateway endpoint crashed on an unknown id instead of reporting it
+* Creating, deleting or reading a domain's Istio gateway failed with "Class not found" on Linux
 
 ### Enhancements
 * Duplicate button on Container Images, Domains, Gateways, Database Services and Email Services
+* Added unit and database test suites, covering workspace status, auto updates, the commands, the helpers and the whole controller layer, and the HTTPRoute, HealthCheckPolicy and GCPBackendPolicy manifests
+* Added an integration suite that deploys to a throwaway k3s cluster, covering what eleven deployment steps apply, report and terminate - including the Gateway API, Contour and Istio resources, which are validated against the real schemas
+* Upgraded the runtime: PHP 8.3 to 8.5, Alpine 3.20 to 3.24, CodeIgniter 4.4 to 4.7, and the three 4spaces extensions. MySQL in development compose went from 5.7 to 8.0
+* The image builds on arm64 as well as amd64, so it can be built and run on Apple Silicon
 
 ### Upgrade guide
 1. Deploy new image
+2. Run migrations [(Guide)](https://github.com/4spacesdk/kubernetes-service-orchestrator?tab=readme-ov-file#migrate-database-helm)
+
+### Notes
+* Published images are still built for amd64 and are unchanged in what they can do. An image built for arm64 has no MSSQL driver - Microsoft ships none for that architecture - so it cannot create a database service with the MSSQL driver
 
 
 

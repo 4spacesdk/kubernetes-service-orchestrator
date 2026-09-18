@@ -45,7 +45,13 @@ class PostUpdateActions extends ResourceController {
     }
 
     /**
+     * PUT is switched off; the UI saves with PATCH.
+     *
+     * `@ignore true` keeps it out of `api_routes`, so this body is never entered. A routed
+     * PUT would replace every column rather than the ones that were sent.
+     *
      * @ignore true
+     * @codeCoverageIgnore
      * @param $id
      * @return void
      */

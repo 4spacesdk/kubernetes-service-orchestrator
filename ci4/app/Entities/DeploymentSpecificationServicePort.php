@@ -5,7 +5,7 @@ use App\Core\Entity;
 /**
  * Class DeploymentSpecificationServicePort
  * @package App\Entities
- * @property int $deploymennt_specification_id
+ * @property int $deployment_specification_id
  * @property DeploymentSpecification $deployment_specification
  * @property string $protocol
  * @property string $name

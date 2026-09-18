@@ -1,7 +1,7 @@
 <?php namespace App\Libraries\Kubernetes;
 
 use App\Entities\Domain;
-use App\Libraries\Kubernetes\CustomResourceDefinitions\K8SIstioGateway;
+use App\Libraries\Kubernetes\CustomResourceDefinitions\K8sIstioGateway;
 use Exception;
 use RenokiCo\PhpK8s\KubernetesCluster;
 use RenokiCo\PhpK8s\ResourcesList;
@@ -52,8 +52,8 @@ class KubeIstioGateway {
         }
     }
 
-    private function getResource(KubernetesCluster $cluster): K8SIstioGateway {
-        return new K8SIstioGateway($cluster, [
+    private function getResource(KubernetesCluster $cluster): K8sIstioGateway {
+        return new K8sIstioGateway($cluster, [
             'metadata' => [
                 'name' => $this->domain->getIstioGatewayName(),
                 'namespace' => $this->domain->certificate_namespace,

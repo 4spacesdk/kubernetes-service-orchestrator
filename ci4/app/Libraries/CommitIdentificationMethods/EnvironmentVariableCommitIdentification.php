@@ -13,6 +13,13 @@ class EnvironmentVariableCommitIdentification extends BaseCommitIdentificationMe
         $this->containerImage = $containerImage;
     }
 
+    /**
+     * Not measured: this is the network call itself. What kso decides before and after
+     * it is tested through the fake behind `BaseCommitIdentificationMethod` - see the strategy note in the
+     * test setup. Marking it keeps the coverage number about code we chose to test.
+     *
+     * @codeCoverageIgnore
+     */
     public function getCommitShortSha(Deployment $deployment): string {
         if (!$deployment->workspace->exists()) {
             $deployment->workspace->find();

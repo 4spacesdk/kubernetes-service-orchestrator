@@ -151,7 +151,7 @@ class ContourHttpProxyStep extends BaseDeploymentStep {
     public function startDeployCommand(Deployment $deployment, ?string $reason = null): void {
         $resources = $this->getResources($deployment, true);
         foreach ($resources as $resource) {
-            $resource->createOrUpdate();
+            $this->apply($resource);
         }
     }
 
@@ -204,7 +204,7 @@ class ContourHttpProxyStep extends BaseDeploymentStep {
      * @return K8sContourHttpProxy[]
      * @throws \Exception
      */
-    private function getResources(Deployment $deployment, bool $auth = false): array {
+    protected function getResources(Deployment $deployment, bool $auth = false): array {
         if ($deployment->workspace_id && !$deployment->workspace->exists()) {
             $deployment->workspace->find();
         }

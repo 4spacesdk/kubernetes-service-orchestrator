@@ -22,6 +22,180 @@ steps:
           .
     secretEnv: ['USERNAME']
 
+  # Tests run against the image that was just built, so what is verified is what ships.
+  # A failure here stops the build before anything is pushed.
+  - id: Test
+    name: gcr.io/cloud-builders/docker
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        set -e
+
+        trap 'docker rm -f kso-test-db kso-test-cluster kso-smoke >/dev/null 2>&1 || true' EXIT
+
+        # Both are started before anything waits on either, so the two image pulls overlap
+        # and k3s boots while MySQL is still coming up. The cluster is then free by the
+        # time the database suite is done with it.
+        #
+        # MySQL: same major version as production and as docker-compose, since the
+        # migrations use MySQL specific SQL.
+        docker run -d --name kso-test-db --network=cloudbuild \
+          -e MYSQL_ROOT_PASSWORD=root \
+          -e MYSQL_DATABASE=deploy_tests \
+          mysql:8.0 &
+
+        # k3s rather than kind or minikube: it is a container, so the build machine needs
+        # nothing installed. --tls-san puts the container name in the certificate, which is
+        # the name the test container reaches it under.
+        docker run -d --name kso-test-cluster --privileged --network=cloudbuild \
+          -e K3S_KUBECONFIG_MODE=666 \
+          rancher/k3s:v1.31.5-k3s1 server \
+          --disable=traefik --disable=metrics-server --disable=servicelb \
+          --tls-san=kso-test-cluster &
+
+        wait
+
+        echo "Waiting for MySQL"
+        for i in $$(seq 1 60); do
+          if docker exec kso-test-db mysqladmin ping -uroot -proot --silent 2>/dev/null; then
+            break
+          fi
+          sleep 2
+        done
+
+        # --entrypoint: the image's entrypoint starts apache and ignores any command given
+        # to it, so without this the container would serve http until the build times out.
+        docker run --rm --network=cloudbuild --entrypoint sh \
+          -e database.tests.hostname=kso-test-db \
+          -e DB_HOST=kso-test-db -e DB_NAME=deploy_tests -e DB_USER=root -e DB_PASS=root -e DB_PORT=3306 \
+          $$USERNAME/$_DOCKER_HUB_REPOSITORY:dev \
+          -c 'cd /var/www/html/ci4 && php spark migrate &&
+              started=$$(date +%s) &&
+              vendor/bin/phpunit --testsuite unit,database &&
+              elapsed=$$(( $$(date +%s) - started )) &&
+              echo "Suite: $${elapsed}s of a 30s budget" &&
+              if [ "$$elapsed" -gt 30 ]; then
+                echo "The suite is over its budget. It is the one run on every save, and";
+                echo "a suite that stops being run stops being worth writing. Find what";
+                echo "got slow, or raise the budget on purpose.";
+                exit 1;
+              fi'
+
+        # The other half of every deployment step: does the api server accept the manifest
+        # the step built, does the resource appear, does getStatus() find it, and does
+        # terminating take it away again. None of that can be answered without a cluster,
+        # and it is where the steps spend most of their lines.
+        #
+        # This runs on every build rather than nightly because it costs seconds, not
+        # minutes. If it ever stops being seconds, move it out - do not make it optional.
+        echo "Waiting for the cluster"
+        cluster_started=$$(date +%s)
+        cluster_up=0
+        for i in $$(seq 1 60); do
+          if docker exec kso-test-cluster kubectl get --raw /readyz >/dev/null 2>&1; then
+            cluster_up=1
+            break
+          fi
+          sleep 2
+        done
+        if [ "$$cluster_up" = "0" ]; then
+          echo "The cluster never became ready."
+          docker logs --tail 50 kso-test-cluster
+          exit 1
+        fi
+
+        # Six steps build resources Kubernetes has never heard of. Without the definitions
+        # the api server rejects them as unknown kinds. Same pinned list the developer
+        # script reads, so the two cannot drift.
+        echo "Installing custom resource definitions"
+        while read -r url; do
+          case "$$url" in ''|'#'*) continue ;; esac
+          if ! docker exec kso-test-cluster kubectl apply --server-side -f "$$url" >/dev/null; then
+            echo "Could not install $$url"
+            exit 1
+          fi
+        done < scripts/cluster-crds.txt
+
+        # k3s writes a kubeconfig pointing at 127.0.0.1, which from the test container is
+        # the test container.
+        KUBECONFIG_B64=$$(docker exec kso-test-cluster \
+          sed 's#127.0.0.1#kso-test-cluster#' /etc/rancher/k3s/k3s.yaml | base64 | tr -d '\n')
+
+        # KUBERNETES_TEST_CLUSTER=disposable is what unlocks the suite. These tests write,
+        # and a cluster anybody cares about must not have it set.
+        docker run --rm --network=cloudbuild --entrypoint sh \
+          -e database.tests.hostname=kso-test-db \
+          -e DB_HOST=kso-test-db -e DB_NAME=deploy_tests -e DB_USER=root -e DB_PASS=root -e DB_PORT=3306 \
+          -e KUBERNETES_AUTH=kube-config \
+          -e KUBERNETES_TEST_CLUSTER=disposable \
+          -e KUBERNETES_KUBECONFIG="$$KUBECONFIG_B64" \
+          $$USERNAME/$_DOCKER_HUB_REPOSITORY:dev \
+          -c 'cd /var/www/html/ci4 && vendor/bin/phpunit --testsuite integration'
+
+        echo "Cluster suite, cluster boot included: $$(( $$(date +%s) - cluster_started ))s"
+
+        # The cluster is thrown away whole, so a leaked namespace costs nothing here. It
+        # does on a developer's machine, where the same cluster is reused all day, so say
+        # so rather than let it pass unnoticed.
+        #
+        # Only the Active ones count. Deleting a namespace is asynchronous, and one that is
+        # still Terminating seconds later was asked to go away - which is the whole point.
+        active=$$(docker exec kso-test-cluster kubectl get ns --no-headers \
+          | awk '$$1 ~ /^kso-test-/ && $$2 == "Active" { print $$1 }')
+        if [ -n "$$active" ]; then
+          echo "Namespaces left behind - tearDown is not removing them:"
+          echo "$$active"
+        fi
+
+        # The suites above run with the http server switched off, and CodeIgniter's test
+        # harness substitutes its own session. Neither can see a container that will not
+        # serve a page: the 4.7 upgrade left the session handler unable to start, and a
+        # full green suite sat next to a sign-in page that threw on every request.
+        #
+        # So: start the image the way production starts it, and ask it for two pages.
+        # `/api/settings` is public and reaches the database; `/api/login` renders a view
+        # and opens a session, which is the combination that broke. `/` is a static
+        # landing page and proves nothing, so it is not checked.
+        echo "Smoke test"
+        docker run -d --name kso-smoke --network=cloudbuild \
+          -e ENVIRONMENT=production \
+          -e DB_HOST=kso-test-db -e DB_NAME=deploy_tests -e DB_USER=root -e DB_PASS=root -e DB_PORT=3306 \
+          $$USERNAME/$_DOCKER_HUB_REPOSITORY:dev
+
+        for i in $$(seq 1 30); do
+          if docker exec kso-smoke curl -sf -o /dev/null http://localhost/api/settings 2>/dev/null; then
+            break
+          fi
+          sleep 2
+        done
+
+        smoke_failed=0
+        for endpoint in /api/settings /api/login; do
+          code=$$(docker exec kso-smoke curl -s -o /tmp/smoke-body -w '%{http_code}' "http://localhost$$endpoint" || echo 000)
+          if [ "$$code" = "200" ]; then
+            echo "  $$endpoint $$code"
+          else
+            echo "  $$endpoint $$code - expected 200"
+            docker exec kso-smoke sh -c 'head -c 2000 /tmp/smoke-body'
+            smoke_failed=1
+          fi
+        done
+
+        if [ "$$smoke_failed" = "1" ]; then
+          echo "--- application log ---"
+          # Today's file only - the one this run wrote. A build from a git checkout has no
+          # other logs (writable/logs is gitignored), but an image built locally carries
+          # whatever the developer's working directory had, and a glob would bury the
+          # failure under stack traces from months ago.
+          docker exec kso-smoke sh -c 'tail -40 "/var/www/html/ci4/writable/logs/log-$$(date +%Y-%m-%d).log"' || true
+          docker rm -f kso-smoke
+          exit 1
+        fi
+
+        docker rm -f kso-smoke
+    secretEnv: ['USERNAME']
+
   - id: Push
     name: gcr.io/cloud-builders/docker
     entrypoint: 'bash'

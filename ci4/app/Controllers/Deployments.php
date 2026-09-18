@@ -456,6 +456,14 @@ class Deployments extends ResourceController {
     }
 
     /**
+     * Empty on purpose - and routed anyway.
+     *
+     * `@ignore true` keeps the verb out of the route generator and swagger, but the init
+     * migration wrote `post deployments` and `put deployments` into `api_routes` back in 2023 and
+     * nothing removed them. Both still answer 200 with an entirely empty body: `success()`
+     * is never called, so there is no envelope at all - no status, no error. A generated
+     * client calling them is told the write succeeded. See SEC-11 and FEAT-41.
+     *
      * @return void
      * @ignore true
      */
@@ -463,6 +471,8 @@ class Deployments extends ResourceController {
     }
 
     /**
+     * Empty on purpose - and routed anyway. See `post()` above.
+     *
      * @param $id
      * @return void
      * @ignore true

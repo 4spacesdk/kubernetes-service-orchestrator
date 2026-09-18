@@ -17,6 +17,13 @@ class GoogleCloudArtifactRegistry extends BaseContainerRegistry {
         $this->image = $image;
     }
 
+    /**
+     * Not measured: this is the network call itself. What kso decides before and after
+     * it is tested through the fake behind `BaseContainerRegistry` - see the strategy note in the
+     * test setup. Marking it keeps the coverage number about code we chose to test.
+     *
+     * @codeCoverageIgnore
+     */
     public function getTags(): array {
         $items = [];
 
@@ -55,6 +62,13 @@ class GoogleCloudArtifactRegistry extends BaseContainerRegistry {
      * @throws ValidationException
      * @throws ApiException
      */
+    /**
+     * Not measured: this is the network call itself. What kso decides before and after
+     * it is tested through the fake behind `BaseContainerRegistry` - see the strategy note in the
+     * test setup. Marking it keeps the coverage number about code we chose to test.
+     *
+     * @codeCoverageIgnore
+     */
     public function getVersions(): array {
         $items = [];
 
@@ -86,6 +100,13 @@ class GoogleCloudArtifactRegistry extends BaseContainerRegistry {
     /**
      * @throws ValidationException
      * @throws ApiException
+     */
+    /**
+     * Not measured: this is the network call itself. What kso decides before and after
+     * it is tested through the fake behind `BaseContainerRegistry` - see the strategy note in the
+     * test setup. Marking it keeps the coverage number about code we chose to test.
+     *
+     * @codeCoverageIgnore
      */
     public function deleteVersions(string $version): void {
         $artifactRegistryClient = new ArtifactRegistryClient([

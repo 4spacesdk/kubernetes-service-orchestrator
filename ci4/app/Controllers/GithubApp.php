@@ -55,8 +55,15 @@ class GithubApp extends \App\Core\BaseController {
         $code = $this->request->getGet('code');
         if (!$code) {
             $this->fail('No code provided');
+            return;
         }
 
+        // Everything past the refusal is the conversation with GitHub, and there is nothing
+        // to put in front of it: the request is built here with `Services::curlrequest()`
+        // rather than through `service('integrations')`, which is the one seam a test can
+        // replace. Reaching this line in a test means posting a manifest code to
+        // api.github.com, so the credentials this stores are out of reach offline.
+        // @codeCoverageIgnoreStart
         $client = Services::curlrequest();
         try {
             $response = $client->post("https://api.github.com/app-manifests/{$code}/conversions", [
@@ -68,6 +75,7 @@ class GithubApp extends \App\Core\BaseController {
 
             if ($response->getStatusCode() !== 201 && $response->getStatusCode() !== 200) {
                 $this->fail('Failed to convert manifest: ' . $response->getBody());
+                return;
             }
 
             $data = json_decode($response->getBody(), true);
@@ -86,7 +94,9 @@ class GithubApp extends \App\Core\BaseController {
             $this->response->redirect($redirectUrl);
         } catch (\Exception $e) {
             $this->fail('Error during manifest conversion: ' . $e->getMessage(), 500);
+            return;
         }
+        // @codeCoverageIgnoreEnd
     }
 
     /**
@@ -131,6 +141,11 @@ class GithubApp extends \App\Core\BaseController {
             return;
         }
 
+        // From here on the method is a GitHub client built in place - `new Client()`, not
+        // `service('integrations')` - so nothing can stand in for it and a test would have
+        // to sign a JWT and call api.github.com to get any further. The decisions buried
+        // behind that missing seam are the archived-repository skip and the sort order.
+        // @codeCoverageIgnoreStart
         $client = new Client();
         
         $payload = [
@@ -179,6 +194,8 @@ class GithubApp extends \App\Core\BaseController {
             $this->response->send();
         } catch (\Exception $e) {
             $this->fail('GitHub API Error: ' . $e->getMessage(), 500);
+            return;
         }
+        // @codeCoverageIgnoreEnd
     }
 }

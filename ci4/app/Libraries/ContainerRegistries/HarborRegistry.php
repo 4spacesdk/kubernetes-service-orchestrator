@@ -21,6 +21,13 @@ class HarborRegistry extends BaseContainerRegistry {
         return substr($projectAndRepo, 0, strpos($projectAndRepo, '/'));
     }
 
+    /**
+     * Not measured: this is the network call itself. What kso decides before and after
+     * it is tested through the fake behind `BaseContainerRegistry` - see the strategy note in the
+     * test setup. Marking it keeps the coverage number about code we chose to test.
+     *
+     * @codeCoverageIgnore
+     */
     public function getTags(): array {
         try {
             $ch = curl_init();
@@ -35,7 +42,6 @@ class HarborRegistry extends BaseContainerRegistry {
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_URL, $url);
             $response = curl_exec($ch);
-            curl_close($ch);
             $artifacts = json_decode($response, true);
 
             if (isset($artifacts['errors'])) {

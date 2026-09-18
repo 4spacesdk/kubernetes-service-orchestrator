@@ -21,7 +21,11 @@ class ZMQ extends Controller {
         parent::initController($request, $response, $logger);
 
         if (!is_cli()) {
+            // Not measured: a test run is a cli run, so the branch is never true from here,
+            // and `die` would take phpunit with it if it were.
+            // @codeCoverageIgnoreStart
             die('Only CLI is allowed to enter this controller');
+            // @codeCoverageIgnoreEnd
         }
 
         $request = Services::clirequest();
@@ -43,10 +47,15 @@ class ZMQ extends Controller {
             ->limit(1)
             ->find();
         if ($zmqEvent->id != $firstEventStored->id) {
+            // Not measured: the duplicate path ends in `die`, which ends the process - and
+            // in a test run that process is phpunit. The condition above is measured; only
+            // the losing branch is out of reach.
+            // @codeCoverageIgnoreStart
             $zmqEvent->delete();
             // This event is handled by another container.
             Data::debug('This event is handled by another container. I am skipping it');
             die;
+            // @codeCoverageIgnoreEnd
         }
     }
 

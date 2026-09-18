@@ -33,6 +33,7 @@ class Jobby extends \App\Core\BaseController {
                 }
             } catch (\Jobby\Exception $e) {
                 $this->fail($e->getMessage());
+                return;
             }
         }
 
@@ -40,6 +41,7 @@ class Jobby extends \App\Core\BaseController {
             $jobby->run();
         } catch (\Jobby\Exception $e) {
             $this->fail($e->getMessage());
+            return;
         }
 
         $this->success();

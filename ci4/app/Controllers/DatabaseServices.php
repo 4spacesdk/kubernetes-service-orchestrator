@@ -7,7 +7,14 @@ use DebugTool\Data;
 class DatabaseServices extends ResourceController {
 
     /**
+     * PUT is switched off; the UI saves with PATCH.
+     *
+     * `@ignore true` keeps it out of `api_routes`, so this body is never entered. A PUT
+     * that was routed would go through the trait's `put()`, which replaces every column -
+     * a partial body would blank the password on a service the deployments depend on.
+     *
      * @ignore true
+     * @codeCoverageIgnore
      * @param $id
      * @return void
      */

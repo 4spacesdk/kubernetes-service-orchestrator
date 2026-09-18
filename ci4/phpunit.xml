@@ -1,42 +1,100 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit bootstrap="tests/bootstrap.php"
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/11.5/phpunit.xsd"
+         bootstrap="tests/bootstrap.php"
          backupGlobals="false"
          colors="true"
-         convertErrorsToExceptions="true"
-         convertNoticesToExceptions="true"
-         convertWarningsToExceptions="true"
          stopOnError="false"
          stopOnFailure="false"
          stopOnIncomplete="false"
          stopOnSkipped="false">
+
+    <!-- PHP errors in a test. `convertErrorsToExceptions` and its siblings were removed in
+         PHPUnit 10, and nothing replaces them here, because they never did the work: the
+         bootstrap boots CodeIgniter, which installs its own error handler, and PHPUnit (9 as
+         well as 11) leaves an existing handler alone and installs none of its own. So it is
+         CodeIgniter's `Exceptions::errorHandler()` that turns a warning or a notice into an
+         ErrorException and fails the test, as before.
+         Deprecations go the same way and never reach PHPUnit: CodeIgniter hands them to the
+         logger at warning level, below the threshold in `Config/Logger.php`, so they vanish.
+         That is why a run says a plain `OK` on PHP 8.5. They are not absent - run with
+         CODEIGNITER_SCREAM_DEPRECATIONS=1 to have each one thrown instead. -->
+
+    <!-- A suite says what a test needs to run, nothing else.
+         `unit` needs nothing, `database` needs a schema, `integration` needs a cluster.
+         The tests under `database/Api` send real requests through the framework and were
+         briefly a suite of their own because they were slow; they are not any more, so
+         they are back where they belong. There is a time budget on unit+database in the
+         build to keep it that way. -->
     <testsuites>
-        <testsuite name="app">
-            <directory>./tests</directory>
+        <!-- No database, no network. Runs anywhere, so keep it the default. -->
+        <testsuite name="unit">
+            <directory>./tests/unit</directory>
+        </testsuite>
+
+        <!-- Needs a database, which migrations build from scratch. No network.
+             Includes Api/, where the requests go through routing, filters and a
+             controller against that same database. -->
+        <testsuite name="database">
+            <directory>./tests/database</directory>
+        </testsuite>
+
+        <!-- Needs a real cluster or a real integration, configured through env. Each test
+             skips itself when its env is missing, so this never blocks a commit.
+             Run on its own by passing the testsuite name to phpunit. -->
+        <testsuite name="integration">
+            <directory>./tests/integration</directory>
         </testsuite>
     </testsuites>
 
-    <filter>
-        <whitelist addUncoveredFilesFromWhitelist="true" processUncoveredFilesFromWhitelist="true">
+    <!-- Which files coverage would measure, for when it is asked for on the command line
+         by passing a coverage flag to phpunit. No <report> here on purpose: reports written
+         on every run need a coverage driver, and warn on every run when there is none.
+         The image ships PCOV switched off in its ini, so an ordinary run pays nothing for
+         it; scripts/test.sh switches it on only when a coverage flag is passed. -->
+    <source>
+        <include>
             <directory suffix=".php">./app</directory>
-            <exclude>
-                <directory suffix=".php">./app/Views</directory>
-                <file>./app/Config/Routes.php</file>
-            </exclude>
-        </whitelist>
-    </filter>
+        </include>
+        <exclude>
+            <directory suffix=".php">./app/Views</directory>
+            <file>./app/Config/Routes.php</file>
+
+            <!-- Migrations run once against an empty schema and are never called again.
+                 DatabaseTestCase already fails when the test database is behind them, which
+                 is the check that matters. Counting them here is 1200 statements of
+                 permanent zero that hide what the number is for. -->
+            <directory suffix=".php">./app/Database/Migrations</directory>
+
+            <!-- Declarations, not behaviour: class constants and interface signatures. -->
+            <directory suffix=".php">./app/Constants</directory>
+            <directory suffix=".php">./app/Interfaces</directory>
+
+            <!-- Stock CodeIgniter configuration, carried unchanged apart from the two lines
+                 UPG-1 lists. `Constants.php` is a wall of `define()`, `Mimes.php` is a
+                 five-hundred-line array, and `Boot/*` sets error reporting per environment
+                 before a test can see it. None of it is a decision kso made, and counting
+                 it measures the framework rather than us. -->
+            <file>./app/Config/Constants.php</file>
+            <file>./app/Config/Mimes.php</file>
+            <file>./app/Config/Exceptions.php</file>
+            <directory suffix=".php">./app/Config/Boot</directory>
+        </exclude>
+    </source>
 
     <logging>
-        <log type="coverage-html" target="build/logs/html"/>
-        <log type="coverage-clover" target="build/logs/clover.xml"/>
-        <log type="coverage-php" target="build/logs/coverage.serialized"/>
-        <log type="coverage-text" target="php://stdout" showUncoveredFiles="false"/>
-        <log type="testdox-html" target="build/logs/testdox.html"/>
-        <log type="testdox-text" target="build/logs/testdox.txt"/>
-        <log type="junit" target="build/logs/logfile.xml"/>
+        <!-- Machine readable results, for a CI job to pick up. Harmless locally. -->
+        <junit outputFile="build/logs/logfile.xml"/>
     </logging>
 
     <php>
         <server name="app.baseURL" value="http://api"/>
+
+        <!-- Turn every PHP deprecation into an exception, so a test fails on one instead of
+             passing over it. Without this, CodeIgniter's error handler logs deprecations
+             below the logger's threshold, and they never surface anywhere - a clean OK said
+             nothing about them. A deprecation in PHP 8.5 is an error in PHP 9. See TEST-4. -->
+        <env name="CODEIGNITER_SCREAM_DEPRECATIONS" value="1"/>
 
         <!-- Directory containing phpunit.xml -->
         <const name="HOMEPATH" value="./"/>
@@ -47,14 +105,23 @@
         <!-- Directory containing the front controller (index.php) -->
         <const name="PUBLICPATH" value="./public/"/>
 
-        <!-- Database configuration -->
-        <!--	<env name="database.tests.hostname" value="localhost"/>  -->
-        <!--	<env name="database.tests.database" value="tests"/>	     -->
-        <!--	<env name="database.tests.username" value="tests_user"/> -->
-        <!--	<env name="database.tests.password" value=""/>		     -->
-        <!--	<env name="database.tests.DBDriver" value="MySQLi"/>	 -->
-        <!--	<env name="database.tests.DBPrefix" value="tests_"/>	 -->
-        <!--		<env name="database.tests.database" value=":memory:"/>-->
-        <!--		<env name="database.tests.DBDriver" value="SQLite3"/>-->
+        <!-- Database for tests that need one. A schema of its own, never the live one.
+             MySQL rather than SQLite, because the migrations use MySQL specific SQL.
+             The defaults match docker-compose. -->
+        <env name="database.tests.hostname" value="db"/>
+        <env name="database.tests.database" value="deploy_tests"/>
+        <env name="database.tests.username" value="root"/>
+        <env name="database.tests.password" value="root"/>
+        <!-- OrmExtension's driver, not CodeIgniter's, because `$default` uses OrmExtension's
+             and a test connection has to behave like the real one. The literal `MySQLi`
+             was here until 2026-09-17, and its builder has no `bindReplace()` - which
+             `OrmExtension\DataMapper\QueryBuilder::parseSubQuery()` calls. So every
+             `whereSubQuery`, `selectSubQuery` and `orderBySubQuery` threw
+             `BadMethodCallException` under test and worked in production. The label filter
+             on workspaces, deployments and specifications is built on `whereSubQuery`, so
+             none of it could be tested at all. -->
+        <env name="database.tests.DBDriver" value="OrmExtension\Extensions\Database\MySQLi"/>
+        <env name="database.tests.DBPrefix" value=""/>
+        <env name="database.tests.port" value="3306"/>
     </php>
 </phpunit>

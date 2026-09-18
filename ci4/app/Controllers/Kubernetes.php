@@ -30,7 +30,7 @@ class Kubernetes extends \App\Core\BaseController {
             $cluster = (new KubeAuth())->authenticate();
             $pods = $cluster->getAllPods(
                 $namespace,
-                (strlen($app) && strlen($role)) ? [
+                (strlen((string) $app) && strlen((string) $role)) ? [
                     'labelSelector' => urldecode(http_build_query(
                         [
                             "app" => "$app,role=$role"
@@ -74,7 +74,7 @@ class Kubernetes extends \App\Core\BaseController {
      */
     public function exec(string $namespace, string $name, string $container): void {
         $command = $this->request->getGet('command');
-        if (strlen($command) == 0) {
+        if (strlen((string) $command) == 0) {
             $this->fail('missing command');
             return;
         }

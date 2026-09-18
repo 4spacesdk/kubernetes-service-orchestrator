@@ -3,7 +3,7 @@
 use App\Core\ResourceController;
 use App\Entities\Domain;
 use App\Interfaces\DomainsGetCertificateStatusResponse;
-use App\Libraries\Kubernetes\CustomResourceDefinitions\K8SIstioGateway;
+use App\Libraries\Kubernetes\CustomResourceDefinitions\K8sIstioGateway;
 use App\Libraries\Kubernetes\KubeAuth;
 use App\Libraries\Kubernetes\KubeCertificate;
 use App\Libraries\Kubernetes\KubeIstioGateway;
@@ -155,9 +155,10 @@ class Domains extends ResourceController {
     }
 
     /**
-     * @ignore true
      * @param $id
      * @return void
+     * @codeCoverageIgnore
+     * @ignore true
      */
     public function put($id = 0) {
     }

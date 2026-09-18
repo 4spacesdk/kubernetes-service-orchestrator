@@ -3,7 +3,7 @@
 use RenokiCo\PhpK8s\Contracts\InteractsWithK8sCluster;
 use RenokiCo\PhpK8s\Kinds\K8sResource;
 
-class K8SIstioGateway extends K8sResource implements InteractsWithK8sCluster {
+class K8sIstioGateway extends K8sResource implements InteractsWithK8sCluster {
 
     /**
      * The resource Kind parameter.

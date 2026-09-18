@@ -134,7 +134,7 @@ class HealthCheckPolicyStep extends BaseDeploymentStep {
         // Decide from the built object, not a fresh getPolicyType() call: re-deriving it here could
         // disagree with what getResource() built and apply a spec-less policy, which the API rejects.
         if ($resource->getAttribute('spec')) {
-            $resource->createOrUpdate();
+            $this->apply($resource);
         } else if ($resource->exists()) {
             // No port asks for a policy, so hand the Service back to GKE's default health check.
             $resource->synced();
@@ -255,7 +255,7 @@ class HealthCheckPolicyStep extends BaseDeploymentStep {
      *
      * @throws \Exception
      */
-    private function getResource(Deployment $deployment, bool $auth = false): K8sHealthCheckPolicy {
+    protected function getResource(Deployment $deployment, bool $auth = false): K8sHealthCheckPolicy {
         $resource = new K8sHealthCheckPolicy();
         $resource
             ->setName($deployment->name)

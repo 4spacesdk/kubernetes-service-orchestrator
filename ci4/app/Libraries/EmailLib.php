@@ -18,6 +18,12 @@ class EmailLib {
     /**
      * @throws \Exception
      */
+    /**
+     * Not measured: from here down it is an smtp conversation. Whether we are configured to
+     * have one at all is decided by `IsConfigured()` above, which is.
+     *
+     * @codeCoverageIgnore
+     */
     public function send(string $subject, string $body, string $receiverName, string $receiverEmail): bool {
         if (!self::IsConfigured()) {
             throw new \Exception('Email host is not configured');

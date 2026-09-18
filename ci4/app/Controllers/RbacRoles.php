@@ -5,32 +5,36 @@ use App\Core\ResourceController;
 class RbacRoles extends ResourceController {
 
     /**
-     * @ignore true
      * @return void
+     * @codeCoverageIgnore
+     * @ignore true
      */
     public function post() {
     }
 
     /**
-     * @ignore true
      * @param $id
+     * @codeCoverageIgnore
      * @return void
+     * @ignore true
      */
     public function put($id = 0) {
     }
 
     /**
-     * @ignore true
      * @param $id
+     * @codeCoverageIgnore
      * @return void
+     * @ignore true
      */
     public function patch($id = 0) {
     }
 
     /**
-     * @ignore true
      * @param $id
+     * @codeCoverageIgnore
      * @return void
+     * @ignore true
      */
     public function delete($id) {
     }

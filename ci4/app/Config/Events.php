@@ -23,9 +23,15 @@ use CodeIgniter\HotReloader\HotReloader;
  *      Events::on('create', [$myInstance, 'myMethod']);
  */
 
-Events::on('pre_system', static function () {
+Events::on('pre_system', static function (): void {
+    // Not measured: stock CodeIgniter, and both halves are unreachable from a test by
+    // their own conditions - the first is skipped when ENVIRONMENT is `testing`, and the
+    // second wants CI_DEBUG with a web request behind it.
+    // @codeCoverageIgnoreStart
     if (ENVIRONMENT !== 'testing') {
-        if (ini_get('zlib.output_compression')) {
+        $value = ini_get('zlib.output_compression');
+
+        if (filter_var($value, FILTER_VALIDATE_BOOLEAN) || (int) $value > 0) {
             throw FrameworkException::forEnabledZlibOutputCompression();
         }
 
@@ -44,14 +50,15 @@ Events::on('pre_system', static function () {
      */
     if (CI_DEBUG && ! is_cli()) {
         Events::on('DBQuery', 'CodeIgniter\Debug\Toolbar\Collectors\Database::collect');
-        Services::toolbar()->respond();
+        service('toolbar')->respond();
         // Hot Reload route - for framework use on the hot reloader.
         if (ENVIRONMENT === 'development') {
-            Services::routes()->get('__hot-reload', static function () {
+            service('routes')->get('__hot-reload', static function (): void {
                 (new HotReloader())->run();
             });
         }
     }
+    // @codeCoverageIgnoreEnd
 });
 
 
@@ -61,3 +68,20 @@ Events::on('pre_system', [\AuthExtension\Hooks\PreController::class, 'execute'])
 Events::on('pre_command', [\RestExtension\Hooks::class, 'preSystem']);
 Events::on('pre_command', [\OrmExtension\Hooks\PreController::class, 'execute']);
 Events::on('pre_command', [\AuthExtension\Hooks\PreController::class, 'execute']);
+
+/*
+ * Drop the cached model definitions after a spark command.
+ *
+ * A migration changes the schema, and ModelDefinitionCache would otherwise keep telling
+ * the next request what the tables looked like before it ran.
+ *
+ * This used to sit at the bottom of `spark`. Here the file stays as CodeIgniter ships it,
+ * and there is nothing to merge on the next framework upgrade.
+ *
+ * `post_command` fires after every command, which is what the old code did. There is also
+ * a narrower `migrate` event if this ever needs to be limited to migrations alone - it
+ * fires once per migration run rather than once per command.
+ */
+Events::on('post_command', static function (): void {
+    \OrmExtension\DataMapper\ModelDefinitionCache::getInstance()->clearCache();
+});

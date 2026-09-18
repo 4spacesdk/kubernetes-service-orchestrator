@@ -1,8 +1,4 @@
 <?php
-/**
- * @var string $code
- * @var string $message
- */
 
 use CodeIgniter\CLI\CLI;
 

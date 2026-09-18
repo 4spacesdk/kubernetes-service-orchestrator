@@ -84,14 +84,11 @@ class PostUpdateAction extends Entity {
                 if (!$this->podio_add_comment_integration->exists()) {
                     $this->podio_add_comment_integration->find();
                 }
-                try {
-                    $client = new \PodioClient($this->podio_add_comment_integration->client_id, $this->podio_add_comment_integration->client_secret);
-                    $client->authenticate_with_app($this->podio_add_comment_integration->app_id, $this->podio_add_comment_integration->app_token);
-                    $podioItem = \PodioItem::get_by_app_item_id($client, $this->podio_add_comment_integration->app_id, $itemId);
-                    \PodioComment::create($client, 'item', $podioItem->item_id, ['value' => $comment, 'created_by' => '4Spaces KSO']);
-                } catch (\Exception $e) {
-                    Data::debug(get_class($this), $e);
-                }
+                service('integrations')->podio()->addComment(
+                    $this->podio_add_comment_integration,
+                    $itemId,
+                    $comment
+                );
 
                 break;
             case \PostUpdateActionTypes::Podio_FieldUpdate:
@@ -110,19 +107,23 @@ class PostUpdateAction extends Entity {
                 if (!$this->podio_field_update_field_reference->exists()) {
                     $this->podio_field_update_field_reference->find();
                 }
-                if (!$this->podio_field_update_field_reference->podio_integration->exists()) {
-                    $this->podio_field_update_field_reference->podio_integration->find();
+                $reference = $this->podio_field_update_field_reference;
+                if (!$reference->podio_integration->exists()) {
+                    $reference->podio_integration->find();
                 }
-                try {
-                    $client = new \PodioClient($this->podio_field_update_field_reference->podio_integration->client_id, $this->podio_field_update_field_reference->podio_integration->client_secret);
-                    $client->authenticate_with_app($this->podio_field_update_field_reference->podio_integration->app_id, $this->podio_field_update_field_reference->podio_integration->app_token);
-                    $podioItem = \PodioItem::get_by_app_item_id($client, $this->podio_field_update_field_reference->podio_integration->app_id, $itemId);
-                    \PodioItem::update_values($client, $podioItem->item_id, [
-                        $this->podio_field_update_field_reference->field_id => is_numeric($this->podio_field_update_value) ? (int)($this->podio_field_update_value) : $this->podio_field_update_value,
-                    ]);
-                } catch (\Exception $e) {
-                    Data::debug(get_class($this), $e);
-                }
+
+                // A numeric value is an option id and has to go as a number; anything else
+                // is text. Podio rejects the wrong one.
+                $value = is_numeric($this->podio_field_update_value)
+                    ? (int) $this->podio_field_update_value
+                    : $this->podio_field_update_value;
+
+                service('integrations')->podio()->updateField(
+                    $reference->podio_integration,
+                    $reference->field_id,
+                    $itemId,
+                    $value
+                );
 
                 break;
         }

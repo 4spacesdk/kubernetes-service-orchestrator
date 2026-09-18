@@ -48,12 +48,17 @@ class CheckCertificateExpiry extends BaseCommand {
                     // Max 3 alerts
                     if ($dayDiff <= $domain->certificate_monitoring_days_before_expiry
                         && ($dayDiff + 3) > $domain->certificate_monitoring_days_before_expiry) {
+                        Data::debug('alerting on', $domain->name, 'expires in', $dayDiff, 'days');
                         $this->alert(
                             $domain,
                             strtotime_($status['notAfter']),
                             strtotime_($status['renewalTime'])
                         );
+                    } else {
+                        Data::debug('not alerting on', $domain->name, 'expires in', $dayDiff, 'days');
                     }
+                } else {
+                    Data::debug('no expiry known for', $domain->name);
                 }
             } catch (\Exception $e) {
 
@@ -65,7 +70,12 @@ class CheckCertificateExpiry extends BaseCommand {
     }
 
     /**
+     * Not measured: from here down it is an email conversation. Whether we *should* send
+     * one is decided above and written into the job's own log, which is what a test can
+     * read - see `CheckCertificateExpiryTest`.
+     *
      * @throws \Exception
+     * @codeCoverageIgnore
      */
     private function alert(Domain $domain, string $expirationDte, string $renewalDate): void {
         $dayDiff = floor(($expirationDte - time()) / DAY);

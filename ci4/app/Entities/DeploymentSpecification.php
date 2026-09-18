@@ -403,7 +403,7 @@ class DeploymentSpecification extends Entity {
 
     // </editor-fold>
 
-    public function toArray(bool $onlyChanged = false, bool $cast = true, bool $recursive = false, array $fieldsFilter = null): array {
+    public function toArray(bool $onlyChanged = false, bool $cast = true, bool $recursive = false, ?array $fieldsFilter = null): array {
         $item = parent::toArray($onlyChanged, $cast, $recursive, $fieldsFilter);
 
         $item['deploymentSteps'] = array_map(fn (BaseDeploymentStep $step) => $step->toArray(), $this->getDeploymentSteps());

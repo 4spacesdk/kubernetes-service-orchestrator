@@ -12,6 +12,15 @@
     "Tools: ssh": "docker exec -it 4s-deploy-service-app sh",
     "Tools: rerun last migration": "docker exec -it 4s-deploy-service-app sh -c \"cd ci4 && php spark app:migrate\"",
     "Tools: sync models & api": "docker exec -it 4s-deploy-service-app sh -c \"cd ci4 && php spark dev:sync_models_and_api\"",
-    "Tools: clear gke-auth": "docker exec -it 4s-deploy-service-app sh -c \"rm /tmp/gcloud-service-account.json\""
+    "Tools: clear gke-auth": "docker exec -it 4s-deploy-service-app sh -c \"rm /tmp/gcloud-service-account.json\"",
+    "Test: all": "scripts/test.sh",
+    "Test: unit (no database)": "docker exec 4s-deploy-service-app sh -c \"cd ci4 && vendor/bin/phpunit --colors=always --testsuite unit\"",
+    "Test: no cluster (database only)": "docker exec 4s-deploy-service-app sh -c \"cd ci4 && vendor/bin/phpunit --colors=always --testsuite unit,database\"",
+    "Test: keep a cluster up (faster reruns)": "scripts/test-cluster.sh up",
+    "Test: remove the cluster": "scripts/test-cluster.sh down",
+    "Test: coverage (summary)": "scripts/test.sh --coverage-text | grep -E 'Summary:|Classes:|Methods:|Lines:' | head -4",
+    "Test: coverage (per file)": "scripts/test.sh --coverage-clover build/clover.xml >/dev/null && docker exec 4s-deploy-service-app sh -c \"cd ci4 && php ../scripts/coverage-table.php build/clover.xml $npm_config_file\"",
+    "Test: coverage (HTML report)": "scripts/test.sh --coverage-html build/coverage && echo \"Report: ci4/build/coverage/index.html\"",
+    "Test: setup database (run once)": "docker exec -e DB_HOST=db -e DB_NAME=deploy_tests -e DB_USER=root -e DB_PASS=root -e DB_PORT=3306 4s-deploy-service-app sh -c \"cd ci4 && php spark migrate\""
   }
 }

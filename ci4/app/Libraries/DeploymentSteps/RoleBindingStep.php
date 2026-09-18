@@ -143,7 +143,7 @@ class RoleBindingStep extends BaseDeploymentStep {
 
     public function startDeployCommand(Deployment $deployment, ?string $reason = null): void {
         $resource = $this->getResource($deployment, true);
-        $resource->createOrUpdate();
+        $this->apply($resource);
     }
 
     public function startTerminateCommand(Deployment $deployment): void {
@@ -163,7 +163,7 @@ class RoleBindingStep extends BaseDeploymentStep {
     /**
      * @throws \Exception
      */
-    private function getResource(Deployment $deployment, bool $auth = false): K8sRoleBinding {
+    protected function getResource(Deployment $deployment, bool $auth = false): K8sRoleBinding {
         $resource = new K8sRoleBinding();
         $resource
             ->setName($deployment->name)

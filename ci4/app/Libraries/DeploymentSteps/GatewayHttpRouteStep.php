@@ -156,7 +156,7 @@ class GatewayHttpRouteStep extends BaseDeploymentStep {
     public function startDeployCommand(Deployment $deployment, ?string $reason = null): void {
         $resources = $this->getResources($deployment, true);
         foreach ($resources as $resource) {
-            $resource->createOrUpdate();
+            $this->apply($resource);
         }
         $this->deleteStaleAliasRedirects($deployment, $resources);
     }
@@ -234,7 +234,7 @@ class GatewayHttpRouteStep extends BaseDeploymentStep {
      * @return K8sHttpRoute[]
      * @throws \Exception
      */
-    private function getResources(Deployment $deployment, bool $auth = false): array {
+    protected function getResources(Deployment $deployment, bool $auth = false): array {
         if ($deployment->workspace_id && !$deployment->workspace->exists()) {
             $deployment->workspace->find();
         }

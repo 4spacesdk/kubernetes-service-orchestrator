@@ -5,10 +5,7 @@ namespace Config;
 use CodeIgniter\Router\RouteCollection;
 use DebugTool\Data;
 
-/**
- * @var RouteCollection $routes
- */
-
+/** @var RouteCollection $routes */
 $routes->get('/', 'Home::index');
 
 $routes->cli('jobby/run/(:segment)', 'Jobby::run/$1');

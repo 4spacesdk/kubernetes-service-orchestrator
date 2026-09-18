@@ -144,7 +144,7 @@ class ClusterRoleBindingStep extends BaseDeploymentStep {
 
     public function startDeployCommand(Deployment $deployment, ?string $reason = null): void {
         $resource = $this->getResource($deployment, true);
-        $resource->createOrUpdate();
+        $this->apply($resource);
     }
 
     public function startTerminateCommand(Deployment $deployment): void {
@@ -164,7 +164,7 @@ class ClusterRoleBindingStep extends BaseDeploymentStep {
     /**
      * @throws \Exception
      */
-    private function getResource(Deployment $deployment, bool $auth = false): K8sClusterRoleBinding {
+    protected function getResource(Deployment $deployment, bool $auth = false): K8sClusterRoleBinding {
         $resource = new K8sClusterRoleBinding();
         $resource
             ->setName("{$deployment->name}.{$deployment->namespace}")

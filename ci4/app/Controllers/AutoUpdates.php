@@ -85,17 +85,31 @@ class AutoUpdates extends ResourceController {
     }
 
     /**
-     * @ignore true
+     * Switched off. `@ignore true` is read by `ci4restextension`'s `ApiItem`, so the route
+     * generator and swagger leave this verb out - and no migration ever wrote it into
+     * `api_routes` either, so no request can reach it. Both halves are needed: the
+     * annotation does not remove a row that is already in the table. See SEC-11, and
+     * `Workspaces`/`Deployments`, where exactly that went wrong.
+     *
      * @param $id
      * @return void
+     * @codeCoverageIgnore
+     * @ignore true
      */
     public function put($id = 0) {
     }
 
     /**
-     * @ignore true
+     * Switched off. `@ignore true` is read by `ci4restextension`'s `ApiItem`, so the route
+     * generator and swagger leave this verb out - and no migration ever wrote it into
+     * `api_routes` either, so no request can reach it. Both halves are needed: the
+     * annotation does not remove a row that is already in the table. See SEC-11, and
+     * `Workspaces`/`Deployments`, where exactly that went wrong.
+     *
      * @param $id
      * @return void
+     * @codeCoverageIgnore
+     * @ignore true
      */
     public function patch($id = 0) {
     }
