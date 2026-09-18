@@ -90,17 +90,8 @@ class Kubernetes extends \App\Core\BaseController {
                 ['/bin/sh', '-c', $command],
                 $container
             );
-            $all = collect($messages)->where('channel', 'stdout')->all();
-            $lines = [];
-            foreach ($all as ['channel' => $channel, 'output' => $output]) {
-                if (strlen($output) > 1) {
-                    $lines[] = trim($output);
-                }
-            }
-            $lines = explode("\n", implode("\n", $lines)); // K8s returning multiple vars in single line. This will fix that.
-
             Data::set('resource', [
-                'lines' => $lines,
+                'lines' => KubeHelper::ExecOutputLines($messages),
             ]);
 
         } catch (\Exception $e) {

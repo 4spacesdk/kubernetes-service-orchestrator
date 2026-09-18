@@ -202,14 +202,9 @@ class KubernetesApiTest extends ClusterControllerTestCase {
     }
 
     /**
-     * The shell, doing what the page opens it for. The output is reassembled from the
-     * websocket's stdout frames, and the frames do not line up with lines - one frame can
-     * carry several, and the endpoint splits them apart again.
-     *
-     * **The carriage return is today's behaviour, not what anyone wants.** php-k8s asks for
-     * the exec with `tty: 1`, so the shell writes CRLF, and the split is on `\n` alone -
-     * which leaves a `\r` on the end of every line except the last one the trim caught. See
-     * the note in the report.
+     * The shell, doing what the page opens it for. The frames do not line up with lines,
+     * and how they are cut differs from one machine to the next - see
+     * `ExecOutputLinesTest` for that, without a cluster.
      */
     public function testExecRunsTheCommandAndReturnsWhatItPrinted(): void {
         $this->namespaceExists();
@@ -221,7 +216,7 @@ class KubernetesApiTest extends ClusterControllerTestCase {
         ));
 
         $this->assertSame('OK', $body['status']);
-        $this->assertSame(["first\r", 'second'], $body['resource']['lines']);
+        $this->assertSame(['first', 'second'], $body['resource']['lines']);
     }
 
     public function testExecOnAPodThatIsNotThereIsReportedAsAnError(): void {

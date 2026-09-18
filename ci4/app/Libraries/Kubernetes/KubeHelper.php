@@ -90,6 +90,26 @@ class KubeHelper {
         return $content ? json_encode($content) : $e->getMessage();
     }
 
+    /**
+     * The lines a command printed, from the frames php-k8s collected during an exec.
+     *
+     * The stdout frames are joined before anything is split. How the output is cut into
+     * frames is up to the network, so a line - or a CRLF - can end up across two of them.
+     * The exec runs with a tty, which is why the line endings are CRLF.
+     *
+     * @param array<array{channel: string, output: string}> $messages
+     * @return string[] Always at least one element, '' when nothing was printed.
+     */
+    public static function ExecOutputLines(array $messages): array {
+        $output = '';
+        foreach ($messages as $message) {
+            if (($message['channel'] ?? null) === 'stdout') {
+                $output .= $message['output'];
+            }
+        }
+        return preg_split('/\r?\n/', rtrim($output, "\r\n"));
+    }
+
     public static function GetMyNamespace(): string {
         if (file_exists('/var/run/secrets/kubernetes.io/serviceaccount/namespace')) {
             return file_get_contents('/var/run/secrets/kubernetes.io/serviceaccount/namespace');
