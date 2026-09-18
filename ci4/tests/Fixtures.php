@@ -6,6 +6,7 @@ use App\Entities\DeploymentPackage;
 use App\Entities\DeploymentPackageDeploymentSpecification;
 use App\Entities\DeploymentSpecification;
 use App\Entities\ContainerImage;
+use App\Entities\ContainerRegistry;
 use App\Entities\DatabaseService;
 use App\Entities\EmailService;
 use App\Entities\DeploymentSpecificationHttpProxyRoute;
@@ -165,6 +166,22 @@ class Fixtures {
     /**
      * @param array<string, mixed> $overrides
      */
+    /**
+     * A connection with no network behind it. Harbor, because its names are the easiest to
+     * read in a test; the provider decides nothing until a client is asked for.
+     *
+     * @param array<string, mixed> $overrides
+     */
+    public static function containerRegistry(array $overrides = []): ContainerRegistry {
+        return self::make(ContainerRegistry::class, [
+            'name' => 'test-registry',
+            'provider' => \ContainerRegistries::Harbor,
+            'harbor_url' => 'registry.example.org',
+            'harbor_username' => 'robot',
+            'harbor_password' => 'secret',
+        ], $overrides);
+    }
+
     public static function databaseService(array $overrides = []): DatabaseService {
         return self::make(DatabaseService::class, [
             'name' => 'test-database',

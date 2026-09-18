@@ -14,6 +14,7 @@ class DeploymentSteps {
         Database = 'database',
         ClusterRole = 'cluster-role',
         Role = 'role',
+        RegistryPullSecret = 'registry-pull-secret',
         ServiceAccount = 'service-account',
         ClusterRoleBinding = 'cluster-role-binding',
         RoleBinding = 'role-binding',

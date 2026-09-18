@@ -31,9 +31,11 @@ class RestGetSweepTest extends ControllerTestCase {
      * about a column no fixture happens to fill.
      */
     private const SECRET_FIELDS = [
-        'registry_provider_gcloud_credentials',
-        'registry_provider_azure_client_secret',
-        'registry_provider_harbor_password',
+        'gcloud_credentials',
+        'azure_client_secret',
+        'harbor_password',
+        'pull_password',
+        'webhook_secret',
         'pass',
         'password',
         'client_secret',
@@ -255,6 +257,7 @@ class RestGetSweepTest extends ControllerTestCase {
         // a row that was never loaded.
         $expected['deployment_specifications'] = 'a resource whose only non-null field is deploymentSteps';
         $expected['users'] = 'a resource whose only non-null field is has_mfa_secret_hash';
+        $expected['container_registries'] = 'a resource whose only non-null field is has_gcloud_credentials, has_azure_client_secret, has_harbor_password, has_pull_password, has_webhook_secret';
 
         // `Environments` is not a resource controller and its `get()` takes no id, but the
         // route table sends `environments/([0-9]+)` to it anyway. PHP accepts the extra
@@ -336,12 +339,9 @@ class RestGetSweepTest extends ControllerTestCase {
         }
         unset($fields);
 
+        // The registry credentials were on this list, on container_images, until INT-1a moved
+        // them to a connection that withholds them.
         $this->assertSame([
-            'container_images' => [
-                'registry_provider_azure_client_secret',
-                'registry_provider_gcloud_credentials',
-                'registry_provider_harbor_password',
-            ],
             'database_services' => ['pass'],
             'email_services' => ['pass'],
             'o_auth_clients' => ['client_secret'],
@@ -386,8 +386,8 @@ class RestGetSweepTest extends ControllerTestCase {
             $this->assertContains($resource, $collections, "{$resource} is no longer routed");
         }
 
-        $this->assertCount(22, $collections, 'the number of plain collection reads changed');
-        $this->assertCount(22, $this->byIdResources(), 'the number of plain by-id reads changed');
+        $this->assertCount(23, $collections, 'the number of plain collection reads changed');
+        $this->assertCount(23, $this->byIdResources(), 'the number of plain by-id reads changed');
     }
 
     /**
@@ -441,10 +441,13 @@ class RestGetSweepTest extends ControllerTestCase {
                 'is_approved' => 0,
                 'approved_date' => '',
             ]),
-            'container_images' => Fixtures::containerImage([
-                'registry_provider_gcloud_credentials' => '{"private_key":"SWEEP-GCLOUD-KEY"}',
-                'registry_provider_azure_client_secret' => 'sweep-azure-secret',
-                'registry_provider_harbor_password' => 'sweep-harbor-password',
+            'container_images' => Fixtures::containerImage()->id,
+            'container_registries' => Fixtures::containerRegistry([
+                'gcloud_credentials' => '{"private_key":"SWEEP-GCLOUD-KEY"}',
+                'azure_client_secret' => 'sweep-azure-secret',
+                'harbor_password' => 'sweep-harbor-password',
+                'pull_password' => 'sweep-pull-password',
+                'webhook_secret' => 'sweep-webhook-secret',
             ])->id,
             'database_services' => Fixtures::databaseService(['pass' => 'sweep-db-password'])->id,
             'deployment_packages' => Fixtures::deploymentPackage()->id,

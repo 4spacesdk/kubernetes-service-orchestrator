@@ -132,12 +132,9 @@ class RunJobHelper {
             ])
             ->neverRestart();
 
-        if (strlen($containerImage->pull_secret) > 0) {
-            $template->setSpec('imagePullSecrets', [
-                [
-                    'name' => $containerImage->pull_secret,
-                ],
-            ]);
+        $imagePullSecrets = ImagePullSecrets::of($containerImage);
+        if (count($imagePullSecrets) > 0) {
+            $template->setSpec('imagePullSecrets', $imagePullSecrets);
         }
 
         if (count($volumes) > 0) {

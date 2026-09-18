@@ -98,7 +98,7 @@ class CreateDeploymentFromPackageTest extends DatabaseTestCase {
      * @param array<string, mixed> $packageSpecification
      */
     private function deploymentFromPackage(array $packageSpecification, ?string $version = null): \App\Entities\Deployment {
-        $image = Fixtures::containerImage(['registry_provider' => \ContainerRegistries::Harbor]);
+        $image = Fixtures::containerImage(['container_registry_id' => Fixtures::containerRegistry()->id]);
         $specification = Fixtures::deploymentSpecification(['name' => 'api', 'container_image_id' => $image->id]);
         $package = Fixtures::deploymentPackage();
         Fixtures::packageSpecification(array_merge([

@@ -449,7 +449,7 @@ class DeploymentSpecificationsApiTest extends ControllerTestCase {
     public function testTheTagListComesFromTheRegistry(): void {
         $fakes = FakeIntegrations::install();
         $fakes->tags = ['1.0.0', '1.1.0'];
-        $image = Fixtures::containerImage(['registry_provider' => \ContainerRegistries::Harbor]);
+        $image = Fixtures::containerImage(['container_registry_id' => Fixtures::containerRegistry()->id]);
         $specification = Fixtures::deploymentSpecification(['container_image_id' => $image->id]);
 
         $body = $this->getJson("deployment-specifications/{$specification->id}/tags");

@@ -1,6 +1,7 @@
 <?php namespace App\Libraries\Integrations;
 
 use App\Entities\ContainerImage;
+use App\Entities\ContainerRegistry;
 use App\Libraries\CommitIdentificationMethods\BaseCommitIdentificationMethod;
 use App\Libraries\CommitIdentificationMethods\EnvironmentVariableCommitIdentification;
 use App\Libraries\ContainerRegistries\AzureContainerRegistry;
@@ -31,11 +32,11 @@ use App\Libraries\VersionControlSystems\GithubVersionControl;
  */
 class IntegrationFactory {
 
-    public function containerRegistry(ContainerImage $image): ?BaseContainerRegistry {
-        return match ($image->registry_provider) {
-            \ContainerRegistries::ArtifactContainerRegistry => new GoogleCloudArtifactRegistry($image),
-            \ContainerRegistries::AzureContainerRegistry => new AzureContainerRegistry($image),
-            \ContainerRegistries::Harbor => new HarborRegistry($image),
+    public function containerRegistry(ContainerRegistry $registry): ?BaseContainerRegistry {
+        return match ($registry->provider) {
+            \ContainerRegistries::ArtifactContainerRegistry => new GoogleCloudArtifactRegistry($registry),
+            \ContainerRegistries::AzureContainerRegistry => new AzureContainerRegistry($registry),
+            \ContainerRegistries::Harbor => new HarborRegistry($registry),
             default => null,
         };
     }

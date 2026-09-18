@@ -12,8 +12,15 @@
 * Creating, deleting or reading a domain's Istio gateway failed with "Class not found" on Linux
 * The pod list showed a pod that was not yet on a node as created on 1970-01-01
 * The shell's output kept a carriage return on every line but the last, and could gain empty lines, depending on how the output arrived
+* A pod only named its main image's pull secret, so an init container from another registry could not be pulled
+* Artifact Registry looked tags up by the last segment of the image url only, so an image with `/` in its path found none
 
 ### Enhancements
+* Container Registries under Setup: a registry's credentials are entered once and shared by its images, instead of copied onto each image. Secrets are write-only
+* Test connection on a container registry
+* Import container images from a registry by picking its repositories
+* kso sets up auto update on Harbor (webhook policy) and Azure Container Registry (webhook) itself, with a secret it checks on every call
+* Optional pull login on a container registry: kso creates a `kso-registry-<id>` pull secret in each namespace that deploys its images, and the pods use it
 * Duplicate button on Container Images, Domains, Gateways, Database Services and Email Services
 * Duplicate button on Deployment Specifications and Deployment Packages, copying everything they are made of
 * Added unit and database test suites, covering workspace status, auto updates, the commands, the helpers and the whole controller layer, and the HTTPRoute, HealthCheckPolicy and GCPBackendPolicy manifests
@@ -23,7 +30,9 @@
 
 ### Upgrade guide
 1. Deploy new image
-2. Run migrations [(Guide)](https://github.com/4spacesdk/kubernetes-service-orchestrator?tab=readme-ov-file#migrate-database-helm)
+2. Run migrations [(Guide)](https://github.com/4spacesdk/kubernetes-service-orchestrator?tab=readme-ov-file#migrate-database-helm). Images with the same registry credentials are grouped into one container registry
+3. Harbor and Azure: the old webhook urls are gone, so auto update from them stops. Open each container registry under Setup and click "Set up auto update", then remove the old webhooks from the registry
+4. Artifact Registry: the service account only needs Artifact Registry Reader now
 
 ### Notes
 * Published images are still built for amd64 and are unchanged in what they can do. An image built for arm64 has no MSSQL driver - Microsoft ships none for that architecture - so it cannot create a database service with the MSSQL driver

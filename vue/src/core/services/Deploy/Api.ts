@@ -1,6 +1,7 @@
 import {BaseApi} from "./BaseApi";
 import {AutoUpdate} from "./models";
 import {ContainerImage} from "./models";
+import {ContainerRegistry} from "./models";
 import {DatabaseService} from "./models";
 import {DeploymentPackage} from "./models";
 import {DeploymentSpecification} from "./models";
@@ -36,6 +37,20 @@ export interface ClusterRoleRule {
 
 export interface ClusterRoleRuleList {
     values?: ClusterRoleRule[];
+}
+
+export interface ContainerRegistryImportRequest {
+    repositories?: string[];
+}
+
+export interface ContainerRegistryRepository {
+    name?: string;
+    url?: string;
+    container_image_id?: number;
+}
+
+export interface ContainerRegistryTestResponse {
+    message?: string;
 }
 
 export interface DeploymentAnnotation {
@@ -593,16 +608,16 @@ export class AutoUpdatesApprovePutById extends BaseApi<AutoUpdate> {
     }
 }
 
-export class AutoUpdatesWebhooksAzureContainerRegistryPost extends BaseApi<AutoUpdate> {
+export class AutoUpdatesWebhooksAzureContainerRegistryPostByContainerRegistryId extends BaseApi<AutoUpdate> {
 
     public topic = 'Resources.AutoUpdates';
     protected method = 'post';
     protected scope = '';
     protected summary = '';
 
-    public constructor() {
+    public constructor(containerRegistryId: number) {
         super();
-        this.uri = `/auto-updates/webhooks/azure-container-registry`;
+        this.uri = `/auto-updates/webhooks/azure-container-registry/${containerRegistryId}`;
     }
 
     protected convertToResource(data: any): AutoUpdate {
@@ -614,16 +629,16 @@ export class AutoUpdatesWebhooksAzureContainerRegistryPost extends BaseApi<AutoU
     }
 }
 
-export class AutoUpdatesWebhooksHarborPost extends BaseApi<AutoUpdate> {
+export class AutoUpdatesWebhooksHarborPostByContainerRegistryId extends BaseApi<AutoUpdate> {
 
     public topic = 'Resources.AutoUpdates';
     protected method = 'post';
     protected scope = '';
     protected summary = '';
 
-    public constructor() {
+    public constructor(containerRegistryId: number) {
         super();
-        this.uri = `/auto-updates/webhooks/harbor`;
+        this.uri = `/auto-updates/webhooks/harbor/${containerRegistryId}`;
     }
 
     protected convertToResource(data: any): AutoUpdate {
@@ -657,12 +672,12 @@ class AutoUpdates {
         return new AutoUpdatesApprovePutById(id);
     }
 
-    public webhooksAzureContainerRegistryPost(): AutoUpdatesWebhooksAzureContainerRegistryPost {
-        return new AutoUpdatesWebhooksAzureContainerRegistryPost();
+    public webhooksAzureContainerRegistryPostByContainerRegistryId(containerRegistryId: number): AutoUpdatesWebhooksAzureContainerRegistryPostByContainerRegistryId {
+        return new AutoUpdatesWebhooksAzureContainerRegistryPostByContainerRegistryId(containerRegistryId);
     }
 
-    public webhooksHarborPost(): AutoUpdatesWebhooksHarborPost {
-        return new AutoUpdatesWebhooksHarborPost();
+    public webhooksHarborPostByContainerRegistryId(containerRegistryId: number): AutoUpdatesWebhooksHarborPostByContainerRegistryId {
+        return new AutoUpdatesWebhooksHarborPostByContainerRegistryId(containerRegistryId);
     }
 
 }
@@ -912,6 +927,355 @@ class ContainerImages {
 
     public deleteById(id: number): ContainerImagesDeleteById {
         return new ContainerImagesDeleteById(id);
+    }
+
+}
+
+
+export class ContainerRegistriesGet extends BaseApi<ContainerRegistry> {
+
+    public topic = 'Resources.ContainerRegistries';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/container_registries`;
+    }
+
+    protected convertToResource(data: any): ContainerRegistry {
+        return new ContainerRegistry(data);
+    }
+
+    public where(name: string, value: any): ContainerRegistriesGet {
+        this.filter().where(name, value);
+        return this;
+    }
+
+    public whereEquals(name: string, value: any): ContainerRegistriesGet {
+        this.filter().whereEquals(name, value);
+        return this;
+    }
+
+    public whereIn(name: string, value: any[]): ContainerRegistriesGet {
+        this.filter().whereIn(name, value);
+        return this;
+    }
+
+    public whereInArray(name: string, value: any[]): ContainerRegistriesGet {
+        this.filter().whereInArray(name, value);
+        return this;
+    }
+
+    public whereNot(name: string, value: any): ContainerRegistriesGet {
+        this.filter().whereNot(name, value);
+        return this;
+    }
+
+    public whereNotIn(name: string, value: any[]): ContainerRegistriesGet {
+        this.filter().whereNotIn(name, value);
+        return this;
+    }
+
+    public whereGreaterThan(name: string, value: any): ContainerRegistriesGet {
+        this.filter().whereGreaterThan(name, value);
+        return this;
+    }
+
+    public whereGreaterThanOrEqual(name: string, value: any): ContainerRegistriesGet {
+        this.filter().whereGreaterThanOrEqual(name, value);
+        return this;
+    }
+
+    public whereLessThan(name: string, value: any): ContainerRegistriesGet {
+        this.filter().whereLessThan(name, value);
+        return this;
+    }
+
+    public whereLessThanOrEqual(name: string, value: any): ContainerRegistriesGet {
+        this.filter().whereLessThanOrEqual(name, value);
+        return this;
+    }
+
+    public search(name: string, value: any): ContainerRegistriesGet {
+        this.filter().search(name, value);
+        return this;
+    }
+
+    public include(name: string): ContainerRegistriesGet {
+        this.getInclude().include(name);
+        return this;
+    }
+
+    public orderBy(name: string, direction: string): ContainerRegistriesGet {
+        this.ordering().orderBy(name, direction);
+        return this;
+    }
+
+    public orderAsc(name: string): ContainerRegistriesGet {
+        this.ordering().orderAsc(name);
+        return this;
+    }
+
+    public orderDesc(name: string): ContainerRegistriesGet {
+        this.ordering().orderDesc(name);
+        return this;
+    }
+
+    public limit(value: number): ContainerRegistriesGet {
+        this.limitValue = value;
+        return this;
+    }
+
+    public offset(value: number): ContainerRegistriesGet {
+        this.offsetValue = value;
+        return this;
+    }
+
+    public count(next?: (value: number) => void) {
+        return this.executeCount(next);
+    }
+
+    public find(next?: (value: ContainerRegistry[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class ContainerRegistriesGetById extends BaseApi<ContainerRegistry> {
+
+    public topic = 'Resources.ContainerRegistries';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/container_registries/${id}`;
+    }
+
+    protected convertToResource(data: any): ContainerRegistry {
+        return new ContainerRegistry(data);
+    }
+
+    public include(name: string): ContainerRegistriesGetById {
+        this.getInclude().include(name);
+        return this;
+    }
+
+    public find(next?: (value: ContainerRegistry[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class ContainerRegistriesPost extends BaseApi<ContainerRegistry> {
+
+    public topic = 'Resources.ContainerRegistries';
+    protected method = 'post';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/container_registries`;
+    }
+
+    protected convertToResource(data: any): ContainerRegistry {
+        return new ContainerRegistry(data);
+    }
+
+    public save(data: ContainerRegistry, next?: (value: ContainerRegistry) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class ContainerRegistriesPatchById extends BaseApi<ContainerRegistry> {
+
+    public topic = 'Resources.ContainerRegistries';
+    protected method = 'patch';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/container_registries/${id}`;
+    }
+
+    protected convertToResource(data: any): ContainerRegistry {
+        return new ContainerRegistry(data);
+    }
+
+    public save(data: ContainerRegistry, next?: (value: ContainerRegistry) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class ContainerRegistriesPatch extends BaseApi<ContainerRegistry> {
+
+    public topic = 'Resources.ContainerRegistries';
+    protected method = 'patch';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/container_registries`;
+    }
+
+    protected convertToResource(data: any): ContainerRegistry {
+        return new ContainerRegistry(data);
+    }
+
+    public save(data: ContainerRegistry, next?: (value: ContainerRegistry) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class ContainerRegistriesDeleteById extends BaseApi<ContainerRegistry> {
+
+    public topic = 'Resources.ContainerRegistries';
+    protected method = 'delete';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/container_registries/${id}`;
+    }
+
+    protected convertToResource(data: any): ContainerRegistry {
+        return new ContainerRegistry(data);
+    }
+
+    public delete(next?: (value: ContainerRegistry) => void) {
+        return super.executeDelete(next);
+    }
+}
+
+export class ContainerRegistriesTestGetById extends BaseApi<ContainerRegistryTestResponse> {
+
+    public topic = 'Resources.ContainerRegistryTestResponses';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/container-registries/${id}/test`;
+    }
+
+    protected convertToResource(data: any): ContainerRegistryTestResponse {
+        return data;
+    }
+
+    public find(next?: (value: ContainerRegistryTestResponse[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class ContainerRegistriesGetRepositoriesGetById extends BaseApi<ContainerRegistryRepository> {
+
+    public topic = 'Resources.ContainerRegistryRepositories';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/container-registries/${id}/repositories`;
+    }
+
+    protected convertToResource(data: any): ContainerRegistryRepository {
+        return data;
+    }
+
+    public find(next?: (value: ContainerRegistryRepository[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class ContainerRegistriesImportPostById extends BaseApi<ContainerRegistry> {
+
+    public topic = 'Resources.ContainerRegistries';
+    protected method = 'post';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/container-registries/${id}/import`;
+    }
+
+    protected convertToResource(data: any): ContainerRegistry {
+        return new ContainerRegistry(data);
+    }
+
+    public save(data: ContainerRegistryImportRequest, next?: (value: ContainerRegistry) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class ContainerRegistriesSetupEventsPostById extends BaseApi<ContainerRegistryTestResponse> {
+
+    public topic = 'Resources.ContainerRegistryTestResponses';
+    protected method = 'post';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/container-registries/${id}/setup-events`;
+    }
+
+    protected convertToResource(data: any): ContainerRegistryTestResponse {
+        return data;
+    }
+
+    public save(data: any, next?: (value: ContainerRegistryTestResponse) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+class ContainerRegistries {
+
+    public get(): ContainerRegistriesGet {
+        return new ContainerRegistriesGet();
+    }
+
+    public getById(id: number): ContainerRegistriesGetById {
+        return new ContainerRegistriesGetById(id);
+    }
+
+    public post(): ContainerRegistriesPost {
+        return new ContainerRegistriesPost();
+    }
+
+    public patchById(id: number): ContainerRegistriesPatchById {
+        return new ContainerRegistriesPatchById(id);
+    }
+
+    public patch(): ContainerRegistriesPatch {
+        return new ContainerRegistriesPatch();
+    }
+
+    public deleteById(id: number): ContainerRegistriesDeleteById {
+        return new ContainerRegistriesDeleteById(id);
+    }
+
+    public testGetById(id: number): ContainerRegistriesTestGetById {
+        return new ContainerRegistriesTestGetById(id);
+    }
+
+    public getRepositoriesGetById(id: number): ContainerRegistriesGetRepositoriesGetById {
+        return new ContainerRegistriesGetRepositoriesGetById(id);
+    }
+
+    public importPostById(id: number): ContainerRegistriesImportPostById {
+        return new ContainerRegistriesImportPostById(id);
+    }
+
+    public setupEventsPostById(id: number): ContainerRegistriesSetupEventsPostById {
+        return new ContainerRegistriesSetupEventsPostById(id);
     }
 
 }
@@ -8220,6 +8584,10 @@ export class Api {
 
     public static containerImages(): ContainerImages {
         return new ContainerImages();
+    }
+
+    public static containerRegistries(): ContainerRegistries {
+        return new ContainerRegistries();
     }
 
     public static databaseServices(): DatabaseServices {

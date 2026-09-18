@@ -4,6 +4,7 @@ import DatabaseServices from '@/components/Pages/Setup/DatabaseServices/routes';
 import EmailServices from '@/components/Pages/Setup/EmailServices/routes';
 import Deployments from '@/components/Pages/Setup/Deployments/routes';
 import ContainerImages from '@/components/Pages/Setup/ContainerImages/routes';
+import ContainerRegistries from '@/components/Pages/Setup/ContainerRegistries/routes';
 import DeploymentSpecifications from '@/components/Pages/Setup/DeploymentSpecifications/routes';
 import DeploymentPackages from '@/components/Pages/Setup/DeploymentPackages/routes';
 import GatewayRoutes from '@/components/Pages/Setup/Gateways/routes';
@@ -15,6 +16,7 @@ export default ([
     ...EmailServices,
     ...Deployments,
     ...ContainerImages,
+    ...ContainerRegistries,
     ...DeploymentSpecifications,
     ...DeploymentPackages,
     ...GatewayRoutes,

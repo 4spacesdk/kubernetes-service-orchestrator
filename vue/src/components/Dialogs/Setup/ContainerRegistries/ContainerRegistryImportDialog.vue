@@ -1,0 +1,167 @@
+<script setup lang="ts">
+import { onMounted, ref, watch } from "vue";
+import { ContainerRegistry } from "@/core/services/Deploy/models";
+import { Api, type ContainerRegistryRepository } from "@/core/services/Deploy/Api";
+import bus from "@/plugins/bus";
+import type { DialogEventsInterface } from "@/components/Dialogs/DialogEventsInterface";
+import ApiService from "@/services/ApiService";
+
+/**
+ * Create container images by picking repositories from a registry connection (INT-1b).
+ * Opened from a connection, or from the image list without one - then it asks which.
+ */
+export interface ContainerRegistryImportDialog_Input {
+    containerRegistry?: ContainerRegistry;
+}
+
+const props = defineProps<{ input: ContainerRegistryImportDialog_Input; events: DialogEventsInterface }>();
+
+const used = ref(false);
+const showDialog = ref(false);
+
+const registries = ref<ContainerRegistry[]>([]);
+const registryId = ref<number | undefined>(props.input.containerRegistry?.id);
+
+const repositories = ref<ContainerRegistryRepository[]>([]);
+const selected = ref<string[]>([]);
+const isLoading = ref(false);
+const isImporting = ref(false);
+const error = ref<string | null>(null);
+
+const headers = [
+    { title: "Repository", key: "name", sortable: false },
+    { title: "Image url", key: "url", sortable: false },
+    { title: "", key: "container_image_id", sortable: false },
+];
+
+// <editor-fold desc="Functions">
+
+onMounted(() => {
+    if (used.value) {
+        return;
+    }
+    used.value = true;
+    showDialog.value = true;
+
+    if (registryId.value) {
+        loadRepositories();
+    } else {
+        Api.containerRegistries()
+            .get()
+            .orderAsc("name")
+            .find(items => (registries.value = items));
+    }
+});
+
+watch(registryId, () => loadRepositories());
+
+/**
+ * Raw axios rather than the generated client: a registry that refuses - an Azure principal
+ * without catalog access, say - answers with an error the dialog should show, not a toast.
+ */
+function loadRepositories() {
+    repositories.value = [];
+    selected.value = [];
+    error.value = null;
+    if (!registryId.value) {
+        return;
+    }
+
+    isLoading.value = true;
+    ApiService.apiAxios!.get(`/container-registries/${registryId.value}/repositories`)
+        .then(response => {
+            if (response.data?.status === "OK") {
+                repositories.value = response.data.resources;
+            } else {
+                error.value = String(response.data?.error ?? "The registry could not be read.");
+            }
+        })
+        .catch(e => (error.value = e?.message ?? "The registry could not be read."))
+        .finally(() => (isLoading.value = false));
+}
+
+function close() {
+    showDialog.value = false;
+    props.events.onClose();
+}
+
+// </editor-fold>
+
+// <editor-fold desc="View Binding Functions">
+
+function onImportBtnClicked() {
+    isImporting.value = true;
+    Api.containerRegistries()
+        .importPostById(registryId.value!)
+        .save({ repositories: selected.value }, () => {
+            isImporting.value = false;
+            bus.emit("containerImageSaved", undefined);
+            close();
+        });
+}
+
+function onCloseBtnClicked() {
+    close();
+}
+
+// </editor-fold>
+</script>
+
+<template>
+    <v-dialog persistent height="70vh" width="60vw" v-model="showDialog">
+        <v-card class="w-100 h-100">
+            <v-card-title>Import container images</v-card-title>
+            <v-divider />
+            <v-card-text>
+                <!-- A card holding a table loses its side padding (main.scss); these keep their own. -->
+                <div v-if="!props.input.containerRegistry || error" class="px-4 pt-4">
+                    <v-select
+                        v-if="!props.input.containerRegistry"
+                        v-model="registryId"
+                        :items="registries"
+                        item-title="name"
+                        item-value="id"
+                        variant="outlined"
+                        label="Registry connection"
+                        density="compact"
+                    />
+                    <v-alert v-if="error" density="compact" variant="tonal" type="error" class="mb-2">
+                        {{ error }}
+                    </v-alert>
+                </div>
+                <v-data-table
+                    v-model="selected"
+                    :headers="headers"
+                    :items="repositories"
+                    :loading="isLoading"
+                    item-value="name"
+                    :item-selectable="(item: ContainerRegistryRepository) => !item.container_image_id"
+                    :items-per-page="-1"
+                    show-select
+                    density="compact"
+                    hide-default-footer>
+                    <template v-slot:item.container_image_id="{ item }">
+                        <span v-if="item.container_image_id" class="text-grey text-no-wrap">Already an image</span>
+                    </template>
+                </v-data-table>
+            </v-card-text>
+            <v-divider />
+            <v-card-actions>
+                <v-spacer />
+                <v-btn variant="tonal" color="grey" prepend-icon="fa fa-circle-xmark" @click="onCloseBtnClicked"> Close </v-btn>
+                <v-btn
+                    flat
+                    variant="tonal"
+                    prepend-icon="fa fa-download"
+                    color="green"
+                    :disabled="selected.length == 0"
+                    :loading="isImporting"
+                    @click="onImportBtnClicked">
+                    Import {{ selected.length || "" }}
+                </v-btn>
+            </v-card-actions>
+        </v-card>
+    </v-dialog>
+</template>
+
+<style scoped></style>

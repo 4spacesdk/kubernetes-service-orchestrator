@@ -2,6 +2,7 @@
 
 use App\Core\ResourceController;
 use App\Entities\AutoUpdate;
+use App\Entities\ContainerRegistry;
 use App\Libraries\ZMQ\ChangeEvent;
 use App\Libraries\ZMQ\Events;
 use App\Libraries\ZMQ\ZMQProxy;
@@ -27,61 +28,96 @@ class AutoUpdates extends ResourceController {
     }
 
     /**
-     * @route /auto-updates/webhooks/azure-container-registry
+     * A push, reported by an Azure Container Registry webhook that kso set up (INT-1c).
+     *
+     * @route /auto-updates/webhooks/azure-container-registry/{containerRegistryId}
      * @method post
      * @custom true
+     * @param int $containerRegistryId
      * @return void
      */
-    public function webhooksAzureContainerRegistry(): void {
+    public function webhooksAzureContainerRegistry(int $containerRegistryId): void {
+        $registry = $this->registryCalling($containerRegistryId, \ContainerRegistries::AzureContainerRegistry);
+        if ($registry === null) {
+            $this->fail('unauthorized', 401);
+            return;
+        }
+
         $payload = $this->request->getJSON(true);
         Data::debug($payload);
 
-        switch ($payload['action']) {
-            case 'push':
-                $image = $payload['request']['host'] . '/' . $payload['target']['repository'];
-                $tag = $payload['target']['tag'];
-
-                AutoUpdate::CheckForUpdates($image, $tag);
-
-                ZMQProxy::getInstance()->send(
-                    Events::AutoUpdate_Created(),
-                    (new ChangeEvent(null, []))->toArray()
-                );
-                break;
+        $host = $payload['request']['host'] ?? null;
+        $repository = $payload['target']['repository'] ?? null;
+        $tag = $payload['target']['tag'] ?? null;
+        if (($payload['action'] ?? null) === 'push' && is_string($host) && is_string($repository) && is_string($tag)) {
+            $this->newTag($registry, "{$host}/{$repository}", $tag);
         }
 
         $this->success();
     }
 
     /**
-     * @route /auto-updates/webhooks/harbor
+     * A push, reported by a Harbor webhook policy that kso set up (INT-1c).
+     *
+     * @route /auto-updates/webhooks/harbor/{containerRegistryId}
      * @method post
      * @custom true
+     * @param int $containerRegistryId
      * @return void
      */
-    public function webhooksHarbor(): void {
+    public function webhooksHarbor(int $containerRegistryId): void {
+        $registry = $this->registryCalling($containerRegistryId, \ContainerRegistries::Harbor);
+        if ($registry === null) {
+            $this->fail('unauthorized', 401);
+            return;
+        }
+
         $payload = $this->request->getJSON(true);
         Data::debug($payload);
 
-        $eventType = strtoupper($payload['type'] ?? '');
-        if ($eventType === 'PUSH_ARTIFACT') {
-            $resource = $payload['event_data']['resources'][0] ?? [];
-            $resourceUrl = $resource['resource_url']; // Eg. 651p8071.c1.de1.container-registry.ovh.net/taksinto/backend/api:hotfix
-            $tag = $resource['tag'];
-
-            if (!empty($resourceUrl)) {
-                $image = substr($resourceUrl, 0, strrpos($resourceUrl, ':'));
-
-                AutoUpdate::CheckForUpdates($image, $tag);
-
-                ZMQProxy::getInstance()->send(
-                    Events::AutoUpdate_Created(),
-                    (new ChangeEvent(null, []))->toArray()
-                );
-            }
+        $resource = $payload['event_data']['resources'][0] ?? null;
+        $resourceUrl = $resource['resource_url'] ?? null; // Eg. 651p8071.c1.de1.container-registry.ovh.net/taksinto/backend/api:hotfix
+        $tag = $resource['tag'] ?? null;
+        if (strtoupper((string) ($payload['type'] ?? '')) === 'PUSH_ARTIFACT'
+            && is_string($resourceUrl) && is_string($tag) && str_contains($resourceUrl, ':')) {
+            $this->newTag($registry, substr($resourceUrl, 0, strrpos($resourceUrl, ':')), $tag);
         }
 
         $this->success();
+    }
+
+    /**
+     * The connection a webhook call is for, if the call proves it knows the connection's
+     * secret. Everything that fails - an unknown id, another provider, a connection kso
+     * never set a webhook up for, a missing or wrong header - is the same answer, so a
+     * caller learns nothing from which one it was.
+     */
+    private function registryCalling(int $id, string $provider): ?ContainerRegistry {
+        $registry = new ContainerRegistry();
+        $registry->find($id);
+        if (!$registry->exists() || $registry->provider !== $provider
+            || !$registry->acceptsWebhook($this->request->getHeaderLine('Authorization') ?: null)) {
+            return null;
+        }
+        return $registry;
+    }
+
+    /**
+     * Only for the connection's own images: a registry's webhook reports that registry's
+     * pushes, and an image url from anywhere else is not its to report.
+     */
+    private function newTag(ContainerRegistry $registry, string $image, string $tag): void {
+        if (!$registry->getClient()?->hasImage($image)) {
+            Data::debug("{$image} is not in {$registry->name}, ignored");
+            return;
+        }
+
+        AutoUpdate::CheckForUpdates($image, $tag);
+
+        ZMQProxy::getInstance()->send(
+            Events::AutoUpdate_Created(),
+            (new ChangeEvent(null, []))->toArray()
+        );
     }
 
     /**

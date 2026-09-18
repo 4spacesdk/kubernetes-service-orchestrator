@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch } from "vue";
-import { ContainerImage, System } from "@/core/services/Deploy/models";
+import { ContainerImage, ContainerRegistry, System } from "@/core/services/Deploy/models";
 import { Api } from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type { DialogEventsInterface } from "@/components/Dialogs/DialogEventsInterface";
-import { CommitIdentificationMethods, ContainerRegistries, ImagePullPolicies, VersionControlProviders } from "@/constants";
+import { CommitIdentificationMethods, ImagePullPolicies, VersionControlProviders } from "@/constants";
 import ApiService from "../../../../services/ApiService";
 
 export interface ContainerImageEditDialog_Input {
@@ -27,20 +27,8 @@ const showPullSecret = ref(false);
 const githubRepositories = ref<{ id: number; full_name: string; name: string }[]>([]);
 const isLoadingRepositories = ref(false);
 
-const containerRegistries = ref([
-    {
-        identifier: ContainerRegistries.ArtifactContainerRegistry,
-        name: "Artifact Container Registry",
-    },
-    {
-        identifier: ContainerRegistries.AzureContainerRegistry,
-        name: "Azure Container Registry",
-    },
-    {
-        identifier: ContainerRegistries.Harbor,
-        name: "Harbor",
-    },
-]);
+const containerRegistries = ref<ContainerRegistry[]>([]);
+const isLoadingRegistries = ref(false);
 
 const commitIdentificationMethods = ref([
     {
@@ -78,7 +66,33 @@ onMounted(() => {
     }
     used.value = true;
     load();
+    loadRegistries();
 });
+
+function loadRegistries() {
+    isLoadingRegistries.value = true;
+    Api.containerRegistries()
+        .get()
+        .orderAsc("name")
+        .find(items => {
+            containerRegistries.value = items;
+            isLoadingRegistries.value = false;
+        });
+}
+
+function onCreateRegistryBtnClicked() {
+    bus.emit("containerRegistryEdit", { containerRegistry: new ContainerRegistry() });
+}
+
+function onRegistrySaved(registry: ContainerRegistry | undefined) {
+    loadRegistries();
+    if (registry?.id && !item.value.container_registry_id) {
+        item.value.container_registry_id = registry.id;
+    }
+}
+
+bus.on("containerRegistrySaved", onRegistrySaved);
+onUnmounted(() => bus.off("containerRegistrySaved", onRegistrySaved));
 
 onUnmounted(() => {});
 
@@ -150,6 +164,10 @@ function onSaveBtnClicked() {
     if (!showPullSecret.value) {
         item.value.pull_secret = "";
     }
+    // The connection is chosen by id. The loaded relation is left out, so the save cannot
+    // be read as a request to change the connection itself.
+    item.value.container_registry = undefined;
+    item.value.container_registry_id = item.value.container_registry_id ?? 0;
     const api = item.value!.exists() ? Api.containerImages().patchById(item.value!.id!) : Api.containerImages().post();
 
     api.save(item.value!, (newItem) => {
@@ -292,199 +310,24 @@ function onCloseBtnClicked() {
                     <v-tabs-window-item value="registry">
                         <v-row dense class="pb-4 px-2">
                             <v-col cols="12">
-                                <v-switch
-                                    v-model="item.registry_subscribe"
+                                <v-select
+                                    v-model="item.container_registry_id"
+                                    :items="containerRegistries"
+                                    :loading="isLoadingRegistries"
+                                    item-title="name"
+                                    item-value="id"
                                     variant="outlined"
-                                    label="Setup registry"
-                                    density="compact"
-                                    color="secondary"
-                                />
-                                <div v-if="item.registry_subscribe">
-                                    <v-row>
-                                        <v-col cols="12">
-                                            <v-select
-                                                v-model="item.registry_provider"
-                                                :items="containerRegistries"
-                                                item-title="name"
-                                                item-value="identifier"
-                                                variant="outlined"
-                                                label="Registry"
-                                                density="compact"
-                                                hide-details
-                                            />
-                                        </v-col>
-
-                                        <v-col cols="12" v-if="item.registry_provider == ContainerRegistries.ArtifactContainerRegistry">
-                                            <div class="border pa-2">
-                                                KSO integrates with Google Cloud Artifact Container Registry to perform following tasks
-                                                <ul class="ml-5">
-                                                    <li>Fetch available image tags</li>
-                                                    <li>Cleanup images without tags</li>
-                                                    <li>Subscribe to new image tags</li>
-                                                </ul>
-                                                <br />
-                                                To enable these features, you need to provide a service account with following roles
-                                                <ul class="ml-5">
-                                                    <li>Artifact Registry Administrator</li>
-                                                    <li>Pub/Sub Editor</li>
-                                                </ul>
-                                            </div>
-                                        </v-col>
-                                        <v-col cols="12" v-if="item.registry_provider == ContainerRegistries.ArtifactContainerRegistry">
-                                            <v-text-field
-                                                variant="outlined"
-                                                v-model="item.registry_provider_gcloud_project"
-                                                label="Google Cloud Project"
-                                                density="compact"
-                                                hide-details
-                                            />
-                                        </v-col>
-                                        <v-col cols="12" v-if="item.registry_provider == ContainerRegistries.ArtifactContainerRegistry">
-                                            <v-text-field
-                                                variant="outlined"
-                                                v-model="item.registry_provider_gcloud_location"
-                                                label="Google Cloud Registry Location"
-                                                hint="Eg. europe"
-                                                persistent-hint
-                                                density="compact"
-                                            />
-                                        </v-col>
-                                        <v-col cols="12" v-if="item.registry_provider == ContainerRegistries.ArtifactContainerRegistry">
-                                            <v-text-field
-                                                variant="outlined"
-                                                v-model="item.registry_provider_gcloud_registry_name"
-                                                label="Registry name"
-                                                hint="Eg. Name of the registry"
-                                                persistent-hint
-                                                density="compact"
-                                            />
-                                        </v-col>
-                                        <v-col cols="12" v-if="item.registry_provider == ContainerRegistries.ArtifactContainerRegistry">
-                                            <v-textarea
-                                                variant="outlined"
-                                                v-model="item.registry_provider_gcloud_credentials"
-                                                label="Credentials"
-                                                hint="Eg. Service account json key. Required roles: Artifact Registry Administrator & Pub/Sub Editor"
-                                                persistent-hint
-                                                density="compact"
-                                            />
-                                        </v-col>
-
-                                        <v-col cols="12" v-if="item.registry_provider == ContainerRegistries.AzureContainerRegistry">
-                                            <div class="border pa-2">
-                                                KSO integrates with Azure Container Registry to perform following tasks
-                                                <ul class="ml-5">
-                                                    <li>Fetch available image tags</li>
-                                                    <li>React on new image tags through registry webhooks</li>
-                                                </ul>
-                                                <br />
-                                                To enable these features, you need to provide a service principal and setup a webhook
-                                                <ul class="ml-5">
-                                                    <li>
-                                                        Service URI:
-                                                        {{
-                                                            ApiService.apiAxios!.defaults.baseURL +
-                                                            "/auto-updates/webhooks/azure-container-registry"
-                                                        }}
-                                                    </li>
-                                                    <li>Custom headers: none</li>
-                                                    <li>Actions: push</li>
-                                                    <li>Scope: none</li>
-                                                </ul>
-                                                <br />
-                                                And give the service principal Read permission to the registry.
-                                            </div>
-                                        </v-col>
-                                        <v-col cols="12" v-if="item.registry_provider == ContainerRegistries.AzureContainerRegistry">
-                                            <v-text-field
-                                                variant="outlined"
-                                                v-model="item.registry_provider_azure_tenant"
-                                                label="Microsoft Entra ID Tenant"
-                                                density="compact"
-                                                hide-details
-                                            />
-                                        </v-col>
-                                        <v-col cols="12" v-if="item.registry_provider == ContainerRegistries.AzureContainerRegistry">
-                                            <v-text-field
-                                                variant="outlined"
-                                                v-model="item.registry_provider_azure_registry_name"
-                                                label="Registry name"
-                                                hint="Eg. Name of the registry"
-                                                persistent-hint
-                                                density="compact"
-                                            />
-                                        </v-col>
-                                        <v-col cols="12" v-if="item.registry_provider == ContainerRegistries.AzureContainerRegistry">
-                                            <v-text-field
-                                                variant="outlined"
-                                                v-model="item.registry_provider_azure_client_id"
-                                                label="Client ID (Application ID)"
-                                                density="compact"
-                                                hide-details
-                                            />
-                                        </v-col>
-                                        <v-col cols="12" v-if="item.registry_provider == ContainerRegistries.AzureContainerRegistry">
-                                            <v-text-field
-                                                variant="outlined"
-                                                v-model="item.registry_provider_azure_client_secret"
-                                                label="Client Secret (Application secret)"
-                                                density="compact"
-                                                hide-details
-                                            />
-                                        </v-col>
-
-                                        <v-col cols="12" v-if="item.registry_provider == ContainerRegistries.Harbor">
-                                            <div class="border pa-2">
-                                                KSO integrates with Harbor to perform following tasks
-                                                <ul class="ml-5">
-                                                    <li>Fetch available image tags</li>
-                                                    <li>React on new image tags through registry webhooks</li>
-                                                </ul>
-                                                <br />
-                                                To enable these features, you need to provide harbor following info and setup a webhook
-                                                <ul class="ml-5">
-                                                    <li>Notify Type: http</li>
-                                                    <li>Payload Format: Default</li>
-                                                    <li>Event Type: Artifact pushed</li>
-                                                    <li>
-                                                        Endpoint URL:
-                                                        {{ ApiService.apiAxios!.defaults.baseURL + "/auto-updates/webhooks/harbor" }}
-                                                    </li>
-                                                </ul>
-                                                <br />
-                                            </div>
-                                        </v-col>
-                                        <v-col cols="12" v-if="item.registry_provider == ContainerRegistries.Harbor">
-                                            <v-text-field
-                                                variant="outlined"
-                                                v-model="item.registry_provider_harbor_url"
-                                                label="Registry URL"
-                                                density="compact"
-                                                hide-details
-                                                hint="Base URL of your Harbor registry"
-                                                persistent-hint
-                                            />
-                                        </v-col>
-                                        <v-col cols="12" v-if="item.registry_provider == ContainerRegistries.Harbor">
-                                            <v-text-field
-                                                variant="outlined"
-                                                v-model="item.registry_provider_harbor_username"
-                                                label="Robot username"
-                                                hint="Eg. robot$kso"
-                                                persistent-hint
-                                                density="compact"
-                                            />
-                                        </v-col>
-                                        <v-col cols="12" v-if="item.registry_provider == ContainerRegistries.Harbor">
-                                            <v-text-field
-                                                variant="outlined"
-                                                v-model="item.registry_provider_harbor_password"
-                                                label="Robot token"
-                                                density="compact"
-                                            />
-                                        </v-col>
-                                    </v-row>
-                                </div>
+                                    label="Registry connection"
+                                    hint="Where kso asks for tags and receives new ones. None for an image from a public registry."
+                                    persistent-hint
+                                    clearable
+                                    density="compact">
+                                    <template v-slot:append>
+                                        <v-btn variant="tonal" height="40" prepend-icon="fa fa-plus" @click="onCreateRegistryBtnClicked">
+                                            New
+                                        </v-btn>
+                                    </template>
+                                </v-select>
                             </v-col>
                         </v-row>
                     </v-tabs-window-item>

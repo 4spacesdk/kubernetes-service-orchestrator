@@ -2,12 +2,7 @@
 
 use App\Libraries\CommitIdentificationMethods\BaseCommitIdentificationMethod;
 use App\Libraries\CommitIdentificationMethods\EnvironmentVariableCommitIdentification;
-use App\Libraries\ContainerRegistries\AzureContainerRegistry;
 use App\Libraries\ContainerRegistries\BaseContainerRegistry;
-use App\Libraries\ContainerRegistries\GoogleCloudArtifactRegistry;
-use App\Libraries\ContainerRegistries\HarborRegistry;
-use App\Libraries\GoogleCloud\GcrSubscription;
-use App\Libraries\Kubernetes\KubeHelper;
 use App\Libraries\VersionControlSystems\BaseVersionControlSystem;
 use App\Libraries\VersionControlSystems\GithubVersionControl;
 use App\Core\Entity;
@@ -21,20 +16,9 @@ use App\Core\Entity;
  * @property string $default_tag
  * @property string $default_image_pull_policy
  *
- * # Registry Settings
- * @property bool $registry_subscribe
- * @property string $registry_provider
- * @property string $registry_provider_gcloud_registry_name
- * @property string $registry_provider_gcloud_project
- * @property string $registry_provider_gcloud_location
- * @property string $registry_provider_gcloud_credentials
- * @property string $registry_provider_azure_registry_name
- * @property string $registry_provider_azure_tenant
- * @property string $registry_provider_azure_client_id
- * @property string $registry_provider_azure_client_secret
- * @property string $registry_provider_harbor_url
- * @property string $registry_provider_harbor_username
- * @property string $registry_provider_harbor_password
+ * # Registry
+ * @property int $container_registry_id
+ * @property ContainerRegistry $container_registry
  *
  * # Security Context
  * @property string $security_context_fs_group
@@ -55,52 +39,50 @@ use App\Core\Entity;
  */
 class ContainerImage extends Entity {
 
-    public static function post($data) {
-        /** @var ContainerImage $item */
-        $item = parent::post($data);
-        $item->postSave($data);
-        return $item;
+    /**
+     * The client for this image's registry, or null when it has none - an image pulled from
+     * a public registry, say - or the provider is one kso does not know.
+     *
+     * Not `getContainerRegistry()`: CodeIgniter reads a `get<Property>()` method as the getter
+     * for that property, and `container_registry` is the relation.
+     */
+    public function getRegistryClient(): ?BaseContainerRegistry {
+        if (!$this->container_registry_id) {
+            return null;
+        }
+        $this->container_registry->find();
+        if (!$this->container_registry->exists()) {
+            return null;
+        }
+        return $this->container_registry->getClient();
     }
 
-    public static function patch($id, $data) {
-        /** @var ContainerImage $item */
-        $item = parent::patch($id, $data);
-        $item->postSave($data);
-        return $item;
-    }
-
-    private function postSave(array $data): void {
-        if (isset($data['registry_subscribe'])
-            && $this->registry_subscribe && strlen($this->registry_provider)) {
-            switch ($this->registry_provider) {
-                case \ContainerRegistries::ArtifactContainerRegistry:
-                    $pubSub = service('integrations')->pubSub();
-                    $pubSub->ensureTopic(
-                        $this->registry_provider_gcloud_project,
-                        $this->registry_provider_gcloud_credentials,
-                        GcrSubscription::TOPIC
-                    );
-                    $pubSub->ensureSubscription(
-                        $this->registry_provider_gcloud_project,
-                        $this->registry_provider_gcloud_credentials,
-                        GcrSubscription::TOPIC,
-                        GcrSubscription::name()
-                    );
-                    break;
+    /**
+     * The secrets a pod pulling this image names: the one kso makes for its registry, if
+     * the registry has a pull login, and the one named on the image, if any (INT-1d). Both,
+     * so moving an image over to a kso-made secret does not need a moment where it has none.
+     *
+     * @return string[]
+     */
+    public function getPullSecretNames(): array {
+        $names = [];
+        if ($this->container_registry_id) {
+            $this->container_registry->find();
+            if ($this->container_registry->exists() && $this->container_registry->hasPullCredentials()) {
+                $names[] = $this->container_registry->getPullSecretName();
             }
         }
+        if (strlen((string) $this->pull_secret)) {
+            $names[] = $this->pull_secret;
+        }
+        return $names;
     }
 
-    public function getContainerRegistry(): ?BaseContainerRegistry {
-        return service('integrations')->containerRegistry($this);
-    }
-
+    /**
+     * @return string[] Empty when the image has no registry to ask.
+     */
     public function getTags(): array {
-        return $this->getContainerRegistry()->getTags();
-    }
-
-    public function getRegistryRepoName(): string {
-        return $this->getContainerRegistry()->getRepoName();
+        return $this->getRegistryClient()?->getTags($this->url) ?? [];
     }
 
     public function getVersionControlSystem(): ?BaseVersionControlSystem {

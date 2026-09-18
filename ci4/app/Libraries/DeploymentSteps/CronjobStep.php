@@ -6,6 +6,7 @@ use App\Entities\EnvironmentVariable;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepLevels;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
+use App\Libraries\Kubernetes\ImagePullSecrets;
 use App\Libraries\Kubernetes\KubeAuth;
 use App\Models\ContainerImageModel;
 use App\Models\DeploymentCronJobModel;
@@ -287,12 +288,9 @@ class CronjobStep extends BaseDeploymentStep {
             $template = (new K8sPod())
                 ->setContainers([$container])
                 ->setSpec('restartPolicy', $cronJob->restart_policy);
-            if (strlen($cronJob->container_image->pull_secret) > 0) {
-                $template->setSpec('imagePullSecrets', [
-                    [
-                        'name' => $cronJob->container_image->pull_secret,
-                    ],
-                ]);
+            $imagePullSecrets = ImagePullSecrets::of($cronJob->container_image);
+            if (count($imagePullSecrets) > 0) {
+                $template->setSpec('imagePullSecrets', $imagePullSecrets);
             }
 
             if (strlen($cronJob->container_image->security_context_fs_group) > 0) {

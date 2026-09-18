@@ -165,6 +165,7 @@ class IncludeSweepTest extends ControllerTestCase {
 
         sort($empty);
         $this->assertSame([
+            'container_registries?include=deletion',
             'database_services?include=deletion',
             'deployments?include=deletion',
             'domains?include=deletion',
@@ -410,7 +411,7 @@ class IncludeSweepTest extends ControllerTestCase {
     public function testTheSweepStillCoversEveryRoutedResourceAndItsRelations(): void {
         $models = $this->resourceModels();
 
-        $this->assertCount(22, $models, 'the number of plain collection reads changed');
+        $this->assertCount(23, $models, 'the number of plain collection reads changed');
         $this->assertSame(
             ['environments'],
             array_keys(array_filter($models, static fn ($model) => $model === null)),
@@ -422,7 +423,7 @@ class IncludeSweepTest extends ControllerTestCase {
             $relations += count($this->relationsOf($modelName));
         }
 
-        $this->assertSame(83, $relations, 'the number of includable relations changed');
+        $this->assertSame(86, $relations, 'the number of includable relations changed');
     }
 
     // </editor-fold>
@@ -445,7 +446,8 @@ class IncludeSweepTest extends ControllerTestCase {
         }
         $this->arranged = true;
 
-        $image = Fixtures::containerImage(['name' => 'sweep-image']);
+        $registry = Fixtures::containerRegistry(['name' => 'sweep-registry']);
+        $image = Fixtures::containerImage(['name' => 'sweep-image', 'container_registry_id' => $registry->id]);
 
         $specification = Fixtures::deploymentSpecification([
             'container_image_id' => $image->id,

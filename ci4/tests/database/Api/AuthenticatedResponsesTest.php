@@ -50,20 +50,38 @@ class AuthenticatedResponsesTest extends ControllerTestCase {
     }
 
     /**
-     * SEC-2. A whole GCP service account key, an Azure client secret and a Harbor
-     * password, in plain text, to anyone who can sign in. Invert this when SEC-2 lands.
+     * SEC-2, fixed for registries by INT-1a. The key, the client secret and the password
+     * are written, never read back: the connection says whether each is set, and that is
+     * all. It used to hand a whole GCP service account key to anyone signed in.
      */
-    public function testContainerImagesStillReturnRegistryCredentials(): void {
-        Fixtures::containerImage([
+    public function testARegistryConnectionNeverReturnsItsSecrets(): void {
+        Fixtures::containerRegistry([
             'name' => 'with-credentials',
-            'registry_provider_gcloud_credentials' => '{"private_key":"THE-KEY"}',
-            'registry_provider_azure_client_secret' => 'azure-secret',
+            'gcloud_credentials' => '{"private_key":"THE-KEY"}',
+            'azure_client_secret' => 'azure-secret',
+            'harbor_password' => 'harbor-secret',
         ]);
 
-        $image = $this->firstResourceNamed('container_images', 'name', 'with-credentials');
+        $registry = $this->firstResourceNamed('container_registries', 'name', 'with-credentials');
 
-        $this->assertSame('{"private_key":"THE-KEY"}', $image['registry_provider_gcloud_credentials']);
-        $this->assertSame('azure-secret', $image['registry_provider_azure_client_secret']);
+        foreach (['gcloud_credentials', 'azure_client_secret', 'harbor_password'] as $secret) {
+            $this->assertArrayNotHasKey($secret, $registry);
+            $this->assertTrue($registry["has_{$secret}"], $secret);
+        }
+    }
+
+    /**
+     * The same connection reached through an image, which is how the edit dialog loads
+     * it. A relation is serialised by the related entity, so the rule holds there too.
+     */
+    public function testAnImageDoesNotLeakItsRegistrysSecrets(): void {
+        $registry = Fixtures::containerRegistry(['harbor_password' => 'harbor-secret']);
+        $image = Fixtures::containerImage(['container_registry_id' => $registry->id]);
+
+        $body = $this->decode($this->signedIn()->get("container_images/{$image->id}?include=container_registry"));
+
+        $this->assertStringNotContainsString('harbor-secret', json_encode($body));
+        $this->assertTrue($body['resource']['container_registry']['has_harbor_password']);
     }
 
     /**

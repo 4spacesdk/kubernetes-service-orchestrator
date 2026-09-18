@@ -29,9 +29,10 @@ class PublicSurfaceTest extends ControllerTestCase {
      * the question to answer first is what it gives away to someone who is not logged in.
      */
     private const PUBLIC_ROUTES = [
-        // The image registries call these when a new tag is pushed.
-        'post auto-updates/webhooks/azure-container-registry',
-        'post auto-updates/webhooks/harbor',
+        // The image registries call these when a new tag is pushed. Public, but each call
+        // has to carry its connection's webhook secret - see AutoUpdateWebhooksApiTest.
+        'post auto-updates/webhooks/azure-container-registry/([0-9]+)',
+        'post auto-updates/webhooks/harbor/([0-9]+)',
 
         // GitHub redirects a browser back to these after installing the app.
         'get githubapp/callback',

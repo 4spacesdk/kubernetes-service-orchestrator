@@ -6,7 +6,7 @@ use RestExtension\ResourceModelInterface;
 class ContainerImageModel extends Model implements ResourceModelInterface {
 
     public $hasOne = [
-
+        ContainerRegistryModel::class,
     ];
 
     public $hasMany = [

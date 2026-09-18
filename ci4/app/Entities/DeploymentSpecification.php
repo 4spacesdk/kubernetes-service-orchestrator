@@ -18,16 +18,24 @@ use App\Libraries\DeploymentSteps\MigrationJobStep;
 use App\Libraries\DeploymentSteps\NamespaceStep;
 use App\Libraries\DeploymentSteps\PersistentVolumeClaimStep;
 use App\Libraries\DeploymentSteps\PersistentVolumeStep;
+use App\Libraries\DeploymentSteps\RegistryPullSecretStep;
 use App\Libraries\DeploymentSteps\RoleBindingStep;
 use App\Libraries\DeploymentSteps\RoleStep;
 use App\Libraries\DeploymentSteps\ServiceAccountStep;
 use App\Libraries\DeploymentSteps\ServiceStep;
+use App\Models\ContainerImageModel;
+use App\Models\ContainerRegistryModel;
+use App\Models\DeploymentCronJobModel;
+use App\Models\DeploymentSpecificationCronJobModel;
 use App\Models\DeploymentSpecificationEnvironmentVariableModel;
 use App\Models\DeploymentSpecificationHttpProxyRouteModel;
+use App\Models\DeploymentSpecificationInitContainerModel;
 use App\Models\DeploymentSpecificationServiceAnnotationModel;
 use App\Models\DeploymentSpecificationServicePortModel;
 use App\Models\DeploymentSpecificationVolumeModel;
 use App\Models\DeploymentVolumeModel;
+use App\Models\InitContainerModel;
+use App\Models\K8sCronJobModel;
 use App\Core\Entity;
 
 /**
@@ -108,6 +116,7 @@ class DeploymentSpecification extends Entity {
 
             // Level: Deployment
             DatabaseStep::class,
+            RegistryPullSecretStep::class,
             ServiceAccountStep::class,
             ClusterRoleStep::class,
             ClusterRoleBindingStep::class,
@@ -201,6 +210,9 @@ class DeploymentSpecification extends Entity {
         if ($this->enable_cronjob) {
             $steps[] = new CronjobStep();
         }
+        if (count($this->getPullSecretRegistries($deployment)) > 0) {
+            $steps[] = new RegistryPullSecretStep();
+        }
         if ($this->enable_volumes && $deployment) {
             /** @var DeploymentVolume $deploymentVolumes */
             $deploymentVolumes = (new DeploymentVolumeModel())
@@ -224,6 +236,74 @@ class DeploymentSpecification extends Entity {
         usort($steps, fn($a, $b) => array_search(get_class($a), $order) - array_search(get_class($b), $order));
 
         return $steps;
+    }
+
+    /**
+     * The registries kso makes a pull secret for (INT-1d): those with a pull login that an
+     * image of a deployment of this specification comes from - the workload, its init
+     * containers, the migration job and the cron jobs, each only when turned on. Without a
+     * deployment, a deployment's own cron jobs are left out.
+     *
+     * @return ContainerRegistry[]
+     */
+    public function getPullSecretRegistries(?Deployment $deployment = null): array {
+        $imageIds = [$this->container_image_id];
+
+        /** @var DeploymentSpecificationInitContainer $initContainers */
+        $initContainers = (new DeploymentSpecificationInitContainerModel())
+            ->includeRelated(InitContainerModel::class)
+            ->where('deployment_specification_id', $this->id)
+            ->find();
+        foreach ($initContainers as $initContainer) {
+            $imageIds[] = $initContainer->init_container->container_image_id;
+        }
+
+        if ($this->enable_database) {
+            $imageIds[] = $this->database_migration_container_image_id;
+        }
+
+        if ($this->enable_cronjob) {
+            /** @var K8sCronJob $cronJobs */
+            $cronJobs = (new K8sCronJobModel())
+                ->whereRelated(DeploymentSpecificationCronJobModel::class, 'deployment_specification_id', $this->id)
+                ->find();
+            foreach ($cronJobs as $cronJob) {
+                $imageIds[] = $cronJob->container_image_id;
+            }
+            if ($deployment) {
+                $cronJobs = (new K8sCronJobModel())
+                    ->whereRelated(DeploymentCronJobModel::class, 'deployment_id', $deployment->id)
+                    ->find();
+                foreach ($cronJobs as $cronJob) {
+                    $imageIds[] = $cronJob->container_image_id;
+                }
+            }
+        }
+
+        $imageIds = array_values(array_unique(array_filter(array_map('intval', $imageIds))));
+        if (count($imageIds) == 0) {
+            return [];
+        }
+
+        /** @var ContainerImage $images */
+        $images = (new ContainerImageModel())
+            ->whereIn('id', $imageIds)
+            ->where('container_registry_id >', 0)
+            ->find();
+        $registryIds = array_values(array_unique(array_map(fn (ContainerImage $image) => (int) $image->container_registry_id, iterator_to_array($images))));
+        if (count($registryIds) == 0) {
+            return [];
+        }
+
+        /** @var ContainerRegistry $registries */
+        $registries = (new ContainerRegistryModel())
+            ->whereIn('id', $registryIds)
+            ->orderBy('id', 'asc')
+            ->find();
+        return array_values(array_filter(
+            iterator_to_array($registries),
+            fn (ContainerRegistry $registry) => $registry->hasPullCredentials()
+        ));
     }
 
     public function hasDeploymentStep(Deployment $deployment, string $class): bool {

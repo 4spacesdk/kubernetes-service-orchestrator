@@ -59,6 +59,14 @@ bus.on('databaseServiceEdit', async input => {
     addComponent((await import('@/components/Dialogs/Setup/DatabaseServices/DatabaseServiceEditDialog.vue')).default, input);
 });
 
+bus.on('containerRegistryImport', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/ContainerRegistries/ContainerRegistryImportDialog.vue')).default, input);
+});
+
+bus.on('containerRegistryEdit', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/ContainerRegistries/ContainerRegistryEditDialog.vue')).default, input);
+});
+
 bus.on('emailServiceEdit', async input => {
     addComponent((await import('@/components/Dialogs/Setup/EmailServices/EmailServiceEditDialog.vue')).default, input);
 });

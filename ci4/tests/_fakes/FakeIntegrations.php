@@ -1,6 +1,7 @@
 <?php namespace App\Tests\Fakes;
 
 use App\Entities\ContainerImage;
+use App\Entities\ContainerRegistry;
 use App\Entities\Deployment;
 use App\Libraries\CommitIdentificationMethods\BaseCommitIdentificationMethod;
 use App\Libraries\ContainerRegistries\BaseContainerRegistry;
@@ -37,6 +38,21 @@ class FakeIntegrations extends IntegrationFactory {
 
     public string $repoName = 'team/app';
 
+    /** @var string[] Repository names the registry lists, each pulled as `registry.example.org/<name>`. */
+    public array $repositories = [];
+
+    /**
+     * The real registry clients, for a test about what one of them decides - which Pub/Sub
+     * topic the Artifact Registry client asks for, say - with the fakes still behind it.
+     */
+    public bool $realRegistryClients = false;
+
+    /** @var array<array{webhookUrl: string, secret: string, imageUrls: string[]}> Every setupEvents() call. */
+    public array $eventSetups = [];
+
+    /** Thrown by setupEvents(), for a registry that refuses. */
+    public ?\Exception $failSetupEventsWith = null;
+
     /** Null means the image has no version control configured. */
     public ?string $commitMessage = null;
 
@@ -45,7 +61,7 @@ class FakeIntegrations extends IntegrationFactory {
     /** Null means no commit identification is configured. */
     public ?string $shortSha = null;
 
-    /** @var string[] Every registry the code asked about, for tests that count calls. */
+    /** @var string[] The name of every registry connection the code asked about, for tests that count calls. */
     public array $registryLookups = [];
 
     public static function install(): self {
@@ -59,23 +75,51 @@ class FakeIntegrations extends IntegrationFactory {
         Services::injectMock('integrations', null);
     }
 
-    public function containerRegistry(ContainerImage $image): ?BaseContainerRegistry {
-        $this->registryLookups[] = $image->name;
+    public function containerRegistry(ContainerRegistry $registry): ?BaseContainerRegistry {
+        $this->registryLookups[] = $registry->name;
 
+        if ($this->realRegistryClients) {
+            return parent::containerRegistry($registry);
+        }
         if ($this->tags === null) {
             return null;
         }
 
-        return new class ($this->tags, $this->repoName) extends BaseContainerRegistry {
-            /** @param string[] $tags */
-            public function __construct(private array $tags, private string $repoName) {}
+        return new class ($registry, $this->tags, $this->repoName, $this->repositories, $this) extends BaseContainerRegistry {
+            /**
+             * @param string[] $tags
+             * @param string[] $repositories
+             */
+            public function __construct(ContainerRegistry $registry, private array $tags, private string $repoName, private array $repositories, private FakeIntegrations $fakes) {
+                parent::__construct($registry);
+            }
 
-            public function getRepoName(): string {
+            public function getUrlPrefix(): string {
+                return 'registry.example.org';
+            }
+
+            public function setupEvents(string $webhookUrl, string $secret, array $imageUrls): string {
+                if ($this->fakes->failSetupEventsWith) {
+                    throw $this->fakes->failSetupEventsWith;
+                }
+                $this->fakes->eventSetups[] = ['webhookUrl' => $webhookUrl, 'secret' => $secret, 'imageUrls' => $imageUrls];
+                return 'fake events set up';
+            }
+
+            public function listRepositories(): array {
+                return array_map(fn ($name) => ['name' => $name, 'url' => "registry.example.org/{$name}"], $this->repositories);
+            }
+
+            public function getRepoName(string $url): string {
                 return $this->repoName;
             }
 
-            public function getTags(): array {
+            public function getTags(string $url): array {
                 return $this->tags;
+            }
+
+            public function testConnection(): string {
+                return 'fake registry';
             }
         };
     }

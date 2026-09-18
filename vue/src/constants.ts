@@ -4,6 +4,8 @@ import type { InfoDialog_Input } from "@/components/Dialogs/Common/InfoDialog.vu
 import type { DatabaseServiceEditDialog_Input } from "@/components/Dialogs/Setup/DatabaseServices/DatabaseServiceEditDialog.vue";
 import type { DomainCreateDialog_Input } from "@/components/Dialogs/Setup/Domains/DomainCreateDialog.vue";
 import type { EmailServiceEditDialog_Input } from "@/components/Dialogs/Setup/EmailServices/EmailServiceEditDialog.vue";
+import type { ContainerRegistryEditDialog_Input } from "@/components/Dialogs/Setup/ContainerRegistries/ContainerRegistryEditDialog.vue";
+import type { ContainerRegistryImportDialog_Input } from "@/components/Dialogs/Setup/ContainerRegistries/ContainerRegistryImportDialog.vue";
 import type { UserEditDialog_Input } from "@/components/Dialogs/Users/UserEditDialog.vue";
 import {
     ContainerImage,
@@ -14,6 +16,7 @@ import {
     Domain,
     Gateway,
     EmailService,
+    ContainerRegistry,
     InitContainer,
     K8sCronJob,
     KNativeMinScaleSchedule,
@@ -165,6 +168,10 @@ export type Events = {
     emailServiceEdit: EmailServiceEditDialog_Input;
     emailServiceSaved: EmailService | undefined;
     emailServiceEditDialog_closed: EmailService | undefined;
+    containerRegistryEdit: ContainerRegistryEditDialog_Input;
+    containerRegistryImport: ContainerRegistryImportDialog_Input;
+    containerRegistrySaved: ContainerRegistry | undefined;
+    containerRegistryEditDialog_closed: ContainerRegistry | undefined;
 
     userEdit: UserEditDialog_Input;
     userSaved: User | undefined;

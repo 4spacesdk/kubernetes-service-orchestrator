@@ -1,20 +1,52 @@
 <?php namespace App\Libraries\ContainerRegistries;
 
-use App\Entities\ContainerImage;
+use App\Libraries\GoogleCloud\GcrSubscription;
 use DebugTool\Data;
 use Google\ApiCore\ApiException;
 use Google\ApiCore\ValidationException;
 use Google\Cloud\ArtifactRegistry\V1beta2\ArtifactRegistryClient;
 use Google\Cloud\ArtifactRegistry\V1beta2\Tag;
-use Google\Cloud\ArtifactRegistry\V1beta2\Version;
-use Google\Cloud\ArtifactRegistry\V1beta2\VersionView;
 
 class GoogleCloudArtifactRegistry extends BaseContainerRegistry {
 
-    private ContainerImage $image;
+    /**
+     * Where every image in this repository lives: `{location}-docker.pkg.dev/{project}/{repository}`.
+     *
+     * Except a gcr.io-domain repository, the kind Container Registry was migrated into.
+     * Its images keep their old urls, `eu.gcr.io/{project}/{image}`, and the repository is
+     * named after the host.
+     */
+    public function getUrlPrefix(): string {
+        $repository = $this->registry->gcloud_registry_name;
+        if (preg_match('/(^|\.)gcr\.io$/', $repository)) {
+            return "{$repository}/{$this->registry->gcloud_project}";
+        }
+        return "{$this->registry->gcloud_location}-docker.pkg.dev/{$this->registry->gcloud_project}/{$repository}";
+    }
 
-    public function __construct(ContainerImage $image) {
-        $this->image = $image;
+    /**
+     * The image path after the repository, with its slashes. Artifact Registry names a
+     * package by that whole path - the api wants the slashes escaped, see `packageName()`.
+     *
+     * An url that does not start with the prefix falls back to its last segment, which is
+     * all this used to take, so an image written some other way resolves as it did before.
+     */
+    public function getRepoName(string $url): string {
+        $prefix = $this->getUrlPrefix() . '/';
+        if (str_starts_with($url, $prefix)) {
+            return substr($url, strlen($prefix));
+        }
+
+        $parts = explode('/', $url);
+        return end($parts);
+    }
+
+    private function repositoryName(): string {
+        return "projects/{$this->registry->gcloud_project}/locations/{$this->registry->gcloud_location}/repositories/{$this->registry->gcloud_registry_name}";
+    }
+
+    public function packageName(string $url): string {
+        return $this->repositoryName() . '/packages/' . str_replace('/', '%2F', $this->getRepoName($url));
     }
 
     /**
@@ -24,19 +56,13 @@ class GoogleCloudArtifactRegistry extends BaseContainerRegistry {
      *
      * @codeCoverageIgnore
      */
-    public function getTags(): array {
+    public function getTags(string $url): array {
         $items = [];
 
         try {
-            $artifactRegistryClient = new ArtifactRegistryClient([
-                'credentials' => json_decode($this->image->registry_provider_gcloud_credentials, true),
-            ]);
+            $client = $this->client();
             try {
-                Data::debug("projects/{$this->image->registry_provider_gcloud_project}/locations/{$this->image->registry_provider_gcloud_location}/repositories/{$this->image->registry_provider_gcloud_registry_name}/packages/{$this->image->getRegistryRepoName()}");
-                // Iterate through all elements
-                $pagedResponse = $artifactRegistryClient->listTags([
-                    'parent' => "projects/{$this->image->registry_provider_gcloud_project}/locations/{$this->image->registry_provider_gcloud_location}/repositories/{$this->image->registry_provider_gcloud_registry_name}/packages/{$this->image->getRegistryRepoName()}"
-                ]);
+                $pagedResponse = $client->listTags(['parent' => $this->packageName($url)]);
                 /** @var Tag $element */
                 foreach ($pagedResponse->iterateAllElements() as $element) {
                     $name = explode('/', $element->getName());
@@ -47,84 +73,72 @@ class GoogleCloudArtifactRegistry extends BaseContainerRegistry {
             } catch (ApiException $e) {
                 Data::debug($e->getMessage());
             } finally {
-                $artifactRegistryClient->close();
+                $client->close();
             }
         } catch (ValidationException $e) {
             Data::debug($e->getMessage());
         }
 
-        usort($items, fn($a, $b) => version_compare(str_replace('v', '', $a), str_replace('v', '', $b)));
-
-        return $items;
+        return self::sortVersions($items);
     }
 
     /**
-     * @throws ValidationException
-     * @throws ApiException
-     */
-    /**
-     * Not measured: this is the network call itself. What kso decides before and after
-     * it is tested through the fake behind `BaseContainerRegistry` - see the strategy note in the
-     * test setup. Marking it keeps the coverage number about code we chose to test.
-     *
      * @codeCoverageIgnore
      */
-    public function getVersions(): array {
-        $items = [];
-
-        $artifactRegistryClient = new ArtifactRegistryClient([
-            'credentials' => json_decode($this->image->registry_provider_gcloud_credentials, true),
-            'projectId' => $this->image->registry_provider_gcloud_project,
-        ]);
+    public function listRepositories(): array {
+        $client = $this->client();
         try {
-            // Iterate through all elements
-            $pagedResponse = $artifactRegistryClient->listVersions([
-                'view' => VersionView::FULL,
-                'parent' => "projects/{$this->image->registry_provider_gcloud_project}/locations/{$this->image->registry_provider_gcloud_location}/repositories/{$this->image->registry_provider_gcloud_registry_name}/packages/{$this->image->getRegistryRepoName()}"
-            ]);
-            /** @var Version $element */
-            foreach ($pagedResponse->iterateAllElements() as $element) {
-                if ($element->getRelatedTags()->count() == 0) {
-                    $name = explode('/', $element->getName());
-                    $items[] = end($name);
-                }
+            $items = [];
+            foreach ($client->listPackages(['parent' => $this->repositoryName()])->iterateAllElements() as $package) {
+                $items[] = $this->repository(urldecode(substr($package->getName(), strrpos($package->getName(), '/packages/') + 10)));
             }
-
+            return $items;
         } finally {
-            $artifactRegistryClient->close();
+            $client->close();
         }
-
-        return $items;
     }
 
     /**
-     * @throws ValidationException
-     * @throws ApiException
+     * @return array{name: string, url: string}
      */
+    public function repository(string $path): array {
+        return ['name' => $path, 'url' => "{$this->getUrlPrefix()}/{$path}"];
+    }
+
     /**
-     * Not measured: this is the network call itself. What kso decides before and after
-     * it is tested through the fake behind `BaseContainerRegistry` - see the strategy note in the
-     * test setup. Marking it keeps the coverage number about code we chose to test.
-     *
+     * Pub/Sub, not a webhook: the registry publishes to a topic in the project, and the cron
+     * job pulls from a subscription with the connection's own key. Nothing reaches kso from
+     * outside, so there is no secret to check.
+     */
+    public function setupEvents(string $webhookUrl, string $secret, array $imageUrls): string {
+        $pubSub = service('integrations')->pubSub();
+        $credentials = (string) $this->registry->gcloud_credentials;
+        $pubSub->ensureTopic($this->registry->gcloud_project, $credentials, GcrSubscription::TOPIC);
+        $pubSub->ensureSubscription($this->registry->gcloud_project, $credentials, GcrSubscription::TOPIC, GcrSubscription::name());
+        return "Subscribed to {$this->registry->gcloud_project}/" . GcrSubscription::TOPIC;
+    }
+
+    /**
      * @codeCoverageIgnore
      */
-    public function deleteVersions(string $version): void {
-        $artifactRegistryClient = new ArtifactRegistryClient([
-            'credentials' => json_decode($this->image->registry_provider_gcloud_credentials, true),
-            'projectId' => $this->image->registry_provider_gcloud_project,
-        ]);
+    public function testConnection(): string {
+        $client = $this->client();
         try {
-            $artifactRegistryClient->deleteVersion([
-                'name' => "projects/{$this->image->registry_provider_gcloud_project}/locations/{$this->image->registry_provider_gcloud_location}/repositories/{$this->image->registry_provider_gcloud_registry_name}/packages/{$this->image->getRegistryRepoName()}/versions/$version",
-            ]);
+            $client->getRepository($this->repositoryName());
         } finally {
-            $artifactRegistryClient->close();
+            $client->close();
         }
+        return "Found {$this->getUrlPrefix()}";
     }
 
-    public function getRepoName(): string {
-        $parts = explode('/', $this->image->url);
-        return end($parts);
+    /**
+     * @codeCoverageIgnore
+     * @throws ValidationException
+     */
+    protected function client(): ArtifactRegistryClient {
+        return new ArtifactRegistryClient([
+            'credentials' => json_decode((string) $this->registry->gcloud_credentials, true),
+        ]);
     }
 
 }

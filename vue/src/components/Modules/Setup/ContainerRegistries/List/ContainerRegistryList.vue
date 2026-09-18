@@ -1,24 +1,20 @@
 <script setup lang="ts">
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
+import {ContainerRegistry} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
-import {ContainerImage} from "@/core/services/Deploy/models";
 import debounce from "lodash.debounce";
-import { VersionControlProviders } from "@/constants";
-import { CopyNameStrategy, duplicateEntity } from "@/helpers/DuplicateEntity";
 
 const emit = defineEmits<{
-    (e: 'onItemEditClicked', item: ContainerImage): void
+    (e: 'onItemEditClicked', item: ContainerRegistry): void
 }>();
 
 const itemCount = ref(0);
-const rows = ref<ContainerImage[]>([]);
+const rows = ref<ContainerRegistry[]>([]);
 const headers = ref([
     {title: 'Name', key: 'name', sortable: false},
-    {title: 'Url', key: 'url', sortable: false},
-    {title: 'Pull secret', key: 'pull_secret', sortable: false},
-    {title: 'Registry', key: 'container_registry', sortable: false},
-    {title: 'VCS', key: 'version_control_provider', sortable: false},
+    {title: 'Provider', key: 'provider', sortable: false},
+    {title: 'Auto update', key: 'events_enabled', sortable: false},
     {title: '', key: 'actions', sortable: false},
 ]);
 const isLoading = ref(true);
@@ -27,13 +23,13 @@ const options = ref({});
 const searchValue = ref('');
 
 onMounted(() => {
-    bus.on('containerImageSaved', onItemSaved);
+    bus.on('containerRegistrySaved', onItemSaved);
 
     getItems(false, true);
 });
 
 onUnmounted(() => {
-    bus.off('containerImageSaved', onItemSaved);
+    bus.off('containerRegistrySaved', onItemSaved);
 });
 
 watch(searchValue, debounce(() => {
@@ -52,13 +48,12 @@ function getItems(doItems = true, doCount = false) {
     isLoading.value = true;
 
     // Prepare API call
-    const api = Api.containerImages().get()
-        .include('container_registry');
+    const api = Api.containerRegistries().get();
 
     if (searchValue.value?.length) {
         api
             .search('name', searchValue.value)
-            .search('url', searchValue.value);
+            .search('provider', searchValue.value);
     }
 
     if (doItems) {
@@ -82,33 +77,26 @@ function getItems(doItems = true, doCount = false) {
 
 // <editor-fold desc="View functions">
 
-function onImportBtnClicked() {
-    bus.emit('containerRegistryImport', {});
-}
-
-function createItem() {
-    bus.emit('containerImageEdit', {
-        containerImage: ContainerImage.Create(),
+function onCreateItemBtnClicked() {
+    bus.emit('containerRegistryEdit', {
+        containerRegistry: new ContainerRegistry()
     });
 }
 
-function onEditItemBtnClicked(item: ContainerImage) {
-    bus.emit('containerImageEdit', {
-        containerImage: item,
+function onEditItemBtnClicked(item: ContainerRegistry) {
+    bus.emit('containerRegistryEdit', {
+        containerRegistry: item
+    });
+    emit('onItemEditClicked', item);
+}
+
+function onImportItemBtnClicked(item: ContainerRegistry) {
+    bus.emit('containerRegistryImport', {
+        containerRegistry: item
     });
 }
 
-function onDuplicateItemBtnClicked(item: ContainerImage) {
-    // Read the row again rather than copying what the table holds, so fields the list
-    // does not ask for still make it into the copy.
-    Api.containerImages().getById(item.id!).find(items => {
-        bus.emit('containerImageEdit', {
-            containerImage: duplicateEntity(items[0], ContainerImage, CopyNameStrategy.Label),
-        });
-    });
-}
-
-function deleteItem(item: ContainerImage) {
+function onDeleteItemBtnClicked(item: ContainerRegistry) {
     bus.emit('confirm', {
         body: `Do you want to delete <strong>${item.name}</strong>?`,
         confirmIcon: 'fa fa-trash',
@@ -116,7 +104,8 @@ function deleteItem(item: ContainerImage) {
 
         responseCallback: (confirmed: boolean) => {
             if (confirmed) {
-                Api.containerImages().deleteById(item.id!).delete(() => bus.emit('containerImageSaved'));
+                // Refused while an image uses the connection.
+                Api.containerRegistries().deleteById(item.id!).delete(() => bus.emit('containerRegistrySaved'));
             }
         }
     });
@@ -135,7 +124,7 @@ function deleteItem(item: ContainerImage) {
             color="blue-grey lighten-5"
             dark
         >
-            <v-toolbar-title>Container Images</v-toolbar-title>
+            <v-toolbar-title>Container Registries</v-toolbar-title>
 
             <v-text-field
                 v-model="searchValue"
@@ -147,12 +136,7 @@ function deleteItem(item: ContainerImage) {
             />
 
             <v-spacer></v-spacer>
-            <v-btn small class="" @click="onImportBtnClicked()"
-                   prepend-icon="fa fa-download"
-            >
-                Import
-            </v-btn>
-            <v-btn small class="" @click="createItem()"
+            <v-btn small class="" @click="onCreateItemBtnClicked()"
                    prepend-icon="fa fa-plus"
             >
                 Create
@@ -168,41 +152,20 @@ function deleteItem(item: ContainerImage) {
             class="table"
             density="compact"
             @update:options="options = $event; getItems()">
-            <template v-slot:item.container_registry="{ item }">
-                <span>{{ item.container_registry?.name }}</span>
-            </template>
-            <template v-slot:item.version_control_provider="{ item }">
-                <span v-if="item.version_control_enabled">
-                    {{ item.version_control_provider }}
-                    <v-tooltip
-                        v-if="item.version_control_provider === VersionControlProviders.GitHub && item.version_control_repository_name"
-                        activator="parent"
-                        location="bottom"
-                    >
-                        {{ item.version_control_repository_name }}
-                    </v-tooltip>
-                </span>
+            <template v-slot:item.events_enabled="{ item }">
+                <v-icon v-if="item.events_enabled" size="small">fa fa-check</v-icon>
             </template>
             <template v-slot:item.actions="{ item }">
                 <div class="d-flex justify-end gap-1">
-
-                    <v-btn
-                        variant="plain" color="primary" size="small" icon
-                        @click="onEditItemBtnClicked(item)">
+                    <v-btn variant="plain" color="primary" size="small" @click="onEditItemBtnClicked(item)">
                         <v-icon>fa fa-pen</v-icon>
                         <v-tooltip activator="parent" location="bottom">Edit</v-tooltip>
                     </v-btn>
-
-                    <v-btn
-                        variant="plain" color="primary" size="small" icon
-                        @click="onDuplicateItemBtnClicked(item)">
-                        <v-icon>fa fa-clone</v-icon>
-                        <v-tooltip activator="parent" location="bottom">Duplicate</v-tooltip>
+                    <v-btn variant="plain" color="primary" size="small" @click="onImportItemBtnClicked(item)">
+                        <v-icon>fa fa-download</v-icon>
+                        <v-tooltip activator="parent" location="bottom">Import images</v-tooltip>
                     </v-btn>
-
-                    <v-btn
-                        variant="plain" color="red" size="small" icon
-                        @click="deleteItem(item)">
+                    <v-btn variant="plain" color="red" size="small" @click="onDeleteItemBtnClicked(item)">
                         <v-icon>fa fa-trash</v-icon>
                         <v-tooltip activator="parent" location="bottom">Delete</v-tooltip>
                     </v-btn>

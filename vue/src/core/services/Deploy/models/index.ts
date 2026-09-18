@@ -1,5 +1,6 @@
 export {AutoUpdate as AutoUpdate} from "./AutoUpdate";
 export {ContainerImage as ContainerImage} from "./ContainerImage";
+export {ContainerRegistry as ContainerRegistry} from "./ContainerRegistry";
 export {CronJob as CronJob} from "./CronJob";
 export {DatabaseService as DatabaseService} from "./DatabaseService";
 export {Deletion as Deletion} from "./Deletion";

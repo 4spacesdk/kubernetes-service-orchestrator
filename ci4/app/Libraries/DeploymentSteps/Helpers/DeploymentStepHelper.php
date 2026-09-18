@@ -22,6 +22,7 @@ use App\Libraries\DeploymentSteps\PersistentVolumeClaimStep;
 use App\Libraries\DeploymentSteps\PersistentVolumeStep;
 use App\Libraries\DeploymentSteps\RoleBindingStep;
 use App\Libraries\DeploymentSteps\RoleStep;
+use App\Libraries\DeploymentSteps\RegistryPullSecretStep;
 use App\Libraries\DeploymentSteps\ServiceAccountStep;
 use App\Libraries\DeploymentSteps\ServiceStep;
 use App\Models\DeploymentModel;
@@ -50,6 +51,10 @@ class DeploymentStepHelper {
         Role_Found = 'found',
         Role_NotFoundNotExpected = 'not-found-not-expected',
         Role_FoundNotExpected = 'found-not-expected';
+
+    const string
+        RegistryPullSecret_NotFound = 'not-found',
+        RegistryPullSecret_Found = 'found';
 
     const string
         ServiceAccount_NotFound = 'not-found',
@@ -139,6 +144,7 @@ class DeploymentStepHelper {
             DeploymentSteps::GatewayHttpRoute => new GatewayHttpRouteStep(),
 
             DeploymentSteps::Database => new DatabaseStep(),
+            DeploymentSteps::RegistryPullSecret => new RegistryPullSecretStep(),
             DeploymentSteps::ServiceAccount => new ServiceAccountStep(),
             DeploymentSteps::ClusterRole => new ClusterRoleStep(),
             DeploymentSteps::Role => new RoleStep(),

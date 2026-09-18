@@ -158,61 +158,41 @@ class PullContainerRegistriesTest extends DatabaseTestCase {
     }
 
     /**
-     * Subscribing is opt-in per image. An image that was never subscribed has no Pub/Sub
+     * Events are opt-in per registry connection. One that never enabled them has no Pub/Sub
      * topic behind it, so reading it would fail - and the customer never asked for it.
      */
-    public function testOnlyImagesWithRegistrySubscribeAreLookedAt(): void {
-        Fixtures::containerImage([
-            'name' => 'subscribed',
-            'registry_subscribe' => true,
-            'registry_provider' => \ContainerRegistries::Harbor,
-        ]);
+    public function testOnlyConnectionsWithEventsEnabledAreLookedAt(): void {
+        $this->artifactRegistry(['name' => 'with-events', 'events_enabled' => true]);
         // Two of them, so that reading the flag backwards gives a different count rather
         // than the same one.
-        Fixtures::containerImage([
-            'name' => 'unsubscribed',
-            'registry_subscribe' => false,
-            'registry_provider' => \ContainerRegistries::Harbor,
-        ]);
-        Fixtures::containerImage([
-            'name' => 'also-unsubscribed',
-            'registry_subscribe' => false,
-            'registry_provider' => \ContainerRegistries::Harbor,
-        ]);
+        $this->artifactRegistry(['name' => 'without-events', 'events_enabled' => false]);
+        $this->artifactRegistry(['name' => 'also-without-events', 'events_enabled' => false]);
 
         $log = $this->runTheJob();
 
-        $this->assertStringContainsString(
-            'found 1 container images with registry subscribe enabled',
-            $log
-        );
+        $this->assertStringContainsString('found 1 artifact registries with events enabled', $log);
     }
 
     /**
      * Only Google's Artifact Registry publishes to a Pub/Sub topic. Harbor and Azure are
-     * subscribed to by other means entirely, and pulling a Google queue for them would ask
-     * Google for a project that has nothing to do with the image.
+     * told about by webhooks, and pulling a Google queue for them would ask Google for a
+     * project that has nothing to do with them.
      */
-    public function testOnlyArtifactRegistryImagesContributeAProject(): void {
-        Fixtures::containerImage([
-            'name' => 'on-harbor',
-            'registry_subscribe' => true,
-            'registry_provider' => \ContainerRegistries::Harbor,
-            'registry_provider_gcloud_project' => 'not-a-google-project',
+    public function testOnlyArtifactRegistriesContributeAProject(): void {
+        Fixtures::containerRegistry([
+            'provider' => \ContainerRegistries::Harbor,
+            'gcloud_project' => 'not-a-google-project',
+            'events_enabled' => true,
         ]);
-        Fixtures::containerImage([
-            'name' => 'on-azure',
-            'registry_subscribe' => true,
-            'registry_provider' => \ContainerRegistries::AzureContainerRegistry,
-            'registry_provider_gcloud_project' => 'also-not-a-google-project',
+        Fixtures::containerRegistry([
+            'provider' => \ContainerRegistries::AzureContainerRegistry,
+            'gcloud_project' => 'also-not-a-google-project',
+            'events_enabled' => true,
         ]);
 
         $log = $this->runTheJob();
 
-        $this->assertStringContainsString(
-            'found 2 container images with registry subscribe enabled',
-            $log
-        );
+        $this->assertStringContainsString('found 0 artifact registries with events enabled', $log);
         $this->assertStringNotContainsString('ACR projects', $log);
     }
 
@@ -223,15 +203,27 @@ class PullContainerRegistriesTest extends DatabaseTestCase {
     public function testNothingSubscribedIsNotAnError(): void {
         $log = $this->runTheJob();
 
-        $this->assertStringContainsString(
-            'found 0 container images with registry subscribe enabled',
-            $log
-        );
+        $this->assertStringContainsString('found 0 artifact registries with events enabled', $log);
         $this->assertStringNotContainsString('ACR projects', $log);
     }
 
     /**
-     * The whole of `run()` on the path that matters: a subscribed Artifact Registry image
+     * Two connections into the same project share its topic, so the project is pulled once
+     * - pulling it twice would split its messages between the two reads for no gain.
+     */
+    public function testTwoConnectionsInOneProjectArePulledAsOne(): void {
+        $fakes = FakeIntegrations::install();
+        $this->artifactRegistry(['gcloud_registry_name' => 'one']);
+        $this->artifactRegistry(['gcloud_registry_name' => 'two']);
+
+        $log = $this->runTheJob();
+
+        $this->assertStringContainsString('found 1 ACR projects', $log);
+        $this->assertCount(5, $fakes->pubSub()->pulls);
+    }
+
+    /**
+     * The whole of `run()` on the path that matters: an Artifact Registry with events on
      * is found, its project is pulled, and the job writes what it saw.
      *
      * `run()` pulls five times two seconds apart. The suite makes `sleep()` instant inside
@@ -240,12 +232,7 @@ class PullContainerRegistriesTest extends DatabaseTestCase {
      */
     public function testAnArtifactRegistryProjectIsPulledFiveTimes(): void {
         $fakes = FakeIntegrations::install();
-        Fixtures::containerImage([
-            'registry_provider' => \ContainerRegistries::ArtifactContainerRegistry,
-            'registry_provider_gcloud_project' => 'the-project',
-            'registry_provider_gcloud_credentials' => '{}',
-            'registry_subscribe' => true,
-        ]);
+        $this->artifactRegistry();
 
         $log = $this->runTheJob();
 
@@ -261,12 +248,7 @@ class PullContainerRegistriesTest extends DatabaseTestCase {
     public function testAFailingPullIsWrittenToTheLogRatherThanEndingTheRun(): void {
         $fakes = FakeIntegrations::install();
         $fakes->pubSub()->failPullWith = new \Exception('the key has expired');
-        Fixtures::containerImage([
-            'registry_provider' => \ContainerRegistries::ArtifactContainerRegistry,
-            'registry_provider_gcloud_project' => 'the-project',
-            'registry_provider_gcloud_credentials' => '{}',
-            'registry_subscribe' => true,
-        ]);
+        $this->artifactRegistry();
 
         $log = $this->runTheJob();
 
@@ -281,6 +263,18 @@ class PullContainerRegistriesTest extends DatabaseTestCase {
      * is a process-wide static, so it is cleared first - otherwise each run carries every
      * earlier run's lines and an assertion reads the wrong answer.
      */
+    /**
+     * @param array<string, mixed> $overrides
+     */
+    private function artifactRegistry(array $overrides = []): \App\Entities\ContainerRegistry {
+        return Fixtures::containerRegistry(array_merge([
+            'provider' => \ContainerRegistries::ArtifactContainerRegistry,
+            'gcloud_project' => 'the-project',
+            'gcloud_credentials' => '{}',
+            'events_enabled' => true,
+        ], $overrides));
+    }
+
     private function runTheJob(): string {
         $store = (new \ReflectionClass(\DebugTool\Data::class))->getProperty('store');
         $store->setValue(null, ['status' => null]);

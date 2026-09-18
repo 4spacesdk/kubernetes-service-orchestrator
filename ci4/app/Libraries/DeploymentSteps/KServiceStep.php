@@ -14,6 +14,7 @@ use App\Libraries\DeploymentSteps\Helpers\DeploymentStepLevels;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepTriggers;
 use App\Libraries\Kubernetes\CustomResourceDefinitions\K8sKNativeService;
+use App\Libraries\Kubernetes\ImagePullSecrets;
 use App\Libraries\Kubernetes\KubeAuth;
 use App\Models\ContainerImageModel;
 use App\Models\DeploymentSpecificationDeploymentAnnotationModel;
@@ -408,15 +409,6 @@ class KServiceStep extends BaseDeploymentStep {
             $template->setAttribute('spec.containerConcurrency', (int)$deployment->knative_concurrency_limit_hard);
         }
 
-        // Image Pull Secrets
-        if (strlen($spec->container_image->pull_secret) > 0) {
-            $template->setAttribute('spec.imagePullSecrets', [
-                [
-                    'name' => $spec->container_image->pull_secret,
-                ]
-            ]);
-        }
-
         // Pod Security Context
         if (strlen($spec->container_image->security_context_fs_group) > 0) {
             $template->setAttribute('spec.securityContext.fsGroup', (int)$spec->container_image->security_context_fs_group);
@@ -430,11 +422,19 @@ class KServiceStep extends BaseDeploymentStep {
             ->where('deployment_specification_id', $spec->id)
             ->orderBy('position', 'asc')
             ->find();
+        $podImages = [$spec->container_image];
         foreach ($deploymentSpecificationInitContainers as $deploymentSpecificationInitContainer) {
             $initContainers[] = $deploymentSpecificationInitContainer->init_container->toKubernetesResource($deployment)->toArray();
+            $podImages[] = $deploymentSpecificationInitContainer->init_container->container_image;
         }
         if (count($initContainers) > 0) {
             $template->setAttribute('spec.initContainers', $initContainers);
+        }
+
+        // Image Pull Secrets
+        $imagePullSecrets = ImagePullSecrets::of(...$podImages);
+        if (count($imagePullSecrets) > 0) {
+            $template->setAttribute('spec.imagePullSecrets', $imagePullSecrets);
         }
 
         // Service Account

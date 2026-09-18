@@ -38,9 +38,9 @@ class ContainerImageIntegrationsTest extends DatabaseTestCase {
         ];
 
         foreach ($expected as $provider => $class) {
-            $image = Fixtures::containerImage(['registry_provider' => $provider]);
+            $image = $this->imageIn(['provider' => $provider]);
 
-            $this->assertInstanceOf($class, $image->getContainerRegistry(), $provider);
+            $this->assertInstanceOf($class, $image->getRegistryClient(), $provider);
         }
     }
 
@@ -84,17 +84,16 @@ class ContainerImageIntegrationsTest extends DatabaseTestCase {
     }
 
     /**
-     * An image with nothing configured resolves to null on all three. Every caller has to
-     * handle that, and several do not - see `getTags()` below.
+     * An image with nothing configured resolves to null on all three - an image pulled from
+     * a public registry has no connection at all.
      */
     public function testAnImageWithoutIntegrationsResolvesToNothing(): void {
         $image = Fixtures::containerImage([
-            'registry_provider' => '',
             'version_control_provider' => '',
             'commit_identification_method' => '',
         ]);
 
-        $this->assertNull($image->getContainerRegistry());
+        $this->assertNull($image->getRegistryClient());
         $this->assertNull($image->getVersionControlSystem());
         $this->assertNull($image->getCommitIdentification());
     }
@@ -104,9 +103,20 @@ class ContainerImageIntegrationsTest extends DatabaseTestCase {
      * throwing. That matters because the column is free text.
      */
     public function testAnUnknownProviderIsTreatedAsNone(): void {
-        $image = Fixtures::containerImage(['registry_provider' => 'some-registry-we-do-not-support']);
+        $image = $this->imageIn(['provider' => 'some-registry-we-do-not-support']);
 
-        $this->assertNull($image->getContainerRegistry());
+        $this->assertNull($image->getRegistryClient());
+    }
+
+    /**
+     * A connection is soft-deleted, so an image could in principle point at one that is
+     * gone. The model refuses to delete one that is in use; this is the fallback.
+     */
+    public function testAnImageWhoseConnectionIsGoneHasNoRegistry(): void {
+        $image = $this->imageIn();
+        $this->db->table('container_registries')->where('id', $image->container_registry_id)->delete();
+
+        $this->assertNull($image->getRegistryClient());
     }
 
     // </editor-fold>
@@ -116,25 +126,18 @@ class ContainerImageIntegrationsTest extends DatabaseTestCase {
     public function testTagsComeFromTheRegistry(): void {
         $fakes = FakeIntegrations::install();
         $fakes->tags = ['1.0.0', '1.1.0', 'latest'];
-        $image = Fixtures::containerImage(['registry_provider' => \ContainerRegistries::Harbor]);
+        $image = $this->imageIn();
 
         $this->assertSame(['1.0.0', '1.1.0', 'latest'], $image->getTags());
-        $this->assertSame('team/app', $image->getRegistryRepoName());
+        $this->assertSame('team/app', $image->getRegistryClient()->getRepoName($image->url));
     }
 
     /**
-     * Today's behaviour, and the reason the null case above is worth stating: `getTags()`
-     * calls straight through without checking, so an image with no registry configured
-     * fails with a null call rather than an empty list or a message. FEAT-1 puts this
-     * behind a button, where the error is what the user will see.
+     * No registry, no tags. This used to end in a call on null - an image from a public
+     * registry has no connection, so it is an ordinary case, not an error.
      */
-    public function testTagsOnAnImageWithoutARegistryFailOnNull(): void {
-        $image = Fixtures::containerImage(['registry_provider' => '']);
-
-        $this->expectException(\Error::class);
-        $this->expectExceptionMessage('on null');
-
-        $image->getTags();
+    public function testTagsOnAnImageWithoutARegistryAreEmpty(): void {
+        $this->assertSame([], Fixtures::containerImage()->getTags());
     }
 
     /**
@@ -144,11 +147,11 @@ class ContainerImageIntegrationsTest extends DatabaseTestCase {
     public function testTheFakeIsWhatGetsAsked(): void {
         $fakes = FakeIntegrations::install();
         $fakes->tags = [];
-        $image = Fixtures::containerImage(['name' => 'the-image', 'registry_provider' => \ContainerRegistries::Harbor]);
+        $image = $this->imageIn(['name' => 'the-registry']);
 
         $image->getTags();
 
-        $this->assertSame(['the-image'], $fakes->registryLookups);
+        $this->assertSame(['the-registry'], $fakes->registryLookups);
     }
 
     // </editor-fold>
@@ -156,15 +159,15 @@ class ContainerImageIntegrationsTest extends DatabaseTestCase {
     // <editor-fold desc="Subscribing to registry pushes">
 
     /**
-     * Turning on `registry_subscribe` is what makes a registry tell kso about new tags, and
-     * it happens while the image is being saved - so saving a container image through the
-     * API reaches Google Cloud. Worth knowing, and worth having under test: nothing else
-     * creates the subscription the cron job later reads.
+     * Turning on events is what makes an Artifact Registry tell kso about new tags, and it
+     * happens while the connection is being saved - so saving one through the API reaches
+     * Google Cloud. Nothing else creates the subscription the cron job later reads.
      */
-    public function testSubscribingCreatesTheTopicAndSubscription(): void {
+    public function testEnablingEventsCreatesTheTopicAndSubscription(): void {
         $fakes = FakeIntegrations::install();
+        $fakes->realRegistryClients = true;
 
-        $this->saveSubscribingImage();
+        $this->saveWithEvents();
 
         $this->assertSame(
             [['project' => 'the-project', 'topic' => GcrSubscription::TOPIC]],
@@ -186,8 +189,9 @@ class ContainerImageIntegrationsTest extends DatabaseTestCase {
      */
     public function testItSubscribesUnderTheNameTheCronJobReads(): void {
         $fakes = FakeIntegrations::install();
+        $fakes->realRegistryClients = true;
 
-        $this->saveSubscribingImage();
+        $this->saveWithEvents();
 
         $this->assertSame(
             GcrSubscription::name(),
@@ -202,16 +206,18 @@ class ContainerImageIntegrationsTest extends DatabaseTestCase {
      */
     public function testOnlyArtifactRegistrySubscribes(): void {
         $fakes = FakeIntegrations::install();
+        $fakes->realRegistryClients = true;
 
-        $this->saveSubscribingImage(['registry_provider' => \ContainerRegistries::Harbor]);
+        $this->saveWithEvents(['provider' => \ContainerRegistries::Harbor]);
 
         $this->assertSame([], $fakes->pubSub()->topicsEnsured);
     }
 
-    public function testAnImageThatIsNotSubscribingTouchesNothing(): void {
+    public function testAConnectionWithoutEventsTouchesNothing(): void {
         $fakes = FakeIntegrations::install();
+        $fakes->realRegistryClients = true;
 
-        $this->saveSubscribingImage(['registry_subscribe' => false]);
+        $this->saveWithEvents(['events_enabled' => false]);
 
         $this->assertSame([], $fakes->pubSub()->topicsEnsured);
     }
@@ -219,18 +225,26 @@ class ContainerImageIntegrationsTest extends DatabaseTestCase {
     /**
      * @param array<string, mixed> $overrides
      */
-    private function saveSubscribingImage(array $overrides = []): void {
-        $image = Fixtures::containerImage(array_merge([
-            'registry_provider' => \ContainerRegistries::ArtifactContainerRegistry,
-            'registry_provider_gcloud_project' => 'the-project',
-            'registry_provider_gcloud_credentials' => '{}',
-            'registry_subscribe' => true,
+    private function saveWithEvents(array $overrides = []): void {
+        $registry = Fixtures::containerRegistry(array_merge([
+            'provider' => \ContainerRegistries::ArtifactContainerRegistry,
+            'gcloud_project' => 'the-project',
+            'gcloud_credentials' => '{}',
         ], $overrides));
 
         // postSave() runs on the REST path, not on a plain save, and it only looks when the
         // request actually carried the flag.
-        \App\Entities\ContainerImage::patch($image->id, [
-            'registry_subscribe' => $overrides['registry_subscribe'] ?? true,
+        \App\Entities\ContainerRegistry::patch($registry->id, [
+            'events_enabled' => $overrides['events_enabled'] ?? true,
+        ]);
+    }
+
+    /**
+     * @param array<string, mixed> $registry
+     */
+    private function imageIn(array $registry = []): \App\Entities\ContainerImage {
+        return Fixtures::containerImage([
+            'container_registry_id' => Fixtures::containerRegistry($registry)->id,
         ]);
     }
 

@@ -1,13 +1,13 @@
 <?php namespace App\Commands;
 
 use App\Entities\AutoUpdate;
-use App\Entities\ContainerImage;
+use App\Entities\ContainerRegistry;
 use App\Entities\CronJob;
 use App\Libraries\GoogleCloud\GcrSubscription;
 use App\Libraries\ZMQ\ChangeEvent;
 use App\Libraries\ZMQ\Events;
 use App\Libraries\ZMQ\ZMQProxy;
-use App\Models\ContainerImageModel;
+use App\Models\ContainerRegistryModel;
 use CodeIgniter\CLI\BaseCommand;
 use DebugTool\Data;
 
@@ -31,22 +31,20 @@ class PullContainerRegistries extends BaseCommand {
         $job->last_run = date('Y-m-d H:i:s');
         $job->save();
 
-        /** @var ContainerImage $containerImages */
-        $containerImages = (new ContainerImageModel())
-            ->where('registry_subscribe', true)
+        /** @var ContainerRegistry $registries */
+        $registries = (new ContainerRegistryModel())
+            ->where('events_enabled', true)
+            ->where('provider', \ContainerRegistries::ArtifactContainerRegistry)
             ->find();
-        Data::debug('found', $containerImages->count(), 'container images with registry subscribe enabled');
+        Data::debug('found', $registries->count(), 'artifact registries with events enabled');
 
         $hasCreatedAutoUpdate = false;
 
         try {
+            // One pull per project: the topic is per project, whichever repository published.
             $acrProjects = [];
-            foreach ($containerImages as $image) {
-                switch ($image->registry_provider) {
-                    case \ContainerRegistries::ArtifactContainerRegistry:
-                        $acrProjects[$image->registry_provider_gcloud_project] = $image->registry_provider_gcloud_credentials;
-                        break;
-                }
+            foreach ($registries as $registry) {
+                $acrProjects[$registry->gcloud_project] = (string) $registry->gcloud_credentials;
             }
 
             if (count($acrProjects)) {

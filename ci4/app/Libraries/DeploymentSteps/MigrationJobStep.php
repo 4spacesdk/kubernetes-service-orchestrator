@@ -12,6 +12,7 @@ use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepLevels;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepTriggers;
+use App\Libraries\Kubernetes\ImagePullSecrets;
 use App\Libraries\Kubernetes\KubeAuth;
 use App\Libraries\Kubernetes\KubeHelper;
 use App\Models\ContainerImageModel;
@@ -308,8 +309,10 @@ class MigrationJobStep extends BaseDeploymentStep {
             ->where('include_in_migration_job', true)
             ->orderBy('position', 'asc')
             ->find();
+        $podImages = [$containerImage];
         foreach ($deploymentSpecificationInitContainers as $deploymentSpecificationInitContainer) {
             $initContainers[] = $deploymentSpecificationInitContainer->init_container->toKubernetesResource($deployment);
+            $podImages[] = $deploymentSpecificationInitContainer->init_container->container_image;
         }
 
         $extraEnvVars = [];
@@ -382,12 +385,9 @@ class MigrationJobStep extends BaseDeploymentStep {
             $template->setSpec('securityContext.fsGroup', (int)$containerImage->security_context_fs_group);
         }
 
-        if (strlen($containerImage->pull_secret) > 0) {
-            $template->setSpec('imagePullSecrets', [
-                [
-                    'name' => $containerImage->pull_secret,
-                ],
-            ]);
+        $imagePullSecrets = ImagePullSecrets::of(...$podImages);
+        if (count($imagePullSecrets) > 0) {
+            $template->setSpec('imagePullSecrets', $imagePullSecrets);
         }
 
         if (count($initContainers) > 0) {

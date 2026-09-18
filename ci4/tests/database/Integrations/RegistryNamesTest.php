@@ -11,7 +11,7 @@ use App\Libraries\VersionControlSystems\GithubVersionControl;
  * The part of the registry and version control clients that is not a network call.
  *
  * Each client turns the image url into the names its API wants, and each does it with
- * `substr`, `strpos` and `explode` against a prefix stored on the image. That arithmetic is
+ * `substr`, `strpos` and `explode` against a prefix stored on the registry connection. That arithmetic is
  * the only thing in these files that can be wrong without anyone noticing: a repo name that
  * comes out one character short still looks like a repo name, and the failure appears as
  * "no tags found" rather than as an error.
@@ -23,13 +23,10 @@ use App\Libraries\VersionControlSystems\GithubVersionControl;
 class RegistryNamesTest extends DatabaseTestCase {
 
     public function testHarborSplitsTheProjectFromTheRepository(): void {
-        $registry = new HarborRegistry(Fixtures::containerImage([
-            'url' => 'harbor.example.org/team-a/api',
-            'registry_provider_harbor_url' => 'harbor.example.org',
-        ]));
+        $registry = new HarborRegistry(Fixtures::containerRegistry(['harbor_url' => 'harbor.example.org']));
 
-        $this->assertSame('team-a', $registry->getProjectName());
-        $this->assertSame('api', $registry->getRepoName());
+        $this->assertSame('team-a', $registry->getProjectName('harbor.example.org/team-a/api'));
+        $this->assertSame('api', $registry->getRepoName('harbor.example.org/team-a/api'));
     }
 
     /**
@@ -37,34 +34,59 @@ class RegistryNamesTest extends DatabaseTestCase {
      * and only the first segment is the project.
      */
     public function testHarborKeepsAPathInsideTheRepositoryName(): void {
-        $registry = new HarborRegistry(Fixtures::containerImage([
-            'url' => 'harbor.example.org/team-a/group/api',
-            'registry_provider_harbor_url' => 'harbor.example.org',
-        ]));
+        $registry = new HarborRegistry(Fixtures::containerRegistry(['harbor_url' => 'harbor.example.org']));
 
-        $this->assertSame('team-a', $registry->getProjectName());
-        $this->assertSame('group/api', $registry->getRepoName());
+        $this->assertSame('team-a', $registry->getProjectName('harbor.example.org/team-a/group/api'));
+        $this->assertSame('group/api', $registry->getRepoName('harbor.example.org/team-a/group/api'));
     }
 
     public function testAzureStripsTheRegistryName(): void {
-        $registry = new AzureContainerRegistry(Fixtures::containerImage([
-            'url' => 'acme.azurecr.io/team/api',
-            'registry_provider_azure_registry_name' => 'acme.azurecr.io',
+        $registry = new AzureContainerRegistry(Fixtures::containerRegistry([
+            'provider' => \ContainerRegistries::AzureContainerRegistry,
+            'azure_registry_name' => 'acme.azurecr.io',
         ]));
 
-        $this->assertSame('team/api', $registry->getRepoName());
+        $this->assertSame('team/api', $registry->getRepoName('acme.azurecr.io/team/api'));
+    }
+
+    public function testArtifactRegistryStripsTheRepositoryPrefix(): void {
+        $registry = $this->artifactRegistry('a-repo');
+
+        $this->assertSame('europe-docker.pkg.dev/a-project/a-repo', $registry->getUrlPrefix());
+        $this->assertSame('api', $registry->getRepoName('europe-docker.pkg.dev/a-project/a-repo/api'));
     }
 
     /**
-     * Artifact Registry takes the last segment and nothing else, where the other two work
-     * from a configured prefix. Three registries, three different rules.
+     * It used to take the last segment and nothing else, so `team/api` was looked up as
+     * `api` and found no tags. The api wants the slash escaped.
      */
-    public function testArtifactRegistryTakesTheLastSegment(): void {
-        $registry = new GoogleCloudArtifactRegistry(Fixtures::containerImage([
-            'url' => 'europe-docker.pkg.dev/a-project/a-repo/api',
-        ]));
+    public function testArtifactRegistryKeepsAPathAndEscapesItForTheApi(): void {
+        $registry = $this->artifactRegistry('a-repo');
+        $url = 'europe-docker.pkg.dev/a-project/a-repo/team/api';
 
-        $this->assertSame('api', $registry->getRepoName());
+        $this->assertSame('team/api', $registry->getRepoName($url));
+        $this->assertSame(
+            'projects/a-project/locations/europe/repositories/a-repo/packages/team%2Fapi',
+            $registry->packageName($url)
+        );
+    }
+
+    /**
+     * A gcr.io-domain repository - what Container Registry was migrated into - keeps the
+     * old image urls, which start with the host and the project.
+     */
+    public function testAGcrDomainRepositoryUsesTheOldUrlForm(): void {
+        $registry = $this->artifactRegistry('eu.gcr.io');
+
+        $this->assertSame('eu.gcr.io/a-project', $registry->getUrlPrefix());
+        $this->assertSame('admin-client', $registry->getRepoName('eu.gcr.io/a-project/admin-client'));
+    }
+
+    /**
+     * An url written some other way resolves as it always did, to its last segment.
+     */
+    public function testAnUrlOutsideThePrefixFallsBackToItsLastSegment(): void {
+        $this->assertSame('api', $this->artifactRegistry('a-repo')->getRepoName('somewhere.else/x/api'));
     }
 
     public function testGithubSplitsOwnerFromRepository(): void {
@@ -82,6 +104,15 @@ class RegistryNamesTest extends DatabaseTestCase {
         $image = Fixtures::containerImage(['version_control_repository_name' => 'kso']);
 
         $this->assertSame(['', 'kso'], $this->ownerAndRepo($image));
+    }
+
+    private function artifactRegistry(string $repository): GoogleCloudArtifactRegistry {
+        return new GoogleCloudArtifactRegistry(Fixtures::containerRegistry([
+            'provider' => \ContainerRegistries::ArtifactContainerRegistry,
+            'gcloud_project' => 'a-project',
+            'gcloud_location' => 'europe',
+            'gcloud_registry_name' => $repository,
+        ]));
     }
 
     /**

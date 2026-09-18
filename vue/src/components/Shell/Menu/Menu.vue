@@ -126,6 +126,11 @@ const categories = ref<MenuCategory[]>([
                 permissions: [RbacPermissions.Developer],
             },
             {
+                title: "Container Registries",
+                url: "/setup/container-registries",
+                permissions: [RbacPermissions.Developer],
+            },
+            {
                 title: "Container Images",
                 url: "/setup/container-images",
                 permissions: [RbacPermissions.Developer],
