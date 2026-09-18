@@ -34,8 +34,19 @@ class ZMQProxyTest extends CIUnitTestCase {
     /**
      * An endpoint inside this process. `inproc` needs the bind before the connect, and both
      * sockets have to come from the same context.
+     *
+     * A new name for every test. `ZMQContext` is persistent by default, so the tests share
+     * one, and ZeroMQ releases a bound endpoint in the background after the socket is gone.
+     * With a fixed name the next test could bind before that had happened - it did in
+     * Cloud Build, as "Address in use", and never locally.
      */
-    private const Endpoint = 'inproc://kso-zmq-proxy-test';
+    private string $endpoint;
+
+    protected function setUp(): void {
+        parent::setUp();
+
+        $this->endpoint = 'inproc://kso-zmq-proxy-test-' . bin2hex(random_bytes(8));
+    }
 
     // <editor-fold desc="Sending">
 
@@ -182,14 +193,14 @@ class ZMQProxyTest extends CIUnitTestCase {
 
     private function listenOn(\ZMQContext $context): \ZMQSocket {
         $socket = $context->getSocket(\ZMQ::SOCKET_PULL);
-        $socket->bind(self::Endpoint);
+        $socket->bind($this->endpoint);
 
         return $socket;
     }
 
     private function senderOn(\ZMQContext $context): \ZMQSocket {
         $socket = $context->getSocket(\ZMQ::SOCKET_PUSH);
-        $socket->connect(self::Endpoint);
+        $socket->connect($this->endpoint);
 
         return $socket;
     }
