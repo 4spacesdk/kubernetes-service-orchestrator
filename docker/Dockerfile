@@ -1,6 +1,11 @@
-# Build Vue app
-FROM node:16.13.1-alpine AS build-stage
+# Node for the Vue app. One stage for both uses: the production build below, and the
+# `vue` service in docker-compose.yml, where vite runs in development. So the Node that
+# builds what ships is the Node a developer runs, and neither depends on the machine.
+FROM node:16.13.1-alpine AS vue-toolchain
 WORKDIR /vue
+
+# Build Vue app
+FROM vue-toolchain AS build-stage
 COPY vue/package*.json ./
 RUN npm install
 COPY vue /vue
@@ -58,7 +63,7 @@ RUN apk add --update  \
     go
 
 RUN docker-php-ext-configure intl
-RUN docker-php-ext-install mysqli pdo pdo_mysql intl zip pcntl soap sockets calendar posix ctype gmp
+RUN docker-php-ext-install -j$(nproc) mysqli pdo pdo_mysql intl zip pcntl soap sockets calendar posix ctype gmp
 RUN docker-php-ext-enable pdo_mysql intl posix
 RUN docker-php-ext-configure calendar
 
@@ -111,7 +116,7 @@ RUN wget https://github.com/zeromq/zeromq4-1/releases/download/v4.1.8/zeromq-4.1
      && tar -xvzf zeromq-4.1.8.tar.gz \
      && cd zeromq-4.1.8 \
      && ./configure \
-     && make \
+     && make -j$(nproc) \
      && make install \
      && ldconfig / \
      && cd .. \
@@ -169,17 +174,6 @@ RUN if [[ "$GKE_AUTH_ENABLED" == "TRUE" ]] ; then GOBIN=/usr/local/bin go instal
 # Install composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin/ --filename=composer
 
-# NPM
-ENV NODE_VERSION=16.13.1
-RUN curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.34.0/install.sh | sh
-ENV NVM_DIR=/root/.nvm
-RUN . "$NVM_DIR/nvm.sh" && nvm install ${NODE_VERSION}
-RUN . "$NVM_DIR/nvm.sh" && nvm use v${NODE_VERSION}
-RUN . "$NVM_DIR/nvm.sh" && nvm alias default v${NODE_VERSION}
-ENV PATH="/root/.nvm/versions/node/v${NODE_VERSION}/bin/:${PATH}"
-RUN node --version
-RUN npm --version
-
 RUN rm -rf /tmp/* /var/cache/apk/*
 
 # Configure apache
@@ -189,24 +183,31 @@ COPY docker/apache/httpd.conf /etc/apache2/httpd.conf
 RUN ln -sf /dev/stdout /var/log/apache2/access.log \
     && ln -sf /dev/stderr /var/log/apache2/error.log
 
-# Copy application files
 ENV APP_HOME /var/www/html
+RUN mkdir -p $APP_HOME && chown www-data:www-data /var/www $APP_HOME
+
+# Composer dependencies before the application files, so a change to the code reuses the
+# cached vendor layers - they are only reinstalled when a composer.lock changes.
+# ext-sqlsrv is required in composer.json but absent on arm64, see the SQLSRV layer above.
+COPY --chown=www-data ci4/composer.json ci4/composer.lock $APP_HOME/ci4/
+RUN cd $APP_HOME/ci4 && \
+  if [ "$TARGETARCH" = "amd64" ] || [ -z "$TARGETARCH" ]; then composer install; \
+  else composer install --ignore-platform-req=ext-sqlsrv; fi
+COPY --chown=www-data zmq-client/composer.json zmq-client/composer.lock $APP_HOME/zmq-client/
+RUN cd $APP_HOME/zmq-client && composer install
+COPY --chown=www-data zmq-server/composer.json zmq-server/composer.lock $APP_HOME/zmq-server/
+RUN cd $APP_HOME/zmq-server && composer install
+
+# Copy application files
 COPY --chown=www-data ci4 $APP_HOME/ci4
 COPY --chown=www-data zmq-client $APP_HOME/zmq-client
 COPY --chown=www-data zmq-server $APP_HOME/zmq-server
 COPY --chown=www-data --from=build-stage /vue/dist $APP_HOME/vue
-COPY docker/apache/index.php $APP_HOME
+COPY --chown=www-data docker/apache/index.php $APP_HOME
 
-# Change ownership of our applications
-RUN chown -R www-data:www-data /var/www
-
-# Install componser dependencies
-# ext-sqlsrv is required in composer.json but absent on arm64, see the SQLSRV layer above.
-RUN cd $APP_HOME/ci4 && \
-  if [ "$TARGETARCH" = "amd64" ] || [ -z "$TARGETARCH" ]; then composer install; \
-  else composer install --ignore-platform-req=ext-sqlsrv; fi
-RUN cd $APP_HOME/zmq-client && composer install
-RUN cd $APP_HOME/zmq-server && composer install
+# CodeIgniter opens its file cache on every boot, spark included, and stops if the
+# directory is missing. Its contents are gitignored, so do not rely on the checkout.
+RUN mkdir -p $APP_HOME/ci4/writable/cache && chown www-data:www-data $APP_HOME/ci4/writable/cache
 
 # Set TAG_NAME as Environment Variable
 ARG BUILD_TAG_NAME=latest

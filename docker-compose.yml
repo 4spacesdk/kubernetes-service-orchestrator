@@ -15,7 +15,6 @@ services:
 
     ports:
       - "${KSO_CI4_PORT}:80"
-      - "${KSO_VUE_PORT}:8901"
       - "${KSO_ZMQ_PORT}:9100"
 
     environment:
@@ -36,6 +35,31 @@ services:
 
     volumes:
       - ./:/var/www/html:delegated
+
+    networks:
+      - deploy-service-network
+
+  # Vite and npm. Built from the stage that builds the production Vue app, so the two use
+  # the same Node. Idles until the npm scripts exec into it.
+  vue:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: vue-toolchain
+
+    container_name: 4s-deploy-service-vue
+    restart: unless-stopped
+    tty: true
+    command: tail -f /dev/null
+
+    working_dir: /vue
+
+    ports:
+      # vite listens on SERVER_PORT from vue/.env
+      - "${KSO_VUE_PORT:-8951}:8901"
+
+    volumes:
+      - ./vue:/vue:delegated
 
     networks:
       - deploy-service-network

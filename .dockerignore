@@ -1,0 +1,17 @@
+# The build context holds what a clean checkout holds, so an image built on a developer's
+# machine is the image Cloud Build makes. Dependencies are installed inside the image, and
+# anything a running container wrote belongs to that container.
+.git
+.idea
+.env
+**/node_modules
+**/vendor
+ci4/.env
+ci4/build
+ci4/writable/cache/*
+ci4/writable/debugbar/*
+ci4/writable/logs/*
+ci4/writable/session/*
+ci4/writable/tmp/*
+ci4/writable/uploads/*
+!ci4/writable/*/index.html
