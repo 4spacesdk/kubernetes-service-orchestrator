@@ -36,9 +36,6 @@ class SystemTest extends CIUnitTestCase {
                 'is_network_contour_supported',
                 'is_network_gateway_api_supported',
                 'hosting_provider',
-                'github_app_id',
-                'github_app_slug',
-                'github_app_installation_id',
             ],
             array_keys($system->toPublicArray())
         );
@@ -52,16 +49,12 @@ class SystemTest extends CIUnitTestCase {
     public function testPublicArrayCastsRatherThanPassingDatabaseStringsOn(): void {
         $system = new System();
         $system->id = '1';
-        $system->github_app_id = '3998914';
-        $system->github_app_installation_id = '138891329';
         $system->is_network_nginx_ingress_supported = '1';
         $system->is_network_istio_supported = '0';
 
         $public = $system->toPublicArray();
 
         $this->assertSame(1, $public['id']);
-        $this->assertSame(3998914, $public['github_app_id']);
-        $this->assertSame(138891329, $public['github_app_installation_id']);
         $this->assertTrue($public['is_network_nginx_ingress_supported']);
         $this->assertFalse($public['is_network_istio_supported']);
     }
@@ -75,14 +68,6 @@ class SystemTest extends CIUnitTestCase {
         $system->is_network_contour_supported = false;
         $system->is_network_gateway_api_supported = true;
         $system->hosting_provider = 'gke';
-
-        $system->github_app_id = 3998914;
-        $system->github_app_slug = 'kso-example';
-        $system->github_app_installation_id = 138891329;
-        $system->github_app_client_id = 'Iv23liExample';
-        $system->github_app_client_secret = 'not-a-real-secret';
-        $system->github_app_private_key = '-----BEGIN RSA PRIVATE KEY-----not-a-real-key';
-        $system->github_app_webhook_secret = 'not-a-real-webhook-secret';
 
         return $system;
     }

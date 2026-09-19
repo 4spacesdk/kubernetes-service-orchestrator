@@ -27,6 +27,7 @@ class DeletionModel extends Model {
         PodioIntegrationModel::class,
         GatewayModel::class,
         ContainerRegistryModel::class,
+        GithubIntegrationModel::class,
     ];
 
 }

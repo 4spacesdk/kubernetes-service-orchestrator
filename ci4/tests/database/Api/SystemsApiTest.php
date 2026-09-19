@@ -9,10 +9,9 @@ use DebugTool\Data;
 /**
  * The Systems endpoints - the System page's save, and what comes back from it.
  *
- * The System row holds the GitHub App credentials: the private key, the client secret and
- * the webhook secret. They are the keys to every customer repository kso can reach, and
- * SEC-1 was them going out over the API. The fix was `System::toPublicArray()`, an allow
- * list, and `Systems::_setResource()`, which routes every System response through it.
+ * The System row held the GitHub App credentials until INT-2 moved them to
+ * `GithubIntegration`, and SEC-1 was them going out over the API. The fix was
+ * `System::toPublicArray()`, an allow list, which every System response goes through.
  *
  * **An allow list is only worth what its test asserts.** Checking that three named
  * credentials are absent proves nothing about the fourth one somebody adds next year, so
@@ -26,7 +25,7 @@ use DebugTool\Data;
 class SystemsApiTest extends ControllerTestCase {
 
     /**
-     * Exactly the nine fields the System page is allowed to see, in the order the allow
+     * Exactly the six fields the System page is allowed to see, in the order the allow
      * list gives them.
      *
      * Pinned rather than derived. If this fails because a field was added to
@@ -40,15 +39,11 @@ class SystemsApiTest extends ControllerTestCase {
         'is_network_contour_supported',
         'is_network_gateway_api_supported',
         'hosting_provider',
-        'github_app_id',
-        'github_app_slug',
-        'github_app_installation_id',
     ];
 
     /**
      * Saving the System page answers with the row, and the browser needs that answer to
-     * redraw the form. It must be the allow list and nothing beyond it - the entity that
-     * was saved carries the private key in the very next column.
+     * redraw the form. It must be the allow list and nothing beyond it.
      */
     public function testSavingTheSystemAnswersWithTheAllowListAndNothingElse(): void {
         $this->aFullyConfiguredSystem();
@@ -95,12 +90,6 @@ class SystemsApiTest extends ControllerTestCase {
 
         $body = (string) $this->saveResponse(['hosting_provider' => \HostingProviders::Gke]);
 
-        // Against the serialised body, not the keys: a credential that arrived as a nested
-        // object or under an unexpected key would still be in the text.
-        $this->assertStringNotContainsString('BEGIN RSA PRIVATE KEY', $body);
-        $this->assertStringNotContainsString('the-client-secret', $body);
-        $this->assertStringNotContainsString('the-webhook-secret', $body);
-
         foreach (array_keys(json_decode($body, true)['resource']) as $key) {
             $this->assertDoesNotMatchRegularExpression(
                 '/secret|private_key|credential|password|token/i',
@@ -108,21 +97,6 @@ class SystemsApiTest extends ControllerTestCase {
                 "the system save returned a field called {$key}"
             );
         }
-    }
-
-    /**
-     * The three identifiers that are *not* credentials have to come back, or the System
-     * page loses them on every save and the container image dialog has no installation to
-     * list repositories from.
-     */
-    public function testTheGithubIdentifiersSurviveTheAllowList(): void {
-        $this->aFullyConfiguredSystem();
-
-        $system = $this->save(['hosting_provider' => \HostingProviders::Gke])['resource'];
-
-        $this->assertSame(4711, $system['github_app_id']);
-        $this->assertSame('kso-deployer', $system['github_app_slug']);
-        $this->assertSame(815, $system['github_app_installation_id']);
     }
 
     /**
@@ -141,45 +115,30 @@ class SystemsApiTest extends ControllerTestCase {
         $this->assertTrue($system['is_network_nginx_ingress_supported']);
         $this->assertFalse($system['is_network_istio_supported']);
         $this->assertIsInt($system['id']);
-        $this->assertIsInt($system['github_app_id']);
-        $this->assertIsInt($system['github_app_installation_id']);
         $this->assertIsString($system['hosting_provider']);
     }
 
     /**
-     * **SEC-1 is not fully closed.** `PATCH /systems` without an id is a route of its own,
-     * and it takes a list of rows rather than one. That path does not go through
-     * `_setResource()` at all - the trait calls `_setResources()`, which the controller
-     * does not override - so it answers with the whole entity, private key included, to
-     * anyone holding a token.
-     *
-     * This is today's behaviour, asserted so that it is a decision rather than an
-     * oversight. **Fixing it should break this test**: replace it with the allow list, the
-     * way the single-row save above is checked.
+     * `PATCH /systems` without an id is a route of its own, and it answers with a list
+     * rather than one row. It went through `_setResources()`, which was not overridden, and
+     * handed the GitHub App private key to anyone holding a token - SEC-1's third way out.
      */
-    public function testTheBulkSaveRouteStillHandsBackTheGithubPrivateKey(): void {
+    public function testTheBulkSaveRouteAnswersWithTheAllowListToo(): void {
         $this->aFullyConfiguredSystem();
 
         $body = json_decode((string) $this->withBodyFormat('json')->signedIn()->patch('systems', [
             ['id' => 1, 'hosting_provider' => \HostingProviders::Eks],
         ])->response()->getBody(), true);
 
-        $this->assertSame(
-            '-----BEGIN RSA PRIVATE KEY-----',
-            $body['resources'][0]['github_app_private_key'],
-            'PATCH /systems still leaks the GitHub App private key - see the note above'
-        );
-        $this->assertSame('the-client-secret', $body['resources'][0]['github_app_client_secret']);
+        $this->assertSame(self::PUBLIC_FIELDS, array_keys($body['resources'][0]));
+        $this->assertSame(\HostingProviders::Eks, $body['resources'][0]['hosting_provider']);
     }
 
     /**
      * Every route that reaches this controller, exactly.
      *
-     * The four inherited REST verbs are switched off with `@ignore true`, and **GET is the
-     * one that has to stay off**: a listing is served by `_setResources()`, which this
-     * controller does not override, so `GET /systems` would answer with the whole entity -
-     * the same leak the test above records for the bulk save. Turning any of the four back
-     * on is a security decision, and this is where it is made.
+     * The four inherited REST verbs are switched off with `@ignore true`. Turning any of
+     * them back on is a security decision, and this is where it is made.
      *
      * The three `default_*` routes are listed because they exist in the table, not because
      * they work: they point at `updateDefaultEmailService`, `updateDefaultDatabaseService`
@@ -247,22 +206,14 @@ class SystemsApiTest extends ControllerTestCase {
     // <editor-fold desc="Helpers">
 
     /**
-     * The System row as a real installation has it: credentials filled in, identifiers
-     * filled in. The values are recognisable strings so a leak can be found in the body
-     * text rather than only by key name.
+     * The System row as a real installation has it.
      *
      * @param array<string, mixed> $overrides
      */
     private function aFullyConfiguredSystem(array $overrides = []): void {
         Fixtures::system(array_merge([
             'hosting_provider' => \HostingProviders::Gke,
-            'github_app_id' => 4711,
-            'github_app_slug' => 'kso-deployer',
-            'github_app_installation_id' => 815,
-            'github_app_client_id' => 'the-client-id',
-            'github_app_client_secret' => 'the-client-secret',
-            'github_app_private_key' => '-----BEGIN RSA PRIVATE KEY-----',
-            'github_app_webhook_secret' => 'the-webhook-secret',
+            'is_network_gateway_api_supported' => true,
         ], $overrides));
     }
 

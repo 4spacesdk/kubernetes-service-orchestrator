@@ -31,6 +31,8 @@ use App\Core\Entity;
  * @property bool $version_control_enabled
  * @property string $version_control_provider
  * @property string $version_control_repository_name
+ * @property int $github_integration_id
+ * @property GithubIntegration $github_integration
  *
  * # Commit Identification
  * @property bool $commit_identification_enabled

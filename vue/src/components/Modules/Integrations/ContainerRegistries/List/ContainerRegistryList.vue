@@ -97,17 +97,19 @@ function onImportItemBtnClicked(item: ContainerRegistry) {
 }
 
 function onDeleteItemBtnClicked(item: ContainerRegistry) {
-    bus.emit('confirm', {
-        body: `Do you want to delete <strong>${item.name}</strong>?`,
-        confirmIcon: 'fa fa-trash',
-        confirmColor: 'red',
-
-        responseCallback: (confirmed: boolean) => {
-            if (confirmed) {
-                // Refused while an image uses the connection.
-                Api.containerRegistries().deleteById(item.id!).delete(() => bus.emit('containerRegistrySaved'));
-            }
-        }
+    bus.emit("integrationDelete", {
+        name: item.name!,
+        imageField: "container_registry_id",
+        id: item.id!,
+        imageDetail: image => image.url,
+        note: "Webhooks kso set up on the registry stay there; remove them in the registry.",
+        delete: done =>
+            Api.containerRegistries()
+                .deleteById(item.id!)
+                .delete(() => {
+                    bus.emit("containerRegistrySaved");
+                    done();
+                }),
     });
 }
 

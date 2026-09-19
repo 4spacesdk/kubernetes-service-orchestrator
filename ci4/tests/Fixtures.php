@@ -9,6 +9,7 @@ use App\Entities\ContainerImage;
 use App\Entities\ContainerRegistry;
 use App\Entities\DatabaseService;
 use App\Entities\EmailService;
+use App\Entities\GithubIntegration;
 use App\Entities\DeploymentSpecificationHttpProxyRoute;
 use App\Entities\DeploymentSpecificationClusterRoleRule;
 use App\Entities\DeploymentSpecificationDeploymentAnnotation;
@@ -179,6 +180,26 @@ class Fixtures {
             'harbor_url' => 'registry.example.org',
             'harbor_username' => 'robot',
             'harbor_password' => 'secret',
+        ], $overrides);
+    }
+
+    /**
+     * An App that is created and installed. The key is not a real one - nothing here signs
+     * with it, since GitHub itself is faked.
+     *
+     * @param array<string, mixed> $overrides
+     */
+    public static function githubIntegration(array $overrides = []): GithubIntegration {
+        return self::make(GithubIntegration::class, [
+            'name' => 'test-github',
+            'organization' => 'test-org',
+            'app_id' => 4711,
+            'client_id' => 'Iv1.test',
+            'client_secret' => 'the-client-secret',
+            'private_key' => '-----BEGIN RSA PRIVATE KEY-----',
+            'webhook_secret' => 'the-webhook-secret',
+            'slug' => 'kso-test',
+            'installation_id' => 815,
         ], $overrides);
     }
 

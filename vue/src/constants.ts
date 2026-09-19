@@ -4,8 +4,10 @@ import type { InfoDialog_Input } from "@/components/Dialogs/Common/InfoDialog.vu
 import type { DatabaseServiceEditDialog_Input } from "@/components/Dialogs/Setup/DatabaseServices/DatabaseServiceEditDialog.vue";
 import type { DomainCreateDialog_Input } from "@/components/Dialogs/Setup/Domains/DomainCreateDialog.vue";
 import type { EmailServiceEditDialog_Input } from "@/components/Dialogs/Setup/EmailServices/EmailServiceEditDialog.vue";
-import type { ContainerRegistryEditDialog_Input } from "@/components/Dialogs/Setup/ContainerRegistries/ContainerRegistryEditDialog.vue";
-import type { ContainerRegistryImportDialog_Input } from "@/components/Dialogs/Setup/ContainerRegistries/ContainerRegistryImportDialog.vue";
+import type { ContainerRegistryEditDialog_Input } from "@/components/Dialogs/Integrations/ContainerRegistries/ContainerRegistryEditDialog.vue";
+import type { ContainerRegistryImportDialog_Input } from "@/components/Dialogs/Integrations/ContainerRegistries/ContainerRegistryImportDialog.vue";
+import type { GithubIntegrationEditDialog_Input } from "@/components/Dialogs/Integrations/GithubIntegrations/GithubIntegrationEditDialog.vue";
+import type { IntegrationDeleteDialog_Input } from "@/components/Dialogs/Integrations/IntegrationDeleteDialog.vue";
 import type { UserEditDialog_Input } from "@/components/Dialogs/Users/UserEditDialog.vue";
 import {
     ContainerImage,
@@ -17,6 +19,7 @@ import {
     Gateway,
     EmailService,
     ContainerRegistry,
+    GithubIntegration,
     InitContainer,
     K8sCronJob,
     KNativeMinScaleSchedule,
@@ -172,6 +175,10 @@ export type Events = {
     containerRegistryImport: ContainerRegistryImportDialog_Input;
     containerRegistrySaved: ContainerRegistry | undefined;
     containerRegistryEditDialog_closed: ContainerRegistry | undefined;
+    githubIntegrationEdit: GithubIntegrationEditDialog_Input;
+    integrationDelete: IntegrationDeleteDialog_Input;
+    githubIntegrationSaved: GithubIntegration | undefined;
+    githubIntegrationEditDialog_closed: GithubIntegration | undefined;
 
     userEdit: UserEditDialog_Input;
     userSaved: User | undefined;

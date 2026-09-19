@@ -10,6 +10,7 @@ import {MigrationJob} from "./models";
 import {Domain} from "./models";
 import {EmailService} from "./models";
 import {Gateway} from "./models";
+import {GithubIntegration} from "./models";
 import {InitContainer} from "./models";
 import {K8sCronJob} from "./models";
 import {KNativeMinScaleSchedule} from "./models";
@@ -201,6 +202,17 @@ export interface GatewayAddress {
 
 export interface GatewayAddressList {
     values?: GatewayAddress[];
+}
+
+export interface GithubIntegrationSetupResponse {
+    url?: string;
+    manifest?: string;
+}
+
+export interface GithubRepository {
+    id?: number;
+    full_name?: string;
+    name?: string;
 }
 
 export interface HttpProxyRoute {
@@ -4694,27 +4706,6 @@ class Gateways {
 }
 
 
-export class GithubAppManifestGet extends BaseApi<any> {
-
-    public topic = 'UnknownResource';
-    protected method = 'get';
-    protected scope = '';
-    protected summary = '';
-
-    public constructor() {
-        super();
-        this.uri = `/githubapp/manifest`;
-    }
-
-    protected convertToResource(data: any): any {
-        return data;
-    }
-
-    public find(next?: (value: any[]) => void) {
-        return super.executeFind(next);
-    }
-}
-
 export class GithubAppCallbackGet extends BaseApi<any> {
 
     public topic = 'UnknownResource';
@@ -4757,32 +4748,7 @@ export class GithubAppPost_installGet extends BaseApi<any> {
     }
 }
 
-export class GithubAppRepositoriesGet extends BaseApi<any> {
-
-    public topic = 'UnknownResource';
-    protected method = 'get';
-    protected scope = '';
-    protected summary = '';
-
-    public constructor() {
-        super();
-        this.uri = `/githubapp/repositories`;
-    }
-
-    protected convertToResource(data: any): any {
-        return data;
-    }
-
-    public find(next?: (value: any[]) => void) {
-        return super.executeFind(next);
-    }
-}
-
 class GithubApp {
-
-    public manifestGet(): GithubAppManifestGet {
-        return new GithubAppManifestGet();
-    }
 
     public callbackGet(): GithubAppCallbackGet {
         return new GithubAppCallbackGet();
@@ -4792,8 +4758,328 @@ class GithubApp {
         return new GithubAppPost_installGet();
     }
 
-    public repositoriesGet(): GithubAppRepositoriesGet {
-        return new GithubAppRepositoriesGet();
+}
+
+
+export class GithubIntegrationsGet extends BaseApi<GithubIntegration> {
+
+    public topic = 'Resources.GithubIntegrations';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/github_integrations`;
+    }
+
+    protected convertToResource(data: any): GithubIntegration {
+        return new GithubIntegration(data);
+    }
+
+    public where(name: string, value: any): GithubIntegrationsGet {
+        this.filter().where(name, value);
+        return this;
+    }
+
+    public whereEquals(name: string, value: any): GithubIntegrationsGet {
+        this.filter().whereEquals(name, value);
+        return this;
+    }
+
+    public whereIn(name: string, value: any[]): GithubIntegrationsGet {
+        this.filter().whereIn(name, value);
+        return this;
+    }
+
+    public whereInArray(name: string, value: any[]): GithubIntegrationsGet {
+        this.filter().whereInArray(name, value);
+        return this;
+    }
+
+    public whereNot(name: string, value: any): GithubIntegrationsGet {
+        this.filter().whereNot(name, value);
+        return this;
+    }
+
+    public whereNotIn(name: string, value: any[]): GithubIntegrationsGet {
+        this.filter().whereNotIn(name, value);
+        return this;
+    }
+
+    public whereGreaterThan(name: string, value: any): GithubIntegrationsGet {
+        this.filter().whereGreaterThan(name, value);
+        return this;
+    }
+
+    public whereGreaterThanOrEqual(name: string, value: any): GithubIntegrationsGet {
+        this.filter().whereGreaterThanOrEqual(name, value);
+        return this;
+    }
+
+    public whereLessThan(name: string, value: any): GithubIntegrationsGet {
+        this.filter().whereLessThan(name, value);
+        return this;
+    }
+
+    public whereLessThanOrEqual(name: string, value: any): GithubIntegrationsGet {
+        this.filter().whereLessThanOrEqual(name, value);
+        return this;
+    }
+
+    public search(name: string, value: any): GithubIntegrationsGet {
+        this.filter().search(name, value);
+        return this;
+    }
+
+    public include(name: string): GithubIntegrationsGet {
+        this.getInclude().include(name);
+        return this;
+    }
+
+    public orderBy(name: string, direction: string): GithubIntegrationsGet {
+        this.ordering().orderBy(name, direction);
+        return this;
+    }
+
+    public orderAsc(name: string): GithubIntegrationsGet {
+        this.ordering().orderAsc(name);
+        return this;
+    }
+
+    public orderDesc(name: string): GithubIntegrationsGet {
+        this.ordering().orderDesc(name);
+        return this;
+    }
+
+    public limit(value: number): GithubIntegrationsGet {
+        this.limitValue = value;
+        return this;
+    }
+
+    public offset(value: number): GithubIntegrationsGet {
+        this.offsetValue = value;
+        return this;
+    }
+
+    public count(next?: (value: number) => void) {
+        return this.executeCount(next);
+    }
+
+    public find(next?: (value: GithubIntegration[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class GithubIntegrationsGetById extends BaseApi<GithubIntegration> {
+
+    public topic = 'Resources.GithubIntegrations';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/github_integrations/${id}`;
+    }
+
+    protected convertToResource(data: any): GithubIntegration {
+        return new GithubIntegration(data);
+    }
+
+    public include(name: string): GithubIntegrationsGetById {
+        this.getInclude().include(name);
+        return this;
+    }
+
+    public find(next?: (value: GithubIntegration[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class GithubIntegrationsPost extends BaseApi<GithubIntegration> {
+
+    public topic = 'Resources.GithubIntegrations';
+    protected method = 'post';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/github_integrations`;
+    }
+
+    protected convertToResource(data: any): GithubIntegration {
+        return new GithubIntegration(data);
+    }
+
+    public save(data: GithubIntegration, next?: (value: GithubIntegration) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class GithubIntegrationsPatchById extends BaseApi<GithubIntegration> {
+
+    public topic = 'Resources.GithubIntegrations';
+    protected method = 'patch';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/github_integrations/${id}`;
+    }
+
+    protected convertToResource(data: any): GithubIntegration {
+        return new GithubIntegration(data);
+    }
+
+    public save(data: GithubIntegration, next?: (value: GithubIntegration) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class GithubIntegrationsPatch extends BaseApi<GithubIntegration> {
+
+    public topic = 'Resources.GithubIntegrations';
+    protected method = 'patch';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/github_integrations`;
+    }
+
+    protected convertToResource(data: any): GithubIntegration {
+        return new GithubIntegration(data);
+    }
+
+    public save(data: GithubIntegration, next?: (value: GithubIntegration) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class GithubIntegrationsDeleteById extends BaseApi<GithubIntegration> {
+
+    public topic = 'Resources.GithubIntegrations';
+    protected method = 'delete';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/github_integrations/${id}`;
+    }
+
+    protected convertToResource(data: any): GithubIntegration {
+        return new GithubIntegration(data);
+    }
+
+    public delete(next?: (value: GithubIntegration) => void) {
+        return super.executeDelete(next);
+    }
+}
+
+export class GithubIntegrationsCreateAppPostById extends BaseApi<GithubIntegrationSetupResponse> {
+
+    public topic = 'Resources.GithubIntegrationSetupResponses';
+    protected method = 'post';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/github-integrations/${id}/create-app`;
+    }
+
+    protected convertToResource(data: any): GithubIntegrationSetupResponse {
+        return data;
+    }
+
+    public save(data: any, next?: (value: GithubIntegrationSetupResponse) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class GithubIntegrationsInstallPostById extends BaseApi<GithubIntegrationSetupResponse> {
+
+    public topic = 'Resources.GithubIntegrationSetupResponses';
+    protected method = 'post';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/github-integrations/${id}/install`;
+    }
+
+    protected convertToResource(data: any): GithubIntegrationSetupResponse {
+        return data;
+    }
+
+    public save(data: any, next?: (value: GithubIntegrationSetupResponse) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class GithubIntegrationsGetRepositoriesGetById extends BaseApi<GithubRepository> {
+
+    public topic = 'Resources.GithubRepositories';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/github-integrations/${id}/repositories`;
+    }
+
+    protected convertToResource(data: any): GithubRepository {
+        return data;
+    }
+
+    public find(next?: (value: GithubRepository[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+class GithubIntegrations {
+
+    public get(): GithubIntegrationsGet {
+        return new GithubIntegrationsGet();
+    }
+
+    public getById(id: number): GithubIntegrationsGetById {
+        return new GithubIntegrationsGetById(id);
+    }
+
+    public post(): GithubIntegrationsPost {
+        return new GithubIntegrationsPost();
+    }
+
+    public patchById(id: number): GithubIntegrationsPatchById {
+        return new GithubIntegrationsPatchById(id);
+    }
+
+    public patch(): GithubIntegrationsPatch {
+        return new GithubIntegrationsPatch();
+    }
+
+    public deleteById(id: number): GithubIntegrationsDeleteById {
+        return new GithubIntegrationsDeleteById(id);
+    }
+
+    public createAppPostById(id: number): GithubIntegrationsCreateAppPostById {
+        return new GithubIntegrationsCreateAppPostById(id);
+    }
+
+    public installPostById(id: number): GithubIntegrationsInstallPostById {
+        return new GithubIntegrationsInstallPostById(id);
+    }
+
+    public getRepositoriesGetById(id: number): GithubIntegrationsGetRepositoriesGetById {
+        return new GithubIntegrationsGetRepositoriesGetById(id);
     }
 
 }
@@ -8628,6 +8914,10 @@ export class Api {
 
     public static githubApp(): GithubApp {
         return new GithubApp();
+    }
+
+    public static githubIntegrations(): GithubIntegrations {
+        return new GithubIntegrations();
     }
 
     public static initContainers(): InitContainers {

@@ -8,6 +8,8 @@ use App\Libraries\ContainerRegistries\AzureContainerRegistry;
 use App\Libraries\ContainerRegistries\BaseContainerRegistry;
 use App\Libraries\ContainerRegistries\GoogleCloudArtifactRegistry;
 use App\Libraries\ContainerRegistries\HarborRegistry;
+use App\Libraries\Github\BaseGithub;
+use App\Libraries\Github\GithubApi;
 use App\Libraries\GoogleCloud\BasePubSub;
 use App\Libraries\GoogleCloud\PubSubApi;
 use App\Libraries\Podio\BasePodio;
@@ -55,6 +57,13 @@ class IntegrationFactory {
      */
     public function podio(): BasePodio {
         return new PodioApi();
+    }
+
+    /**
+     * GitHub, for setting up an integration's App and listing what it can see.
+     */
+    public function github(): BaseGithub {
+        return new GithubApi();
     }
 
     /**

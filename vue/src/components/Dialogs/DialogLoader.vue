@@ -60,11 +60,19 @@ bus.on('databaseServiceEdit', async input => {
 });
 
 bus.on('containerRegistryImport', async input => {
-    addComponent((await import('@/components/Dialogs/Setup/ContainerRegistries/ContainerRegistryImportDialog.vue')).default, input);
+    addComponent((await import('@/components/Dialogs/Integrations/ContainerRegistries/ContainerRegistryImportDialog.vue')).default, input);
 });
 
 bus.on('containerRegistryEdit', async input => {
-    addComponent((await import('@/components/Dialogs/Setup/ContainerRegistries/ContainerRegistryEditDialog.vue')).default, input);
+    addComponent((await import('@/components/Dialogs/Integrations/ContainerRegistries/ContainerRegistryEditDialog.vue')).default, input);
+});
+
+bus.on('integrationDelete', async input => {
+    addComponent((await import('@/components/Dialogs/Integrations/IntegrationDeleteDialog.vue')).default, input);
+});
+
+bus.on('githubIntegrationEdit', async input => {
+    addComponent((await import('@/components/Dialogs/Integrations/GithubIntegrations/GithubIntegrationEditDialog.vue')).default, input);
 });
 
 bus.on('emailServiceEdit', async input => {

@@ -3,9 +3,11 @@
 use App\Entities\ContainerImage;
 use App\Entities\ContainerRegistry;
 use App\Entities\Deployment;
+use App\Entities\GithubIntegration;
 use App\Libraries\CommitIdentificationMethods\BaseCommitIdentificationMethod;
 use App\Libraries\ContainerRegistries\BaseContainerRegistry;
 use App\Libraries\Integrations\IntegrationFactory;
+use App\Libraries\Github\BaseGithub;
 use App\Libraries\GoogleCloud\BasePubSub;
 use App\Libraries\Podio\BasePodio;
 use App\Libraries\VersionControlSystems\BaseVersionControlSystem;
@@ -138,6 +140,48 @@ class FakeIntegrations extends IntegrationFactory {
 
             public function getCommitUrl(string $shortSha): string {
                 return $this->url;
+            }
+        };
+    }
+
+    /**
+     * What GitHub answers when a manifest code is swapped for an App. Null makes the
+     * swap fail, the way GitHub refuses a code it has already seen.
+     *
+     * @var array<string, mixed>|null
+     */
+    public ?array $githubApp = null;
+
+    /** @var string[] Every manifest code GitHub was asked to swap. */
+    public array $manifestCodes = [];
+
+    /** @var array<array{id: int, full_name: string, name: string, archived: bool}> */
+    public array $githubRepositories = [];
+
+    /** The account an installation lives on. Null makes GitHub fail to answer. */
+    public ?string $githubInstallationAccount = null;
+
+    public function github(): BaseGithub {
+        return new class ($this) extends BaseGithub {
+            public function __construct(private FakeIntegrations $fakes) {}
+
+            public function convertManifest(string $code): array {
+                $this->fakes->manifestCodes[] = $code;
+                if ($this->fakes->githubApp === null) {
+                    throw new \Exception('Failed to convert manifest: code already used');
+                }
+                return $this->fakes->githubApp;
+            }
+
+            public function installationAccount(GithubIntegration $integration): string {
+                if ($this->fakes->githubInstallationAccount === null) {
+                    throw new \Exception('GitHub did not answer');
+                }
+                return $this->fakes->githubInstallationAccount;
+            }
+
+            public function listRepositories(GithubIntegration $integration): array {
+                return $this->fakes->githubRepositories;
             }
         };
     }

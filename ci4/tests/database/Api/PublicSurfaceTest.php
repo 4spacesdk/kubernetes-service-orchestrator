@@ -34,10 +34,10 @@ class PublicSurfaceTest extends ControllerTestCase {
         'post auto-updates/webhooks/azure-container-registry/([0-9]+)',
         'post auto-updates/webhooks/harbor/([0-9]+)',
 
-        // GitHub redirects a browser back to these after installing the app.
+        // GitHub redirects a browser back to these while an app is set up. Each acts only
+        // with the state nonce kso issued - see GithubAppApiTest.
         'get githubapp/callback',
         'get githubapp/post-install',
-        'get githubapp/repositories',
 
         'get home',
 
@@ -140,9 +140,6 @@ class PublicSurfaceTest extends ControllerTestCase {
             'is_network_contour_supported',
             'is_network_gateway_api_supported',
             'hosting_provider',
-            'github_app_id',
-            'github_app_slug',
-            'github_app_installation_id',
         ], array_keys($body['system']));
     }
 
@@ -193,8 +190,6 @@ class PublicSurfaceTest extends ControllerTestCase {
         $this->assertIsBool($system['is_network_gateway_api_supported']);
         $this->assertIsBool($system['is_network_nginx_ingress_supported']);
         $this->assertIsInt($system['id']);
-        $this->assertIsInt($system['github_app_id']);
-        $this->assertIsInt($system['github_app_installation_id']);
     }
 
 }

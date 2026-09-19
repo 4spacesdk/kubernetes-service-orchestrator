@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch } from "vue";
-import { ContainerImage, ContainerRegistry, System } from "@/core/services/Deploy/models";
+import { ContainerImage, ContainerRegistry, GithubIntegration } from "@/core/services/Deploy/models";
 import { Api } from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type { DialogEventsInterface } from "@/components/Dialogs/DialogEventsInterface";
 import { CommitIdentificationMethods, ImagePullPolicies, VersionControlProviders } from "@/constants";
-import ApiService from "../../../../services/ApiService";
+import ApiService from "@/services/ApiService";
 
 export interface ContainerImageEditDialog_Input {
     containerImage: ContainerImage;
@@ -26,6 +26,9 @@ const showPullSecret = ref(false);
 
 const githubRepositories = ref<{ id: number; full_name: string; name: string }[]>([]);
 const isLoadingRepositories = ref(false);
+const githubRepositoriesError = ref<string | null>(null);
+
+const githubIntegrations = ref<GithubIntegration[]>([]);
 
 const containerRegistries = ref<ContainerRegistry[]>([]);
 const isLoadingRegistries = ref(false);
@@ -67,7 +70,29 @@ onMounted(() => {
     used.value = true;
     load();
     loadRegistries();
+    loadGithubIntegrations();
 });
+
+function loadGithubIntegrations() {
+    Api.githubIntegrations()
+        .get()
+        .orderAsc("name")
+        .find(items => {
+            githubIntegrations.value = items;
+            pickTheOnlyGithubIntegration();
+        });
+}
+
+/**
+ * With one organisation connected there is nothing to choose.
+ */
+function pickTheOnlyGithubIntegration() {
+    if (item.value.version_control_provider == VersionControlProviders.GitHub
+        && !item.value.github_integration_id
+        && githubIntegrations.value.length == 1) {
+        item.value.github_integration_id = githubIntegrations.value[0].id;
+    }
+}
 
 function loadRegistries() {
     isLoadingRegistries.value = true;
@@ -119,20 +144,21 @@ function render() {
 }
 
 function fetchGithubRepositories() {
-    const installationId = System.Instance.github_app_installation_id;
-    if (!installationId) {
-        githubRepositories.value = [];
+    githubRepositories.value = [];
+    githubRepositoriesError.value = null;
+    const integrationId = item.value.github_integration_id;
+    if (item.value.version_control_provider != VersionControlProviders.GitHub || !integrationId) {
         return;
     }
 
     isLoadingRepositories.value = true;
-    ApiService.apiAxios!.get("/githubapp/repositories", {
-        params: {
-            installation_id: installationId,
-        },
-    })
+    ApiService.apiAxios!.get(`/github-integrations/${integrationId}/repositories`)
         .then((response) => {
-            githubRepositories.value = response.data;
+            if (response.data?.status === "OK") {
+                githubRepositories.value = response.data.resources;
+            } else {
+                githubRepositoriesError.value = String(response.data?.error ?? "Failed");
+            }
         })
         .finally(() => {
             isLoadingRepositories.value = false;
@@ -140,13 +166,10 @@ function fetchGithubRepositories() {
 }
 
 watch(
-    () => item.value.version_control_provider,
-    (provider) => {
-        if (provider == VersionControlProviders.GitHub && System.Instance.github_app_installation_id) {
-            fetchGithubRepositories();
-        } else {
-            githubRepositories.value = [];
-        }
+    () => [item.value.version_control_provider, item.value.github_integration_id],
+    () => {
+        pickTheOnlyGithubIntegration();
+        fetchGithubRepositories();
     }
 );
 
@@ -168,6 +191,8 @@ function onSaveBtnClicked() {
     // be read as a request to change the connection itself.
     item.value.container_registry = undefined;
     item.value.container_registry_id = item.value.container_registry_id ?? 0;
+    item.value.github_integration = undefined;
+    item.value.github_integration_id = item.value.github_integration_id ?? 0;
     const api = item.value!.exists() ? Api.containerImages().patchById(item.value!.id!) : Api.containerImages().post();
 
     api.save(item.value!, (newItem) => {
@@ -358,6 +383,20 @@ function onCloseBtnClicked() {
                                                 />
                                             </v-col>
 
+                                            <v-col cols="12" v-if="item.version_control_provider == VersionControlProviders.GitHub">
+                                                <v-select
+                                                    v-model="item.github_integration_id"
+                                                    :items="githubIntegrations"
+                                                    item-title="name"
+                                                    item-value="id"
+                                                    variant="outlined"
+                                                    label="GitHub integration"
+                                                    :hint="githubIntegrations.length ? '' : 'None yet - create one under Integrations, GitHub Integrations'"
+                                                    persistent-hint
+                                                    density="compact"
+                                                />
+                                            </v-col>
+
                                             <v-col cols="12">
                                                 <v-combobox
                                                     v-if="item.version_control_provider == VersionControlProviders.GitHub"
@@ -370,8 +409,8 @@ function onCloseBtnClicked() {
                                                     :return-object="false"
                                                     label="Repository name"
                                                     density="compact"
-                                                    hide-details
                                                     :loading="isLoadingRepositories"
+                                                    :error-messages="githubRepositoriesError ?? undefined"
                                                 />
                                                 <v-text-field
                                                     v-else

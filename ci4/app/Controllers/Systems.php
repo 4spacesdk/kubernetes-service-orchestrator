@@ -8,9 +8,9 @@ use OrmExtension\Extensions\Entity;
 class Systems extends ResourceController {
 
     /**
-     * The System entity holds the GitHub App credentials. The default implementation
-     * returns the whole entity, which handed the private key back to the browser on
-     * every save of the System page.
+     * Every System response goes through the allow list. The default implementation
+     * returns the whole entity, which handed the GitHub App private key back to the browser
+     * on every save of the System page while the App lived there (SEC-1).
      *
      * @param Entity|System $item
      */
@@ -20,6 +20,21 @@ class Systems extends ResourceController {
             return;
         }
         parent::_setResource($item);
+    }
+
+    /**
+     * The same for `PATCH /systems` without an id, which answers with a list. That route
+     * was SEC-1's third way out.
+     *
+     * @param Entity|System|int $items
+     */
+    public function _setResources($items) {
+        if ($items instanceof System) {
+            Data::set('count', $items->count());
+            Data::set('resources', array_map(fn (System $item) => $item->toPublicArray(), iterator_to_array($items)));
+            return;
+        }
+        parent::_setResources($items);
     }
 
 
@@ -32,9 +47,7 @@ class Systems extends ResourceController {
      * there; `Workspaces` and `Deployments` carry the same annotation and are routed
      * anyway. See SEC-11.
      *
-     * GET is the one that matters here: a listing goes through `_setResources()`, which is
-     * not overridden, and would hand out the whole entity. `SystemsApiTest` pins the routes
-     * that do exist.
+     * `SystemsApiTest` pins the routes that do exist.
      *
      * @ignore true
      * @codeCoverageIgnore

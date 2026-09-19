@@ -4,7 +4,7 @@ import {useRoute, useRouter} from "vue-router";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import {ContainerRegistry} from "@/core/services/Deploy/models";
-import ContainerRegistryList from "@/components/Modules/Setup/ContainerRegistries/List/ContainerRegistryList.vue";
+import ContainerRegistryList from "@/components/Modules/Integrations/ContainerRegistries/List/ContainerRegistryList.vue";
 
 const router = useRouter();
 

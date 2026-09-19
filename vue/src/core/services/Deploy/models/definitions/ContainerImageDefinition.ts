@@ -2,6 +2,7 @@
  * Created by ModelParser
  */
 import {ContainerRegistry} from '../ContainerRegistry';
+import {GithubIntegration} from '../GithubIntegration';
 import {User} from '../User';
 import {Deletion} from '../Deletion';
 import {BaseModel} from '../BaseModel';
@@ -22,6 +23,8 @@ export class ContainerImageDefinition extends BaseModel {
     version_control_enabled?: boolean;
     version_control_provider?: string;
     version_control_repository_name?: string;
+    github_integration_id?: number;
+    github_integration?: GithubIntegration;
     commit_identification_enabled?: boolean;
     commit_identification_method?: string;
     commit_identification_environment_variable_name?: string;
@@ -57,6 +60,8 @@ export class ContainerImageDefinition extends BaseModel {
             delete this.version_control_enabled;
             delete this.version_control_provider;
             delete this.version_control_repository_name;
+            delete this.github_integration_id;
+            delete this.github_integration;
             delete this.commit_identification_enabled;
             delete this.commit_identification_method;
             delete this.commit_identification_environment_variable_name;
@@ -116,6 +121,12 @@ export class ContainerImageDefinition extends BaseModel {
         }
         if (data.version_control_repository_name != null) {
             this.version_control_repository_name = data.version_control_repository_name;
+        }
+        if (data.github_integration_id != null) {
+            this.github_integration_id = data.github_integration_id;
+        }
+        if (data.github_integration != null) {
+            this.github_integration = new GithubIntegration(data.github_integration);
         }
         if (data.commit_identification_enabled != null) {
             this.commit_identification_enabled = data.commit_identification_enabled;

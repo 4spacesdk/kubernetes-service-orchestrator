@@ -122,30 +122,21 @@ class AuthenticatedResponsesTest extends ControllerTestCase {
     }
 
     /**
-     * The other half of the SEC-1 fix. `Settings` was the endpoint that leaked the GitHub
-     * App private key without a token; `Systems::_setResource` is what stops the same
-     * entity coming back on the response to a save, to anyone signed in.
+     * SEC-1, after INT-2 moved the GitHub App off the System row: the private key now lives
+     * on the integration, and reaching it through an image - which is how the image dialog
+     * loads it - must not bring it along.
      */
-    public function testSavingTheSystemDoesNotHandBackTheGithubCredentials(): void {
-        Fixtures::system([
-            'hosting_provider' => \HostingProviders::Gke,
-            'github_app_private_key' => '-----BEGIN RSA PRIVATE KEY-----',
-            'github_app_client_secret' => 'client-secret',
-            'github_app_webhook_secret' => 'webhook-secret',
-        ]);
+    public function testAnImageDoesNotLeakItsGithubAppsKeys(): void {
+        $integration = Fixtures::githubIntegration();
+        $image = Fixtures::containerImage(['github_integration_id' => $integration->id]);
 
-        $body = $this->decode(
-            $this->withBodyFormat('json')
-                ->signedIn()
-                ->patch('systems/1', ['hosting_provider' => \HostingProviders::Eks])
-        );
+        $body = $this->decode($this->signedIn()->get("container_images/{$image->id}?include=github_integration"));
+        $text = json_encode($body);
 
-        $system = $body['resource'];
-
-        $this->assertSame(\HostingProviders::Eks, $system['hosting_provider']);
-        $this->assertArrayNotHasKey('github_app_private_key', $system);
-        $this->assertArrayNotHasKey('github_app_client_secret', $system);
-        $this->assertArrayNotHasKey('github_app_webhook_secret', $system);
+        $this->assertStringNotContainsString('BEGIN RSA PRIVATE KEY', $text);
+        $this->assertStringNotContainsString('the-client-secret', $text);
+        $this->assertStringNotContainsString('the-webhook-secret', $text);
+        $this->assertTrue($body['resource']['github_integration']['has_private_key']);
     }
 
     // <editor-fold desc="Reading responses">

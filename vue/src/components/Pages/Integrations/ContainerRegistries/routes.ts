@@ -1,8 +1,8 @@
-import ContainerRegistryListPage from "@/components/Pages/Setup/ContainerRegistries/ContainerRegistryListPage.vue";
+import ContainerRegistryListPage from "@/components/Pages/Integrations/ContainerRegistries/ContainerRegistryListPage.vue";
 
 export default ([
     {
-        path: '/setup/container-registries',
+        path: '/integrations/container-registries',
         name: 'ContainerRegistries',
         component: ContainerRegistryListPage,
         meta: {
@@ -10,7 +10,7 @@ export default ([
         }
     },
     {
-        path: '/setup/container-registries/:id',
+        path: '/integrations/container-registries/:id',
         name: 'ContainerRegistryById',
         component: ContainerRegistryListPage,
         meta: {

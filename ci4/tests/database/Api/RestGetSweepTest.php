@@ -42,9 +42,7 @@ class RestGetSweepTest extends ControllerTestCase {
         'app_token',
         'auth_bearer_token',
         'mfa_secret_hash',
-        'github_app_private_key',
-        'github_app_client_secret',
-        'github_app_webhook_secret',
+        'private_key',
     ];
 
     // <editor-fold desc="The route table is the list">
@@ -258,6 +256,7 @@ class RestGetSweepTest extends ControllerTestCase {
         $expected['deployment_specifications'] = 'a resource whose only non-null field is deploymentSteps';
         $expected['users'] = 'a resource whose only non-null field is has_mfa_secret_hash';
         $expected['container_registries'] = 'a resource whose only non-null field is has_gcloud_credentials, has_azure_client_secret, has_harbor_password, has_pull_password, has_webhook_secret';
+        $expected['github_integrations'] = 'a resource whose only non-null field is has_client_secret, has_private_key, has_webhook_secret';
 
         // `Environments` is not a resource controller and its `get()` takes no id, but the
         // route table sends `environments/([0-9]+)` to it anyway. PHP accepts the extra
@@ -386,8 +385,8 @@ class RestGetSweepTest extends ControllerTestCase {
             $this->assertContains($resource, $collections, "{$resource} is no longer routed");
         }
 
-        $this->assertCount(23, $collections, 'the number of plain collection reads changed');
-        $this->assertCount(23, $this->byIdResources(), 'the number of plain by-id reads changed');
+        $this->assertCount(24, $collections, 'the number of plain collection reads changed');
+        $this->assertCount(24, $this->byIdResources(), 'the number of plain by-id reads changed');
     }
 
     /**
@@ -456,6 +455,11 @@ class RestGetSweepTest extends ControllerTestCase {
             'domains' => Fixtures::domain()->id,
             'email_services' => Fixtures::emailService(['pass' => 'sweep-mail-password'])->id,
             'gateways' => Fixtures::gateway()->id,
+            'github_integrations' => Fixtures::githubIntegration([
+                'client_secret' => 'sweep-github-client-secret',
+                'private_key' => 'SWEEP-GITHUB-KEY',
+                'webhook_secret' => 'sweep-github-webhook-secret',
+            ])->id,
             'init_containers' => Fixtures::initContainer()->id,
             'k8s_cron_jobs' => Fixtures::cronJob()->id,
             'k_native_min_scale_schedules' => Fixtures::minScaleSchedule()->id,

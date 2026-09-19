@@ -7,6 +7,7 @@ class ContainerImageModel extends Model implements ResourceModelInterface {
 
     public $hasOne = [
         ContainerRegistryModel::class,
+        GithubIntegrationModel::class,
     ];
 
     public $hasMany = [

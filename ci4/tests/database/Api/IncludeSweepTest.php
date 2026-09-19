@@ -171,6 +171,7 @@ class IncludeSweepTest extends ControllerTestCase {
             'domains?include=deletion',
             'email_services?include=deletion',
             'gateways?include=deletion',
+            'github_integrations?include=deletion',
             'podio_integrations?include=deletion',
             'users?include=deletion',
             'workspaces?include=deletion',
@@ -411,7 +412,7 @@ class IncludeSweepTest extends ControllerTestCase {
     public function testTheSweepStillCoversEveryRoutedResourceAndItsRelations(): void {
         $models = $this->resourceModels();
 
-        $this->assertCount(23, $models, 'the number of plain collection reads changed');
+        $this->assertCount(24, $models, 'the number of plain collection reads changed');
         $this->assertSame(
             ['environments'],
             array_keys(array_filter($models, static fn ($model) => $model === null)),
@@ -423,7 +424,7 @@ class IncludeSweepTest extends ControllerTestCase {
             $relations += count($this->relationsOf($modelName));
         }
 
-        $this->assertSame(86, $relations, 'the number of includable relations changed');
+        $this->assertSame(89, $relations, 'the number of includable relations changed');
     }
 
     // </editor-fold>
@@ -447,7 +448,8 @@ class IncludeSweepTest extends ControllerTestCase {
         $this->arranged = true;
 
         $registry = Fixtures::containerRegistry(['name' => 'sweep-registry']);
-        $image = Fixtures::containerImage(['name' => 'sweep-image', 'container_registry_id' => $registry->id]);
+        $github = Fixtures::githubIntegration(['name' => 'sweep-github']);
+        $image = Fixtures::containerImage(['name' => 'sweep-image', 'container_registry_id' => $registry->id, 'github_integration_id' => $github->id]);
 
         $specification = Fixtures::deploymentSpecification([
             'container_image_id' => $image->id,

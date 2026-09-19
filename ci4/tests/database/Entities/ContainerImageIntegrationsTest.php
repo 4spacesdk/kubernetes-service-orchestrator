@@ -5,6 +5,7 @@ use App\Fixtures;
 use App\Libraries\ContainerRegistries\AzureContainerRegistry;
 use App\Libraries\ContainerRegistries\GoogleCloudArtifactRegistry;
 use App\Libraries\ContainerRegistries\HarborRegistry;
+use App\Libraries\Github\GithubApi;
 use App\Libraries\GoogleCloud\GcrSubscription;
 use App\Libraries\GoogleCloud\PubSubApi;
 use App\Libraries\Podio\PodioApi;
@@ -59,6 +60,13 @@ class ContainerImageIntegrationsTest extends DatabaseTestCase {
      */
     public function testPubSubResolvesToTheRealClient(): void {
         $this->assertInstanceOf(PubSubApi::class, service('integrations')->pubSub());
+    }
+
+    /**
+     * Same again for GitHub: the setup flow's tests all install a fake.
+     */
+    public function testGithubResolvesToTheRealClient(): void {
+        $this->assertInstanceOf(GithubApi::class, service('integrations')->github());
     }
 
     /**

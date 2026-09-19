@@ -1,201 +1,78 @@
 <?php namespace App\Controllers;
 
-use App\Entities\System;
-use Config\Services;
-use DebugTool\Data;
-use Firebase\JWT\JWT;
-use Github\AuthMethod;
-use Github\Client;
-use Github\ResultPager;
+use App\Entities\GithubIntegration;
 
+/**
+ * Where GitHub sends the operator's browser while a GitHub integration is set up. Both are
+ * public, because a browser arriving from GitHub carries no token, and both act only on the
+ * integration whose state nonce they are handed - see `GithubIntegration` and SEC-19.
+ *
+ * The urls stay here rather than under the integration: an App already created has them
+ * stored at GitHub.
+ */
 class GithubApp extends \App\Core\BaseController {
 
     public function requireAuth(string $method): bool {
-        // Callback and post-install must be accessible without authentication from GitHub
-        if ($method === 'callback' || $method === 'post_install') {
-            return false;
-        }
-        return true;
+        return false;
     }
 
     /**
-     * @route /githubapp/manifest
-     * @method get
-     * @custom true
-     * @return void
-     */
-    public function manifest(): void {
-        $baseUrl = env('DEV_REMOTE_BASE_URL') ?: base_url();
-        
-        $manifest = [
-            'name' => 'KSO - ' . (getenv('PROJECT_NAME') ?: 'Orchestrator'),
-            'url' => $baseUrl,
-            'redirect_url' => $baseUrl . '/githubapp/callback',
-            'setup_url' => $baseUrl . '/githubapp/post-install',
-            'public' => false,
-            'default_permissions' => [
-                // Required to read commit messages and SHA for version control
-                'contents' => 'read',
-                // Mandatory for all GitHub Apps
-                'metadata' => 'read',
-            ],
-        ];
-
-        $this->response->setJSON($manifest);
-        $this->response->send();
-    }
-
-    /**
+     * GitHub made the App from the manifest. Swap the code for its keys, then send the
+     * operator straight on to install it.
+     *
+     * The state is used up before GitHub is asked, so a code and state can only be tried once.
+     *
      * @route /githubapp/callback
      * @method get
      * @custom true
      * @return void
      */
     public function callback(): void {
-        $code = $this->request->getGet('code');
-        if (!$code) {
+        $code = (string) $this->request->getGet('code');
+        if ($code === '') {
             $this->fail('No code provided');
             return;
         }
 
-        // Everything past the refusal is the conversation with GitHub, and there is nothing
-        // to put in front of it: the request is built here with `Services::curlrequest()`
-        // rather than through `service('integrations')`, which is the one seam a test can
-        // replace. Reaching this line in a test means posting a manifest code to
-        // api.github.com, so the credentials this stores are out of reach offline.
-        // @codeCoverageIgnoreStart
-        $client = Services::curlrequest();
-        try {
-            $response = $client->post("https://api.github.com/app-manifests/{$code}/conversions", [
-                'headers' => [
-                    'Accept' => 'application/vnd.github+json',
-                    'User-Agent' => 'KSO-Orchestrator'
-                ]
-            ]);
-
-            if ($response->getStatusCode() !== 201 && $response->getStatusCode() !== 200) {
-                $this->fail('Failed to convert manifest: ' . $response->getBody());
-                return;
-            }
-
-            $data = json_decode($response->getBody(), true);
-            
-            $system = System::Get();
-            $system->github_app_id = $data['id'];
-            $system->github_app_client_id = $data['client_id'];
-            $system->github_app_client_secret = $data['client_secret'];
-            $system->github_app_private_key = $data['pem'];
-            $system->github_app_webhook_secret = $data['webhook_secret'];
-            $system->github_app_slug = $data['slug'];
-            $system->save();
-
-            // Redirect back to the frontend settings page
-            $redirectUrl = getFrontendUrl('/app/setup/system?github_success=1');
-            $this->response->redirect($redirectUrl);
-        } catch (\Exception $e) {
-            $this->fail('Error during manifest conversion: ' . $e->getMessage(), 500);
+        $integration = GithubIntegration::findBySetupState($this->request->getGet('state'));
+        if ($integration === null) {
+            $this->fail('This GitHub App setup was not started from kso, or it has already been used. Start it again.');
             return;
         }
-        // @codeCoverageIgnoreEnd
+        $integration->setup_state = '';
+        $integration->save();
+
+        try {
+            $integration->storeApp($integration->getClient()->convertManifest($code));
+        } catch (\Throwable $e) {
+            $this->fail('Error during manifest conversion: ' . $e->getMessage());
+            return;
+        }
+
+        $this->response->redirect($integration->installUrl());
     }
 
     /**
+     * GitHub installed the App, or changed which repositories it sees. Only the first carries
+     * a state, and only a state kso issued lets the installation be stored; the operator is
+     * sent back to kso either way.
+     *
      * @route /githubapp/post-install
      * @method get
      * @custom true
      * @return void
      */
     public function post_install(): void {
-        $installationId = $this->request->getGet('installation_id');
-        if ($installationId) {
-            $system = System::Get();
-            $system->github_app_installation_id = (int)$installationId;
-            $system->save();
+        $installationId = (int) $this->request->getGet('installation_id');
+        $integration = GithubIntegration::findBySetupState($this->request->getGet('state'));
+
+        $query = '';
+        if ($installationId > 0 && $integration !== null) {
+            $integration->storeInstallation($installationId);
+            $query = '?github_install_success=1';
         }
 
-        // Redirect back to the frontend settings page
-        $redirectUrl = getFrontendUrl('/app/setup/system?github_install_success=1');
-        $this->response->redirect($redirectUrl);
+        $this->response->redirect(getFrontendUrl('/app/integrations/github-integrations' . $query));
     }
 
-    /**
-     * @route /githubapp/repositories
-     * @method get
-     * @custom true
-     * @return void
-     */
-    public function repositories(): void {
-        $system = System::Get();
-        $installationId = $this->request->getGet('installation_id') ?: $system->github_app_installation_id;
-        
-        if (!$installationId) {
-            $this->fail('No installation_id provided');
-            return;
-        }
-
-        $appId = $system->github_app_id;
-        $privateKey = $system->github_app_private_key;
-
-        if (!$appId || !$privateKey) {
-            $this->fail('GitHub App not configured');
-            return;
-        }
-
-        // From here on the method is a GitHub client built in place - `new Client()`, not
-        // `service('integrations')` - so nothing can stand in for it and a test would have
-        // to sign a JWT and call api.github.com to get any further. The decisions buried
-        // behind that missing seam are the archived-repository skip and the sort order.
-        // @codeCoverageIgnoreStart
-        $client = new Client();
-        
-        $payload = [
-            'iat' => time() - 60,
-            'exp' => time() + (10 * 60),
-            'iss' => $appId,
-        ];
-
-        try {
-            $jwt = JWT::encode($payload, $privateKey, 'RS256');
-            $client->authenticate($jwt, null, AuthMethod::JWT);
-            $token = $client->api('apps')->createInstallationToken($installationId);
-            $client->authenticate($token['token'], null, AuthMethod::ACCESS_TOKEN);
-
-            /** @var \Github\Api\Apps $appsApi */
-            $appsApi = $client->api('apps');
-            $paginator = new ResultPager($client);
-            $response = $paginator->fetch($appsApi, 'listRepositories');
-            
-            $repositories = $response['repositories'] ?? [];
-            while ($paginator->hasNext()) {
-                $response = $paginator->fetchNext();
-                $repositories = array_merge($repositories, $response['repositories'] ?? []);
-            }
-            
-            $result = [];
-            foreach ($repositories as $repo) {
-                // Skip archived repositories
-                if (isset($repo['archived']) && $repo['archived']) {
-                    continue;
-                }
-                
-                $result[] = [
-                    'id' => $repo['id'],
-                    'full_name' => $repo['full_name'],
-                    'name' => $repo['name'],
-                ];
-            }
-
-            // Sort by name
-            usort($result, function ($a, $b) {
-                return strcmp($a['name'], $b['name']);
-            });
-
-            $this->response->setJSON($result);
-            $this->response->send();
-        } catch (\Exception $e) {
-            $this->fail('GitHub API Error: ' . $e->getMessage(), 500);
-            return;
-        }
-        // @codeCoverageIgnoreEnd
-    }
 }

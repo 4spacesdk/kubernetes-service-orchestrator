@@ -1,10 +1,8 @@
 <?php namespace App\Libraries\VersionControlSystems;
 
 use App\Entities\ContainerImage;
-use App\Entities\System;
+use App\Libraries\Github\GithubApi;
 use DebugTool\Data;
-use Firebase\JWT\JWT;
-use Github\AuthMethod;
 use Github\Client;
 
 class GithubVersionControl extends BaseVersionControlSystem {
@@ -27,28 +25,17 @@ class GithubVersionControl extends BaseVersionControlSystem {
      * @codeCoverageIgnore
      */
     private function authenticateAsInstallation(): void {
-        $system = System::Get();
-        $appId = $system->github_app_id;
-        $privateKey = $system->github_app_private_key;
-        $installationId = $system->github_app_installation_id;
-
-        if (!$appId || !$privateKey || !$installationId) {
+        if (!$this->containerImage->github_integration_id) {
+            return;
+        }
+        $integration = $this->containerImage->github_integration;
+        $integration->find();
+        if (!$integration->exists() || !$integration->isInstalled()) {
             return;
         }
 
-        $payload = [
-            'iat' => time() - 60,
-            'exp' => time() + (10 * 60),
-            'iss' => $appId,
-        ];
-
         try {
-            $jwt = JWT::encode($payload, $privateKey, 'RS256');
-
-            $this->client->authenticate($jwt, null, AuthMethod::JWT);
-            $token = $this->client->api('apps')->createInstallationToken($installationId);
-
-            $this->client->authenticate($token['token'], null, AuthMethod::ACCESS_TOKEN);
+            $this->client = GithubApi::installationClient($integration);
         } catch (\Exception $e) {
             Data::debug("GitHub App Auth Error: " . $e->getMessage());
         }

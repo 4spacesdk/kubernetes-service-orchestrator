@@ -10,8 +10,8 @@ class SystemModel extends Model implements ResourceModelInterface {
      *
      * `restGet()` is what runs them, and there are only two ways in: a `get` route, or
      * being an included relation on one. `systems` has neither. It carries only a `patch`
-     * route - `Systems::get()` is switched off with `@ignore true` precisely because a
-     * listing would hand out the GitHub App private key, which is SEC-1 - and no model
+     * route - `Systems::get()` is switched off with `@ignore true`, because a listing once
+     * handed out the GitHub App private key (SEC-1) - and no model
      * names `SystemModel` in its `$hasOne` or `$hasMany`, so no `?include=` reaches it.
      *
      * They are marked rather than left uncovered because the thing keeping them out is a
