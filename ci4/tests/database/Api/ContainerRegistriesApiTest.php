@@ -5,7 +5,7 @@ use App\Fixtures;
 use App\Tests\Fakes\FakeIntegrations;
 
 /**
- * The registry connection over the API (INT-1a).
+ * The registry connection over the API.
  *
  * The secrets are write-only, which only works if saving the rest of the form cannot wipe
  * them: the dialog never has them to send back. So a PATCH that leaves a secret out, or
@@ -123,7 +123,7 @@ class ContainerRegistriesApiTest extends ControllerTestCase {
 
     // </editor-fold>
 
-    // <editor-fold desc="Creating images from the registry (INT-1b)">
+    // <editor-fold desc="Creating images from the registry">
 
     public function testTheRepositoriesAreListedWithTheImageAlreadyMadeFromThem(): void {
         $fakes = FakeIntegrations::install();
@@ -199,7 +199,7 @@ class ContainerRegistriesApiTest extends ControllerTestCase {
 
     // </editor-fold>
 
-    // <editor-fold desc="Setting up events (INT-1c)">
+    // <editor-fold desc="Setting up events">
 
     public function testSettingUpEventsHandsTheRegistryAUrlAndASecretAndTurnsEventsOn(): void {
         $fakes = FakeIntegrations::install();

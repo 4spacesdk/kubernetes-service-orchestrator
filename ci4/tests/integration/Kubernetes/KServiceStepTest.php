@@ -164,7 +164,7 @@ class KServiceStepTest extends ClusterTestCase {
     }
 
     /**
-     * The same collision as FEAT-13, seen from the other end: both volume sources name
+     * The same name collision the claim step has, seen from the other end: both volume sources name
      * their volume after the deployment, so a deployment with one of each builds a template
      * with two volumes of one name. A pod spec cannot have that.
      */

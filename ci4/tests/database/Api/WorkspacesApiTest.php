@@ -498,13 +498,14 @@ class WorkspacesApiTest extends ControllerTestCase {
      *
      * `requestSupportLogin` was registered by the initial migration in 2023 and the
      * controller method is gone, so every installation carries a route to nothing. It is a
-     * small thing on its own and a clear example of what SEC-11 is about: the routes are
-     * data, written once by a migration, and nothing keeps them in step with the code.
+     * small thing on its own and a clear example of authorization living in the table: the
+     * routes are data, written once by a migration, and nothing keeps them in step with the
+     * code.
      */
     public function testTheSupportLoginRouteStillPointsAtAMethodThatIsGone(): void {
         $this->assertFalse(
             method_exists(\App\Controllers\Workspaces::class, 'requestSupportLogin'),
-            'the method is back - remove this test and the note in SEC-11'
+            'the method is back - remove this test'
         );
 
         $this->assertSame(

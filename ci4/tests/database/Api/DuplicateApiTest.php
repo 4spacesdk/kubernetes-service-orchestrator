@@ -6,16 +6,17 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use RestExtension\Exceptions\UnauthorizedException;
 
 /**
- * DUP-2: a copy of a deployment specification or a deployment package, made on the server.
+ * A copy of a deployment specification or a deployment package, made on the server.
  *
  * A specification is mostly child collections, edited in dialogs of their own that need a
- * saved row to write to - which is why this cannot be done in the browser, as DUP-1 is.
+ * saved row to write to - which is why this cannot be done in the browser, as the copy
+ * button on the flat lists is.
  *
  * Two things are held here. **Every column of every row comes along**, which the tests check
  * by filling each column from its type rather than by naming fields, so a column added
  * later is covered without anyone remembering to. And **the original keeps its rows**: a
  * child copied by re-pointing its foreign key would move from the original to the copy,
- * which is what DUP-1 nearly did to gateway addresses.
+ * which is what copying a gateway in the browser nearly did to its addresses.
  *
  * The last test in each half is a guard: every table that belongs to a specification or a
  * package has to be listed here as copied or as deliberately not, so a new child collection

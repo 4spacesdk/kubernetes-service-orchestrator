@@ -151,7 +151,7 @@ class KubeIstioGatewayTest extends ClusterTestCase {
     }
 
     /**
-     * Today's behaviour, and the same shape as FEAT-16. An Istio Gateway has no `status`
+     * Today's behaviour. An Istio Gateway has no `status`
      * subresource, so the attribute is absent and `getStatus()` - declared to return an
      * array - hands back null. The call dies on its own return type.
      *
@@ -175,7 +175,7 @@ class KubeIstioGatewayTest extends ClusterTestCase {
     // <editor-fold desc="Removing it">
 
     /**
-     * Today's behaviour, and the other half of FEAT-17. `delete()` builds the resource
+     * Today's behaviour, and the same bug `KubeCertificate` has. `delete()` builds the resource
      * fresh and never calls `synced()`, and php-k8s answers `delete()` on an unsynced
      * resource with `return true` before it sends anything. So it reports success, sends
      * nothing, and the gateway stays where it was.

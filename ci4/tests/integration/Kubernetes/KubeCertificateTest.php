@@ -93,8 +93,7 @@ class KubeCertificateTest extends ClusterTestCase {
      * request. Every deployment step calls `synced()` first; these two certificate classes
      * do not.
      *
-     * Nothing calls this today, which is the only reason it has not been noticed. See
-     * FEAT-17.
+     * Nothing calls this today, which is the only reason it has not been noticed.
      */
     public function testDeletingDoesNothingAtAll(): void {
         $domain = $this->domainInTheTestNamespace();
@@ -124,10 +123,9 @@ class KubeCertificateTest extends ClusterTestCase {
      * declared to return an array and hands back whatever is under `status`, which is
      * nothing, so it dies on its own return type.
      *
-     * That is the same shape as FEAT-16, and it is reachable in production: any cluster
-     * where cert-manager is missing, not yet running, or has not got to this certificate
-     * yet. The expiry cron job and the domain's certificate panel both go through here.
-     * See FEAT-17.
+     * It is reachable in production: any cluster where cert-manager is missing, not yet
+     * running, or has not got to this certificate yet. The expiry cron job and the domain's
+     * certificate panel both go through here.
      */
     public function testTheStatusOfAFreshCertificateDiesUntilCertManagerWritesOne(): void {
         $domain = $this->domainInTheTestNamespace();
@@ -146,7 +144,7 @@ class KubeCertificateTest extends ClusterTestCase {
      * looks exactly like one it accepted, and the endpoint answers success either way.
      *
      * A namespace that is not there is the realistic way in: a domain keeps pointing at one
-     * after it is removed. See FEAT-17.
+     * after it is removed.
      */
     public function testACertificateThatCouldNotBeCreatedIsSwallowedWithoutAWord(): void {
         $domain = $this->domainInTheTestNamespace([

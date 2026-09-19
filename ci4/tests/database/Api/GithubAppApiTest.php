@@ -9,9 +9,10 @@ use App\Tests\Fakes\FakeIntegrations;
  * The two places GitHub sends the operator's browser while a GitHub integration is set up.
  *
  * Both are public, because a browser arriving from GitHub carries no token, so whatever they
- * accept is what anyone who can get the operator to open a link gets to choose. Until INT-2
- * that was everything: the callback replaced the connected App's keys, and post-install
- * repointed the installation, on the strength of a query string (SEC-19).
+ * accept is what anyone who can get the operator to open a link gets to choose. Before GitHub
+ * became an integration of its own, that was everything: the callback replaced the
+ * connected App's keys, and post-install repointed the installation, on the strength of a
+ * query string.
  *
  * Now each acts only on the integration whose state nonce it is handed, and uses it up.
  */
@@ -32,7 +33,7 @@ class GithubAppApiTest extends ControllerTestCase {
     /**
      * The controller and the route table agree that both are public, and the two endpoints
      * that did not need to be - the manifest and the repository listing - are gone from it.
-     * They live on the integration now, behind a token (SEC-10).
+     * They live on the integration now, behind a token.
      */
     public function testOnlyTheTwoRedirectsAreLeftAndBothArePublic(): void {
         $controller = new \App\Controllers\GithubApp();
@@ -71,7 +72,7 @@ class GithubAppApiTest extends ControllerTestCase {
     }
 
     /**
-     * SEC-19. A code with no state kso issued is somebody else's App. GitHub is not asked,
+     * A code with no state kso issued is somebody else's App. GitHub is not asked,
      * and the App already connected is left alone - including by an empty state, which is
      * what every integration not in the middle of a setup has.
      */
@@ -214,9 +215,9 @@ class GithubAppApiTest extends ControllerTestCase {
     }
 
     /**
-     * SEC-19, the half that was a single link: a public endpoint that took the installation
-     * id from the query string. Without the state kso issued it now writes nothing - and does
-     * not tell the browser it worked.
+     * The half of the old takeover that was a single link: a public endpoint that took the
+     * installation id from the query string. Without the state kso issued it now writes
+     * nothing - and does not tell the browser it worked.
      */
     #[\PHPUnit\Framework\Attributes\DataProvider('statesKsoDidNotIssue')]
     public function testALinkCanNoLongerRepointTheInstallation(string $query): void {

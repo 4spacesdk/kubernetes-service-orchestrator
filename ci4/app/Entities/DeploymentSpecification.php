@@ -239,7 +239,7 @@ class DeploymentSpecification extends Entity {
     }
 
     /**
-     * The registries kso makes a pull secret for (INT-1d): those with a pull login that an
+     * The registries kso makes a pull secret for: those with a pull login that an
      * image of a deployment of this specification comes from - the workload, its init
      * containers, the migration job and the cron jobs, each only when turned on. Without a
      * deployment, a deployment's own cron jobs are left out.

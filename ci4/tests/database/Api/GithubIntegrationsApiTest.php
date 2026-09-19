@@ -5,7 +5,7 @@ use App\Fixtures;
 use App\Tests\Fakes\FakeIntegrations;
 
 /**
- * The GitHub integration over the API (INT-2): one App per organisation.
+ * The GitHub integration over the API: one App per organisation.
  *
  * Only the name and the organisation are the operator's to write. The rest comes from
  * GitHub through the setup flow, and the secrets never leave the server.

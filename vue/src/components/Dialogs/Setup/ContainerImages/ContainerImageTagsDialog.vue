@@ -7,7 +7,7 @@ import type { DialogEventsInterface } from "@/components/Dialogs/DialogEventsInt
 import ApiService from "@/services/ApiService";
 
 /**
- * The tags an image's registry reports (FEAT-1) - mostly a quick check that the registry's
+ * The tags an image's registry reports - mostly a quick check that the registry's
  * credentials work for this image, so a refusal is shown with its reason.
  */
 export interface ContainerImageTagsDialog_Input {

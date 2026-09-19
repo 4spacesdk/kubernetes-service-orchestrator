@@ -276,6 +276,40 @@ class CronjobStepTest extends ManifestTestCase {
         $this->assertCount(0, $this->build($deployment));
     }
 
+    // <editor-fold desc="Running one now">
+
+    /**
+     * The names to pick from are the ones the step deploys: the specification's and the
+     * deployment's own.
+     */
+    public function testTheNamesCoverTheSpecificationsAndTheDeploymentsOwnCronJobs(): void {
+        $deployment = $this->deploymentWithCronJob();
+        Fixtures::deploymentCronJob([
+            'deployment_id' => $deployment->id,
+            'k8s_cron_job_id' => Fixtures::cronJob(['name' => 'report', 'container_image_id' => Fixtures::containerImage()->id])->id,
+        ]);
+
+        $this->assertSame(
+            ["{$deployment->name}-cleanup", "{$deployment->name}-report"],
+            (new CronjobStep())->getCronJobNames($deployment)
+        );
+    }
+
+    /**
+     * The name comes from the request. One the deployment does not have is refused before
+     * the cluster is asked - this suite has none - so no request can start another
+     * deployment's job.
+     */
+    public function testANameThatIsNotTheDeploymentsIsRefusedBeforeTheClusterIsAsked(): void {
+        $deployment = $this->deploymentWithCronJob();
+
+        $this->expectExceptionMessage("'someone-else-cleanup' is not one of the deployment's cron jobs");
+
+        (new CronjobStep())->runNow($deployment, 'someone-else-cleanup');
+    }
+
+    // </editor-fold>
+
     // <editor-fold desc="Fixtures and reading">
 
     /**

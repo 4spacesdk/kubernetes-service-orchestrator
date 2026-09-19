@@ -19,6 +19,7 @@
 * GitHub Integrations: one GitHub App per organisation
 * Lists: search, filters, page and sort kept in the url, sortable columns, clickable names ([#53](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/53)), keyboard shortcuts
 * Update the version of several deployments at once
+* Run a deployment's cron job now, from the Resources dialog ([#50](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/50))
 * Duplicate on most setup entities
 * Faster start: the app loads half as much before it shows, and dialogs reuse the lists they pick from
 * Terminate and Delete moved into a menu on workspaces and gateways

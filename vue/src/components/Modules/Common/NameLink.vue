@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * The name in a list row, as the row's default action (LIST-4, #53). A link rather than a
+ * The name in a list row, as the row's default action (#53). A link rather than a
  * span, so it is reachable with Tab and opened with Enter.
  */
 const emit = defineEmits<{

@@ -73,7 +73,7 @@ class CheckKNativeMinScaleSchedulesTest extends DatabaseTestCase {
     }
 
     /**
-     * **Today's behaviour, and it is FEAT-22.** `checkForDue()` finds the schedule that is
+     * **Today's behaviour, and it is a bug.** `checkForDue()` finds the schedule that is
      * due and then returns the whole **collection** rather than the one it found, so
      * `applyMinScale()` reads the first schedule's value - the one with the lowest priority
      * number - whichever one was actually due.

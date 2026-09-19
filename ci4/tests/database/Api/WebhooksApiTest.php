@@ -162,9 +162,9 @@ class WebhooksApiTest extends ControllerTestCase {
 
     /**
      * Pinned, not endorsed. A delivery is returned with the bearer token it was sent with,
-     * in clear text, to any signed-in caller - the same shape of exposure SEC-1 was about,
-     * one level down. The token belongs to the subscriber's system, not to kso, so kso
-     * cannot rotate it and the subscriber has no way of knowing it was read.
+     * in clear text, to any signed-in caller - the same shape of exposure the GitHub App key
+     * once had, one level down. The token belongs to the subscriber's system, not to kso, so
+     * kso cannot rotate it and the subscriber has no way of knowing it was read.
      *
      * The field list is asserted whole so that the day it is narrowed, that is a deliberate
      * edit here rather than a silent change of what the settings page shows.

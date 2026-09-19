@@ -20,7 +20,7 @@ class PersistentVolumeClaimStepTest extends ManifestTestCase {
 
     /**
      * The one trigger is what makes an edited volume reach the cluster without a full
-     * deploy - and the claim is the resource that edit cannot actually change, see FEAT-13.
+     * deploy - and the claim is the resource that edit cannot actually change, see `StorageStepsTest`.
      */
     public function testTheStepIsWiredInAtTheDeploymentLevel(): void {
         $step = new PersistentVolumeClaimStep();

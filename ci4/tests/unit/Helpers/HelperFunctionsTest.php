@@ -340,7 +340,7 @@ class HelperFunctionsTest extends CIUnitTestCase {
      * It is latent only because every caller today is handed RFC 3339 by Kubernetes or
      * cert-manager. The moment a MySQL-shaped datetime reaches it - and one column away,
      * `CheckCertificateExpiry` decides whether to warn on the answer - it is silently a day
-     * out. See FEAT-29.
+     * out.
      */
     public function testAnOrdinarySpacedDatetimeComesBackADayEarly(): void {
         $parsed = strtotime_('2024-05-01 10:00:00');

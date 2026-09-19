@@ -8,7 +8,7 @@ import type { DialogEventsInterface } from "@/components/Dialogs/DialogEventsInt
 import ApiService from "@/services/ApiService";
 
 /**
- * Create container images by picking repositories from a registry connection (INT-1b).
+ * Create container images by picking repositories from a registry connection.
  * Opened from a connection, or from the image list without one - then it asks which.
  */
 export interface ContainerRegistryImportDialog_Input {

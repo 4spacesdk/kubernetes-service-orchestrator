@@ -57,7 +57,7 @@ class DomainsApiTest extends ClusterControllerTestCase {
     }
 
     /**
-     * **Today's behaviour, and it is FEAT-17 seen from the endpoint.** cert-manager writes
+     * **Today's behaviour, and a bug seen from the endpoint.** cert-manager writes
      * the status, and its controller is not installed - so `getStatus()` returns null from
      * a method declared to return an array, and the page dies. The same happens in any
      * cluster where cert-manager is missing or has not got to this certificate yet.
@@ -171,7 +171,7 @@ class DomainsApiTest extends ClusterControllerTestCase {
 
     /**
      * Every one of these follows the `if ($item->exists())` shape, so an unknown id is
-     * answered with success and an empty resource rather than a refusal. That is FEAT-9,
+     * answered with success and an empty resource rather than a refusal. That is a bug,
      * and it is the opposite of what the Gateways endpoints do.
      */
     #[DataProvider('theCertificateEndpoints')]
@@ -225,7 +225,7 @@ class DomainsApiTest extends ClusterControllerTestCase {
     }
 
     /**
-     * Today's behaviour, and the second half of FEAT-17: `KubeIstioGateway::delete()` has
+     * Today's behaviour, and a bug: `KubeIstioGateway::delete()` has
      * the same missing `synced()` as the certificate class, so terminating reports success
      * and leaves the gateway where it was.
      */

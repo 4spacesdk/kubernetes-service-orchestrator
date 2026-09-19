@@ -48,6 +48,11 @@ const selectedDeploymentRows = ref<Row[]>([]);
 const isLoadingBatchDeploy = ref(false);
 const isLoadingBatchTerminate = ref(false);
 const isMissingWorkspace = ref(false);
+/** The deployment's cron jobs, for Run. Loaded the first time the menu opens. */
+const cronJobNames = ref<string[] | null>(null);
+const isLoadingCronJobNames = ref(false);
+const runningCronJob = ref<string | null>(null);
+const isRunMenuOpen = ref(false);
 
 // <editor-fold desc="Functions">
 
@@ -186,6 +191,51 @@ function onPreviewBtnClicked(row: Row) {
     bus.emit('deploymentResourcePreview', {
         deployment: props.input.deployment,
         step: row.item,
+    });
+}
+
+function onRunMenuToggled(open: boolean) {
+    isRunMenuOpen.value = open;
+    if (!open || cronJobNames.value !== null) {
+        return;
+    }
+    isLoadingCronJobNames.value = true;
+    const api = Api.deployments().getCronJobNamesGetById(props.input.deployment.id!);
+    api.setErrorHandler(response => {
+        bus.emit('info', {
+            title: 'Failed to list the cron jobs',
+            body: response.error ?? 'failed to load',
+        });
+        isLoadingCronJobNames.value = false;
+        return false;
+    });
+    api.find(response => {
+        cronJobNames.value = response[0]?.names ?? [];
+        isLoadingCronJobNames.value = false;
+    });
+}
+
+/**
+ * Starts a job from the cron job's template in the cluster - what is deployed,
+ * not what the next deploy would send.
+ */
+function onRunCronJobClicked(name: string) {
+    runningCronJob.value = name;
+    const api = Api.deployments().runCronJobPostById(props.input.deployment.id!)
+        .name(name);
+    api.setErrorHandler(response => {
+        bus.emit('info', {
+            title: `Failed to run ${name}`,
+            body: response.error ?? 'failed to run',
+        });
+        runningCronJob.value = null;
+        return false;
+    });
+    api.save(null, value => {
+        bus.emit('toast', {
+            text: `Started ${value.job}`,
+        });
+        runningCronJob.value = null;
     });
 }
 
@@ -604,6 +654,28 @@ function onCloseBtnClicked() {
                                     :disabled="item.item.hasPreviewCommand"
                                     activator="parent" location="bottom">Not available for this step
                                 </v-tooltip>
+                            </div>
+                            <div v-if="item.item.identifier === 'cronjob'">
+                                <v-menu @update:model-value="onRunMenuToggled">
+                                    <template v-slot:activator="{ props: menuProps }">
+                                        <v-btn
+                                            v-bind="menuProps"
+                                            :loading="runningCronJob !== null"
+                                            variant="plain" color="primary" size="small" icon>
+                                            <v-icon>fa fa-person-running</v-icon>
+                                            <v-tooltip :disabled="isRunMenuOpen" activator="parent" location="bottom">Run a cron job now</v-tooltip>
+                                        </v-btn>
+                                    </template>
+                                    <v-list density="compact">
+                                        <v-list-item v-if="isLoadingCronJobNames" title="Loading..."/>
+                                        <v-list-item v-else-if="!cronJobNames?.length" title="No cron jobs"/>
+                                        <v-list-item
+                                            v-for="name in cronJobNames ?? []" :key="name"
+                                            :title="name"
+                                            prepend-icon="fa fa-play"
+                                            @click="onRunCronJobClicked(name)"/>
+                                    </v-list>
+                                </v-menu>
                             </div>
                             <div>
                                 <v-btn

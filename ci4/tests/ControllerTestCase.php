@@ -8,8 +8,9 @@ use CodeIgniter\Test\FeatureTestTrait;
  * Base for tests that send a real request through the whole stack.
  *
  * Routing, filters, the RestExtension authorization hook, the controller and the response
- * all run. That is the point: SEC-1 was not a wrong value in a manifest, it was an
- * endpoint answering a request it should have refused, and only a real request sees that.
+ * all run. That is the point: the leaked GitHub App credentials were not a wrong value in a
+ * manifest, they came from an endpoint answering a request it should have refused, and only
+ * a real request sees that.
  *
  * Four things have to be arranged first, and none of them is obvious.
  *

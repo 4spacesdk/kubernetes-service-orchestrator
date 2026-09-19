@@ -182,7 +182,7 @@ class Workspace extends Entity {
                     try {
                         $tags = $deploymentSpecification->container_image->getTags();
                     } catch (\Throwable $e) {
-                        // As before FEAT-1 made a failed lookup throw: no version.
+                        // A registry that cannot be read gives no version, as it did before a failed lookup threw.
                         Data::debug($e->getMessage());
                         $tags = [];
                     }

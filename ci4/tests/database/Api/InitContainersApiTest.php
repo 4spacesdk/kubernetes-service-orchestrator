@@ -83,7 +83,7 @@ class InitContainersApiTest extends ControllerTestCase {
     /**
      * An unknown id is answered with OK and nothing is written - the same shape as the
      * deployment and specification endpoints, and the same objection: a dialog saving
-     * against a container somebody else deleted is told it worked. See FEAT-9.
+     * against a container somebody else deleted is told it worked.
      *
      * The rows matter as much as the status. The entity's `Create()` saves each variable
      * before it is attached to anything, so a guard moved one line down would leave a

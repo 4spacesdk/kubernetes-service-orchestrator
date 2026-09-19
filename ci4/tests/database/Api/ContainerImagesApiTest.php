@@ -5,7 +5,7 @@ use App\Fixtures;
 use App\Tests\Fakes\FakeIntegrations;
 
 /**
- * An image's tags, read from its registry (FEAT-1).
+ * An image's tags, read from its registry (#64).
  *
  * The endpoint is there to check a registry's credentials, so a registry that refuses must
  * say why. An empty list would read as "no tags" - the answer this used to give for both.

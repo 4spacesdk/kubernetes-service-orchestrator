@@ -78,7 +78,7 @@ class ContainerImage extends Entity {
 
     /**
      * The secrets a pod pulling this image names: the one kso makes for its registry, if
-     * the registry has a pull login, and the one named on the image, if any (INT-1d). Both,
+     * the registry has a pull login, and the one named on the image, if any. Both,
      * so moving an image over to a kso-made secret does not need a moment where it has none.
      *
      * @return string[]

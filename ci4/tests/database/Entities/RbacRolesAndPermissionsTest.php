@@ -152,7 +152,7 @@ class RbacRolesAndPermissionsTest extends DatabaseTestCase {
      *
      * So calling it twice with the same two permissions leaves three join rows, one of them
      * a duplicate. Calling it with a *smaller* set does not take anything away: a permission
-     * removed from the list keeps its row. Nothing reads these rows today (SEC-4), which is
+     * removed from the list keeps its row. Nothing reads these rows today, which is
      * the only reason it has not bitten - the day RBAC is enforced, revoking a permission
      * will not revoke it.
      *

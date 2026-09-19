@@ -44,7 +44,7 @@ const isLoading = ref(true);
 const options = ref({});
 
 const showCreateMenu = ref(false);
-/** Ids of the rows ticked for a bulk update (LIST-6). */
+/** Ids of the rows ticked for a bulk update. */
 const selected = ref<number[]>([]);
 const deploymentSpecs = ref<DeploymentSpecification[]>([]);
 const showDeploymentSpecsWarning = ref(true);

@@ -113,7 +113,7 @@ class RelationIncludeApiTest extends ControllerTestCase {
      *
      * It is worth pinning because it is the route a secret travels without anyone asking
      * for it: `GET /deployments/{id}` pulls in the deployment's database service, and that
-     * entity still returns `pass` in cleartext (SEC-2). The include parameter is not the
+     * entity still returns `pass` in cleartext. The include parameter is not the
      * only way in.
      *
      * If the extension ever starts honouring the include list here, this test is the one

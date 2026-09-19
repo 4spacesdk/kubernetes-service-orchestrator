@@ -214,7 +214,7 @@ class RoutingStepsTest extends ClusterTestCase {
      * with none sends `routes: []` - and php-k8s rewrites **every** empty list in the
      * payload to `{}` before sending it, by string replacement, with three hardcoded
      * exceptions. Contour's schema wants an array, so the deploy fails with a 422 that
-     * names a field nobody wrote. See FEAT-14.
+     * names a field nobody wrote.
      */
     public function testAContourSpecificationWithoutRoutesIsRefusedByTheSchema(): void {
         $deployment = $this->routableDeployment(\NetworkTypes::Contour, [], [], withRoute: false);

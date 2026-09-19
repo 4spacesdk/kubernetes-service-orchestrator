@@ -422,7 +422,7 @@ onUnmounted(() => {
     document.removeEventListener("change", onChangeEventListener, true);
 });
 
-// <editor-fold desc="Keyboard shortcuts (LIST-2)">
+// <editor-fold desc="Keyboard shortcuts">
 
 /**
  * The dialog on top. Vuetify appends each overlay to the same container as it opens, so

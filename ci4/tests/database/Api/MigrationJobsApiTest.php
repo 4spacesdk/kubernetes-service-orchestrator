@@ -8,8 +8,8 @@ use App\Fixtures;
  *
  * The job runs inside the customer's cluster and calls home when it starts and when it
  * finishes, posting its log as the request body. **These two endpoints take no token** -
- * the job has none - which is accepted deliberately and written up in SEC-10; the job id is
- * all that stands in for authentication.
+ * the job has none - which is accepted deliberately; the job id is all that stands in for
+ * authentication.
  *
  * That makes what they write worth knowing exactly.
  */
@@ -66,7 +66,7 @@ class MigrationJobsApiTest extends ControllerTestCase {
     }
 
     /**
-     * No token anywhere in these two calls - see SEC-10. Pinned so that adding
+     * No token anywhere in these two calls - the job has none to send. Pinned so that adding
      * authentication is a deliberate act rather than something that breaks the cluster
      * quietly.
      */
@@ -120,11 +120,11 @@ class MigrationJobsApiTest extends ControllerTestCase {
      * `requireAuth()` returns false for every method name, so read as code this controller
      * is entirely public - including `GET /migration_jobs`, which lists every migration and
      * its log. It is not: the column says otherwise for everything but the two callbacks,
-     * and the column is the only thing the authorization hook reads (SEC-11). The method has
+     * and the column is the only thing the authorization hook reads. The method has
      * no call sites anywhere in the application.
      *
      * Both halves are asserted so that closing the gap from either side is visible. The two
-     * public rows are SEC-10's deliberate exception: the job runs inside the customer's
+     * public rows are a deliberate exception: the job runs inside the customer's
      * cluster and has no token to call home with.
      */
     public function testTheControllerCallsItselfPublicAndOnlyTwoRoutesActuallyAre(): void {

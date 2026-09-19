@@ -5,7 +5,7 @@ use App\Entities\Webhook;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
- * Every field the lists in the web app sort by (LIST-5), asked of the API.
+ * Every field the lists in the web app sort by, asked of the API.
  *
  * `ordering` is not checked by the API: a field that is not a column is a database error,
  * and a direction that is not `asc` or `desc` answers an empty list. The lists only send

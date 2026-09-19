@@ -85,7 +85,7 @@ class MigrationJobStepTest extends ManifestTestCase {
      * The dialog offers three tag policies for the migration image, but this step handles
      * only two: "Default" reaches a `match` with no arm for it and throws. Nothing else
      * goes wrong first, so the whole deploy fails while the manifest is being built.
-     * Held as a test so the fix - see FEAT-6 - is a deliberate one.
+     * Held as a test so the fix is a deliberate one.
      */
     public function testDefaultTagPolicyOnTheMigrationImageIsUnhandled(): void {
         $migrationImage = Fixtures::containerImage(['url' => 'registry.example.org/migrator']);
@@ -120,7 +120,7 @@ class MigrationJobStepTest extends ManifestTestCase {
     /**
      * The first callback is joined to the migration with `&&`, so a kso that cannot be
      * reached means the migration never runs at all - the job fails on the curl instead.
-     * That is the arrangement issue #42 is about; see FEAT-4.
+     * That is the arrangement issue #42 is about.
      */
     public function testMigrationOnlyRunsIfTheFirstCallbackSucceeds(): void {
         $deployment = $this->migratableDeployment([], ['database_migration_command' => 'php spark migrate']);

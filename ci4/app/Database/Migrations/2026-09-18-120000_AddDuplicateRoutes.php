@@ -6,7 +6,8 @@ use CodeIgniter\Database\Migration;
 use RestExtension\Entities\ApiRoute;
 
 /**
- * DUP-2. Signed in only - `quick()` leaves `is_public` off.
+ * Routes for duplicating a deployment specification and a deployment package.
+ * Signed in only - `quick()` leaves `is_public` off.
  */
 class AddDuplicateRoutes extends Migration {
 

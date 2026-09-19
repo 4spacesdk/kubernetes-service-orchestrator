@@ -450,7 +450,7 @@ function onDeploymentPackagesShortcutClicked() {
                         <v-tooltip activator="parent" location="bottom">Deploy</v-tooltip>
                     </v-btn>
 
-                    <!-- Terminate and Delete stay out of reach of a slip from Deploy (LIST-3). -->
+                    <!-- Terminate and Delete stay out of reach of a slip from Deploy. -->
                     <v-menu v-if="rbacDeveloper || rbacWorkspaceUpdate" location="bottom end">
                         <template v-slot:activator="{ props }">
                             <v-btn v-bind="props" variant="plain" color="primary"  aria-label="More" :loading="item.isLoadingDeleteBtn" size="small" density="comfortable" icon>

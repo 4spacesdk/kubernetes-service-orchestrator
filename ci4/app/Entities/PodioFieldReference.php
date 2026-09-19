@@ -31,7 +31,7 @@ class PodioFieldReference extends Entity {
      * The value of this field on the item the url points at.
      *
      * The url is a Podio task link; everything after `items/` is the id. A url without
-     * that segment is not handled - see FEAT-11.
+     * that segment is not handled and fails with `Undefined array key 1`.
      */
     public function getFieldValue(string $url): ?string {
         if (!$this->podio_integration->exists()) {

@@ -6,14 +6,14 @@ use App\Models\ContainerImageModel;
 use App\Libraries\Integrations\IntegrationFactory;
 
 /**
- * A connection to a container registry, shared by every image that lives in it (INT-1a).
+ * A connection to a container registry, shared by every image that lives in it.
  *
  * The credentials used to sit on each image, so one key was stored once per image and a
  * rotation meant editing all of them. Now an image points here.
  *
  * **The secrets are write-only.** They are hidden from every response - the `has_*` fields
  * say whether one is set - and a PATCH that leaves one out or sends it empty keeps what is
- * stored, so a form can be saved without re-entering them. See SEC-2.
+ * stored, so a form can be saved without re-entering them.
  *
  * Class ContainerRegistry
  * @package App\Entities
@@ -39,7 +39,7 @@ use App\Libraries\Integrations\IntegrationFactory;
  * @property string $harbor_username
  * @property string $harbor_password
  *
- * # Pulling, from inside the cluster (INT-1d). Its own, read-only login - see getDockerConfigJson().
+ * # Pulling, from inside the cluster. Its own, read-only login - see getDockerConfigJson().
  * @property string $pull_username
  * @property string $pull_password
  *
@@ -106,7 +106,7 @@ class ContainerRegistry extends Entity {
     }
 
     /**
-     * Make the registry tell kso about new tags, and turn events on (INT-1c).
+     * Make the registry tell kso about new tags, and turn events on.
      *
      * A webhook gets a secret of its own, made here the first time and kept after that, so
      * running this again - after an import into a new project, say - does not break the
@@ -139,7 +139,7 @@ class ContainerRegistry extends Entity {
     }
 
     /**
-     * Whether kso makes the pull secret for this registry (INT-1d). Only with a login of its
+     * Whether kso makes the pull secret for this registry. Only with a login of its
      * own: the one kso reads tags and sets webhooks up with can do more than pull, and a
      * pull secret is readable by anyone who may read secrets in the namespace.
      */
@@ -175,7 +175,7 @@ class ContainerRegistry extends Entity {
 
     /**
      * Whether a webhook call carries this connection's secret. A connection that never had
-     * a webhook set up by kso has no secret and accepts nothing - see INT-1c.
+     * a webhook set up by kso has no secret and accepts nothing.
      */
     public function acceptsWebhook(?string $authorization): bool {
         return strlen((string) $this->webhook_secret) > 0
@@ -215,7 +215,7 @@ class ContainerRegistry extends Entity {
     }
 
     /**
-     * Make an image for each named repository that does not have one yet (INT-1b).
+     * Make an image for each named repository that does not have one yet.
      *
      * The names are looked up in the registry again rather than trusted: the url an image
      * gets comes from the registry, never from the request. A name the registry does not

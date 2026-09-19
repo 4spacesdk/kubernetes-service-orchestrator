@@ -73,6 +73,14 @@ export interface DeploymentAnnotationList {
     values?: DeploymentAnnotation[];
 }
 
+export interface DeploymentCronJobNamesGetResponse {
+    names?: string[];
+}
+
+export interface DeploymentCronJobRunResponse {
+    job?: string;
+}
+
 export interface DeploymentPackageDeploymentSpecification {
     deploymentSpecification?: DeploymentSpecification;
     defaultEnablePodioNotification?: boolean;
@@ -3437,6 +3445,53 @@ export class DeploymentsUpdateCronJobsPutById extends BaseApi<Deployment> {
     }
 }
 
+export class DeploymentsGetCronJobNamesGetById extends BaseApi<DeploymentCronJobNamesGetResponse> {
+
+    public topic = 'Resources.DeploymentCronJobNamesGetResponses';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/deployments/${id}/cron-jobs/names`;
+    }
+
+    protected convertToResource(data: any): DeploymentCronJobNamesGetResponse {
+        return data;
+    }
+
+    public find(next?: (value: DeploymentCronJobNamesGetResponse[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class DeploymentsRunCronJobPostById extends BaseApi<DeploymentCronJobRunResponse> {
+
+    public topic = 'Resources.DeploymentCronJobRunResponses';
+    protected method = 'post';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/deployments/${id}/cron-jobs/run`;
+    }
+
+    protected convertToResource(data: any): DeploymentCronJobRunResponse {
+        return data;
+    }
+
+    public name(value: string): DeploymentsRunCronJobPostById {
+        this.addQueryParameter('name', value);
+        return this;
+    }
+
+    public save(data: any, next?: (value: DeploymentCronJobRunResponse) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
 export class DeploymentsUpdateKNativeMinScaleSchedulesPutById extends BaseApi<Deployment> {
 
     public topic = 'Resources.Deployments';
@@ -3593,6 +3648,14 @@ class Deployments {
 
     public updateCronJobsPutById(id: number): DeploymentsUpdateCronJobsPutById {
         return new DeploymentsUpdateCronJobsPutById(id);
+    }
+
+    public getCronJobNamesGetById(id: number): DeploymentsGetCronJobNamesGetById {
+        return new DeploymentsGetCronJobNamesGetById(id);
+    }
+
+    public runCronJobPostById(id: number): DeploymentsRunCronJobPostById {
+        return new DeploymentsRunCronJobPostById(id);
     }
 
     public updateKNativeMinScaleSchedulesPutById(id: number): DeploymentsUpdateKNativeMinScaleSchedulesPutById {

@@ -6,13 +6,13 @@ use App\ControllerTestCase;
  * The two endpoints that describe this installation to anyone who asks.
  *
  * `GET /swagger` is the Swagger UI page and `GET /swagger/openapi` is the document it
- * reads. **Both answer without a token**, and that is SEC-14: the document is every
- * endpoint, every model and every field of the API - a map of the attack surface, served
- * to anyone who can reach the host.
+ * reads. **Both answer without a token**, and that is a known open issue: the document is
+ * every endpoint, every model and every field of the API - a map of the attack surface,
+ * served to anyone who can reach the host.
  *
  * Here the controller's own `requireAuth()` and the `api_routes.is_public` column agree,
  * which is worth holding on to precisely because they do not have to: the column is what
- * the hook reads, and the method has no call sites at all (SEC-11). Closing SEC-14 means
+ * the hook reads, and the method has no call sites at all. Putting them behind login means
  * changing the column in a migration; the test below is what makes that a deliberate act
  * rather than an accident either way.
  *
@@ -20,7 +20,7 @@ use App\ControllerTestCase;
  * seconds - it reflects over every controller and every model on each call, with no cache
  * in between - and the whole unit+database run has a ten second budget in both cloudbuild
  * files. Half the budget for one endpoint is not a trade worth making, so its body stays
- * uncovered and the cost is reported instead. If SEC-14 is closed by taking the route out
+ * uncovered and the cost is reported instead. If the gap is closed by taking the route out
  * of `api_routes`, the method becomes unreachable and the question goes away.
  */
 class SwaggerApiTest extends ControllerTestCase {
@@ -50,8 +50,8 @@ class SwaggerApiTest extends ControllerTestCase {
 
         $public = array_column($rows, 'is_public', 'from');
 
-        $this->assertSame(1, (int) $public['swagger'], 'the UI page is closed now - SEC-14 has moved');
-        $this->assertSame(1, (int) $public['swagger/openapi'], 'the document is closed now - SEC-14 is fixed');
+        $this->assertSame(1, (int) $public['swagger'], 'the UI page needs a login now - update this test and the note above');
+        $this->assertSame(1, (int) $public['swagger/openapi'], 'the document needs a login now - update this test and the note above');
     }
 
     /**

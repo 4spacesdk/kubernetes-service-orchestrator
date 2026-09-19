@@ -169,7 +169,7 @@ class CustomResourceStep extends BaseDeploymentStep {
         // shared by the cluster, under the same name, and the last one deployed won.
         //
         // A manifest that *does* name a namespace is still honoured, including one outside
-        // the workspace. See SEC-15.
+        // the workspace: the manifest comes from an operator, not a customer.
         if (!isset($yaml['metadata']['namespace'])) {
             $resource->setNamespace($deployment->namespace);
         }

@@ -27,14 +27,14 @@ abstract class BaseContainerRegistry {
 
     /**
      * Whether an image url is one of this registry's. A webhook is trusted to report pushes
-     * to its own registry, not to name any image it likes (INT-1c).
+     * to its own registry, not to name any image it likes.
      */
     public function hasImage(string $imageUrl): bool {
         return str_starts_with($imageUrl, $this->getUrlPrefix() . '/');
     }
 
     /**
-     * Make the registry tell kso about new tags (INT-1c). A webhook is to call `$webhookUrl`
+     * Make the registry tell kso about new tags. A webhook is to call `$webhookUrl`
      * with `Authorization: Bearer $secret`; a registry that kso pulls from instead ignores
      * both. The image urls say where the images live, for a registry that is set up per
      * project. Returns what was done, in words.
@@ -51,7 +51,7 @@ abstract class BaseContainerRegistry {
 
     /**
      * Throws with the registry's reason rather than answering an empty list, so a refused
-     * login cannot be mistaken for an image without tags (FEAT-1).
+     * login cannot be mistaken for an image without tags.
      *
      * @return string[] Oldest version first.
      * @throws \Exception
@@ -88,7 +88,7 @@ abstract class BaseContainerRegistry {
     public abstract function testConnection(): string;
 
     /**
-     * Every repository in the connection, for creating images from (INT-1b).
+     * Every repository in the connection, for creating images from.
      *
      * @return array<array{name: string, url: string}> `url` is what an image in it is pulled as.
      * @throws \Exception

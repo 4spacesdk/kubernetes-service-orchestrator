@@ -7,7 +7,7 @@ import type { DialogEventsInterface } from "@/components/Dialogs/DialogEventsInt
 import ApiService from "@/services/ApiService";
 
 /**
- * Set the version of several deployments at once (LIST-6). Setting a version rolls it out,
+ * Set the version of several deployments at once. Setting a version rolls it out,
  * so this is also how several are deployed together.
  *
  * Each deployment picks its own tag, because their images have different ones; "Set all

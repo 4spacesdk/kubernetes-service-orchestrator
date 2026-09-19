@@ -11,11 +11,11 @@ use App\Models\AutoUpdateModel;
  * Harbor and Azure Container Registry call these when a tag is pushed, and kso turns that
  * into a pending update for every deployment running that image whose tag pattern matches.
  *
- * They are public by necessity - a registry has no token - so since INT-1c each call has
- * to prove itself instead: the url names the registry connection, and the call carries
+ * They are public by necessity - a registry has no token - so each call has to prove
+ * itself instead: the url names the registry connection, and the call carries
  * `Authorization: Bearer <secret>`, a secret kso made when it set the webhook up. Anything
- * else is refused, including a connection kso never set a webhook up for. That closed
- * SEC-12, where a plain POST from anyone wrote rows.
+ * else is refused, including a connection kso never set a webhook up for. Before this
+ * check, a plain POST from anyone wrote rows.
  *
  * The tests keep `auto_update_require_approval` on unless they are specifically about
  * approval, so nothing here approves an update by accident.
@@ -60,7 +60,7 @@ class AutoUpdateWebhooksApiTest extends ControllerTestCase {
     }
 
     /**
-     * Decided with INT-1c: a connection kso never set a webhook up for has no secret, and
+     * A deliberate choice: a connection kso never set a webhook up for has no secret, and
      * accepts nothing - not even a call with an empty bearer. The migrated connections are
      * like that until someone sets them up.
      */

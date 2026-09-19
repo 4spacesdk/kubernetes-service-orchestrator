@@ -15,6 +15,7 @@ use App\Interfaces\EnvironmentVariableList;
 use App\Interfaces\IntArrayInterface;
 use App\Interfaces\LabelList;
 use App\Libraries\DeploymentSteps\BaseDeploymentStep;
+use App\Libraries\DeploymentSteps\CronjobStep;
 use App\Models\KNativeMinScaleScheduleModel;
 use App\Models\MigrationJobModel;
 use DebugTool\Data;
@@ -378,6 +379,61 @@ class Deployments extends ResourceController {
     }
 
     /**
+     * The name of each cron job the deployment has in the cluster, for picking one to run.
+     *
+     * @route /deployments/{id}/cron-jobs/names
+     * @method get
+     * @custom true
+     * @param int $id
+     * @responseSchema DeploymentCronJobNamesGetResponse
+     * @return void
+     */
+    public function getCronJobNames(int $id): void {
+        $item = new Deployment();
+        $item->find($id);
+        if (!$item->exists()) {
+            $this->fail('unknown deployment');
+            return;
+        }
+
+        try {
+            Data::set('resource', ['names' => (new CronjobStep())->getCronJobNames($item)]);
+        } catch (\Throwable $e) {
+            $this->fail($e->getMessage());
+            return;
+        }
+        $this->success();
+    }
+
+    /**
+     * Start one of the deployment's cron jobs now, from what is deployed (#50).
+     *
+     * @route /deployments/{id}/cron-jobs/run
+     * @method post
+     * @custom true
+     * @param int $id
+     * @parameter string $name parameterType=query
+     * @responseSchema DeploymentCronJobRunResponse
+     * @return void
+     */
+    public function runCronJob(int $id): void {
+        $item = new Deployment();
+        $item->find($id);
+        if (!$item->exists()) {
+            $this->fail('unknown deployment');
+            return;
+        }
+
+        try {
+            Data::set('resource', ['job' => (new CronjobStep())->runNow($item, (string) $this->request->getGet('name'))]);
+        } catch (\Throwable $e) {
+            $this->fail($e->getMessage());
+            return;
+        }
+        $this->success();
+    }
+
+    /**
      * @route /deployments/{id}/knative-min-scale-schedules
      * @method put
      * @custom true
@@ -470,7 +526,8 @@ class Deployments extends ResourceController {
      * migration wrote `post deployments` and `put deployments` into `api_routes` back in 2023 and
      * nothing removed them. Both still answer 200 with an entirely empty body: `success()`
      * is never called, so there is no envelope at all - no status, no error. A generated
-     * client calling them is told the write succeeded. See SEC-11 and FEAT-41.
+     * client calling them is told the write succeeded. Closing them takes a
+     * migration that deletes the rows.
      *
      * @return void
      * @ignore true

@@ -147,7 +147,7 @@ class WorkloadStepReadbacksTest extends ClusterTestCase {
     /**
      * The claim step builds a list rather than a single resource, so its preview is two
      * lists. A deployment with a volume of its own and one from its specification has two
-     * of each - and the pair collides on one name, which is FEAT-13 seen before it is
+     * of each - and the pair collides on one name, a failed deploy seen here before it is
      * applied rather than after.
      */
     public function testAClaimPreviewPairsEachLocalWithWhatTheClusterHolds(): void {

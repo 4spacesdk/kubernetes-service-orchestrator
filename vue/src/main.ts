@@ -56,7 +56,7 @@ if (location.origin.includes('localhost')) {
     ApiService.initApi(`${location.origin}/api`);
 }
 
-// Nothing is drawn until both are back, so they are asked for together (PERF-2). The token
+// Nothing is drawn until both are back, so they are asked for together. The token
 // they need - from the url when kso runs in an iframe - is set before either goes out.
 ApiService.useAccessTokenFromUrl();
 Promise.all([

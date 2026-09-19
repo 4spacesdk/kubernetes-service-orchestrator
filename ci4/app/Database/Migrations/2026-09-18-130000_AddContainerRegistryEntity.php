@@ -9,8 +9,8 @@ use OrmExtension\Migration\Table;
 use RestExtension\Entities\ApiRoute;
 
 /**
- * INT-1a. Registry credentials move off the container images into a connection of their
- * own, which the images point at.
+ * Registry credentials move off the container images into a connection of their own,
+ * which the images point at.
  *
  * Existing images are grouped by provider and every credential field: one connection per
  * distinct set, so four images carrying the same key end up sharing one. A connection
@@ -90,7 +90,7 @@ class AddContainerRegistryEntity extends Migration {
         ApiRoute::quick('container-registries/([0-9]+)/repositories', ContainerRegistries::class, 'getRepositories/$1', 'get');
         ApiRoute::quick('container-registries/([0-9]+)/setup-events', ContainerRegistries::class, 'setupEvents/$1', 'post');
 
-        // INT-1c. The webhooks now carry the connection they belong to, and check its secret.
+        // The webhooks now carry the connection they belong to, and check its secret.
         // The old urls are removed rather than kept alongside: they checked nothing, and a
         // registry still calling one is told so by a 404 instead of being trusted.
         $db = Database::connect();

@@ -28,7 +28,7 @@ class AutoUpdates extends ResourceController {
     }
 
     /**
-     * A push, reported by an Azure Container Registry webhook that kso set up (INT-1c).
+     * A push, reported by an Azure Container Registry webhook that kso set up.
      *
      * @route /auto-updates/webhooks/azure-container-registry/{containerRegistryId}
      * @method post
@@ -57,7 +57,7 @@ class AutoUpdates extends ResourceController {
     }
 
     /**
-     * A push, reported by a Harbor webhook policy that kso set up (INT-1c).
+     * A push, reported by a Harbor webhook policy that kso set up.
      *
      * @route /auto-updates/webhooks/harbor/{containerRegistryId}
      * @method post
@@ -124,7 +124,7 @@ class AutoUpdates extends ResourceController {
      * Switched off. `@ignore true` is read by `ci4restextension`'s `ApiItem`, so the route
      * generator and swagger leave this verb out - and no migration ever wrote it into
      * `api_routes` either, so no request can reach it. Both halves are needed: the
-     * annotation does not remove a row that is already in the table. See SEC-11, and
+     * annotation does not remove a row that is already in the table. See
      * `Workspaces`/`Deployments`, where exactly that went wrong.
      *
      * @param $id
@@ -139,7 +139,7 @@ class AutoUpdates extends ResourceController {
      * Switched off. `@ignore true` is read by `ci4restextension`'s `ApiItem`, so the route
      * generator and swagger leave this verb out - and no migration ever wrote it into
      * `api_routes` either, so no request can reach it. Both halves are needed: the
-     * annotation does not remove a row that is already in the table. See SEC-11, and
+     * annotation does not remove a row that is already in the table. See
      * `Workspaces`/`Deployments`, where exactly that went wrong.
      *
      * @param $id

@@ -92,6 +92,37 @@ class WorkloadStepsTest extends ClusterTestCase {
         );
     }
 
+    /**
+     * Run now: a job made from the deployed cron job's own template, marked and
+     * owned the way `kubectl create job --from=cronjob/...` does it.
+     */
+    public function testRunningACronJobNowStartsAJobFromWhatIsDeployed(): void {
+        $deployment = $this->deploymentWithCronJob();
+        $step = new CronjobStep();
+        $step->startDeployCommand($deployment);
+        $cronJob = $this->cluster()->getCronjobByName("{$deployment->name}-cleanup", $this->testNamespace);
+
+        $jobName = $step->runNow($deployment, "{$deployment->name}-cleanup");
+
+        $job = $this->cluster()->getJobByName($jobName, $this->testNamespace);
+        $this->assertStringStartsWith("{$deployment->name}-cleanup-manual-", $jobName);
+        $this->assertSame('manual', $job->getAttribute('metadata.annotations')['cronjob.kubernetes.io/instantiate']);
+        $owner = $job->getAttribute('metadata.ownerReferences')[0];
+        $this->assertSame(['CronJob', "{$deployment->name}-cleanup", $cronJob->getAttribute('metadata.uid')], [$owner['kind'], $owner['name'], $owner['uid']]);
+        $this->assertSame(
+            $cronJob->getAttribute('spec.jobTemplate.spec.template.spec.containers')[0]['image'],
+            $job->getAttribute('spec.template.spec.containers')[0]['image'],
+        );
+    }
+
+    public function testACronJobThatIsNotDeployedCannotBeRun(): void {
+        $deployment = $this->deploymentWithCronJob();
+
+        $this->expectExceptionMessage("'{$deployment->name}-cleanup' is not deployed");
+
+        (new CronjobStep())->runNow($deployment, "{$deployment->name}-cleanup");
+    }
+
     // </editor-fold>
 
     // <editor-fold desc="Migration jobs">

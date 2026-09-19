@@ -5,7 +5,7 @@ use CodeIgniter\Database\Migration;
 use RestExtension\Entities\ApiRoute;
 
 /**
- * FEAT-1. Signed in only - `quick()` leaves `is_public` off.
+ * An image's tags, read from its registry. Signed in only - `quick()` leaves `is_public` off.
  */
 class AddContainerImageTagsRoute extends Migration {
 

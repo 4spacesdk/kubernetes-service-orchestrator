@@ -309,7 +309,7 @@ class GatewayStepTest extends ClusterTestCase {
     /**
      * **Today's behaviour, pinned rather than endorsed.** The panel of one gateway shows
      * the events of every Gateway in its namespace, because the name half of php-k8s'
-     * field selector never reaches the api server - see FEAT-43 and the comment on
+     * field selector never reaches the api server - see the comment on
      * `getKubernetesEvents()`. The namespace half does work, which is what the second
      * assertion holds down: an event in another namespace stays out.
      */

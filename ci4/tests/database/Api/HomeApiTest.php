@@ -5,8 +5,8 @@ use App\ControllerTestCase;
 /**
  * The root of the API, which is a link to Swagger and nothing else.
  *
- * Small, but not nothing: it is public (SEC-14 covers why that matters), and the link it
- * prints is built from `base_url()`, so it is the one place where a misconfigured base url
+ * Small, but not nothing: it is public, like the OpenAPI document it points to, and the
+ * link it prints is built from `base_url()`, so it is the one place where a misconfigured base url
  * shows up as a broken page rather than as a wrong value buried in a manifest.
  *
  * The href is asserted against `base_url()` rather than against a literal host, so the
@@ -26,7 +26,7 @@ class HomeApiTest extends ControllerTestCase {
 
     /**
      * The controller declares itself public and the table agrees. `requireAuth()` has no
-     * call sites - the column is what the hook reads (SEC-11) - so both halves are held
+     * call sites - the column is what the hook reads - so both halves are held
      * here, and closing one without the other fails.
      */
     public function testTheFrontPageIsPublicInBothTheCodeAndTheTable(): void {

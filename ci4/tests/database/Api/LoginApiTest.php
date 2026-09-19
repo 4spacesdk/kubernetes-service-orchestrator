@@ -158,7 +158,7 @@ class LoginApiTest extends ControllerTestCase {
      * Today's behaviour, and worth a decision. A wrong password and an unknown username
      * produce different messages, so the form tells an anonymous visitor whether an
      * account exists. That turns the login page into a way of testing whether a given
-     * person has one. See SEC-13.
+     * person has one. The fix is one message for both.
      */
     public function testWrongPasswordAndUnknownUserAreToldApart(): void {
         Fixtures::user(['username' => 'exists', 'password' => 'the-right-one']);
@@ -724,7 +724,7 @@ class LoginApiTest extends ControllerTestCase {
     /**
      * The same enumeration as on the sign-in form, from a page that needs no password at
      * all: a known address is told to check its inbox and an unknown one is told it is
-     * unknown. Part of SEC-13 rather than a finding of its own.
+     * unknown. The same finding as the sign-in form, not one of its own.
      */
     public function testAnUnknownAddressIsToldThatItIsUnknown(): void {
         $this->pretendEmailIsConfigured();

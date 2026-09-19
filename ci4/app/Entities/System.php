@@ -61,7 +61,7 @@ class System extends Entity {
 
     /**
      * What an API response may carry of the System row. It held the GitHub App credentials
-     * until INT-2 moved them to `GithubIntegration`, and they went out over the API (SEC-1).
+     * until they moved to `GithubIntegration`, and they went out over the API.
      *
      * Use this instead of toArray() whenever a System is put into an API response.
      * It is an allow list, so a credential added to the entity later stays out of

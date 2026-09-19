@@ -168,7 +168,6 @@ class KubernetesApiTest extends ClusterControllerTestCase {
      *
      * A user who clicks the shell on a workspace that is still starting therefore gets an
      * empty box, and the reason is in the server's error log rather than on the screen.
-     * See FEAT-21.
      *
      * The expectation below is what makes the rejection visible at all - see
      * `TestCase::failOnAnUnhandledRejection()`.

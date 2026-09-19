@@ -479,7 +479,7 @@ function onAddressClicked(address: string) {
                         >
                     </v-btn>
 
-                    <!-- Terminate and Delete stay out of reach of a slip from Deploy (LIST-3). -->
+                    <!-- Terminate and Delete stay out of reach of a slip from Deploy. -->
                     <v-menu location="bottom end">
                         <template v-slot:activator="{ props }">
                             <v-btn v-bind="props" variant="plain" color="primary"  aria-label="More" size="small" density="comfortable" icon>

@@ -20,7 +20,7 @@ use App\Fixtures;
  * that fires every minute always beats one that fires every January. Comparing two
  * timezones is exactly the case that cannot be made stable that way - it flips on New
  * Year's Day - so it is left out rather than written as a test that fails once a year. A
- * clock seam would fix that; see the note in TEST-1.
+ * clock seam would fix that.
  */
 class KNativeMinScaleScheduleTest extends DatabaseTestCase {
 

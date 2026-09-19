@@ -8,8 +8,7 @@ export interface SortItem {
 
 /**
  * What a list shows - search, page, page size, sort and any filters of its own - kept in
- * the url, so a refresh keeps it and a link shares it (LIST-1). Sorting goes to the API
- * (LIST-5).
+ * the url, so a refresh keeps it and a link shares it. Sorting goes to the API.
  *
  * Bind `page`, `itemsPerPage` and `sortBy` to `v-data-table-server` with v-model and read
  * them in `getItems()`. A list inside a dialog passes `syncWithUrl: false`: the url belongs

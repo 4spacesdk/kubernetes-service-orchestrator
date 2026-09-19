@@ -7,7 +7,7 @@ interface SavingApi<T> {
 }
 
 /**
- * Saving from a dialog (UI-1, UI-2): validate the form, send once, and close only when the
+ * Saving from a dialog: validate the form, send once, and close only when the
  * server said yes. A refusal is shown and the dialog stays open with what was typed.
  *
  * Many dialogs used to call `close()` straight after `save()`, so a failed save vanished

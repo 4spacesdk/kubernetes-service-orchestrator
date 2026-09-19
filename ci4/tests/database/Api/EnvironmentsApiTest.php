@@ -40,8 +40,8 @@ class EnvironmentsApiTest extends ControllerTestCase {
     }
 
     /**
-     * Not public. Harmless in itself, but the table is what decides (SEC-11), so the
-     * declaration and the column are held against each other.
+     * Not public. Harmless in itself, but the route table, not the controller, is what
+     * decides, so the declaration and the column are held against each other.
      */
     public function testTheListNeedsAToken(): void {
         $this->assertTrue((new \App\Controllers\Environments())->requireAuth('get'));

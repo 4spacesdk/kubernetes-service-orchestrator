@@ -6,7 +6,7 @@ import type {DeploymentStep} from "@/core/services/Deploy/Api";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import JsonViewer from 'vue-json-viewer';
-// Only these two dialogs use it, so it loads with them rather than with the app (PERF-2).
+// Only these two dialogs use it, so it loads with them rather than with the app.
 import { Diff } from 'vue-diff';
 import 'vue-diff/dist/index.css';
 import _ from "lodash";

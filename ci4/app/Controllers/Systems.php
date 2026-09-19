@@ -10,7 +10,7 @@ class Systems extends ResourceController {
     /**
      * Every System response goes through the allow list. The default implementation
      * returns the whole entity, which handed the GitHub App private key back to the browser
-     * on every save of the System page while the App lived there (SEC-1).
+     * on every save of the System page while the App lived there.
      *
      * @param Entity|System $item
      */
@@ -24,7 +24,7 @@ class Systems extends ResourceController {
 
     /**
      * The same for `PATCH /systems` without an id, which answers with a list. That route
-     * was SEC-1's third way out.
+     * was the third way the private key got out.
      *
      * @param Entity|System|int $items
      */
@@ -45,7 +45,7 @@ class Systems extends ResourceController {
      * these verbs out - and no migration wrote them into `api_routes` either, which is the
      * half that actually decides. The annotation does not remove a row that is already
      * there; `Workspaces` and `Deployments` carry the same annotation and are routed
-     * anyway. See SEC-11.
+     * anyway.
      *
      * `SystemsApiTest` pins the routes that do exist.
      *

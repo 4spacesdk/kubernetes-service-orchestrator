@@ -173,8 +173,8 @@ class DatabaseStepTest extends DatabaseTestCase {
      *
      * Nothing is connected to. The service points at a `.test` host, which by RFC 6761
      * resolves nowhere, and the connection fails on its own arguments before a socket is
-     * opened - see FEAT-34, which is why the queries below this line cannot be reached from
-     * a test at all.
+     * opened: the port is handed over as a string, which mysqli refuses. That is also why the
+     * queries below this line cannot be reached from a test at all.
      */
     public function testNothingIsRecordedWhenTheServerCannotBeReached(): void {
         $deployment = $this->deploymentWaitingForItsDatabase();

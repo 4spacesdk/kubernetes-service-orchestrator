@@ -11,7 +11,7 @@ class SystemModel extends Model implements ResourceModelInterface {
      * `restGet()` is what runs them, and there are only two ways in: a `get` route, or
      * being an included relation on one. `systems` has neither. It carries only a `patch`
      * route - `Systems::get()` is switched off with `@ignore true`, because a listing once
-     * handed out the GitHub App private key (SEC-1) - and no model
+     * handed out the GitHub App private key - and no model
      * names `SystemModel` in its `$hasOne` or `$hasMany`, so no `?include=` reaches it.
      *
      * They are marked rather than left uncovered because the thing keeping them out is a
@@ -24,7 +24,8 @@ class SystemModel extends Model implements ResourceModelInterface {
      * save while still answering 200 - see
      * `SystemsApiTest::testSavingTheSystemChangesTheRowAndNotJustTheAnswer()`.
      *
-     * That the interface demands six members when this model can use three is FEAT-50.
+     * That the interface demands six members when this model can use three is a known
+     * wart, shared by the other models that have no route of their own.
      */
 
     public $hasOne = [

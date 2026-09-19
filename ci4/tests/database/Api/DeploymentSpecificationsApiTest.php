@@ -51,7 +51,8 @@ class DeploymentSpecificationsApiTest extends ControllerTestCase {
 
     /**
      * Verbs stay one comma-separated string all the way to the database. They are only
-     * split when the manifest is built - where nothing trims them, see FEAT-8.
+     * split when the manifest is built - where nothing trims them, so `get, list` gives
+     * Kubernetes a verb with a leading space.
      */
     public function testVerbsAreStoredAsTheSingleStringTheyArrivedAs(): void {
         $specification = Fixtures::deploymentSpecification();
@@ -156,7 +157,7 @@ class DeploymentSpecificationsApiTest extends ControllerTestCase {
 
     /**
      * Same as on the deployments controller: an unknown id is answered with OK, and
-     * nothing is written. See FEAT-9.
+     * nothing is written.
      */
     public function testAnUnknownSpecificationReportsSuccessAndWritesNothing(): void {
         $body = $this->putValues('deployment-specifications/999999/role-rules', [
@@ -464,7 +465,7 @@ class DeploymentSpecificationsApiTest extends ControllerTestCase {
 
     /**
      * The version dialogs wait for a list and cannot show a failure, so this keeps answering
-     * one. `/container-images/{id}/tags` is where the reason is shown (FEAT-1).
+     * one. `/container-images/{id}/tags` is where the reason is shown.
      */
     public function testARegistryThatRefusesStillGivesTheVersionDialogsAList(): void {
         $fakes = FakeIntegrations::install();

@@ -7,13 +7,13 @@ use RestExtension\Exceptions\UnauthorizedException;
 /**
  * What the API hands back to someone who is signed in.
  *
- * Being signed in is not the same as being entitled to everything, and SEC-2 is exactly
- * that gap: several endpoints return stored credentials in plain text to any authenticated
+ * Being signed in is not the same as being entitled to everything, and that is exactly the
+ * gap here: several endpoints return stored credentials in plain text to any authenticated
  * user. Nothing enforces which fields may leave, so the answer has to be written down.
  *
  * Several tests below assert that a secret **is** returned. That is deliberate - they
- * record today's behaviour so the change is visible when SEC-2 is fixed, at which point
- * they should be inverted rather than deleted.
+ * record today's behaviour so the change is visible when those secrets stop being returned,
+ * at which point they should be inverted rather than deleted.
  */
 class AuthenticatedResponsesTest extends ControllerTestCase {
 
@@ -37,8 +37,8 @@ class AuthenticatedResponsesTest extends ControllerTestCase {
 
     /**
      * How it is supposed to look. The user endpoint returns a flag saying whether a
-     * second factor is configured, never the hash itself - the pattern SEC-2 asks the
-     * other endpoints to follow.
+     * second factor is configured, never the hash itself - the pattern the other endpoints
+     * should follow.
      */
     public function testUsersReturnAnMfaFlagAndNotTheHash(): void {
         Fixtures::user(['username' => 'someone', 'mfa_secret_hash' => 'a-real-hash']);
@@ -50,9 +50,10 @@ class AuthenticatedResponsesTest extends ControllerTestCase {
     }
 
     /**
-     * SEC-2, fixed for registries by INT-1a. The key, the client secret and the password
-     * are written, never read back: the connection says whether each is set, and that is
-     * all. It used to hand a whole GCP service account key to anyone signed in.
+     * Fixed for registries when they became an entity of their own. The key, the client
+     * secret and the password are written, never read back: the connection says whether each
+     * is set, and that is all. It used to hand a whole GCP service account key to anyone
+     * signed in.
      */
     public function testARegistryConnectionNeverReturnsItsSecrets(): void {
         Fixtures::containerRegistry([
@@ -85,7 +86,7 @@ class AuthenticatedResponsesTest extends ControllerTestCase {
     }
 
     /**
-     * SEC-2, and the one that matters most: this password opens the server every
+     * The plain-text secret that matters most: this password opens the server every
      * customer's database lives on.
      */
     public function testDatabaseServicesStillReturnTheirPassword(): void {
@@ -122,7 +123,7 @@ class AuthenticatedResponsesTest extends ControllerTestCase {
     }
 
     /**
-     * SEC-1, after INT-2 moved the GitHub App off the System row: the private key now lives
+     * The GitHub App has moved off the System row: the private key now lives
      * on the integration, and reaching it through an image - which is how the image dialog
      * loads it - must not bring it along.
      */

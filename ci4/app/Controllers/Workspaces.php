@@ -297,7 +297,8 @@ class Workspaces extends ResourceController {
      * migration wrote `post workspaces` and `put workspaces` into `api_routes` back in 2023 and
      * nothing removed them. Both still answer 200 with an entirely empty body: `success()`
      * is never called, so there is no envelope at all - no status, no error. A generated
-     * client calling them is told the write succeeded. See SEC-11 and FEAT-41.
+     * client calling them is told the write succeeded. Closing them takes a
+     * migration that deletes the rows.
      *
      * @return void
      * @ignore true

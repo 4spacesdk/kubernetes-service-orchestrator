@@ -16,7 +16,7 @@ use App\Models\UserModel;
  *
  * **`mfa/setup/prepare` is not covered here on purpose** - it renders the QR code through
  * `api.qrserver.com`, so exercising it would send a real secret to a third party from the
- * test suite. See SEC-16. Its `hasMFA` branch could not be reached even if the network call
+ * test suite. Its `hasMFA` branch could not be reached even if the network call
  * were gone, for the reason `testMeAlwaysSaysTheUserHasNoSecondFactor` pins: the flag it
  * branches on is always false.
  *
@@ -116,7 +116,7 @@ class UsersApiTest extends ControllerTestCase {
      *
      * `User::removeMFASecret()` sets the column to null and saves, and `mfa_secret_hash` is
      * `NOT NULL`. The endpoint throws a database exception, the secret stays, and the
-     * account keeps a second factor its owner asked to remove. See SEC-17.
+     * account keeps a second factor its owner asked to remove.
      */
     public function testRemovingTheSecondFactorFails(): void {
         $secret = (new MFALib())->createSecret();

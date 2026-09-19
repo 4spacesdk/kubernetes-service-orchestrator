@@ -22,7 +22,7 @@ use RenokiCo\PhpK8s\Exceptions\KubernetesAPIException;
  * exercised here, the second against a CRD the test cluster already has installed.
  *
  * A manifest that names no namespace is applied into the workspace's own. One that names
- * a namespace is applied there, wherever that is - see SEC-15.
+ * a namespace is applied there, wherever that is.
  */
 class CustomResourceStepTest extends ClusterTestCase {
 
@@ -107,7 +107,7 @@ class CustomResourceStepTest extends ClusterTestCase {
      * own, so every workspace's resource landed in one namespace shared by the cluster,
      * under the same name. The second workspace deployed overwrote the first, terminating
      * either removed it for both, and `getStatus()` read that one resource for all of
-     * them. See SEC-15.
+     * them.
      */
     public function testAManifestWithoutANamespaceGoesToTheWorkspace(): void {
         $deployment = $this->deploymentWithCustomResource(<<<YAML
@@ -133,7 +133,7 @@ class CustomResourceStepTest extends ClusterTestCase {
     }
 
     /**
-     * Today's behaviour, and what is left of SEC-15: a manifest that names a namespace is
+     * Today's behaviour, and the hole still open: a manifest that names a namespace is
      * applied there, including one the workspace does not own. The text comes from an
      * operator rather than from a customer, so it is a smaller hole than the default was -
      * but it is still a workspace's deployment writing outside its own namespace, and
@@ -230,7 +230,7 @@ class CustomResourceStepTest extends ClusterTestCase {
     /**
      * Today's behaviour. The status panel is declared to return an array and hands back
      * whatever is under `status` - which for a kind that has no status subresource, such as
-     * a ConfigMap, is nothing at all. The panel dies on the return type. See FEAT-16.
+     * a ConfigMap, is nothing at all. The panel dies on the return type.
      */
     public function testTheStatusPanelDiesOnAKindThatHasNoStatus(): void {
         $deployment = $this->deploymentWithCustomResource($this->aConfigMap());

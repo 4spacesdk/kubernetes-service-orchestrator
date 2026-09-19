@@ -94,9 +94,9 @@ class GatewaysApiTest extends ClusterControllerTestCase {
 
     /**
      * The gateway endpoints answer an unknown id with a failure rather than a cheerful
-     * empty resource - which is what FEAT-9 asks for everywhere else. **The guard was
+     * empty resource - which is what the other endpoints should do too. **The guard was
      * written and did not work**: `find()` returns an empty entity, never null, so
-     * `!$gateway` was always false and all six endpoints fatalled instead. See FEAT-20.
+     * `!$gateway` was always false and all six endpoints fatalled instead.
      */
     #[DataProvider('theEndpointsThatTakeAnId')]
     public function testAnUnknownGatewayIsRefused(string $method, string $path): void {

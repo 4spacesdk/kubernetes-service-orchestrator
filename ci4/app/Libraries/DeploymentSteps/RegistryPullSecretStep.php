@@ -11,7 +11,7 @@ use RenokiCo\PhpK8s\Exceptions\KubernetesAPIException;
 use RenokiCo\PhpK8s\Kinds\K8sSecret;
 
 /**
- * The pull secrets kso makes from a registry connection's pull login (INT-1d), one per
+ * The pull secrets kso makes from a registry connection's pull login, one per
  * registry the deployment's images come from, named after the connection.
  *
  * Several deployments in a namespace share one, so terminating a deployment leaves it.

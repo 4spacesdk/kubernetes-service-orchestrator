@@ -68,9 +68,10 @@ class PostUpdateActionPerformTest extends DatabaseTestCase {
     }
 
     /**
-     * Today's behaviour, and it is the same shape as FEAT-10: a commit message with no
-     * task url leaves the item id empty, and the id is pulled apart before anything is
-     * guarded. The action dies rather than skipping quietly. See FEAT-11.
+     * Today's behaviour, and the same shape as the conditions' crash on an image without a
+     * commit identification: a commit message with no task url leaves the item id empty, and
+     * the id is pulled apart before anything is guarded. The action dies rather than
+     * skipping quietly.
      */
     public function testACommitWithoutATaskUrlCrashes(): void {
         $this->fakesWithCommit('Tidy up the logging');

@@ -70,11 +70,11 @@
             <directory suffix=".php">./app/Constants</directory>
             <directory suffix=".php">./app/Interfaces</directory>
 
-            <!-- Stock CodeIgniter configuration, carried unchanged apart from the two lines
-                 UPG-1 lists. `Constants.php` is a wall of `define()`, `Mimes.php` is a
-                 five-hundred-line array, and `Boot/*` sets error reporting per environment
-                 before a test can see it. None of it is a decision kso made, and counting
-                 it measures the framework rather than us. -->
+            <!-- Stock CodeIgniter configuration, carried unchanged apart from the
+                 `require_once` of kso's own constants. `Constants.php` is a wall of `define()`,
+                 `Mimes.php` is a five-hundred-line array, and `Boot/*` sets error reporting per
+                 environment before a test can see it. None of it is a decision kso made, and
+                 counting it measures the framework rather than us. -->
             <file>./app/Config/Constants.php</file>
             <file>./app/Config/Mimes.php</file>
             <file>./app/Config/Exceptions.php</file>
@@ -93,7 +93,8 @@
         <!-- Turn every PHP deprecation into an exception, so a test fails on one instead of
              passing over it. Without this, CodeIgniter's error handler logs deprecations
              below the logger's threshold, and they never surface anywhere - a clean OK said
-             nothing about them. A deprecation in PHP 8.5 is an error in PHP 9. See TEST-4. -->
+             nothing about them. A deprecation in PHP 8.5 is an error in PHP 9. Those raised in
+             vendor code are logged rather than thrown - see `tests/VendorDeprecations.php`. -->
         <env name="CODEIGNITER_SCREAM_DEPRECATIONS" value="1"/>
 
         <!-- Directory containing phpunit.xml -->

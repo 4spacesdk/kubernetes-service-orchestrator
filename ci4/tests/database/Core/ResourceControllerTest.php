@@ -102,8 +102,8 @@ class ResourceControllerTest extends DatabaseTestCase {
      * the answer into `api_routes.is_public`, and that column is what the authorization
      * hook actually enforces. So this is the default the whole public surface is measured
      * against: a new controller that extends `ResourceController` and forgets to think
-     * about authentication is closed, not open. SEC-1 was an endpoint that was open
-     * without anyone deciding it should be. See `PublicSurfaceTest`.
+     * about authentication is closed, not open. The GitHub App credentials leaked through an
+     * endpoint that was open without anyone deciding it should be. See `PublicSurfaceTest`.
      */
     #[DataProvider('theHttpMethods')]
     public function testAResourceEndpointRequiresATokenByDefault(string $method): void {

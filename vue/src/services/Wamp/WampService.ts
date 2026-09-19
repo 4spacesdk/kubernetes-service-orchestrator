@@ -10,7 +10,7 @@ class WampService {
 
     /**
      * The push client is fetched here rather than bundled with the start of the app: it is
-     * a third of what had to load before anything was drawn (PERF-2). Subscriptions made
+     * a third of what had to load before anything was drawn. Subscriptions made
      * before it connects wait in `subscriptions`.
      */
     public init() {

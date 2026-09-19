@@ -10,7 +10,7 @@ use App\Libraries\DeploymentSteps\RegistryPullSecretStep;
 use App\ManifestTestCase;
 
 /**
- * Pull secrets made by kso from a registry connection's own pull login (INT-1d).
+ * Pull secrets made by kso from a registry connection's own pull login.
  *
  * Two halves that have to agree by name: the step makes `kso-registry-{id}` in the
  * namespace, and every pod whose images come from that registry names it. A pod that

@@ -185,7 +185,7 @@ class DeploymentPackagesApiTest extends ControllerTestCase {
      * **The two endpoints on this controller disagree about unknown ids.** This one answers
      * OK and writes nothing; `copy-to-deployments` and `labels` refuse with an error. A
      * client cannot tell from the status whether the package it named exists. Pinned rather
-     * than fixed - see FEAT-9 for the wider pattern.
+     * than fixed, like the other update endpoints that answer OK for an unknown id.
      */
     public function testAnUnknownPackageIsAnsweredWithOkByTheVariablesEndpoint(): void {
         $body = $this->putValues('deployment-packages/999999/environment-variables', [
@@ -308,8 +308,8 @@ class DeploymentPackagesApiTest extends ControllerTestCase {
     /**
      * Only `1` and a lowercase `true` count as yes. `TRUE`, `yes` and `on` are all read as
      * no, and the call still answers OK - so a client that sends the wrong spelling is
-     * told its overwrite worked when it did not happen. Pinned rather than fixed; see
-     * FEAT-9 for the wider pattern.
+     * told its overwrite worked when it did not happen. Pinned rather than fixed, like the
+     * other endpoints that answer OK when nothing was done.
      */
     public function testOverrideOnlyUnderstandsOneAndLowercaseTrue(): void {
         $package = Fixtures::deploymentPackage();

@@ -14,7 +14,7 @@ import type {
 
 /**
  * The lists the dialogs pick from - images, domains, gateways and the like - fetched once
- * and shared, rather than again on every dialog that opens (PERF-1).
+ * and shared, rather than again on every dialog that opens.
  *
  * A list is dropped when its `…Saved` event says it changed, deletes included, and after a
  * minute anyway: changes made by someone else reach no event here.

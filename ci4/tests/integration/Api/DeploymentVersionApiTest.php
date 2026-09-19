@@ -7,7 +7,7 @@ use App\Fixtures;
 /**
  * Setting a deployment's version rolls it out, synchronously, in the same request. Whether
  * the rollout worked used to be dropped: the answer was OK either way. The bulk version
- * update (LIST-6) reads this answer to say which deployments failed.
+ * update reads this answer to say which deployments failed.
  *
  * Both tests start from a deployment that is fully in the cluster. One that is not stays in
  * Draft - its Service step needs the Deployment to exist - and a Draft deployment is not

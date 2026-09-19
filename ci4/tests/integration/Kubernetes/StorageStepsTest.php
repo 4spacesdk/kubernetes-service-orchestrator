@@ -71,7 +71,7 @@ class StorageStepsTest extends ClusterTestCase {
      * anything but growing `resources.requests` on an already bound claim. kso does not
      * know that, so **editing a workspace's volume and deploying again throws**, and the
      * deploy stops at that step. The workspace keeps the old disk and the error is a raw
-     * 422 from Kubernetes. See FEAT-13.
+     * 422 from Kubernetes.
      */
     public function testChangingAVolumeMakesTheNextDeployFail(): void {
         $deployment = $this->deploymentInANamespace();

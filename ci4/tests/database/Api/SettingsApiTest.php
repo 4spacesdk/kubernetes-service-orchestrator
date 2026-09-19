@@ -7,8 +7,8 @@ use App\ControllerTestCase;
  *
  * The endpoint is public - the frontend reads it before anyone has a token - and what it
  * gives away to an anonymous caller is pinned in `PublicSurfaceTest`, because that is where
- * SEC-1 came from. This file covers the other half: the branch that only runs when the
- * request carries a token, and which puts the caller's own user on the response so the
+ * the GitHub App private key once leaked. This file covers the other half: the branch that
+ * only runs when the request carries a token, and which puts the caller's own user on the response so the
  * frontend does not need a second round trip to find out who it is talking to.
  *
  * That branch is the reason `ControllerTestCase` resets the `RestRequest` singleton between
@@ -51,8 +51,8 @@ class SettingsApiTest extends ControllerTestCase {
 
     /**
      * The declaration and the column, held against each other as everywhere else. This is
-     * the endpoint where they matter most: `requireAuth()` has no call sites at all
-     * (SEC-11), so the `false` below documents an intention and the column is what actually
+     * the endpoint where they matter most: `requireAuth()` has no call sites at all,
+     * so the `false` below documents an intention and the column is what actually
      * lets an anonymous caller in.
      */
     public function testTheEndpointIsPublicInBothTheCodeAndTheTable(): void {

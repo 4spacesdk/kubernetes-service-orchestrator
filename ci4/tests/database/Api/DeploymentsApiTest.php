@@ -21,7 +21,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
  * A request for an id that does not exist therefore answers **200 with an empty
  * resource** rather than 404, and changes nothing. The caller is told it worked. Several
  * tests below pin that, because it is consistent enough to be a decision rather than an
- * oversight - but see FEAT-9.
+ * oversight - which does not make it right.
  *
  * **Nothing here touches a cluster - but not for the reason it first appeared.** An
  * earlier version of this note said the Draft check in `EmitTrigger()` was enough. It is
@@ -246,7 +246,7 @@ class DeploymentsApiTest extends ControllerTestCase {
     /**
      * Today's behaviour on the other update endpoints: an id that does not exist is
      * answered with OK and an empty resource. Nothing was changed and the caller is not
-     * told. See FEAT-9. The version endpoint no longer does this.
+     * told. The version endpoint no longer does this.
      */
     public function testUpdatingAnUnknownDeploymentReportsSuccessAnyway(): void {
         $body = $this->decode($this->signedIn()->put('deployments/999999/image-pull-policy?value=Always'));
@@ -257,7 +257,7 @@ class DeploymentsApiTest extends ControllerTestCase {
 
     /**
      * Also today's behaviour. `updateUpdateManagement` catches every exception and writes
-     * it to the debug log, so a rejected tag pattern is reported as a success. See FEAT-9.
+     * it to the debug log, so a rejected tag pattern is reported as a success.
      */
     public function testAnInvalidTagPatternIsReportedAsSuccess(): void {
         $deployment = Fixtures::deployment(['auto_update_tag_regex' => 'v[0-9]+']);
@@ -350,7 +350,7 @@ class DeploymentsApiTest extends ControllerTestCase {
 
     /**
      * The only endpoint on this controller that refuses an unknown id. Everything else
-     * answers OK - see FEAT-9.
+     * answers OK.
      */
     public function testTheSpecificationEndpointRejectsAnUnknownDeployment(): void {
         $body = $this->decode($this->signedIn()->get('deployments/999999/deployment-specification'));
@@ -456,7 +456,7 @@ class DeploymentsApiTest extends ControllerTestCase {
      *
      * It is the same endpoint as `testAnInvalidTagPatternIsReportedAsSuccess`, which is
      * what makes the pair worth reading together: a pattern that cannot compile is reported
-     * as success, and a pattern that is not there at all is a crash. See FEAT-9.
+     * as success, and a pattern that is not there at all is a crash.
      */
     public function testUpdateManagementWithoutATagPatternIsAFatalError(): void {
         $deployment = Fixtures::deployment();
@@ -487,7 +487,8 @@ class DeploymentsApiTest extends ControllerTestCase {
 
     /**
      * A deployment's own volumes, which are merged with the specification's when the claim
-     * is built. Same snake_case wire format as the specification endpoint - see FEAT-18.
+     * is built. Same snake_case wire format as the specification endpoint, where
+     * every other collection is sent in camelCase.
      */
     public function testAVolumeIsStoredWithTheFieldsItArrivedWith(): void {
         $deployment = Fixtures::deployableDeployment();
@@ -595,7 +596,7 @@ class DeploymentsApiTest extends ControllerTestCase {
      * the workspace, and the UI edits them through `/workspaces/{id}/ingress`, which works.
      *
      * Nothing in the frontend calls this one. It is still generated into the API client and
-     * published in the OpenAPI document, so it reads as a supported endpoint. See FEAT-19.
+     * published in the OpenAPI document, so it reads as a supported endpoint.
      */
     public function testTheDeploymentIngressEndpointFailsOnEveryCall(): void {
         $deployment = Fixtures::deployableDeployment();
@@ -629,6 +630,39 @@ class DeploymentsApiTest extends ControllerTestCase {
             $this->reload($deployment)->status,
             'it was recomputed, not left as it was'
         );
+    }
+
+    // </editor-fold>
+
+    // <editor-fold desc="Running a cron job now">
+
+    public function testTheCronJobNamesAreListed(): void {
+        $deployment = Fixtures::deployableDeployment();
+        Fixtures::deploymentCronJob([
+            'deployment_id' => $deployment->id,
+            'k8s_cron_job_id' => Fixtures::cronJob(['container_image_id' => Fixtures::containerImage()->id])->id,
+        ]);
+
+        $body = $this->decode($this->signedIn()->get("deployments/{$deployment->id}/cron-jobs/names"));
+
+        $this->assertSame('OK', $body['status']);
+        $this->assertSame(["{$deployment->name}-cleanup"], $body['resource']['names']);
+    }
+
+    public function testRunningACronJobTheDeploymentDoesNotHaveIsReported(): void {
+        $deployment = Fixtures::deployableDeployment();
+
+        $body = $this->decode($this->signedIn()->post("deployments/{$deployment->id}/cron-jobs/run?name=other-cleanup"));
+
+        $this->assertNotSame('OK', $body['status']);
+        $this->assertStringContainsString("'other-cleanup' is not one of the deployment's cron jobs", json_encode($body));
+    }
+
+    public function testRunningACronJobOnAnUnknownDeploymentIsReported(): void {
+        $body = $this->decode($this->signedIn()->post('deployments/999999/cron-jobs/run?name=x'));
+
+        $this->assertNotSame('OK', $body['status']);
+        $this->assertStringContainsString('unknown deployment', json_encode($body));
     }
 
     // </editor-fold>

@@ -6,7 +6,7 @@ use RestExtension\Exceptions\UnauthorizedException;
 /**
  * What the API answers without a token.
  *
- * SEC-1 was an endpoint that was reachable without authentication and handed back the
+ * `GET /settings` was once reachable without authentication and handed back the
  * GitHub App private key. Nothing in the code said it was public, and nothing failed when
  * it was - so this is the guard that would have caught it.
  *
@@ -17,8 +17,7 @@ use RestExtension\Exceptions\UnauthorizedException;
  * reads it, so it is documentation, not a gate: fixing a public endpoint by editing
  * `requireAuth()` changes nothing. Reading a controller therefore does not tell you whether
  * its endpoint is open; the table does. That is also why the list below is pinned rather
- * than derived - a route that turns public has to be a deliberate edit here. See SEC-10 and
- * SEC-11.
+ * than derived - a route that turns public has to be a deliberate edit here.
  */
 class PublicSurfaceTest extends ControllerTestCase {
 
@@ -64,7 +63,7 @@ class PublicSurfaceTest extends ControllerTestCase {
         'post oauth-agent/refresh',
         'post oauth-agent/token',
 
-        // Read by the frontend before anyone signs in. Allow-listed, see SEC-1.
+        // Read by the frontend before anyone signs in. Allow-listed, see System::toPublicArray().
         'get settings',
 
         'get swagger',
@@ -122,8 +121,9 @@ class PublicSurfaceTest extends ControllerTestCase {
     }
 
     /**
-     * The endpoint SEC-1 was about. It is public on purpose - the frontend reads it before
-     * anyone signs in - so what it returns is the whole of its security.
+     * The endpoint that once leaked the GitHub App private key. It is public on purpose - the
+     * frontend reads it before anyone signs in - so what it returns is the whole of its
+     * security.
      */
     public function testSettingsReturnsTheAllowListAndNothingElse(): void {
         $body = json_decode((string) $this->get('settings')->response()->getBody(), true);

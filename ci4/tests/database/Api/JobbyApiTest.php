@@ -14,7 +14,7 @@ use CodeIgniter\CLI\Commands;
  * `run($id)` is what those processes call back on: it executes the row's spark command and
  * writes what happened into `last_log`.
  *
- * **Both are public** - see `api_routes` below, and SEC-10. A GET on `/jobby` from anyone
+ * **Both are public** - see `api_routes` below. A GET on `/jobby` from anyone
  * lays out the whole plan and starts every due job, and a GET on `/jobby/run/3` runs the
  * command row 3 points at, right away. That is not a change that belongs in a test, but it
  * is worth having written down exactly here.
@@ -64,7 +64,7 @@ class JobbyApiTest extends ControllerTestCase {
             ->getResultArray();
         $public = array_column($rows, 'is_public', 'from');
 
-        $this->assertSame(1, (int) $public['jobby'], 'the route is closed now - SEC-10 is fixed and this test has done its job');
+        $this->assertSame(1, (int) $public['jobby'], 'the route is closed now - this test has done its job');
         $this->assertSame(1, (int) $public['jobby/run/([0-9]+)']);
     }
 

@@ -18,7 +18,7 @@ use App\Tests\Fakes\FakeIntegrations;
  * With the version control and commit lookups faked, the condition's own refusals are
  * covered too - everything up to the point where it asks Podio for a field value. Podio is
  * reached through `\PodioClient` directly rather than through an abstraction, so that last
- * step still has no seam; see TEST-3 track C.
+ * step still has no seam.
  *
  * `perform()` is in the same position: it calls Podio from its first lines.
  */
@@ -147,7 +147,7 @@ class PostUpdateActionConditionsTest extends DatabaseTestCase {
      * default, and what every image starts as - and the result is used without asking.
      * The condition is careful about everything after this point and not about this. The
      * failure lands in the post-update run after a deployment, so a customer's release
-     * finishes and the follow-up work dies. See FEAT-10.
+     * finishes and the follow-up work dies.
      */
     public function testAnImageWithoutCommitIdentificationCrashesTheCheck(): void {
         $fakes = FakeIntegrations::install();
@@ -162,7 +162,6 @@ class PostUpdateActionConditionsTest extends DatabaseTestCase {
 
     /**
      * The same one line later: a sha, but no version control configured to ask about it.
-     * See FEAT-10.
      */
     public function testAnImageWithoutVersionControlCrashesTheCheck(): void {
         $fakes = FakeIntegrations::install();

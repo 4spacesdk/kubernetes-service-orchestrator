@@ -72,7 +72,7 @@ class RbacStepsTest extends ManifestTestCase {
      * Today's behaviour, and a trap. The verbs are split on commas and nothing is trimmed,
      * so a specification written as "get, list" - which is how anyone would type it -
      * produces a verb of " list" with a leading space. Kubernetes rejects it, and the whole
-     * Role fails to apply. See FEAT-8.
+     * Role fails to apply.
      */
     public function testVerbsAreSplitOnCommasWithoutTrimming(): void {
         $deployment = Fixtures::deployableDeployment();

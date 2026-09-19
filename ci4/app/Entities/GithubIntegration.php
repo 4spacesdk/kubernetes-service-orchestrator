@@ -5,7 +5,7 @@ use App\Libraries\Github\BaseGithub;
 use App\Models\GithubIntegrationModel;
 
 /**
- * A GitHub App in one organisation, and its installation there (INT-2).
+ * A GitHub App in one organisation, and its installation there.
  *
  * The App used to sit on the System row, one for the whole instance. It is private - see
  * the manifest - and a private App can only be installed on the account that owns it, so
@@ -16,7 +16,7 @@ use App\Models\GithubIntegrationModel;
  * and installation are written by the setup flow and never taken from a request, and the
  * secrets are hidden from every response - the `has_*` fields say whether one is set.
  *
- * **The setup flow is bound to this row by a state nonce** (SEC-19). kso issues it when the
+ * **The setup flow is bound to this row by a state nonce.** kso issues it when the
  * operator starts creating or installing the App, GitHub hands it back on the redirect, and
  * it is used up there. A redirect without it changes nothing, so a link sent to the
  * operator's browser can no longer repoint the installation.

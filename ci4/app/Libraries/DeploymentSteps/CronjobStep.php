@@ -192,6 +192,70 @@ class CronjobStep extends BaseDeploymentStep {
     }
 
     /**
+     * The name of every cron job this step deploys for the deployment, from the
+     * specification's and the deployment's own alike.
+     *
+     * @return string[]
+     * @throws \Exception
+     */
+    public function getCronJobNames(Deployment $deployment): array {
+        return array_map(fn(K8sCronJob $resource) => $resource->getName(), $this->getResources($deployment));
+    }
+
+    /**
+     * Start a run of one of the deployment's cron jobs now (#50). What
+     * `kubectl create job --from=cronjob/<name>` does: the job is made from the template of
+     * the cron job in the cluster, so it runs what is deployed rather than what kso would
+     * deploy next. It is owned by the cron job, as kubectl's is, so it goes when the cron
+     * job does.
+     *
+     * @return string The name of the job.
+     * @throws \Exception When the name is not one of the deployment's, or the cron job is
+     *     not deployed.
+     */
+    public function runNow(Deployment $deployment, string $name): string {
+        // Before the cluster is asked: the name comes from the request.
+        if (!in_array($name, $this->getCronJobNames($deployment), true)) {
+            throw new \Exception("'{$name}' is not one of the deployment's cron jobs");
+        }
+        $resource = current(array_filter($this->getResources($deployment, true), fn(K8sCronJob $r) => $r->getName() === $name));
+        if (!$resource->exists()) {
+            throw new \Exception("'{$name}' is not deployed");
+        }
+        /** @var K8sCronJob $cronJob */
+        $cronJob = $resource->get();
+        $template = $cronJob->getAttribute('spec.jobTemplate', []);
+
+        // A cron job's name is at most 52 characters, so this stays within the 63 a job's
+        // pods can carry it in a label.
+        $jobName = substr($name, 0, 52) . '-manual-' . substr(uniqid(), -5);
+
+        $job = new K8sJob((new KubeAuth())->authenticate(), [
+            'metadata' => [
+                'name' => $jobName,
+                'namespace' => $deployment->namespace,
+                'labels' => $template['metadata']['labels'] ?? [],
+                'annotations' => array_merge(
+                    $template['metadata']['annotations'] ?? [],
+                    ['cronjob.kubernetes.io/instantiate' => 'manual'],
+                ),
+                'ownerReferences' => [[
+                    'apiVersion' => 'batch/v1',
+                    'kind' => 'CronJob',
+                    'name' => $name,
+                    'uid' => $cronJob->getAttribute('metadata.uid'),
+                    'controller' => true,
+                    'blockOwnerDeletion' => true,
+                ]],
+            ],
+            'spec' => $template['spec'] ?? [],
+        ]);
+        $job->create();
+
+        return $jobName;
+    }
+
+    /**
      * @return K8sCronJob[]
      * @throws \Exception
      */

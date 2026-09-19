@@ -19,10 +19,10 @@ use App\Models\AutoUpdateModel;
  * `ZMQ::autoUpdateApproved()`, which is where `rollout()` lives - a different process, out
  * of band, after the response has gone out.
  *
- * That also makes this the file where SEC-18 bites hardest: without the silenced ZMQProxy
- * that `tests/bootstrap.php` installs, every test below would publish a real approval and
- * a live client would deploy a tag into whatever cluster the development environment is
- * pointed at. Nothing here may be made to emit for real.
+ * That also makes this the file where a test emitting real events would do most harm:
+ * without the silenced ZMQProxy that `tests/bootstrap.php` installs, every test below would
+ * publish a real approval and a live client would deploy a tag into whatever cluster the
+ * development environment is pointed at. Nothing here may be made to emit for real.
  */
 class AutoUpdatesApiTest extends ControllerTestCase {
 
@@ -74,7 +74,7 @@ class AutoUpdatesApiTest extends ControllerTestCase {
 
     /**
      * The same shape as the update endpoints elsewhere: an id that does not exist is
-     * answered with OK rather than refused, and nothing is written. See FEAT-9.
+     * answered with OK rather than refused, and nothing is written.
      */
     public function testAnUnknownAutoUpdateIsAnsweredWithOkAndWritesNothing(): void {
         $body = $this->approve(999999);

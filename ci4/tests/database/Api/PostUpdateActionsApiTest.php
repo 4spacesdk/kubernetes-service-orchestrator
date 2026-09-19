@@ -194,7 +194,7 @@ class PostUpdateActionsApiTest extends ControllerTestCase {
     /**
      * An unknown id is answered with OK and nothing is written - the same shape as the
      * specification endpoints, and the same objection: a dialog saving against an action
-     * somebody else deleted is told it worked. See FEAT-9.
+     * somebody else deleted is told it worked.
      *
      * The rows are the half that would not be noticed. The controller saves each condition
      * and each new field reference before the action is asked to take them, so a guard one

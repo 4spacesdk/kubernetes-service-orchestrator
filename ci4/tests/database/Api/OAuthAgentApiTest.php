@@ -95,7 +95,7 @@ class OAuthAgentApiTest extends ControllerTestCase {
      * a token; nothing calls it at runtime, the `is_public` column decides. Here the two
      * agree, and they have to: an endpoint whose job is to hand out the first token cannot
      * ask for one to do it. Closing either half would lock every client out of signing in,
-     * so both are asserted - see SEC-10 for what the two drifting apart costs.
+     * so both are asserted - if the two drift apart, the code no longer says what runs.
      */
     public function testBothEndpointsAreOpenInTheControllerAndInTheTable(): void {
         $controller = new \App\Controllers\OAuthAgent();

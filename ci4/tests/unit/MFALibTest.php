@@ -10,7 +10,7 @@ use RobThree\Auth\TwoFactorAuth;
  * **`getQRCodeImageAsDataUri()` is not called from here, and must not be.** It hands the
  * label and the freshly generated secret to `QRServerProvider`, which fetches the image
  * from `api.qrserver.com` - so the secret of an account that is being set up leaves the
- * machine, in the query string of a GET, to a third party. That is SEC-16, and it is why
+ * machine, in the query string of a GET, to a third party. That is a known leak, and it is why
  * `users/mfa/setup/prepare` is off limits to the whole suite. One probing request during
  * the coverage work on 2026-09-17 sent one unused secret out there.
  *

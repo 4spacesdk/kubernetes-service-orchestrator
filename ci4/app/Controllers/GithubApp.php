@@ -5,7 +5,7 @@ use App\Entities\GithubIntegration;
 /**
  * Where GitHub sends the operator's browser while a GitHub integration is set up. Both are
  * public, because a browser arriving from GitHub carries no token, and both act only on the
- * integration whose state nonce they are handed - see `GithubIntegration` and SEC-19.
+ * integration whose state nonce they are handed - see `GithubIntegration`.
  *
  * The urls stay here rather than under the integration: an App already created has them
  * stored at GitHub.

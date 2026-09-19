@@ -14,7 +14,7 @@ use OrmExtension\DataMapper\ModelDefinitionCache;
  * asks for columns that no longer exist, or leaves out ones that now do.
  *
  * The old fix was a line in the `spark` file, which had to be merged by hand on every
- * framework upgrade (UPG-1). It is an event now. This holds the wiring - that the listener
+ * framework upgrade. It is an event now. This holds the wiring - that the listener
  * is on `post_command` and that it actually clears - because nothing else would notice if
  * a later upgrade dropped `app/Config/Events.php` on the floor.
  */

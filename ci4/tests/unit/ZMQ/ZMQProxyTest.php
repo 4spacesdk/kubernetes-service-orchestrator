@@ -10,8 +10,8 @@ use CodeIgniter\Test\CIUnitTestCase;
  * This is the class `SilentZmq::install()` neuters, and for a good reason: the zmq server
  * really is listening on 9101 inside the development container, so a message sent from a
  * test is picked up by the client and called back into the application over HTTP - outside
- * the test, under the development environment, against the production database. That is
- * SEC-18, and nothing below undoes it.
+ * the test, under the development environment, against the production database. That has
+ * happened, and nothing below undoes it.
  *
  * **Nothing here sends to 9101.** The send path is exercised over an `inproc://` pair
  * created in this process: a PULL socket bound to a name only this test knows and a PUSH

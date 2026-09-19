@@ -9,8 +9,8 @@ use DebugTool\Data;
 /**
  * The Systems endpoints - the System page's save, and what comes back from it.
  *
- * The System row held the GitHub App credentials until INT-2 moved them to
- * `GithubIntegration`, and SEC-1 was them going out over the API. The fix was
+ * The System row held the GitHub App credentials until they moved to `GithubIntegration`,
+ * and they once went out over the API. The fix was
  * `System::toPublicArray()`, an allow list, which every System response goes through.
  *
  * **An allow list is only worth what its test asserts.** Checking that three named
@@ -20,7 +20,7 @@ use DebugTool\Data;
  * deliberate decision, made here, rather than a leak nobody noticed.
  *
  * `PublicSurfaceTest` holds the same line for the unauthenticated half, `GET /settings`.
- * This is the half behind a token - which is where SEC-1's second path was.
+ * This is the half behind a token - which is where the second leak was.
  */
 class SystemsApiTest extends ControllerTestCase {
 
@@ -66,9 +66,9 @@ class SystemsApiTest extends ControllerTestCase {
      *
      * So `isRestUpdateAllowed()` returning `false` was invisible to this file: mutating it
      * left all eight tests green. This one reads the row back through a fresh entity, which
-     * is the only question that matters about a save. It is the same family as FEAT-9 - the
-     * API says OK when it did nothing - and the reason it is worth a test of its own is
-     * that the response cannot tell you.
+     * is the only question that matters about a save. It is the same family as the
+     * unknown-id tests elsewhere - the API says OK when it did nothing - and the reason it
+     * is worth a test of its own is that the response cannot tell you.
      */
     public function testSavingTheSystemChangesTheRowAndNotJustTheAnswer(): void {
         $this->aFullyConfiguredSystem(['hosting_provider' => \HostingProviders::Gke]);
@@ -121,7 +121,7 @@ class SystemsApiTest extends ControllerTestCase {
     /**
      * `PATCH /systems` without an id is a route of its own, and it answers with a list
      * rather than one row. It went through `_setResources()`, which was not overridden, and
-     * handed the GitHub App private key to anyone holding a token - SEC-1's third way out.
+     * handed the GitHub App private key to anyone holding a token - the third way out.
      */
     public function testTheBulkSaveRouteAnswersWithTheAllowListToo(): void {
         $this->aFullyConfiguredSystem();

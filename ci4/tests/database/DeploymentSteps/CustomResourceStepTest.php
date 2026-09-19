@@ -76,7 +76,6 @@ class CustomResourceStepTest extends ManifestTestCase {
     /**
      * Today's behaviour. An empty field parses to null and the constructor wants an array,
      * so the deploy dies on a raw TypeError with nothing pointing at the specification.
-     * See FEAT-8.
      */
     public function testEmptyCustomResourceFailsWithATypeError(): void {
         $deployment = $this->deploymentWithCustomResource('');
@@ -88,7 +87,7 @@ class CustomResourceStepTest extends ManifestTestCase {
 
     /**
      * Malformed YAML at least fails loudly, but as a converted parser warning rather than
-     * as a message about the specification. See FEAT-8.
+     * as a message about the specification.
      */
     public function testMalformedYamlThrowsTheParserError(): void {
         $deployment = $this->deploymentWithCustomResource("foo: [1, 2\n  bar: :::");

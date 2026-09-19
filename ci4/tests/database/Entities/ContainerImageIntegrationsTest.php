@@ -130,7 +130,7 @@ class ContainerImageIntegrationsTest extends DatabaseTestCase {
     /**
      * Asking twice is the same registry twice. `find()` on a relation that is already
      * loaded is a query without the join, so the second ask got whichever connection came
-     * first in the table - found by FEAT-1, whose endpoint asks once to check and once for
+     * first in the table - found by the tags endpoint, which asks once to check and once for
      * the tags.
      */
     public function testAskingTwiceGivesTheSameRegistry(): void {

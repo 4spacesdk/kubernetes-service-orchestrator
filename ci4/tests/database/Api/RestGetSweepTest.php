@@ -152,7 +152,7 @@ class RestGetSweepTest extends ControllerTestCase {
     /**
      * A collection is not readable without a token.
      *
-     * This is the `api_routes.is_public` half of SEC-1 held against every plain read at
+     * This is the `api_routes.is_public` column held against every plain read at
      * once: `PublicSurfaceTest` asserts the column, this asserts that a real request is
      * actually stopped by it. No token is ever sent in this test, so nothing here can be
      * answered by a session another test left behind.
@@ -214,8 +214,8 @@ class RestGetSweepTest extends ControllerTestCase {
 
     /**
      * What a by-id read does with an id that is not there, pinned across all twenty-two at
-     * once - the question FEAT-9 asks. Twenty-one of them agree, one does not, and none of
-     * them refuses.
+     * once - does the API say OK when it did nothing? Twenty-one of them agree, one does
+     * not, and none of them refuses.
      *
      * `ResourceControllerTrait::get()` never asks whether the row was found. It calls
      * `_setResource($items->first())`, and `first()` on a collection that loaded nothing
@@ -296,7 +296,7 @@ class RestGetSweepTest extends ControllerTestCase {
 
     // </editor-fold>
 
-    // <editor-fold desc="SEC-2">
+    // <editor-fold desc="Secrets in responses">
 
     /**
      * Every collection read, swept for field names that are credentials.
@@ -306,7 +306,7 @@ class RestGetSweepTest extends ControllerTestCase {
      * fields may leave a resource - `allToArray()` sends the row.
      *
      * **The list below is today's behaviour, pinned so the fix is visible.** Every pair in
-     * it is a credential handed in cleartext to any authenticated caller. Fixing SEC-2
+     * it is a credential handed in cleartext to any authenticated caller. Withholding them
      * breaks this test, and that failure is the fix landing: the entry comes out of the
      * list, it does not get added to.
      *
@@ -338,15 +338,15 @@ class RestGetSweepTest extends ControllerTestCase {
         }
         unset($fields);
 
-        // The registry credentials were on this list, on container_images, until INT-1a moved
-        // them to a connection that withholds them.
+        // The registry credentials were on this list, on container_images, until they moved
+        // to a connection that withholds them.
         $this->assertSame([
             'database_services' => ['pass'],
             'email_services' => ['pass'],
             'o_auth_clients' => ['client_secret'],
             'podio_integrations' => ['app_token', 'client_secret'],
             'webhooks' => ['auth_bearer_token'],
-        ], $leaks, 'SEC-2: a credential stopped coming back, or a new one started');
+        ], $leaks, 'a credential stopped coming back, or a new one started');
     }
 
     /**

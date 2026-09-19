@@ -10,7 +10,7 @@
  *
  * Nothing in PHPUnit can see that. It is not an exception, not a PHP warning, and it goes
  * to stderr rather than to the output buffer PHPUnit watches - so a test could print a
- * five-hundred-error stack trace and still pass. One did: see FEAT-21.
+ * five-hundred-error stack trace and still pass. One did: the shell on a pod that is not running.
  *
  * So the test bootstrap installs a handler here instead, and `DatabaseTestCase` fails any
  * test that leaves a rejection behind. A test that means to provoke one says so with

@@ -51,7 +51,7 @@ class CheckCertificateExpiryTest extends ClusterTestCase {
     }
 
     /**
-     * **Today's behaviour, and the sharp end of FEAT-17.** A certificate cert-manager has
+     * **Today's behaviour, and the sharp end of a certificate bug.** A certificate cert-manager has
      * not got to yet has no status, `KubeCertificate::getStatus()` is declared to return an
      * array and returns null, and PHP raises a `TypeError`.
      *

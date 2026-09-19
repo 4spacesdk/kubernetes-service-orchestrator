@@ -9,7 +9,7 @@ use OrmExtension\Migration\Table;
 use RestExtension\Entities\ApiRoute;
 
 /**
- * INT-2. The GitHub App moves off the System row into integrations of its own, one per
+ * The GitHub App moves off the System row into integrations of its own, one per
  * organisation. A private GitHub App can only be installed on the account that owns it, so
  * one App for the whole instance meant one organisation.
  *
@@ -74,7 +74,7 @@ class AddGithubIntegrationEntity extends Migration {
         ApiRoute::quick('github-integrations/([0-9]+)/repositories', GithubIntegrations::class, 'getRepositories/$1', 'get');
 
         // The manifest and the repository listing move to the integration. `repositories`
-        // was public and minted a token for any installation id it was given (SEC-10).
+        // was public and minted a token for any installation id it was given.
         Database::connect()->table('api_routes')->whereIn('from', [
             'githubapp/manifest',
             'githubapp/repositories',

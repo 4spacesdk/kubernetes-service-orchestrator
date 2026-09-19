@@ -80,7 +80,7 @@ class PullContainerRegistriesTest extends DatabaseTestCase {
      * Today's behaviour, and a trap the webhooks avoid. The webhook splits on the **last**
      * colon; this splits on the first, so a registry that publishes a host with a port
      * gives an image of `registry.example.org` and a tag of `5000/team/api`. Nothing
-     * matches, and no update is created - silently. See FEAT-12.
+     * matches, and no update is created - silently.
      */
     public function testARegistryHostWithAPortIsSplitInTheWrongPlace(): void {
         $fakes = FakeIntegrations::install();

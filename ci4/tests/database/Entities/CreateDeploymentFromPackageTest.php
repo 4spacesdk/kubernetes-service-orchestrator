@@ -95,8 +95,8 @@ class CreateDeploymentFromPackageTest extends DatabaseTestCase {
     }
 
     /**
-     * A registry that refuses gives no version, as it did before a refusal started to throw
-     * (FEAT-1). The deployment is still made, so the rest of the package is not left half
+     * A registry that refuses gives no version, as it did before a refusal started to
+     * throw. The deployment is still made, so the rest of the package is not left half
      * created.
      */
     public function testARegistryThatRefusesGivesNoVersion(): void {

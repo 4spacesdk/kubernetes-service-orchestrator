@@ -1,6 +1,6 @@
 import { createVuetify } from 'vuetify'
 import { aliases, fa } from 'vuetify/iconsets/fa'
-// Only the components the templates use (PERF-2). All of them was a quarter of what the
+// Only the components the templates use. All of them was a quarter of what the
 // browser had to load before anything was drawn. A component missing here renders as an
 // unknown element with a warning in the console - add it to this list.
 import {

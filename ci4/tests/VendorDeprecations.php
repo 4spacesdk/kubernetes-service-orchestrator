@@ -6,7 +6,7 @@
  * `CODEIGNITER_SCREAM_DEPRECATIONS` is set in `phpunit.xml`, so CodeIgniter's error handler
  * turns every deprecation into an `ErrorException`. That is the point: before it was set,
  * deprecations were logged below the logger's threshold and a clean `OK` said nothing about
- * them. See TEST-4.
+ * them.
  *
  * But "every" includes the vendor tree, and a deprecation in `ci4restextension` fires on
  * nearly every request - with the flag alone, 986 of 1093 tests errored on code we cannot
