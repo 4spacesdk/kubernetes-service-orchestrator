@@ -69,8 +69,18 @@ class DeploymentSpecifications extends ResourceController {
         if ($item->exists()) {
             $item->container_image->find();
 
+            // Empty on a registry that cannot be read, as before: the version dialogs wait for
+            // a list and have no way to show a failure. `/container-images/{id}/tags` is
+            // where the reason is shown.
+            try {
+                $details = $item->container_image->getTagDetails();
+            } catch (\Throwable $e) {
+                Data::debug($e->getMessage());
+                $details = [];
+            }
             Data::set('resource', [
-                'tags' => $item->container_image->getTags(),
+                'tags' => array_column($details, 'name'),
+                'tag_details' => $details,
             ]);
         }
         $this->success();

@@ -1,7 +1,5 @@
 <?php namespace App\Libraries\ContainerRegistries;
 
-use DebugTool\Data;
-
 class HarborRegistry extends BaseContainerRegistry {
 
     public function getUrlPrefix(): string {
@@ -108,14 +106,15 @@ class HarborRegistry extends BaseContainerRegistry {
     }
 
     /**
-     * Harbor pages at most a hundred at a time.
+     * Harbor pages at most a hundred at a time, and ten when not told otherwise.
      *
      * @codeCoverageIgnore
      */
     private function getAll(string $path): array {
+        $separator = str_contains($path, '?') ? '&' : '?';
         $items = [];
         for ($page = 1; ; $page++) {
-            $batch = $this->get("{$path}?page_size=100&page={$page}");
+            $batch = $this->get("{$path}{$separator}page_size=100&page={$page}");
             $items = [...$items, ...$batch];
             if (count($batch) < 100) {
                 return $items;
@@ -159,40 +158,21 @@ class HarborRegistry extends BaseContainerRegistry {
      *
      * @codeCoverageIgnore
      */
-    public function getTags(string $url): array {
-        try {
-            $ch = curl_init();
-            $headers = [
-                'accept: application/json',
-                "authorization: Basic " . base64_encode("{$this->registry->harbor_username}:{$this->registry->harbor_password}"),
-                'X-Accept-Vulnerabilities: application/vnd.security.vulnerability.report; version=1.1, application/vnd.scanner.adapter.vuln.report.harbor+json; version=1.0',
-            ];
-            $repoNameUrlEncoded = urlencode($this->getRepoName($url));
-            $apiUrl = "https://{$this->registry->harbor_url}/api/v2.0/projects/{$this->getProjectName($url)}/repositories/{$repoNameUrlEncoded}/artifacts?q=tags%3D*";
-            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_URL, $apiUrl);
-            $response = curl_exec($ch);
-            $artifacts = json_decode($response, true);
+    protected function fetchTagDetails(string $url): array {
+        $path = '/api/v2.0/projects/' . rawurlencode($this->getProjectName($url))
+            . '/repositories/' . urlencode($this->getRepoName($url))
+            . '/artifacts?q=tags%3D*';
 
-            if (isset($artifacts['errors'])) {
-                Data::debug('failed to get tags');
-                Data::debug($artifacts);
-            } else {
-                $items = [];
-                foreach ($artifacts as $artifact) {
-                    foreach ($artifact['tags'] as $tag) {
-                        $items[] = $tag['name'];
-                    }
-                }
-                return self::sortVersions($items);
+        $items = [];
+        foreach ($this->getAll($path) as $artifact) {
+            foreach ($artifact['tags'] ?? [] as $tag) {
+                $items[] = [
+                    'name' => $tag['name'],
+                    'pushed_at' => self::isoTime($tag['push_time'] ?? $artifact['push_time'] ?? null),
+                ];
             }
-
-        } catch (\Exception $e) {
-            Data::debug($e->getMessage());
         }
-
-        return [];
+        return $items;
     }
 
 }

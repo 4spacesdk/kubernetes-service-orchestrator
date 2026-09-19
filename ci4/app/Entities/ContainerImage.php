@@ -49,14 +49,31 @@ class ContainerImage extends Entity {
      * for that property, and `container_registry` is the relation.
      */
     public function getRegistryClient(): ?BaseContainerRegistry {
+        return $this->registry()?->getClient();
+    }
+
+    private ?ContainerRegistry $loadedRegistry = null;
+
+    private ?int $registryLoadedFor = null;
+
+    /**
+     * The image's registry connection, or null when it has none or it is gone.
+     *
+     * Loaded by id, once. `find()` on the `container_registry` relation can only be asked
+     * once: the first call uses up the join, and a second is a query without it that
+     * answers with the first connection in the table.
+     */
+    private function registry(): ?ContainerRegistry {
         if (!$this->container_registry_id) {
             return null;
         }
-        $this->container_registry->find();
-        if (!$this->container_registry->exists()) {
-            return null;
+        if ($this->registryLoadedFor !== (int) $this->container_registry_id) {
+            $registry = new ContainerRegistry();
+            $registry->find($this->container_registry_id);
+            $this->loadedRegistry = $registry->exists() ? $registry : null;
+            $this->registryLoadedFor = (int) $this->container_registry_id;
         }
-        return $this->container_registry->getClient();
+        return $this->loadedRegistry;
     }
 
     /**
@@ -68,11 +85,9 @@ class ContainerImage extends Entity {
      */
     public function getPullSecretNames(): array {
         $names = [];
-        if ($this->container_registry_id) {
-            $this->container_registry->find();
-            if ($this->container_registry->exists() && $this->container_registry->hasPullCredentials()) {
-                $names[] = $this->container_registry->getPullSecretName();
-            }
+        $registry = $this->registry();
+        if ($registry?->hasPullCredentials()) {
+            $names[] = $registry->getPullSecretName();
         }
         if (strlen((string) $this->pull_secret)) {
             $names[] = $this->pull_secret;
@@ -82,9 +97,18 @@ class ContainerImage extends Entity {
 
     /**
      * @return string[] Empty when the image has no registry to ask.
+     * @throws \Exception When the registry could not be read, with its reason.
      */
     public function getTags(): array {
         return $this->getRegistryClient()?->getTags($this->url) ?? [];
+    }
+
+    /**
+     * @return array<array{name: string, pushed_at: ?string}> Empty when the image has no registry to ask.
+     * @throws \Exception When the registry could not be read, with its reason.
+     */
+    public function getTagDetails(): array {
+        return $this->getRegistryClient()?->getTagDetails($this->url) ?? [];
     }
 
     public function getVersionControlSystem(): ?BaseVersionControlSystem {

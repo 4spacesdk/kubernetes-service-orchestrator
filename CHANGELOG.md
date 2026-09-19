@@ -8,12 +8,14 @@
 * Custom resources without a namespace landed in `default`
 * Init containers from another registry could not be pulled
 * Setting a deployment's version reported success when the deploy failed
+* Harbor: tags beyond the first ten artifacts were missing
 * A failed save in a dialog was silent, and a double click saved twice
 * Creating a workspace refused names starting with Æ, Ø or Å, and namespaces longer than 15 characters
 * Security-related improvements
 
 ### Enhancements
 * Container Registries: credentials shared by all images, import of images, auto update set up by kso, optional pull secrets
+* Container Images: list tags with when each was pushed, and the registry's reason when it refuses. The deployment version picker shows when each tag was pushed too ([#64](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/64))
 * GitHub Integrations: one GitHub App per organisation
 * Lists: search, filters, page and sort kept in the url, sortable columns, clickable names ([#53](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/53)), keyboard shortcuts
 * Update the version of several deployments at once

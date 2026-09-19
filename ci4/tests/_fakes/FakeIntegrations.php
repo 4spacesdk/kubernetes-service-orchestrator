@@ -55,6 +55,12 @@ class FakeIntegrations extends IntegrationFactory {
     /** Thrown by setupEvents(), for a registry that refuses. */
     public ?\Exception $failSetupEventsWith = null;
 
+    /** Thrown by getTags(), for a registry that refuses. */
+    public ?\Exception $failTagsWith = null;
+
+    /** @var array<string, string> When each tag was pushed, as the registry wrote it. A tag not here has no time. */
+    public array $tagPushTimes = [];
+
     /** Null means the image has no version control configured. */
     public ?string $commitMessage = null;
 
@@ -116,8 +122,25 @@ class FakeIntegrations extends IntegrationFactory {
                 return $this->repoName;
             }
 
+            /**
+             * In the order the test gave, unlike a real registry - so the code that picks a
+             * version from them can be seen not to sort.
+             */
             public function getTags(string $url): array {
+                if ($this->fakes->failTagsWith) {
+                    throw $this->fakes->failTagsWith;
+                }
                 return $this->tags;
+            }
+
+            protected function fetchTagDetails(string $url): array {
+                if ($this->fakes->failTagsWith) {
+                    throw $this->fakes->failTagsWith;
+                }
+                return array_map(fn ($tag) => [
+                    'name' => $tag,
+                    'pushed_at' => self::isoTime($this->fakes->tagPushTimes[$tag] ?? null),
+                ], $this->tags);
             }
 
             public function testConnection(): string {

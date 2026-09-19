@@ -1,11 +1,12 @@
 <?php namespace App\Libraries\ContainerRegistries;
 
 use App\Libraries\GoogleCloud\GcrSubscription;
-use DebugTool\Data;
 use Google\ApiCore\ApiException;
 use Google\ApiCore\ValidationException;
 use Google\Cloud\ArtifactRegistry\V1beta2\ArtifactRegistryClient;
 use Google\Cloud\ArtifactRegistry\V1beta2\Tag;
+use Google\Cloud\ArtifactRegistry\V1beta2\Version;
+use Google\Cloud\ArtifactRegistry\V1beta2\VersionView;
 
 class GoogleCloudArtifactRegistry extends BaseContainerRegistry {
 
@@ -56,30 +57,30 @@ class GoogleCloudArtifactRegistry extends BaseContainerRegistry {
      *
      * @codeCoverageIgnore
      */
-    public function getTags(string $url): array {
+    protected function fetchTagDetails(string $url): array {
         $items = [];
 
+        // Versions rather than tags: a tag has no time of its own, the version it points at
+        // does. The full view lists each version's tags with it.
+        $client = $this->client();
         try {
-            $client = $this->client();
-            try {
-                $pagedResponse = $client->listTags(['parent' => $this->packageName($url)]);
-                /** @var Tag $element */
-                foreach ($pagedResponse->iterateAllElements() as $element) {
-                    $name = explode('/', $element->getName());
-                    $items[] = end($name);
+            $pagedResponse = $client->listVersions(['parent' => $this->packageName($url), 'view' => VersionView::FULL]);
+            /** @var Version $version */
+            foreach ($pagedResponse->iterateAllElements() as $version) {
+                $pushedAt = $version->getCreateTime()?->toDateTime()->format(DATE_ATOM);
+                /** @var Tag $tag */
+                foreach ($version->getRelatedTags() as $tag) {
+                    $name = explode('/', $tag->getName());
+                    $items[] = ['name' => end($name), 'pushed_at' => self::isoTime($pushedAt)];
                 }
-
-                Data::debug('found', count($items), 'tags');
-            } catch (ApiException $e) {
-                Data::debug($e->getMessage());
-            } finally {
-                $client->close();
             }
-        } catch (ValidationException $e) {
-            Data::debug($e->getMessage());
+        } catch (ApiException $e) {
+            throw new \Exception("Artifact Registry answered {$e->getStatus()}: {$e->getBasicMessage()}", 0, $e);
+        } finally {
+            $client->close();
         }
 
-        return self::sortVersions($items);
+        return $items;
     }
 
     /**

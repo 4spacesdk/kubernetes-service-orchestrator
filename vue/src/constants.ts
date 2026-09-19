@@ -6,6 +6,7 @@ import type { DomainCreateDialog_Input } from "@/components/Dialogs/Setup/Domain
 import type { EmailServiceEditDialog_Input } from "@/components/Dialogs/Setup/EmailServices/EmailServiceEditDialog.vue";
 import type { ContainerRegistryEditDialog_Input } from "@/components/Dialogs/Integrations/ContainerRegistries/ContainerRegistryEditDialog.vue";
 import type { ContainerRegistryImportDialog_Input } from "@/components/Dialogs/Integrations/ContainerRegistries/ContainerRegistryImportDialog.vue";
+import type { ContainerImageTagsDialog_Input } from "@/components/Dialogs/Setup/ContainerImages/ContainerImageTagsDialog.vue";
 import type { GithubIntegrationEditDialog_Input } from "@/components/Dialogs/Integrations/GithubIntegrations/GithubIntegrationEditDialog.vue";
 import type { IntegrationDeleteDialog_Input } from "@/components/Dialogs/Integrations/IntegrationDeleteDialog.vue";
 import type { DeploymentBulkUpdateVersionDialog_Input } from "@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentBulkUpdateVersionDialog.vue";
@@ -174,6 +175,7 @@ export type Events = {
     emailServiceEditDialog_closed: EmailService | undefined;
     containerRegistryEdit: ContainerRegistryEditDialog_Input;
     containerRegistryImport: ContainerRegistryImportDialog_Input;
+    containerImageTags: ContainerImageTagsDialog_Input;
     containerRegistrySaved: ContainerRegistry | undefined;
     containerRegistryEditDialog_closed: ContainerRegistry | undefined;
     githubIntegrationEdit: GithubIntegrationEditDialog_Input;

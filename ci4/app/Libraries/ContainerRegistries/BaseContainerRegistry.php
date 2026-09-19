@@ -50,9 +50,34 @@ abstract class BaseContainerRegistry {
     public abstract function getRepoName(string $url): string;
 
     /**
+     * Throws with the registry's reason rather than answering an empty list, so a refused
+     * login cannot be mistaken for an image without tags (FEAT-1).
+     *
      * @return string[] Oldest version first.
+     * @throws \Exception
      */
-    public abstract function getTags(string $url): array;
+    public function getTags(string $url): array {
+        return array_column($this->getTagDetails($url), 'name');
+    }
+
+    /**
+     * Each tag with when the image it points at was pushed.
+     *
+     * @return array<array{name: string, pushed_at: ?string}> Oldest version first. `pushed_at`
+     *     is ISO 8601 in UTC, null when the registry does not say.
+     * @throws \Exception
+     */
+    public function getTagDetails(string $url): array {
+        $details = $this->fetchTagDetails($url);
+        usort($details, fn($a, $b) => self::compareVersions($a['name'], $b['name']));
+        return $details;
+    }
+
+    /**
+     * @return array<array{name: string, pushed_at: ?string}> In any order.
+     * @throws \Exception With the registry's reason.
+     */
+    protected abstract function fetchTagDetails(string $url): array;
 
     /**
      * Prove the connection works. Returns what the registry answered, in words; throws
@@ -70,13 +95,22 @@ abstract class BaseContainerRegistry {
      */
     public abstract function listRepositories(): array;
 
+    private static function compareVersions(string $a, string $b): int {
+        return version_compare(str_replace('v', '', $a), str_replace('v', '', $b));
+    }
+
     /**
-     * @param string[] $tags
-     * @return string[]
+     * A registry's time as ISO 8601 in UTC, so the three providers answer alike.
      */
-    protected static function sortVersions(array $tags): array {
-        usort($tags, fn($a, $b) => version_compare(str_replace('v', '', $a), str_replace('v', '', $b)));
-        return $tags;
+    protected static function isoTime(?string $time): ?string {
+        if (!$time) {
+            return null;
+        }
+        try {
+            return (new \DateTimeImmutable($time))->setTimezone(new \DateTimeZone('UTC'))->format('Y-m-d\TH:i:s\Z');
+        } catch (\Exception) {
+            return null;
+        }
     }
 
 }

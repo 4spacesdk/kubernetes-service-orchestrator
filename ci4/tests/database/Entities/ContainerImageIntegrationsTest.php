@@ -127,6 +127,35 @@ class ContainerImageIntegrationsTest extends DatabaseTestCase {
         $this->assertNull($image->getRegistryClient());
     }
 
+    /**
+     * Asking twice is the same registry twice. `find()` on a relation that is already
+     * loaded is a query without the join, so the second ask got whichever connection came
+     * first in the table - found by FEAT-1, whose endpoint asks once to check and once for
+     * the tags.
+     */
+    public function testAskingTwiceGivesTheSameRegistry(): void {
+        Fixtures::containerRegistry(['provider' => \ContainerRegistries::ArtifactContainerRegistry]);
+        $image = $this->imageIn(['provider' => \ContainerRegistries::Harbor]);
+
+        $image->getRegistryClient();
+
+        $this->assertInstanceOf(HarborRegistry::class, $image->getRegistryClient());
+    }
+
+    /**
+     * The same, for a connection that is gone: the second ask must not find another one.
+     */
+    public function testAskingTwiceAfterTheRegistryIsGoneStillGivesNone(): void {
+        Fixtures::containerRegistry(['provider' => \ContainerRegistries::ArtifactContainerRegistry]);
+        $image = $this->imageIn();
+        $this->db->table('container_registries')->where('id', $image->container_registry_id)->delete();
+
+        $image->getRegistryClient();
+
+        $this->assertNull($image->getRegistryClient());
+        $this->assertSame([], $image->getPullSecretNames());
+    }
+
     // </editor-fold>
 
     // <editor-fold desc="With the outside systems faked">

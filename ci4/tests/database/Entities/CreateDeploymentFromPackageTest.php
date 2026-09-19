@@ -95,6 +95,22 @@ class CreateDeploymentFromPackageTest extends DatabaseTestCase {
     }
 
     /**
+     * A registry that refuses gives no version, as it did before a refusal started to throw
+     * (FEAT-1). The deployment is still made, so the rest of the package is not left half
+     * created.
+     */
+    public function testARegistryThatRefusesGivesNoVersion(): void {
+        $fakes = FakeIntegrations::install();
+        $fakes->tags = [];
+        $fakes->failTagsWith = new \Exception('Harbor answered 401: unauthorized');
+
+        $deployment = $this->deploymentFromPackage(['default_version' => '']);
+
+        $this->assertTrue($deployment->exists());
+        $this->assertEmpty($deployment->version);
+    }
+
+    /**
      * @param array<string, mixed> $packageSpecification
      */
     private function deploymentFromPackage(array $packageSpecification, ?string $version = null): \App\Entities\Deployment {

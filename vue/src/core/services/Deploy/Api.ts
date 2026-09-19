@@ -40,6 +40,15 @@ export interface ClusterRoleRuleList {
     values?: ClusterRoleRule[];
 }
 
+export interface ContainerImageTag {
+    name?: string;
+    pushed_at?: string;
+}
+
+export interface ContainerImageTagsGetResponse {
+    tags?: ContainerImageTag[];
+}
+
 export interface ContainerRegistryImportRequest {
     repositories?: string[];
 }
@@ -110,6 +119,7 @@ export interface DeploymentSpecificationInitContainersRequestItem {
 
 export interface DeploymentSpecificationTagsGetResponse {
     tags?: string[];
+    tag_details?: ContainerImageTag[];
 }
 
 export interface DeploymentSpecificationVolume {
@@ -915,6 +925,27 @@ export class ContainerImagesDeleteById extends BaseApi<ContainerImage> {
     }
 }
 
+export class ContainerImagesGetTagsGetById extends BaseApi<ContainerImageTagsGetResponse> {
+
+    public topic = 'Resources.ContainerImageTagsGetResponses';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/container-images/${id}/tags`;
+    }
+
+    protected convertToResource(data: any): ContainerImageTagsGetResponse {
+        return data;
+    }
+
+    public find(next?: (value: ContainerImageTagsGetResponse[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
 class ContainerImages {
 
     public get(): ContainerImagesGet {
@@ -939,6 +970,10 @@ class ContainerImages {
 
     public deleteById(id: number): ContainerImagesDeleteById {
         return new ContainerImagesDeleteById(id);
+    }
+
+    public getTagsGetById(id: number): ContainerImagesGetTagsGetById {
+        return new ContainerImagesGetTagsGetById(id);
     }
 
 }

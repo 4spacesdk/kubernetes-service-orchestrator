@@ -179,7 +179,13 @@ class Workspace extends Entity {
                     if (!$deploymentSpecification->container_image->exists()) {
                         $deploymentSpecification->container_image->find();
                     }
-                    $tags = $deploymentSpecification->container_image->getTags();
+                    try {
+                        $tags = $deploymentSpecification->container_image->getTags();
+                    } catch (\Throwable $e) {
+                        // As before FEAT-1 made a failed lookup throw: no version.
+                        Data::debug($e->getMessage());
+                        $tags = [];
+                    }
                     $tags = array_filter($tags, fn($tag) => !str_contains($tag, 'latest'));
                     $deployment->version = end($tags);
                 }

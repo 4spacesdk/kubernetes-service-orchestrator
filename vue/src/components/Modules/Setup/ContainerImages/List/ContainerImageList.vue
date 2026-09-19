@@ -100,6 +100,12 @@ function onEditItemBtnClicked(item: ContainerImage) {
     });
 }
 
+function onTagsItemBtnClicked(item: ContainerImage) {
+    bus.emit('containerImageTags', {
+        containerImage: item,
+    });
+}
+
 function onDuplicateItemBtnClicked(item: ContainerImage) {
     // Read the row again rather than copying what the table holds, so fields the list
     // does not ask for still make it into the copy.
@@ -202,6 +208,18 @@ function deleteItem(item: ContainerImage) {
                     >
                         <v-icon>fa fa-pen</v-icon>
                         <v-tooltip activator="parent" location="bottom">Edit</v-tooltip>
+                    </v-btn>
+
+                    <v-btn
+                        v-if="item.container_registry_id"
+                        variant="plain" color="primary"
+                        @click="onTagsItemBtnClicked(item)"
+                        size="small"
+                        density="comfortable"
+                        icon
+                    >
+                        <v-icon>fa fa-tags</v-icon>
+                        <v-tooltip activator="parent" location="bottom">List tags</v-tooltip>
                     </v-btn>
 
                     <v-btn

@@ -4,6 +4,7 @@ import {Deployment} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
+import DateView from "@/components/Modules/Common/DateView.vue";
 
 export interface DeploymentUpdateVersionDialog_Input {
     deployment: Deployment;
@@ -16,6 +17,8 @@ const showDialog = ref(false);
 
 const value = ref<string>();
 const tags = ref<string[]>([]);
+/** When each tag was pushed, by name. A tag the registry gives no time for is missing. */
+const pushedAt = ref<Record<string, string>>({});
 const isLoading = ref(false);
 const isSaving = ref(false);
 
@@ -39,7 +42,16 @@ function render() {
     isLoading.value = true;
     Api.deploymentSpecifications().getTagsGetById(props.input.deployment!.deployment_specification_id!)
         .find(response => {
-            tags.value = response[0]?.tags ?? [];
+            pushedAt.value = Object.fromEntries(
+                (response[0]?.tag_details ?? [])
+                    .filter(tag => tag.pushed_at)
+                    .map(tag => [tag.name!, tag.pushed_at!])
+            );
+            // Last pushed first, like the tags dialog. A tag without a time goes last, highest
+            // version first - the server answers oldest version first.
+            tags.value = [...(response[0]?.tags ?? [])]
+                .reverse()
+                .sort((a, b) => (pushedAt.value[b] ?? "").localeCompare(pushedAt.value[a] ?? ""));
             isLoading.value = false;
         });
 }
@@ -99,7 +111,15 @@ function onCloseBtnClicked() {
                             :loading="isLoading"
                             :items="tags"
                             variant="outlined"
-                            label="Version"/>
+                            label="Version">
+                            <template v-slot:item="{ props: itemProps, item }">
+                                <v-list-item v-bind="itemProps">
+                                    <template v-if="pushedAt[item.raw]" v-slot:append>
+                                        <DateView :date-string="pushedAt[item.raw]" text-format="DD/MM-YY HH:mm" class="text-body-2 text-medium-emphasis ml-4 pushed-at"/>
+                                    </template>
+                                </v-list-item>
+                            </template>
+                        </v-select>
                     </v-col>
                 </v-row>
             </v-card-text>
@@ -129,5 +149,9 @@ function onCloseBtnClicked() {
 </template>
 
 <style scoped>
-
+/* Same width for every date, so they line up: Roboto kerns around a 1. */
+.pushed-at {
+    font-variant-numeric: tabular-nums;
+    font-kerning: none;
+}
 </style>

@@ -449,12 +449,34 @@ class DeploymentSpecificationsApiTest extends ControllerTestCase {
     public function testTheTagListComesFromTheRegistry(): void {
         $fakes = FakeIntegrations::install();
         $fakes->tags = ['1.0.0', '1.1.0'];
+        $fakes->tagPushTimes = ['1.1.0' => '2026-09-01T10:30:00Z'];
         $image = Fixtures::containerImage(['container_registry_id' => Fixtures::containerRegistry()->id]);
         $specification = Fixtures::deploymentSpecification(['container_image_id' => $image->id]);
 
         $body = $this->getJson("deployment-specifications/{$specification->id}/tags");
 
         $this->assertSame(['1.0.0', '1.1.0'], $body['resource']['tags']);
+        $this->assertSame([
+            ['name' => '1.0.0', 'pushed_at' => null],
+            ['name' => '1.1.0', 'pushed_at' => '2026-09-01T10:30:00Z'],
+        ], $body['resource']['tag_details']);
+    }
+
+    /**
+     * The version dialogs wait for a list and cannot show a failure, so this keeps answering
+     * one. `/container-images/{id}/tags` is where the reason is shown (FEAT-1).
+     */
+    public function testARegistryThatRefusesStillGivesTheVersionDialogsAList(): void {
+        $fakes = FakeIntegrations::install();
+        $fakes->tags = [];
+        $fakes->failTagsWith = new \Exception('Harbor answered 401: unauthorized');
+        $image = Fixtures::containerImage(['container_registry_id' => Fixtures::containerRegistry()->id]);
+        $specification = Fixtures::deploymentSpecification(['container_image_id' => $image->id]);
+
+        $body = $this->getJson("deployment-specifications/{$specification->id}/tags");
+
+        $this->assertSame('OK', $body['status']);
+        $this->assertSame([], $body['resource']['tags']);
     }
 
     // </editor-fold>

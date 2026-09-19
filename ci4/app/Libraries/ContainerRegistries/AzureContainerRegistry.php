@@ -114,36 +114,28 @@ class AzureContainerRegistry extends BaseContainerRegistry {
      *
      * @codeCoverageIgnore
      */
-    public function getTags(string $url): array {
-        try {
-            $azureAccessToken = $this->getAzureAccessToken();
-            $registryRefreshToken = $this->getRegistryRefreshToken($azureAccessToken);
-            $registryAccessToken = $this->getRegistryAccessToken($registryRefreshToken, $this->getRepoName($url));
+    protected function fetchTagDetails(string $url): array {
+        $azureAccessToken = $this->getAzureAccessToken();
+        $registryRefreshToken = $this->getRegistryRefreshToken($azureAccessToken);
+        $registryAccessToken = $this->getRegistryAccessToken($registryRefreshToken, $this->getRepoName($url));
 
-            $ch = curl_init();
-            curl_setopt($ch, CURLOPT_HTTPHEADER, [
-                "Authorization: Bearer {$registryAccessToken}",
-            ]);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_URL, "https://{$this->registry->azure_registry_name}/acr/v1/{$this->getRepoName($url)}/_tags");
-            $response = curl_exec($ch);
-            $json = json_decode($response, true);
-            if ($json && isset($json['tags'])) {
-
-                $items = [];
-                foreach ($json['tags'] as $tag) {
-                    $items[] = $tag['name'];
-                }
-                return self::sortVersions($items);
-            } else {
-                Data::debug('failed to get tags');
-                Data::debug($response);
-            }
-        } catch (\Exception $e) {
-            Data::debug($e->getMessage());
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            "Authorization: Bearer {$registryAccessToken}",
+        ]);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_URL, "https://{$this->registry->azure_registry_name}/acr/v1/{$this->getRepoName($url)}/_tags");
+        $response = curl_exec($ch);
+        $json = json_decode((string) $response, true);
+        if (!is_array($json) || !isset($json['tags'])) {
+            throw new \Exception('Azure refused to list the tags: ' . ($json['errors'][0]['message'] ?? curl_error($ch) ?: (string) $response));
         }
 
-        return [];
+        // lastUpdateTime moves when the tag is pushed again to a new image; createdTime does not.
+        return array_map(fn ($tag) => [
+            'name' => $tag['name'],
+            'pushed_at' => self::isoTime($tag['lastUpdateTime'] ?? $tag['createdTime'] ?? null),
+        ], $json['tags']);
     }
 
     /**
