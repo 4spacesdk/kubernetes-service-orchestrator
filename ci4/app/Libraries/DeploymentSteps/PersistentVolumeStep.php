@@ -139,9 +139,38 @@ class PersistentVolumeStep extends BaseDeploymentStep {
         return null;
     }
 
+    /**
+     * A new volume is reserved for the deployment's own claim, so no other claim with the
+     * same storage class can take it first.
+     *
+     * An existing volume keeps the binding it has. An update replaces the whole object, and
+     * the manifest has neither the controller's `claimRef` nor its `pv.kubernetes.io/*`
+     * annotations - sent without them, a bound volume went `Available` on every deploy of
+     * this step and its claim was lost. So both are copied from the live volume first. A
+     * `claimRef` without the claim's uid is no better: that unbinds it too.
+     */
     public function startDeployCommand(Deployment $deployment, ?string $reason = null): void {
         $resources = $this->getResources($deployment, true);
         foreach ($resources as $resource) {
+            if ($resource->exists()) {
+                $live = $resource->get();
+                if ($claimRef = $live->getAttribute('spec.claimRef')) {
+                    $resource->setSpec('claimRef', $claimRef);
+                }
+                $binding = array_filter(
+                    $live->getAnnotations(),
+                    fn ($name) => str_starts_with($name, 'pv.kubernetes.io/'),
+                    ARRAY_FILTER_USE_KEY
+                );
+                if ($binding) {
+                    $resource->setAnnotations(array_merge($resource->getAnnotations(), $binding));
+                }
+            } else {
+                $resource->setSpec('claimRef', [
+                    'namespace' => $deployment->namespace,
+                    'name' => $deployment->name,
+                ]);
+            }
             $this->apply($resource);
         }
     }
@@ -181,7 +210,9 @@ class PersistentVolumeStep extends BaseDeploymentStep {
                 ->setCapacity($deploymentVolume->capacity)
                 ->setSpec('volumeMode', $deploymentVolume->volume_mode)
                 ->setAccessModes(['ReadWriteMany'])
-                ->setSpec('persistentVolumeReclaimPolicy', $deploymentVolume->reclaim_policy);
+                ->setSpec('persistentVolumeReclaimPolicy', $deploymentVolume->reclaim_policy)
+                // The claim asks for this class, and only binds to a volume of the same one.
+                ->setSpec('storageClassName', (string) $deploymentVolume->storage_class);
 
             switch($deploymentVolume->type) {
                 case 'nfs':
@@ -214,7 +245,8 @@ class PersistentVolumeStep extends BaseDeploymentStep {
                 ->setCapacity($deploymentSpecificationVolume->capacity)
                 ->setSpec('volumeMode', $deploymentSpecificationVolume->volume_mode)
                 ->setAccessModes(['ReadWriteMany'])
-                ->setSpec('persistentVolumeReclaimPolicy', $deploymentSpecificationVolume->reclaim_policy);
+                ->setSpec('persistentVolumeReclaimPolicy', $deploymentSpecificationVolume->reclaim_policy)
+                ->setSpec('storageClassName', (string) $deploymentSpecificationVolume->storage_class);
 
             switch($deploymentSpecificationVolume->type) {
                 case 'nfs':

@@ -545,6 +545,34 @@ class DeploymentSpecification extends Entity {
         $this->deployment_specification_http_proxy_routes = $values;
     }
 
+    /**
+     * Why the specification cannot be given this many volumes, or null when it can. See
+     * `Deployment::volumeCountProblem()`: every deployment on it mounts them alongside its
+     * own, and a deployment mounts at most one.
+     */
+    public function volumeCountProblem(int $volumes): ?string {
+        if ($volumes > 1) {
+            return 'A specification can have one volume';
+        }
+        if ($volumes === 1) {
+            $names = array_column(
+                db_connect()->table('deployments')
+                    ->distinct()
+                    ->select('deployments.name')
+                    ->join('deployment_volumes', 'deployment_volumes.deployment_id = deployments.id AND deployment_volumes.deletion_id IS NULL')
+                    ->where('deployments.deployment_specification_id', $this->id)
+                    ->where('deployments.deletion_id', null)
+                    ->orderBy('deployments.name')
+                    ->get()->getResultArray(),
+                'name'
+            );
+            if ($names) {
+                return 'These deployments have a volume of their own: ' . implode(', ', $names);
+            }
+        }
+        return null;
+    }
+
     public function updateVolumes(DeploymentSpecificationVolume $values): void {
         $this->deployment_specification_volumes->find()->deleteAll();
         $this->save($values);

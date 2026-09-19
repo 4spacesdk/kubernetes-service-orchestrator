@@ -482,7 +482,58 @@ class DeploymentSpecificationsApiTest extends ControllerTestCase {
 
     // </editor-fold>
 
+    // <editor-fold desc="One volume per deployment">
+
+    /**
+     * Every deployment on the specification mounts its volumes, and a deployment mounts one.
+     */
+    public function testASecondVolumeIsRefused(): void {
+        $specification = Fixtures::deploymentSpecification();
+
+        $body = $this->putValues("deployment-specifications/{$specification->id}/volumes", [$this->volume(), $this->volume()]);
+
+        $this->assertSame('A specification can have one volume', $body['error'] ?? null);
+        $this->assertSame(0, db_connect()->table('deployment_specification_volumes')->where('deployment_specification_id', $specification->id)->countAllResults());
+    }
+
+    /**
+     * The deployments that would end up with two are named, so the operator knows where
+     * to look.
+     */
+    public function testAVolumeIsRefusedWhileADeploymentHasOneOfItsOwn(): void {
+        $deployment = Fixtures::deployableDeployment(['name' => 'with-a-disk']);
+        Fixtures::deploymentVolume(['deployment_id' => $deployment->id]);
+
+        $body = $this->putValues("deployment-specifications/{$deployment->deployment_specification_id}/volumes", [$this->volume()]);
+
+        $this->assertSame('These deployments have a volume of their own: with-a-disk', $body['error'] ?? null);
+    }
+
+    public function testARemovedDeploymentVolumeDoesNotCount(): void {
+        $deployment = Fixtures::deployableDeployment();
+        $removed = Fixtures::deploymentVolume(['deployment_id' => $deployment->id]);
+        db_connect()->table('deployment_volumes')->where('id', $removed->id)->update(['deletion_id' => 1]);
+
+        $body = $this->putValues("deployment-specifications/{$deployment->deployment_specification_id}/volumes", [$this->volume()]);
+
+        $this->assertSame('OK', $body['status']);
+    }
+
+    // </editor-fold>
+
     // <editor-fold desc="Helpers">
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function volume(): array {
+        return [
+            'type' => 'nfs', 'mount_path' => '/data', 'sub_path' => '', 'capacity' => 20,
+            'volume_mode' => 'Filesystem', 'reclaim_policy' => 'Retain', 'nfs_server' => '10.0.0.2',
+            'nfs_path' => '/exports', 'storage_class' => '', 'csi_driver' => '', 'csi_volume_handle' => '',
+        ];
+    }
+
 
     /**
      * @return array<string, mixed> the decoded response

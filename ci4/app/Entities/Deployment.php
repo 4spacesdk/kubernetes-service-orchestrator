@@ -211,6 +211,32 @@ class Deployment extends Entity {
         DeploymentStepHelper::EmitTrigger(DeploymentStepTriggers::Deployment_EnvironmentVariable_Updated, $this);
     }
 
+    /**
+     * Why the deployment cannot be given this many volumes of its own, or null when it can.
+     *
+     * A deployment mounts at most one volume. Every volume - its own and its specification's -
+     * is named after the deployment, in the pod and as the claim, so a second one makes the
+     * Deployment invalid (`Duplicate value`) and every deploy of it fails. Refused when saved
+     * instead. Existing claims are not renamed: a new name would give a running deployment a
+     * new, empty disk.
+     */
+    public function volumeCountProblem(int $ownVolumes): ?string {
+        if ($ownVolumes > 1) {
+            return 'A deployment can have one volume';
+        }
+        if ($ownVolumes === 1) {
+            $specification = $this->findDeploymentSpecification();
+            $specificationVolumes = db_connect()->table('deployment_specification_volumes')
+                ->where('deployment_specification_id', $specification->id)
+                ->where('deletion_id', null)
+                ->countAllResults();
+            if ($specificationVolumes > 0) {
+                return "The specification '{$specification->name}' already gives this deployment its volume";
+            }
+        }
+        return null;
+    }
+
     public function updateDeploymentVolumes(DeploymentVolume $values): void {
         $this->deployment_volumes->find()->deleteAll();
         $this->save($values);

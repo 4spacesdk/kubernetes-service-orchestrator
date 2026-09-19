@@ -7,6 +7,8 @@ use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
 use App\Libraries\DeploymentSteps\NamespaceStep;
 use App\Libraries\DeploymentSteps\PersistentVolumeClaimStep;
 use App\Libraries\DeploymentSteps\PersistentVolumeStep;
+use PHPUnit\Framework\Attributes\DataProvider;
+use RenokiCo\PhpK8s\Kinds\K8sPersistentVolumeClaim;
 use RenokiCo\PhpK8s\Exceptions\KubernetesAPIException;
 
 /**
@@ -96,7 +98,8 @@ class StorageStepsTest extends ClusterTestCase {
      * The same immutability, reached a second way: both sources name their claim after the
      * deployment, so a deployment carrying a volume of its own **and** one from its
      * specification builds two resources with one name. The second is an update of the
-     * first, and it is refused. Nothing in kso stops the pair being configured.
+     * first, and it is refused. Saving the pair is refused now; this is what rows from
+     * before that still meet.
      */
     public function testTwoVolumesCollideOnOneName(): void {
         $deployment = $this->deploymentInANamespace();
@@ -167,6 +170,76 @@ class StorageStepsTest extends ClusterTestCase {
             $this->cluster()->getPersistentVolumeByName("{$this->testNamespace}-{$deployment->name}")
                 ->getAttribute('spec.persistentVolumeReclaimPolicy')
         );
+    }
+
+    /**
+     * With a storage class filled in, the claim now binds to the volume kso made for it. It
+     * used to ask for the class while the volume had none, so the volume sat unused and the
+     * claim waited for - or got - a disk from somewhere else.
+     */
+    public function testAClaimWithAStorageClassBindsToItsOwnVolume(): void {
+        $deployment = $this->deploymentInANamespace();
+        Fixtures::deploymentVolume(['deployment_id' => $deployment->id, 'storage_class' => 'kso-static']);
+
+        (new PersistentVolumeStep())->startDeployCommand($deployment);
+        (new PersistentVolumeClaimStep())->startDeployCommand($deployment);
+
+        $volumeName = "{$this->testNamespace}-{$deployment->name}";
+        $this->eventually(
+            fn () => $this->cluster()->getPersistentVolumeClaimByName($deployment->name, $this->testNamespace)
+                ->getAttribute('spec.volumeName') === $volumeName,
+            'the claim did not bind to its own volume'
+        );
+    }
+
+    /**
+     * A new volume is reserved for its deployment's claim. Another claim asking for the same
+     * class and size - another workspace's, say - cannot take it first.
+     */
+    public function testANewVolumeCannotBeTakenByAnotherClaim(): void {
+        $deployment = $this->deploymentInANamespace();
+        Fixtures::deploymentVolume(['deployment_id' => $deployment->id, 'storage_class' => 'kso-static', 'capacity' => 1]);
+        (new PersistentVolumeStep())->startDeployCommand($deployment);
+
+        $other = new K8sPersistentVolumeClaim($this->cluster());
+        $other->setName('someone-else')
+            ->setNamespace($this->testNamespace)
+            ->setCapacity(1)
+            ->setAccessModes(['ReadWriteMany'])
+            ->setStorageClass('kso-static')
+            ->create();
+        sleep(3);
+
+        $this->assertSame('Pending', $this->cluster()->getPersistentVolumeClaimByName('someone-else', $this->testNamespace)->getAttribute('status.phase'));
+    }
+
+    /**
+     * A second deploy must leave a bound volume bound. The update replaces the whole object,
+     * and before the live `claimRef` and `pv.kubernetes.io/*` annotations were carried over,
+     * every deploy of this step turned a bound volume `Available` - with no class as much as
+     * with one.
+     */
+    #[DataProvider('storageClasses')]
+    public function testDeployingAgainKeepsABoundVolumeBound(string $storageClass): void {
+        $deployment = $this->deploymentInANamespace();
+        Fixtures::deploymentVolume(['deployment_id' => $deployment->id, 'storage_class' => $storageClass]);
+        (new PersistentVolumeStep())->startDeployCommand($deployment);
+        (new PersistentVolumeClaimStep())->startDeployCommand($deployment);
+        $volumeName = "{$this->testNamespace}-{$deployment->name}";
+        $this->eventually(fn () => $this->cluster()->getPersistentVolumeByName($volumeName)->getAttribute('status.phase') === 'Bound');
+
+        (new PersistentVolumeStep())->startDeployCommand($deployment);
+        sleep(3);
+
+        $this->assertSame('Bound', $this->cluster()->getPersistentVolumeByName($volumeName)->getAttribute('status.phase'));
+        $this->assertSame('Bound', $this->cluster()->getPersistentVolumeClaimByName($deployment->name, $this->testNamespace)->getAttribute('status.phase'));
+    }
+
+    /**
+     * @return array<string, array{string}>
+     */
+    public static function storageClasses(): array {
+        return ['no class' => [''], 'a class' => ['kso-static']];
     }
 
     public function testTerminatingRemovesTheVolume(): void {

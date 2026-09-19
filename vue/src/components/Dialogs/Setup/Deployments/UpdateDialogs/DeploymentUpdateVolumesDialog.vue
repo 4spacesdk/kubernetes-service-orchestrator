@@ -126,15 +126,21 @@ function onCloseBtnClicked() {
                     <v-chip class="my-auto mx-auto">{{ props.input.deployment.name }}.{{ props.input.deployment.namespace }}</v-chip>
 
                     <div class="my-auto ml-auto d-flex justify-end gap-1">
-                        <v-btn
-                            icon
-                            variant="plain"
-                            color="secondary"
-                            size="small"
-                            @click="onCreateBtnClicked()">
-                            <v-icon>fa fa-plus</v-icon>
-                            <v-tooltip activator="parent" location="bottom">Create</v-tooltip>
-                        </v-btn>
+                        <!-- A wrapper, so the tooltip still shows while the button is disabled. -->
+                        <span>
+                            <v-btn
+                                icon
+                                variant="plain"
+                                color="secondary"
+                                size="small"
+                                :disabled="rows.length >= 1"
+                                @click="onCreateBtnClicked()">
+                                <v-icon>fa fa-plus</v-icon>
+                            </v-btn>
+                            <v-tooltip activator="parent" location="bottom">
+                                {{ rows.length >= 1 ? 'One volume per deployment: every volume is named after the deployment' : 'Create' }}
+                            </v-tooltip>
+                        </span>
                     </div>
                 </div>
             </v-card-title>

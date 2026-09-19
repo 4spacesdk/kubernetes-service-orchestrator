@@ -151,7 +151,9 @@ class PersistentVolumeStepTest extends ManifestTestCase {
      * Today's behaviour, and it is a trap. Unlike the Ingress step, which suffixes its
      * second object, every volume is named after the deployment alone - so a deployment
      * with two volumes builds two manifests with the same name, and applying them leaves
-     * one volume in the cluster with the last one's spec.
+     * one volume in the cluster with the last one's spec. Saving a second volume is refused
+     * now (`Deployment::volumeCountProblem()`); this is what rows from before that still
+     * build.
      */
     public function testTwoVolumesCollideOnOneName(): void {
         $deployment = $this->deploymentWithVolume(['capacity' => 10]);
@@ -167,15 +169,34 @@ class PersistentVolumeStepTest extends ManifestTestCase {
     }
 
     /**
-     * The volume writes no storageClassName although the row has one - only the claim
-     * does. A claim that asks for a class will not bind to a volume without it, so the
-     * pairing relies on the class being empty. Held here because it is easy to change by
-     * accident. See the same note in PersistentVolumeClaimStepTest.
+     * The volume carries the row's class, like the claim does. A claim that asks for a class
+     * only binds to a volume of the same one - without it here, a filled-in class left the
+     * volume unused and the claim provisioned a disk of its own somewhere else.
      */
-    public function testNoStorageClassIsWrittenOnTheVolume(): void {
+    public function testTheStorageClassIsWrittenOnTheVolumeAsOnTheClaim(): void {
         $deployment = $this->deploymentWithVolume(['storage_class' => 'standard-rwx']);
 
-        $this->assertArrayNotHasKey('storageClassName', $this->spec($deployment));
+        $this->assertSame('standard-rwx', $this->spec($deployment)['storageClassName']);
+    }
+
+    /**
+     * An empty class is sent as an empty string, not left out: `""` means no class, where a
+     * missing field would let a default class be filled in on the claim's side.
+     */
+    public function testAnEmptyStorageClassIsSentAsAnEmptyString(): void {
+        $deployment = $this->deploymentWithVolume(['storage_class' => '']);
+
+        $this->assertSame('', $this->spec($deployment)['storageClassName']);
+    }
+
+    /**
+     * The claim reservation is only added when the volume is created, which takes a
+     * cluster - see StorageStepsTest. The manifest itself never carries it.
+     */
+    public function testTheManifestCarriesNoClaimReservation(): void {
+        $deployment = $this->deploymentWithVolume();
+
+        $this->assertArrayNotHasKey('claimRef', $this->spec($deployment));
     }
 
     /**

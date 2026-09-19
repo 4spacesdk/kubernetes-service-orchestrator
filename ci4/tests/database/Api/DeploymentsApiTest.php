@@ -513,7 +513,43 @@ class DeploymentsApiTest extends ControllerTestCase {
         $this->assertSame(20, (int) $row['capacity']);
     }
 
-    public function testLabelsReplaceTheWholeSet(): void {
+    /**
+     * A deployment mounts one volume: every volume is named after it, so a second makes the
+     * Deployment invalid and every deploy of it fails. Refused when saved, before a row is
+     * written.
+     */
+    public function testASecondVolumeIsRefused(): void {
+        $deployment = Fixtures::deployableDeployment();
+
+        $body = $this->putVolumes($deployment, [$this->volume(), $this->volume()]);
+
+        $this->assertSame('A deployment can have one volume', $body['error'] ?? null);
+        $this->assertSame(0, db_connect()->table('deployment_volumes')->where('deployment_id', $deployment->id)->countAllResults());
+    }
+
+    public function testAVolumeOfItsOwnIsRefusedWhenTheSpecificationGivesOne(): void {
+        $deployment = Fixtures::deployableDeployment();
+        Fixtures::specificationVolume(['deployment_specification_id' => $deployment->deployment_specification_id]);
+
+        $body = $this->putVolumes($deployment, [$this->volume()]);
+
+        $this->assertStringContainsString('already gives this deployment its volume', $body['error'] ?? '');
+    }
+
+    /**
+     * A removed volume is soft deleted and no longer mounted, so it does not count.
+     */
+    public function testARemovedSpecificationVolumeDoesNotCount(): void {
+        $deployment = Fixtures::deployableDeployment();
+        $removed = Fixtures::specificationVolume(['deployment_specification_id' => $deployment->deployment_specification_id]);
+        db_connect()->table('deployment_specification_volumes')->where('id', $removed->id)->update(['deletion_id' => 1]);
+
+        $body = $this->putVolumes($deployment, [$this->volume()]);
+
+        $this->assertSame('OK', $body['status']);
+    }
+
+        public function testLabelsReplaceTheWholeSet(): void {
         $deployment = Fixtures::deployableDeployment();
         $this->putValues("deployments/{$deployment->id}/labels", [
             ['name' => 'team', 'value' => 'platform'],
@@ -683,7 +719,26 @@ class DeploymentsApiTest extends ControllerTestCase {
         $this->withBodyFormat('json')->signedIn()->put($path, ['values' => $values]);
     }
 
-    private function reload(Deployment $deployment): Deployment {
+    /**
+     * @param array<array<string, mixed>> $volumes
+     * @return array<string, mixed>
+     */
+    private function putVolumes(Deployment $deployment, array $volumes): array {
+        return $this->decode($this->withBodyFormat('json')->signedIn()->put("deployments/{$deployment->id}/volumes", ['values' => $volumes]));
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function volume(): array {
+        return [
+            'type' => 'nfs', 'mount_path' => '/data', 'sub_path' => '', 'capacity' => 20,
+            'volume_mode' => 'Filesystem', 'reclaim_policy' => 'Retain', 'nfs_server' => '10.0.0.2',
+            'nfs_path' => '/exports', 'storage_class' => '', 'csi_driver' => '', 'csi_volume_handle' => '',
+        ];
+    }
+
+        private function reload(Deployment $deployment): Deployment {
         $fresh = new Deployment();
         $fresh->find($deployment->id);
 

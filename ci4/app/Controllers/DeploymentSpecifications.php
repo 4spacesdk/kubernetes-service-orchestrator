@@ -505,6 +505,11 @@ class DeploymentSpecifications extends ResourceController {
         if ($item->exists()) {
             /** @var DeploymentSpecificationVolumeList $body */
             $body = $this->request->getJSON();
+            // Before anything is written: `Create()` saves as it goes.
+            if ($problem = $item->volumeCountProblem(count($body->values ?? []))) {
+                $this->fail($problem);
+                return;
+            }
             $values = new DeploymentSpecificationVolume();
             $values->all = array_map(
                 fn($data) => DeploymentSpecificationVolume::Create(

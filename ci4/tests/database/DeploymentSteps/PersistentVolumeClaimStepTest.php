@@ -127,10 +127,10 @@ class PersistentVolumeClaimStepTest extends ManifestTestCase {
     }
 
     /**
-     * The claim names no volume, so Kubernetes matches it to one by capacity, access mode
-     * and storage class. With a class set here and none on the PersistentVolume, the match
-     * is with a dynamically provisioned volume rather than the one the previous step made.
-     * See the same note in PersistentVolumeStepTest.
+     * The claim names no volume, on purpose: a claim's spec cannot change once it exists, so
+     * adding `volumeName` would be refused for every claim already out there. The pairing is
+     * made from the other side instead - the volume carries the same class, and a new one is
+     * reserved for this claim. See PersistentVolumeStepTest and StorageStepsTest.
      */
     public function testClaimDoesNotBindToANamedVolume(): void {
         $deployment = $this->deploymentWithVolume();
@@ -158,7 +158,8 @@ class PersistentVolumeClaimStepTest extends ManifestTestCase {
     }
 
     /**
-     * Same trap as on the volume: two volume rows build two claims with one name.
+     * Same trap as on the volume: two volume rows build two claims with one name. Saving
+     * a second volume is refused now; this is what rows from before that still build.
      */
     public function testTwoVolumesCollideOnOneName(): void {
         $deployment = $this->deploymentWithVolume();

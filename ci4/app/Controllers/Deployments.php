@@ -301,6 +301,11 @@ class Deployments extends ResourceController {
         if ($item->exists()) {
             /** @var DeploymentVolumeList $body */
             $body = $this->request->getJSON();
+            // Before anything is written: `Create()` saves as it goes.
+            if ($problem = $item->volumeCountProblem(count($body->values ?? []))) {
+                $this->fail($problem);
+                return;
+            }
             $values = new DeploymentVolume();
             $values->all = array_map(
                 fn($data) => DeploymentVolume::Create(
