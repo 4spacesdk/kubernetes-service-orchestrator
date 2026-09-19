@@ -35,12 +35,13 @@ onUnmounted(() => {
 });
 
 function onItemEditDialog_Closed() {
-    router.push({name: 'DatabaseServices'});
+    router.push({name: 'DatabaseServices', query: router.currentRoute.value.query});
 }
 
 function onItemEditClicked(item: DatabaseService) {
     router.push({
         name: 'DatabaseServiceById',
+        query: router.currentRoute.value.query,
         params: {
             id: item.id
         }

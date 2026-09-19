@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useListState } from "@/composables/useListState";
+import NameLink from "@/components/Modules/Common/NameLink.vue";
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
 import {User} from "@/core/services/Deploy/models";
 import {useRoute, useRouter} from "vue-router";
@@ -13,8 +15,8 @@ const emit = defineEmits<{
 const itemCount = ref(0);
 const rows = ref<User[]>([]);
 const headers = ref([
-    {title: 'Name', key: 'name', sortable: false},
-    {title: 'E-mail', key: 'username', sortable: false},
+    {title: 'Name', key: 'name', sortable: true},
+    {title: 'E-mail', key: 'username', sortable: true},
     {title: 'Roles', key: 'roles', sortable: false},
     {title: '2FA', key: 'mfa', sortable: false},
     {title: '', key: 'actions', sortable: false},
@@ -22,7 +24,10 @@ const headers = ref([
 const isLoading = ref(true);
 const options = ref({});
 
-const searchValue = ref('');
+const {search: searchValue, page, itemsPerPage, sortBy, applyOrdering, applyPaging} = useListState({
+    sortable: {"name": "name", "username": "username"},
+    defaultSort: {key: "name", order: "asc"},
+});
 
 onMounted(() => {
     bus.on('userSaved', onItemSaved);
@@ -43,8 +48,6 @@ function onItemSaved() {
 }
 
 function getItems(doItems = true, doCount = false) {
-    // Get options from DataTable
-    const tableOptions: any = options.value;
 
     // Mark as Loading
     isLoading.value = true;
@@ -60,11 +63,10 @@ function getItems(doItems = true, doCount = false) {
     }
 
     if (doItems) {
+        applyPaging(api);
+        applyOrdering(api);
         api
             .include('rbac_role')
-            .limit(tableOptions.itemsPerPage)
-            .offset(tableOptions.itemsPerPage * (tableOptions.page - 1))
-            .orderAsc('name')
             .find(items => {
                 rows.value = items;
                 isLoading.value = false;
@@ -119,7 +121,7 @@ function deleteItem(item: User) {
         >
             <v-toolbar-title>Users</v-toolbar-title>
 
-            <v-text-field
+            <v-text-field data-shortcut="search"
                 v-model="searchValue"
                 density="compact"
                 variant="outlined"
@@ -129,7 +131,7 @@ function deleteItem(item: User) {
             />
 
             <v-spacer></v-spacer>
-            <v-btn small class="" @click="createItem()"
+            <v-btn data-shortcut="create" small class="" @click="createItem()"
                    prepend-icon="fa fa-plus"
             >
                 Create
@@ -141,7 +143,9 @@ function deleteItem(item: User) {
             :items-length="itemCount"
             :items="rows"
             :loading="isLoading"
-            :items-per-page="50"
+            v-model:page="page"
+            v-model:items-per-page="itemsPerPage"
+            v-model:sort-by="sortBy"
             class="table"
             density="compact"
             @update:options="options = $event; getItems()">
@@ -165,13 +169,19 @@ function deleteItem(item: User) {
                 </v-icon>
             </template>
 
+            <template v-slot:item.name="{ item }">
+
+                <name-link @click="editItem(item)">{{ item.name }}</name-link>
+
+            </template>
+
             <template v-slot:item.actions="{ item }">
-                <div class="d-flex justify-end gap-1">
-                    <v-btn variant="plain" color="primary" size="small" @click="editItem(item)">
+                <div class="d-flex justify-end ga-1">
+                    <v-btn variant="plain" color="primary" @click="editItem(item)" size="small" density="comfortable" icon>
                         <v-icon>fa fa-pen</v-icon>
                         <v-tooltip activator="parent" location="bottom">Edit</v-tooltip>
                     </v-btn>
-                    <v-btn variant="plain" color="red" size="small" @click="deleteItem(item)">
+                    <v-btn variant="plain" color="red" @click="deleteItem(item)" size="small" density="comfortable" icon>
                         <v-icon>fa fa-trash</v-icon>
                         <v-tooltip activator="parent" location="bottom">Delete</v-tooltip>
                     </v-btn>

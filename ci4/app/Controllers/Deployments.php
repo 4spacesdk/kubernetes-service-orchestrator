@@ -85,10 +85,18 @@ class Deployments extends ResourceController {
     public function updateVersion(int $id): void {
         $item = new Deployment();
         $item->find($id);
-        if ($item->exists()) {
-            $item->updateVersion($this->request->getGet('value'));
+        if (!$item->exists()) {
+            $this->fail('unknown deployment');
+            return;
         }
+
+        // The rollout's error used to be dropped, so a deploy that failed answered OK.
+        $error = $item->updateVersion((string) $this->request->getGet('value'));
         $this->_setResource($item);
+        if ($error) {
+            $this->fail("The version is saved, but the deploy failed: {$error}");
+            return;
+        }
         $this->success();
     }
 

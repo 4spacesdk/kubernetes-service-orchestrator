@@ -23,12 +23,13 @@ onUnmounted(() => {
 });
 
 function onItemEditDialog_Closed() {
-    router.push({name: 'DeploymentSpecifications'});
+    router.push({name: 'DeploymentSpecifications', query: router.currentRoute.value.query});
 }
 
 function onItemEditClicked(item: DeploymentSpecification) {
     router.push({
         name: 'DeploymentSpecificationById',
+        query: router.currentRoute.value.query,
         params: {
             id: item.id
         }

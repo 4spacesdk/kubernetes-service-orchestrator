@@ -35,12 +35,13 @@ onUnmounted(() => {
 });
 
 function onItemEditDialog_Closed() {
-    router.push({name: 'Users'});
+    router.push({name: 'Users', query: router.currentRoute.value.query});
 }
 
 function onItemEditClicked(item: User) {
     router.push({
         name: 'UserById',
+        query: router.currentRoute.value.query,
         params: {
             id: item.id
         }

@@ -110,20 +110,27 @@ class Deployment extends Entity {
         return $item;
     }
 
-    public function updateVersion(string $value, bool $applyToKubernetes = true): void {
+    /**
+     * Set the version and roll it out. The version is saved either way; what comes back is
+     * why the rollout failed, or null. A deployment in Draft is not rolled out, and that is
+     * not a failure.
+     */
+    public function updateVersion(string $value, bool $applyToKubernetes = true): ?string {
         $prevVersion = $this->version;
 
         $this->version = $value;
         $this->last_updated = date('Y-m-d H:i:s');
         $this->save();
 
-        if ($applyToKubernetes) {
-            DeploymentStepHelper::EmitTrigger(
-                DeploymentStepTriggers::Deployment_Version_Updated,
-                $this,
-                "4spacesdk/kubernetes-service-orchestrator, version {$prevVersion} -> {$this->version} [{$this->last_updated}]"
-            );
+        if (!$applyToKubernetes) {
+            return null;
         }
+        $error = DeploymentStepHelper::EmitTrigger(
+            DeploymentStepTriggers::Deployment_Version_Updated,
+            $this,
+            "4spacesdk/kubernetes-service-orchestrator, version {$prevVersion} -> {$this->version} [{$this->last_updated}]"
+        );
+        return $error === DeploymentStepHelper::DraftRefusal ? null : $error;
     }
 
     public function updateImagePullPolicy(string $value): void {

@@ -7,6 +7,8 @@ import renderComponent from "@/plugins/renderComponent";
 interface StackEntry {
     reference: string;
     unmount?: () => void;
+    /** Something was typed or changed in the dialog. Esc asks before throwing it away. */
+    dirty?: boolean;
 }
 
 const appContext = getCurrentInstance()?.appContext;
@@ -189,6 +191,10 @@ bus.on('podTerminal', async input => {
     addComponent((await import('@/components/Dialogs/Setup/Deployments/Pods/PodTerminalDialog.vue')).default, input);
 });
 
+
+bus.on('deploymentBulkUpdateVersion', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentBulkUpdateVersionDialog.vue')).default, input);
+});
 
 bus.on('containerImageEdit', async input => {
     addComponent((await import('@/components/Dialogs/Setup/ContainerImages/ContainerImageEditDialog.vue')).default, input);
@@ -402,19 +408,126 @@ function dismissDynamicComponent(dynamicComponent: StackEntry) {
 
 onMounted(() => {
     document.addEventListener("keydown", onKeyDownEventListener);
+    document.addEventListener("input", onChangeEventListener, true);
+    document.addEventListener("change", onChangeEventListener, true);
 });
 
 onUnmounted(() => {
     document.removeEventListener("keydown", onKeyDownEventListener);
+    document.removeEventListener("input", onChangeEventListener, true);
+    document.removeEventListener("change", onChangeEventListener, true);
 });
 
+// <editor-fold desc="Keyboard shortcuts (LIST-2)">
+
+/**
+ * The dialog on top. Vuetify appends each overlay to the same container as it opens, so
+ * the last active one is the one in front.
+ */
+function topDialog(): HTMLElement | null {
+    const dialogs = document.querySelectorAll<HTMLElement>(".v-overlay--active.v-dialog");
+    return dialogs.length ? dialogs[dialogs.length - 1] : null;
+}
+
+/**
+ * A button in the dialog's action bar, by its label. Pressing it rather than removing the
+ * dialog lets the dialog close the way it does when clicked: its own events, its route.
+ */
+function actionButton(dialog: HTMLElement, labels: string[]): HTMLElement | null {
+    const buttons = dialog.querySelectorAll<HTMLButtonElement>(".v-card-actions .v-btn");
+    for (const button of Array.from(buttons).reverse()) {
+        if (!button.disabled && labels.includes(button.textContent?.trim() ?? "")) {
+            return button;
+        }
+    }
+    return null;
+}
+
+function isTyping(target: EventTarget | null): boolean {
+    const element = target as HTMLElement | null;
+    return !!element && (element.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(element.tagName));
+}
+
+function onChangeEventListener(event: Event) {
+    const top = stack.value[stack.value.length - 1];
+    if (top && topDialog()?.contains(event.target as Node)) {
+        top.dirty = true;
+    }
+}
+
 function onKeyDownEventListener(keyboardEvent: KeyboardEvent) {
-    if (keyboardEvent?.key == "Escape") {
-        if (stack.value.length > 0) {
-            popStack();
+    if (stack.value.length > 0) {
+        onDialogKeyDown(keyboardEvent);
+    } else {
+        onPageKeyDown(keyboardEvent);
+    }
+}
+
+function onDialogKeyDown(event: KeyboardEvent) {
+    // An open dropdown or menu takes Esc and Enter for itself.
+    if (document.querySelector(".v-overlay--active.v-menu")) {
+        return;
+    }
+    const dialog = topDialog();
+
+    if (event.key == "Escape") {
+        const entry = stack.value[stack.value.length - 1];
+        const close = () => {
+            const button = dialog ? actionButton(dialog, ["Close", "Cancel", "No"]) : null;
+            button ? button.click() : popStack();
+        };
+        if (entry.dirty) {
+            entry.dirty = false;
+            bus.emit("confirm", {
+                body: "Close without saving your changes?",
+                responseCallback: (confirmed: boolean) => (confirmed ? close() : (entry.dirty = true)),
+            });
+        } else {
+            close();
+        }
+        return;
+    }
+
+    // Enter saves from a one-line field; Ctrl/Cmd+Enter from anywhere, textareas included.
+    // Not from a combobox or select, where Enter picks an item.
+    if (event.key == "Enter" && dialog) {
+        const target = event.target as HTMLElement;
+        const oneLineField = target.tagName == "INPUT"
+            && !["checkbox", "radio"].includes((target as HTMLInputElement).type)
+            && !target.closest(".v-combobox, .v-autocomplete, .v-select");
+        if (event.ctrlKey || event.metaKey || oneLineField) {
+            const save = actionButton(dialog, ["Save"]);
+            if (save) {
+                event.preventDefault();
+                save.click();
+            }
         }
     }
 }
+
+/**
+ * `/` searches and `n` creates, on a list page - marked in the list with `data-shortcut`.
+ */
+function onPageKeyDown(event: KeyboardEvent) {
+    if (isTyping(event.target) || event.ctrlKey || event.metaKey || event.altKey) {
+        return;
+    }
+    if (event.key == "/") {
+        const search = document.querySelector<HTMLInputElement>('[data-shortcut="search"] input');
+        if (search) {
+            event.preventDefault();
+            search.focus();
+        }
+    } else if (event.key == "n") {
+        const create = document.querySelector<HTMLElement>('[data-shortcut="create"]');
+        if (create) {
+            event.preventDefault();
+            create.click();
+        }
+    }
+}
+
+// </editor-fold>
 
 function pushStack(entry: StackEntry) {
     stack.value.push(entry);

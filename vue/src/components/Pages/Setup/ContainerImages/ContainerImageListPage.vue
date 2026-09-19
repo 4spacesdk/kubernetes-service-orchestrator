@@ -23,12 +23,13 @@ onUnmounted(() => {
 });
 
 function onItemEditDialog_Closed() {
-    router.push({name: 'ContainerImages'});
+    router.push({name: 'ContainerImages', query: router.currentRoute.value.query});
 }
 
 function onItemEditClicked(item: ContainerImage) {
     router.push({
         name: 'ContainerImageById',
+        query: router.currentRoute.value.query,
         params: {
             id: item.id
         }

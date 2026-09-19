@@ -224,12 +224,32 @@ class DeploymentsApiTest extends ControllerTestCase {
     }
 
     /**
-     * Today's behaviour, on every one of the update endpoints: an id that does not exist
-     * is answered with OK and an empty resource. Nothing was changed and the caller is not
-     * told. See FEAT-9.
+     * A deployment in Draft is not rolled out, and that is not a failure: the version is
+     * saved and the answer is OK.
+     */
+    public function testADraftDeploymentsVersionIsSavedWithoutAnError(): void {
+        $deployment = Fixtures::deployment(['version' => '1.0.0', 'status' => \DeploymentStatusTypes::Draft]);
+
+        $body = $this->decode($this->signedIn()->put("deployments/{$deployment->id}/version?value=1.2.3"));
+
+        $this->assertSame('OK', $body['status']);
+        $this->assertSame('1.2.3', $this->reload($deployment)->version);
+    }
+
+    public function testTheVersionOfAnUnknownDeploymentIsRefused(): void {
+        $body = $this->decode($this->signedIn()->put('deployments/999999/version?value=1.2.3'));
+
+        $this->assertSame('ERROR', $body['status']);
+        $this->assertSame('unknown deployment', $body['error']);
+    }
+
+    /**
+     * Today's behaviour on the other update endpoints: an id that does not exist is
+     * answered with OK and an empty resource. Nothing was changed and the caller is not
+     * told. See FEAT-9. The version endpoint no longer does this.
      */
     public function testUpdatingAnUnknownDeploymentReportsSuccessAnyway(): void {
-        $body = $this->decode($this->signedIn()->put('deployments/999999/version?value=1.2.3'));
+        $body = $this->decode($this->signedIn()->put('deployments/999999/image-pull-policy?value=Always'));
 
         $this->assertSame('OK', $body['status']);
         $this->assertNull($body['resource']['id'], 'an empty entity is serialised with null columns');

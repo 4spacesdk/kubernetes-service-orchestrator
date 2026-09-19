@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useListState } from "@/composables/useListState";
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
 import {Api} from "@/core/services/Deploy/Api";
 import {WebhookDelivery} from "@/core/services/Deploy/models";
@@ -24,17 +25,21 @@ interface Row {
 const itemCount = ref(0);
 const rows = ref<Row[]>([]);
 const headers = ref([
-    {title: 'Date', key: 'created', sortable: false},
-    {title: 'Url', key: 'item.url', sortable: false},
-    {title: 'Method', key: 'item.method', sortable: false},
-    {title: 'Response code', key: 'item.response_code', sortable: false},
+    {title: 'Date', key: 'created', sortable: true},
+    {title: 'Url', key: 'item.url', sortable: true},
+    {title: 'Method', key: 'item.method', sortable: true},
+    {title: 'Response code', key: 'item.response_code', sortable: true},
     {title: 'Time', key: 'response_time', sortable: false},
     {title: '', key: 'actions', sortable: false},
 ]);
 const isLoading = ref(true);
 const options = ref({});
 
-const searchValue = ref('');
+const {search: searchValue, page, itemsPerPage, sortBy, applyOrdering, applyPaging} = useListState({
+    sortable: {"created": "id", "item.url": "url", "item.method": "method", "item.response_code": "response_code"},
+    defaultSort: {key: "created", order: "desc"},
+    syncWithUrl: false,
+});
 
 onMounted(() => {
     getItems(false, true);
@@ -53,8 +58,6 @@ function onItemSaved() {
 }
 
 function getItems(doItems = true, doCount = false) {
-    // Get options from DataTable
-    const tableOptions: any = options.value;
 
     // Mark as Loading
     isLoading.value = true;
@@ -69,10 +72,9 @@ function getItems(doItems = true, doCount = false) {
     }
 
     if (doItems) {
+        applyPaging(api);
+        applyOrdering(api);
         api
-            .orderDesc('id')
-            .limit(tableOptions.itemsPerPage)
-            .offset(tableOptions.itemsPerPage * (tableOptions.page - 1))
             .find((items: WebhookDelivery[]) => {
                 rows.value = items.map(item => {
                     return {
@@ -141,7 +143,7 @@ function onResponseBodyBtnClicked(item: Row) {
         >
             <v-toolbar-title>Webhook Deliveries</v-toolbar-title>
 
-            <v-text-field
+            <v-text-field data-shortcut="search"
                 v-model="searchValue"
                 density="compact"
                 variant="outlined"
@@ -156,7 +158,9 @@ function onResponseBodyBtnClicked(item: Row) {
             :items-length="itemCount"
             :items="rows"
             :loading="isLoading"
-            :items-per-page="50"
+            v-model:page="page"
+            v-model:items-per-page="itemsPerPage"
+            v-model:sort-by="sortBy"
             class="table"
             density="compact"
             @update:options="options = $event; getItems()">
@@ -167,36 +171,48 @@ function onResponseBodyBtnClicked(item: Row) {
                 <span>{{ item.item.response_time }}ms</span>
             </template>
             <template v-slot:item.actions="{ item }">
-                <div class="d-flex justify-end">
+                <div class="d-flex justify-end ga-1">
 
                     <v-btn
-                        variant="plain" color="primary" size="small" icon
+                        variant="plain" color="primary" 
                         @click="onRequestPayloadBtnClicked(item)"
+                        size="small"
+                        density="comfortable"
+                        icon
                     >
                         <v-icon>fa fa-eye</v-icon>
                         <v-tooltip activator="parent" location="bottom">Request payload</v-tooltip>
                     </v-btn>
 
                     <v-btn
-                        variant="plain" color="secondary" size="small" icon
+                        variant="plain" color="secondary" 
                         @click="onResponseHeadersBtnClicked(item)"
+                        size="small"
+                        density="comfortable"
+                        icon
                     >
                         <v-icon>fa fa-eye</v-icon>
                         <v-tooltip activator="parent" location="bottom">Response headers</v-tooltip>
                     </v-btn>
 
                     <v-btn
-                        variant="plain" color="secondary" size="small" icon
+                        variant="plain" color="secondary" 
                         @click="onResponseBodyBtnClicked(item)"
+                        size="small"
+                        density="comfortable"
+                        icon
                     >
                         <v-icon>fa fa-eye</v-icon>
                         <v-tooltip activator="parent" location="bottom">Response body</v-tooltip>
                     </v-btn>
 
                     <v-btn
-                        variant="plain" color="primary" size="small" icon
+                        variant="plain" color="primary" 
                         @click="onRetryItemBtnClicked(item)"
                         :loading="item.isRunning"
+                        size="small"
+                        density="comfortable"
+                        icon
                     >
                         <v-icon>fa fa-play</v-icon>
                         <v-tooltip activator="parent" location="bottom">Redelivery</v-tooltip>

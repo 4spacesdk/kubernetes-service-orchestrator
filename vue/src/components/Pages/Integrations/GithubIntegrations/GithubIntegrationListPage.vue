@@ -45,12 +45,13 @@ onUnmounted(() => {
 });
 
 function onItemEditDialog_Closed() {
-    router.push({ name: "GithubIntegrations" });
+    router.push({name: "GithubIntegrations", query: router.currentRoute.value.query});
 }
 
 function onItemEditClicked(item: GithubIntegration) {
     router.push({
         name: "GithubIntegrationById",
+        query: router.currentRoute.value.query,
         params: {
             id: item.id,
         },

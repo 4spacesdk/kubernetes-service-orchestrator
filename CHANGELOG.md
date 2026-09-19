@@ -3,43 +3,31 @@
 ## Unreleased
 
 ### Fixed bugs
-* Creating a gateway wrote its addresses twice
-* Deploying a workspace while it was still rolling out could fail with a `409 Conflict` and leave the deployment half applied. Every step now retries a conflict
-* Asking for a migration job's status while it was being cleaned up failed instead of reporting that it was gone
-* A gateway's Kubernetes events panel listed the whole cluster's events instead of the gateway's own
-* A custom resource whose manifest named no namespace was applied to `default` rather than to the workspace it belongs to
-* Every gateway endpoint crashed on an unknown id instead of reporting it
-* Creating, deleting or reading a domain's Istio gateway failed with "Class not found" on Linux
-* The pod list showed a pod that was not yet on a node as created on 1970-01-01
-* The shell's output kept a carriage return on every line but the last, and could gain empty lines, depending on how the output arrived
-* A pod only named its main image's pull secret, so an init container from another registry could not be pulled
-* Artifact Registry looked tags up by the last segment of the image url only, so an image with `/` in its path found none
-* The GitHub App callback and post-install endpoints accepted any link, so one link could replace the app or repoint its installation. They now require a state kso issued
-* `PATCH /systems` without an id returned the GitHub App private key
+* Several gateway, migration job, pod list and shell fixes
+* Deploying while a rollout was still running could fail with `409 Conflict`
+* Custom resources without a namespace landed in `default`
+* Init containers from another registry could not be pulled
+* Setting a deployment's version reported success when the deploy failed
+* Security-related improvements
 
 ### Enhancements
-* Container Registries under Integrations: a registry's credentials are entered once and shared by its images, instead of copied onto each image. Secrets are write-only
-* Test connection on a container registry
-* Import container images from a registry by picking its repositories
-* kso sets up auto update on Harbor (webhook policy) and Azure Container Registry (webhook) itself, with a secret it checks on every call
-* GitHub Integrations under Integrations: one GitHub App per organisation, instead of one for the whole installation. A container image picks the integration its repository lives under
-* Optional pull login on a container registry: kso creates a `kso-registry-<id>` pull secret in each namespace that deploys its images, and the pods use it
-* Duplicate button on Container Images, Domains, Gateways, Database Services and Email Services
-* Duplicate button on Deployment Specifications and Deployment Packages, copying everything they are made of
-* Added unit and database test suites, covering workspace status, auto updates, the commands, the helpers and the whole controller layer, and the HTTPRoute, HealthCheckPolicy and GCPBackendPolicy manifests
-* Added an integration suite that deploys to a throwaway k3s cluster, covering what eleven deployment steps apply, report and terminate - including the Gateway API, Contour and Istio resources, which are validated against the real schemas
-* Upgraded the runtime: PHP 8.3 to 8.5, Alpine 3.20 to 3.24, CodeIgniter 4.4 to 4.7, and the three 4spaces extensions. MySQL in development compose went from 5.7 to 8.0
-* The image builds on arm64 as well as amd64, so it can be built and run on Apple Silicon
+* Container Registries: credentials shared by all images, import of images, auto update set up by kso, optional pull secrets
+* GitHub Integrations: one GitHub App per organisation
+* Lists: search, filters, page and sort kept in the url, sortable columns, clickable names ([#53](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/53)), keyboard shortcuts
+* Update the version of several deployments at once
+* Duplicate on most setup entities
+* Terminate and Delete moved into a menu on workspaces and gateways
+* Upgraded to PHP 8.5, Alpine 3.24 and CodeIgniter 4.7. The image also builds on arm64
+* Added unit, database and integration test suites
 
 ### Upgrade guide
 1. Deploy new image
-2. Run migrations [(Guide)](https://github.com/4spacesdk/kubernetes-service-orchestrator?tab=readme-ov-file#migrate-database-helm). Images with the same registry credentials are grouped into one container registry
-3. Harbor and Azure: the old webhook urls are gone, so auto update from them stops. Open each container registry under Integrations and click "Set up auto update", then remove the old webhooks from the registry
+2. Run migrations [(Guide)](https://github.com/4spacesdk/kubernetes-service-orchestrator?tab=readme-ov-file#migrate-database-helm). Registry credentials and the GitHub App move to Integrations automatically
+3. Harbor and Azure: open each container registry and click "Set up auto update", then remove the old webhooks from the registry
 4. Artifact Registry: the service account only needs Artifact Registry Reader now
-5. The connected GitHub App moves to a GitHub integration, and images using GitHub point at it. Nothing to do
 
 ### Notes
-* Published images are still built for amd64 and are unchanged in what they can do. An image built for arm64 has no MSSQL driver - Microsoft ships none for that architecture - so it cannot create a database service with the MSSQL driver
+* An image built for arm64 has no MSSQL driver
 
 
 

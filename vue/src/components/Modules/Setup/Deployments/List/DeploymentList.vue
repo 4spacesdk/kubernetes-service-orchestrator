@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useListState } from "@/composables/useListState";
+import NameLink from "@/components/Modules/Common/NameLink.vue";
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
@@ -31,9 +33,9 @@ const rows = ref<Deployment[]>([]);
 const headers = ref([
     {title: 'Name', key: 'name', sortable: true},
     {title: 'Namespace', key: 'namespace', sortable: true},
-    {title: 'Status', key: 'status', sortable: false},
+    {title: 'Status', key: 'status', sortable: true},
     {title: 'Last Migration', key: 'last-migration', sortable: false},
-    {title: 'Version', key: 'version', sortable: false},
+    {title: 'Version', key: 'version', sortable: true},
     {title: 'Last Update', key: 'last_updated', sortable: true},
     {title: '', key: 'actions', sortable: false},
 ]);
@@ -41,10 +43,16 @@ const isLoading = ref(true);
 const options = ref({});
 
 const showCreateMenu = ref(false);
+/** Ids of the rows ticked for a bulk update (LIST-6). */
+const selected = ref<number[]>([]);
 const deploymentSpecs = ref<DeploymentSpecification[]>([]);
 const showDeploymentSpecsWarning = ref(true);
 
-const searchValue = ref('');
+const {search: searchValue, page, itemsPerPage, sortBy, applyOrdering, applyPaging} = useListState({
+    sortable: {'name': 'name', 'namespace': 'namespace', 'status': 'status', 'version': 'version', 'last_updated': 'last_updated'},
+    defaultSort: {key: 'name', order: 'asc'},
+    syncWithUrl: !props.filterByWorkspaceId,
+});
 
 onMounted(() => {
     bus.on('deploymentSaved', onItemSaved);
@@ -75,8 +83,6 @@ function onItemSaved() {
 }
 
 function getItems(doItems = true, doCount = false) {
-    // Get options from DataTable
-    const tableOptions: any = options.value;
 
     // Mark as Loading
     isLoading.value = true;
@@ -97,21 +103,9 @@ function getItems(doItems = true, doCount = false) {
     }
 
     if (doItems) {
-        api
-            .include('workspace')
-            .limit(tableOptions.itemsPerPage)
-            .offset(tableOptions.itemsPerPage * (tableOptions.page - 1));
-
-        const sortByKey = tableOptions.sortBy.length > 0 ? tableOptions.sortBy[0].key : 'name';
-        const sortByOrder = tableOptions.sortBy.length > 0 ? tableOptions.sortBy[0].order : 'asc';
-        switch (sortByKey) {
-            case 'name':
-                api.orderBy('name', sortByOrder);
-                break;
-            case 'last_updated':
-                api.orderBy('last_updated', sortByOrder);
-                break;
-        }
+        api.include('workspace');
+        applyPaging(api);
+        applyOrdering(api);
 
         api
             .find(items => {
@@ -170,6 +164,12 @@ function onDeploymentSpecsShortcutClicked() {
     });
 }
 
+function onBulkUpdateVersionBtnClicked() {
+    bus.emit('deploymentBulkUpdateVersion', {
+        deployments: rows.value.filter(row => selected.value.includes(row.id!)),
+    });
+}
+
 // </editor-fold>
 
 </script>
@@ -186,7 +186,7 @@ function onDeploymentSpecsShortcutClicked() {
         >
             <v-toolbar-title>Deployments</v-toolbar-title>
 
-            <v-text-field
+            <v-text-field data-shortcut="search"
                 v-model="searchValue"
                 density="compact"
                 variant="outlined"
@@ -205,7 +205,7 @@ function onDeploymentSpecsShortcutClicked() {
                 min-width="250"
                 offset-y>
                 <template v-slot:activator="{ props }">
-                    <v-btn
+                    <v-btn data-shortcut="create"
                         v-bind="props"
                         small
                         prepend-icon="fa fa-plus">
@@ -248,16 +248,38 @@ function onDeploymentSpecsShortcutClicked() {
             </v-menu>
         </v-toolbar>
 
+        <div v-if="selected.length" class="d-flex align-center ga-2 px-4 py-1 bulk-bar">
+            <span class="text-body-2">{{ selected.length }} selected</span>
+            <v-btn size="small" variant="tonal" color="primary" prepend-icon="fa fa-code-branch" @click="onBulkUpdateVersionBtnClicked">
+                Update version
+            </v-btn>
+            <v-btn size="small" variant="text" @click="selected = []">Clear</v-btn>
+        </div>
+
         <v-data-table-server
+            v-model="selected"
+            show-select
+            item-value="id"
             :headers="headers"
             :items-length="itemCount"
             :items="rows"
             :loading="isLoading"
-            :items-per-page="50"
+            v-model:page="page"
+            v-model:items-per-page="itemsPerPage"
+            v-model:sort-by="sortBy"
             class="table"
             density="compact"
             @update:options="options = $event; getItems()">
 
+            <template v-slot:item.name="{ item }">
+                <!-- A deployment has no edit dialog; its settings menu is the nearest thing. -->
+                <v-menu min-width="250">
+                    <template v-slot:activator="{ props }">
+                        <name-link v-bind="props">{{ item.name }}</name-link>
+                    </template>
+                    <deployment-edit-button :deployment="item"/>
+                </v-menu>
+            </template>
             <template v-slot:item.status="{ item }">
                 <deployment-status
                     :deployment="item"/>
@@ -277,14 +299,17 @@ function onDeploymentSpecsShortcutClicked() {
 
             <template v-slot:item.actions="{ item }">
 
-                <div class="d-flex justify-end">
+                <div class="d-flex justify-end ga-1">
 
                     <v-menu
                         min-width="550">
                         <template v-slot:activator="{ props }">
                             <v-btn
                                 v-bind="props"
-                                variant="plain" color="primary" size="small" icon
+                                variant="plain" color="primary"
+                                size="small"
+                                density="comfortable"
+                                icon
                             >
                                 <v-icon>fa fa-server</v-icon>
                                 <v-tooltip activator="parent" location="bottom">Pods</v-tooltip>
@@ -298,16 +323,24 @@ function onDeploymentSpecsShortcutClicked() {
                     </v-menu>
 
                     <v-btn
-                        variant="plain" color="primary" size="small" icon
-                        @click="onShowResourcesBtnClicked(item)">
+                        variant="plain" color="primary" 
+                        @click="onShowResourcesBtnClicked(item)"
+                        size="small"
+                        density="comfortable"
+                        icon
+                    >
                         <v-icon>fa fa-box</v-icon>
                         <v-tooltip activator="parent" location="bottom">Resources</v-tooltip>
                     </v-btn>
 
                     <v-btn
                         :disabled="!item.canMigrate"
-                        variant="plain" color="primary" size="small" icon
-                        @click="onShowMigrationJobsBtnClicked(item)">
+                        variant="plain" color="primary" 
+                        @click="onShowMigrationJobsBtnClicked(item)"
+                        size="small"
+                        density="comfortable"
+                        icon
+                    >
                         <v-icon>fa fa-truck-arrow-right</v-icon>
                         <v-tooltip activator="parent" location="bottom">Migration Jobs</v-tooltip>
                     </v-btn>
@@ -317,7 +350,11 @@ function onDeploymentSpecsShortcutClicked() {
                         <template v-slot:activator="{ props }">
                             <v-btn
                                 v-bind="props"
-                                variant="plain" color="primary" size="small" icon>
+                                variant="plain" color="primary"
+                                size="small"
+                                density="comfortable"
+                                icon
+                            >
                                 <v-icon>fa fa-cog</v-icon>
                                 <v-tooltip activator="parent" location="bottom">Settings</v-tooltip>
                             </v-btn>
@@ -327,8 +364,12 @@ function onDeploymentSpecsShortcutClicked() {
                     </v-menu>
 
                     <v-btn
-                        variant="plain" color="red" size="small" icon
-                        @click="onDeleteItemBtnClicked(item)">
+                        variant="plain" color="red" 
+                        @click="onDeleteItemBtnClicked(item)"
+                        size="small"
+                        density="comfortable"
+                        icon
+                    >
                         <v-icon>fa fa-trash</v-icon>
                         <v-tooltip activator="parent" location="bottom">Delete</v-tooltip>
                     </v-btn>
@@ -340,6 +381,18 @@ function onDeploymentSpecsShortcutClicked() {
 </template>
 
 <style scoped>
+.bulk-bar {
+    background: rgba(var(--v-theme-primary), 0.08);
+}
+
+/* Eight columns and a select column: with the default padding the row actions are pushed
+   out of view on a narrow window. */
+.table :deep(td),
+.table :deep(th) {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+}
+
 .table > *,
 .table {
     background: transparent;

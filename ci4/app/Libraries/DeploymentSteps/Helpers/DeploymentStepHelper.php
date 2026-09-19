@@ -166,10 +166,16 @@ class DeploymentStepHelper {
         };
     }
 
+    /**
+     * What EmitTrigger() answers for a deployment in Draft. Not a failure - nothing is
+     * deployed until it leaves Draft - so a caller that reports errors leaves it out.
+     */
+    public const string DraftRefusal = 'Deployment still in draft mode';
+
     public static function EmitTrigger(string $trigger, Deployment $deployment, ?string $reason = null): ?string {
         $deployment->checkStatus(false);
         if ($deployment->status == \DeploymentStatusTypes::Draft) {
-            return "Deployment still in draft mode";
+            return self::DraftRefusal;
         }
 
         $steps = $deployment->findDeploymentSpecification()->getDeploymentSteps($deployment);

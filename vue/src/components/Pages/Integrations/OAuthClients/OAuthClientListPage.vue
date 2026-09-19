@@ -23,12 +23,13 @@ onUnmounted(() => {
 });
 
 function onItemEditDialog_Closed() {
-    router.push({name: 'OAuthClients'});
+    router.push({name: 'OAuthClients', query: router.currentRoute.value.query});
 }
 
 function onItemEditClicked(item: OAuthClient) {
     router.push({
         name: 'OAuthClientById',
+        query: router.currentRoute.value.query,
         params: {
             id: item.client_id
         }

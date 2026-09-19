@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useListState } from "@/composables/useListState";
+import NameLink from "@/components/Modules/Common/NameLink.vue";
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
@@ -12,16 +14,19 @@ const emit = defineEmits<{
 const itemCount = ref(0);
 const rows = ref<Webhook[]>([]);
 const headers = ref([
-    {title: 'Name', key: 'name', sortable: false},
-    {title: 'Type', key: 'type', sortable: false},
-    {title: 'Url', key: 'url', sortable: false},
-    {title: 'Method', key: 'http_method', sortable: false},
+    {title: 'Name', key: 'name', sortable: true},
+    {title: 'Type', key: 'type', sortable: true},
+    {title: 'Url', key: 'url', sortable: true},
+    {title: 'Method', key: 'http_method', sortable: true},
     {title: '', key: 'actions', sortable: false},
 ]);
 const isLoading = ref(true);
 const options = ref({});
 
-const searchValue = ref('');
+const {search: searchValue, page, itemsPerPage, sortBy, applyOrdering, applyPaging} = useListState({
+    sortable: {"name": "name", "type": "type", "url": "url", "http_method": "http_method"},
+    defaultSort: {key: "name", order: "asc"},
+});
 
 onMounted(() => {
     bus.on('webhookSaved', onItemSaved);
@@ -42,8 +47,6 @@ function onItemSaved() {
 }
 
 function getItems(doItems = true, doCount = false) {
-    // Get options from DataTable
-    const tableOptions: any = options.value;
 
     // Mark as Loading
     isLoading.value = true;
@@ -58,9 +61,9 @@ function getItems(doItems = true, doCount = false) {
     }
 
     if (doItems) {
+        applyPaging(api);
+        applyOrdering(api);
         api
-            .limit(tableOptions.itemsPerPage)
-            .offset(tableOptions.itemsPerPage * (tableOptions.page - 1))
             .find(items => {
                 rows.value = items;
                 isLoading.value = false;
@@ -125,7 +128,7 @@ function deleteItem(item: Webhook) {
         >
             <v-toolbar-title>Webhooks</v-toolbar-title>
 
-            <v-text-field
+            <v-text-field data-shortcut="search"
                 v-model="searchValue"
                 density="compact"
                 variant="outlined"
@@ -135,7 +138,7 @@ function deleteItem(item: Webhook) {
             />
 
             <v-spacer></v-spacer>
-            <v-btn small class="" @click="createItem()"
+            <v-btn data-shortcut="create" small class="" @click="createItem()"
                    prepend-icon="fa fa-plus"
             >
                 Create
@@ -147,30 +150,47 @@ function deleteItem(item: Webhook) {
             :items-length="itemCount"
             :items="rows"
             :loading="isLoading"
-            :items-per-page="50"
+            v-model:page="page"
+            v-model:items-per-page="itemsPerPage"
+            v-model:sort-by="sortBy"
             class="table"
             density="compact"
             @update:options="options = $event; getItems()">
+            <template v-slot:item.name="{ item }">
+                <name-link @click="onEditItemBtnClicked(item)">{{ item.name }}</name-link>
+            </template>
             <template v-slot:item.actions="{ item }">
-                <div class="d-flex justify-end gap-1">
+                <div class="d-flex justify-end ga-1">
 
                     <v-btn
-                        variant="plain" color="primary" size="small" icon
-                        @click="onDeliveryListBtnClicked(item)">
+                        variant="plain" color="primary" 
+                        @click="onDeliveryListBtnClicked(item)"
+                        size="small"
+                        density="comfortable"
+                        icon
+                    >
                         <v-icon>fa fa-eye</v-icon>
                         <v-tooltip activator="parent" location="bottom">Deliveries</v-tooltip>
                     </v-btn>
 
                     <v-btn
-                        variant="plain" color="primary" size="small" icon
-                        @click="onEditItemBtnClicked(item)">
+                        variant="plain" color="primary" 
+                        @click="onEditItemBtnClicked(item)"
+                        size="small"
+                        density="comfortable"
+                        icon
+                    >
                         <v-icon>fa fa-pen</v-icon>
                         <v-tooltip activator="parent" location="bottom">Edit</v-tooltip>
                     </v-btn>
 
                     <v-btn
-                        variant="plain" color="red" size="small" icon
-                        @click="deleteItem(item)">
+                        variant="plain" color="red" 
+                        @click="deleteItem(item)"
+                        size="small"
+                        density="comfortable"
+                        icon
+                    >
                         <v-icon>fa fa-trash</v-icon>
                         <v-tooltip activator="parent" location="bottom">Delete</v-tooltip>
                     </v-btn>

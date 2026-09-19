@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useListState } from "@/composables/useListState";
+import NameLink from "@/components/Modules/Common/NameLink.vue";
 import { computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch } from "vue";
 import { Api } from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
@@ -22,9 +24,9 @@ const router = useRouter();
 const itemCount = ref(0);
 const rows = ref<Row[]>([]);
 const headers = ref([
-    { title: "Name", key: "workspace.name_readable", sortable: false },
-    { title: "Namespace", key: "workspace.namespace", sortable: false },
-    { title: "Status", key: "status", sortable: false },
+    { title: "Name", key: "workspace.name_readable", sortable: true },
+    { title: "Namespace", key: "workspace.namespace", sortable: true },
+    { title: "Status", key: "status", sortable: true },
     { title: "Url", key: "url", sortable: false },
     { title: "", key: "actions", sortable: false },
 ]);
@@ -35,7 +37,6 @@ const showCreateMenu = ref(false);
 const deploymentPackages = ref<DeploymentPackage[]>([]);
 const showDeploymentPackagesWarning = ref(true);
 
-const searchValue = ref("");
 const statusOptions = ref([
     {
         value: WorkspaceStatusTypes.Draft,
@@ -59,6 +60,12 @@ const statusOptions = ref([
     },
 ]);
 const selectedStatus = ref([WorkspaceStatusTypes.Deploying, WorkspaceStatusTypes.Active, WorkspaceStatusTypes.Error]);
+const {search: searchValue, page, itemsPerPage, sortBy, applyOrdering, applyPaging} = useListState({
+    sortable: {"workspace.name_readable": "name_readable", "workspace.namespace": "namespace", "status": "status"},
+    defaultSort: {key: "workspace.name_readable", order: "asc"},
+    itemsPerPage: -1,
+    filters: { status: selectedStatus },
+});
 
 const rbacDeveloper = ref(false);
 const rbacWorkspaceCreate = ref(false);
@@ -105,8 +112,6 @@ function onItemSaved() {
 }
 
 function getItems(doItems = true, doCount = false) {
-    // Get options from DataTable
-    const tableOptions: any = options.value;
 
     // Mark as Loading
     isLoading.value = true;
@@ -125,11 +130,10 @@ function getItems(doItems = true, doCount = false) {
     api.whereIn("status", selectedStatus.value);
 
     if (doItems) {
+        applyPaging(api);
+        applyOrdering(api);
         api.include("deployment")
             .include("domain")
-            .limit(tableOptions.itemsPerPage)
-            .offset(tableOptions.itemsPerPage * (tableOptions.page - 1))
-            .orderAsc("name_readable")
             .find((items) => {
                 rows.value = items.map((item) => {
                     return {
@@ -297,7 +301,7 @@ function onDeploymentPackagesShortcutClicked() {
                         offset-y
                     >
                         <template v-slot:activator="{ props }">
-                            <v-btn v-bind="props" small prepend-icon="fa fa-plus" style="margin-right: -16px"> Create </v-btn>
+                            <v-btn data-shortcut="create" v-bind="props" small prepend-icon="fa fa-plus" style="margin-right: -16px"> Create </v-btn>
                         </template>
 
                         <v-list v-if="showDeploymentPackagesWarning" class="list-items">
@@ -326,7 +330,7 @@ function onDeploymentPackagesShortcutClicked() {
                 </div>
 
                 <div class="d-flex gap-1">
-                    <v-text-field
+                    <v-text-field data-shortcut="search"
                         v-model="searchValue"
                         variant="outlined"
                         hide-details
@@ -358,7 +362,9 @@ function onDeploymentPackagesShortcutClicked() {
             :items-length="itemCount"
             :items="rows"
             :loading="isLoading"
-            :items-per-page="-1"
+            v-model:page="page"
+            v-model:items-per-page="itemsPerPage"
+            v-model:sort-by="sortBy"
             class="table"
             density="compact"
             @update:options="
@@ -374,15 +380,22 @@ function onDeploymentPackagesShortcutClicked() {
                 <workspace-deployment-domains :workspace="item.workspace" />
             </template>
 
+            <template v-slot:item.workspace.name_readable="{ item }">
+
+                <name-link @click="onShowDeploymentsBtnClicked(item.workspace)">{{ item.workspace.name_readable }}</name-link>
+
+            </template>
+
             <template v-slot:item.actions="{ item }">
-                <div class="d-flex justify-end">
+                <div class="d-flex justify-end ga-1">
                     <v-btn
                         v-if="rbacDeveloper"
                         variant="plain"
                         color="primary"
-                        size="small"
-                        icon
                         @click="onShowDeploymentsBtnClicked(item.workspace)"
+                        size="small"
+                        density="comfortable"
+                        icon
                     >
                         <v-icon>fa fa-box</v-icon>
                         <v-tooltip activator="parent" location="bottom">Deployments</v-tooltip>
@@ -392,9 +405,10 @@ function onDeploymentPackagesShortcutClicked() {
                         v-if="rbacDeveloper"
                         variant="plain"
                         color="primary"
-                        size="small"
-                        icon
                         @click="onShowLogsBtnClicked(item.workspace)"
+                        size="small"
+                        density="comfortable"
+                        icon
                     >
                         <v-icon>fa fa-rectangle-list</v-icon>
                         <v-tooltip activator="parent" location="bottom">Kubernetes Logs</v-tooltip>
@@ -404,9 +418,10 @@ function onDeploymentPackagesShortcutClicked() {
                         v-if="rbacDeveloper"
                         variant="plain"
                         color="primary"
-                        size="small"
-                        icon
                         @click="onShowMigrationJobsBtnClicked(item.workspace)"
+                        size="small"
+                        density="comfortable"
+                        icon
                     >
                         <v-icon>fa fa-truck-arrow-right</v-icon>
                         <v-tooltip activator="parent" location="bottom">Migration Jobs</v-tooltip>
@@ -414,7 +429,7 @@ function onDeploymentPackagesShortcutClicked() {
 
                     <v-menu v-if="rbacWorkspaceUpdate" min-width="250">
                         <template v-slot:activator="{ props }">
-                            <v-btn v-bind="props" variant="plain" color="primary" size="small" icon>
+                            <v-btn v-bind="props" variant="plain" color="primary" size="small" density="comfortable" icon>
                                 <v-icon>fa fa-cog</v-icon>
                                 <v-tooltip activator="parent" location="bottom">Settings</v-tooltip>
                             </v-btn>
@@ -426,38 +441,39 @@ function onDeploymentPackagesShortcutClicked() {
                         v-if="rbacWorkspaceCreate"
                         variant="plain"
                         color="warning"
-                        size="small"
-                        icon
                         @click="onDeployItemBtnClicked(item.workspace)"
+                        size="small"
+                        density="comfortable"
+                        icon
                     >
                         <v-icon>fa fa-play</v-icon>
                         <v-tooltip activator="parent" location="bottom">Deploy</v-tooltip>
                     </v-btn>
 
-                    <v-btn
-                        v-if="rbacDeveloper"
-                        variant="plain"
-                        color="red"
-                        size="small"
-                        icon
-                        @click="onTerminateItemBtnClicked(item.workspace)"
-                    >
-                        <v-icon>fa fa-skull</v-icon>
-                        <v-tooltip activator="parent" location="bottom">Terminate</v-tooltip>
-                    </v-btn>
-
-                    <v-btn
-                        v-if="rbacWorkspaceUpdate"
-                        variant="plain"
-                        color="red"
-                        size="small"
-                        icon
-                        @click="onDeleteItemBtnClicked(item)"
-                        :loading="item.isLoadingDeleteBtn"
-                    >
-                        <v-icon>fa fa-trash</v-icon>
-                        <v-tooltip activator="parent" location="bottom">Delete</v-tooltip>
-                    </v-btn>
+                    <!-- Terminate and Delete stay out of reach of a slip from Deploy (LIST-3). -->
+                    <v-menu v-if="rbacDeveloper || rbacWorkspaceUpdate" location="bottom end">
+                        <template v-slot:activator="{ props }">
+                            <v-btn v-bind="props" variant="plain" color="primary"  aria-label="More" :loading="item.isLoadingDeleteBtn" size="small" density="comfortable" icon>
+                                <v-icon>fa fa-ellipsis-vertical</v-icon>
+                            </v-btn>
+                        </template>
+                        <v-list density="compact">
+                            <v-list-item
+                                v-if="rbacDeveloper"
+                                prepend-icon="fa fa-skull"
+                                title="Terminate"
+                                base-color="red"
+                                @click="onTerminateItemBtnClicked(item.workspace)"
+                            />
+                            <v-list-item
+                                v-if="rbacWorkspaceUpdate"
+                                prepend-icon="fa fa-trash"
+                                title="Delete"
+                                base-color="red"
+                                @click="onDeleteItemBtnClicked(item)"
+                            />
+                        </v-list>
+                    </v-menu>
                 </div>
             </template>
         </v-data-table-server>

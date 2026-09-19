@@ -35,12 +35,13 @@ onUnmounted(() => {
 });
 
 function onItemEditDialog_Closed() {
-    router.push({name: 'ContainerRegistries'});
+    router.push({name: 'ContainerRegistries', query: router.currentRoute.value.query});
 }
 
 function onItemEditClicked(item: ContainerRegistry) {
     router.push({
         name: 'ContainerRegistryById',
+        query: router.currentRoute.value.query,
         params: {
             id: item.id
         }

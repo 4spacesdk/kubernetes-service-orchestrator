@@ -23,12 +23,13 @@ onUnmounted(() => {
 });
 
 function onItemEditDialog_Closed() {
-    router.push({name: 'Gateways'});
+    router.push({name: 'Gateways', query: router.currentRoute.value.query});
 }
 
 function onItemEditClicked(item: Gateway) {
     router.push({
         name: 'GatewaysById',
+        query: router.currentRoute.value.query,
         params: {
             id: item.id
         }

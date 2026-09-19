@@ -23,12 +23,13 @@ onUnmounted(() => {
 });
 
 function onItemEditDialog_Closed() {
-    router.push({name: 'PodioIntegrations'});
+    router.push({name: 'PodioIntegrations', query: router.currentRoute.value.query});
 }
 
 function onItemEditClicked(item: PodioIntegration) {
     router.push({
         name: 'PodioIntegrationById',
+        query: router.currentRoute.value.query,
         params: {
             id: item.id
         }

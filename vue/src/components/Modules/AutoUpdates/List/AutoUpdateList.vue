@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useListState } from "@/composables/useListState";
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
 import {AutoUpdate} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
@@ -24,10 +25,10 @@ const showDialog = ref(false);
 const itemCount = ref(0);
 const rows = ref<Row[]>([]);
 const headers = ref([
-    {title: 'Deployment', key: 'deployment', sortable: false},
+    {title: 'Deployment', key: 'deployment', sortable: true},
     {title: 'Tag', key: 'tag', sortable: false},
-    {title: 'Created', key: 'created', sortable: false},
-    {title: 'Approved', key: 'approved', sortable: false},
+    {title: 'Created', key: 'created', sortable: true},
+    {title: 'Approved', key: 'approved', sortable: true},
     {title: '', key: 'actions', sortable: false},
 ]);
 const isLoading = ref(false);
@@ -37,7 +38,10 @@ const wampSubscription2 = ref<WampSubscription>();
 const selectedRows = ref<Row[]>([]);
 const isLoadingBatchApprove = ref(false);
 
-const searchValue = ref('');
+const {search: searchValue, page, itemsPerPage, sortBy, applyOrdering, applyPaging} = useListState({
+    sortable: {"created": "id", "deployment": "deployment.name", "approved": "is_approved"},
+    defaultSort: {key: "created", order: "desc"},
+});
 
 // <editor-fold desc="Functions">
 
@@ -71,9 +75,6 @@ watch(searchValue, debounce(() => {
 function getItems(doItems = true, doCount = false) {
     showDialog.value = true;
 
-    // Get options from DataTable
-    const tableOptions: any = options.value;
-
     // Mark as Loading
     isLoading.value = true;
 
@@ -87,11 +88,10 @@ function getItems(doItems = true, doCount = false) {
     }
 
     if (doItems) {
+        applyPaging(api);
+        applyOrdering(api);
         api
             .include('deployment')
-            .limit(tableOptions.itemsPerPage)
-            .offset(tableOptions.itemsPerPage * (tableOptions.page - 1))
-            .orderDesc('id')
             .find(items => {
                 rows.value = items.map(item => {
                     return {
@@ -218,7 +218,7 @@ function onAcceptSelectedBtnClicked() {
         >
             <v-toolbar-title>Updates</v-toolbar-title>
 
-            <v-text-field
+            <v-text-field data-shortcut="search"
                 v-model="searchValue"
                 density="compact"
                 variant="outlined"
@@ -247,7 +247,9 @@ function onAcceptSelectedBtnClicked() {
             :items-length="itemCount"
             :items="rows"
             :loading="isLoading"
-            :items-per-page="50"
+            v-model:page="page"
+            v-model:items-per-page="itemsPerPage"
+            v-model:sort-by="sortBy"
             :show-select="true"
             return-object
             class="table"
@@ -281,34 +283,48 @@ function onAcceptSelectedBtnClicked() {
             </template>
 
             <template v-slot:item.actions="{ item }">
-                <div class="d-flex justify-end gap-1">
+                <div class="d-flex justify-end ga-1">
                     <v-btn
                         v-if="!item.item.is_approved"
-                        variant="plain" color="success" size="small" :icon="true"
+                        variant="plain" color="success"
                         @click="onApproveBtnClicked(item)"
                         :loading="item.isLoadingAccept"
+                        size="small"
+                        density="comfortable"
+                        icon
                     >
                         <v-icon>fa fa-check</v-icon>
                         <v-tooltip activator="parent" location="bottom">Approve</v-tooltip>
                     </v-btn>
                     <v-btn
                         v-if="item.item.is_approved"
-                        variant="plain" color="grey" size="small" :icon="true"
+                        variant="plain" color="grey"
                         @click="onApproveBtnClicked(item)"
                         :loading="item.isLoadingAccept"
+                        size="small"
+                        density="comfortable"
+                        icon
                     >
                         <v-icon>fa fa-check</v-icon>
                         <v-tooltip activator="parent" location="bottom">Re-approve</v-tooltip>
                     </v-btn>
                     <v-btn
-                        variant="plain" color="primary" size="small" :icon="true"
-                        @click="onShowLogsBtnClicked(item)">
+                        variant="plain" color="primary"
+                        @click="onShowLogsBtnClicked(item)"
+                        size="small"
+                        density="comfortable"
+                        icon
+                    >
                         <v-icon>fa fa-rectangle-list</v-icon>
                         <v-tooltip activator="parent" location="bottom">Log</v-tooltip>
                     </v-btn>
                     <v-btn
-                        variant="plain" color="red" size="small" :icon="true"
-                        @click="onDeleteBtnClicked(item)">
+                        variant="plain" color="red"
+                        @click="onDeleteBtnClicked(item)"
+                        size="small"
+                        density="comfortable"
+                        icon
+                    >
                         <v-icon>fa fa-trash</v-icon>
                         <v-tooltip activator="parent" location="bottom">Delete</v-tooltip>
                     </v-btn>

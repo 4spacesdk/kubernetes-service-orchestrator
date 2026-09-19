@@ -86,7 +86,10 @@ class AutoUpdate extends Entity {
             return;
         }
 
-        $deployment->updateVersion($this->next_tag);
+        $error = $deployment->updateVersion($this->next_tag);
+        if ($error) {
+            Data::debug("Deploy failed: {$error}");
+        }
 
         $postUpdateActionHelper = new PostUpdateActionHelper($deployment);
         $postUpdateActionHelper->performAll();

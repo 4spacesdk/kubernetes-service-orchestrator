@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useListState } from "@/composables/useListState";
+import NameLink from "@/components/Modules/Common/NameLink.vue";
 import { onMounted, onUnmounted, ref, watch } from "vue";
 import { Api } from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
@@ -29,7 +31,10 @@ const headers = ref<
 const isLoading = ref(true);
 const options = ref({});
 
-const searchValue = ref("");
+const {search: searchValue, page, itemsPerPage, sortBy, applyOrdering, applyPaging} = useListState({
+    sortable: {"gateway.name": "name", "gateway.gateway_class_name": "gateway_class_name", "gateway.namespace": "namespace"},
+    defaultSort: {key: "gateway.name", order: "asc"},
+});
 
 onMounted(() => {
     bus.on("gatewaySaved", onItemSaved);
@@ -38,10 +43,10 @@ onMounted(() => {
 
     headers.value = [
         { title: "Status", key: "status", sortable: false, align: "center" },
-        { title: "Name", key: "gateway.name", sortable: false },
+        { title: "Name", key: "gateway.name", sortable: true },
         { title: "Address", key: "address", sortable: false },
-        { title: "Class", key: "gateway.gateway_class_name", sortable: false },
-        { title: "Namespace", key: "gateway.namespace", sortable: false },
+        { title: "Class", key: "gateway.gateway_class_name", sortable: true },
+        { title: "Namespace", key: "gateway.namespace", sortable: true },
         { title: "Domains", key: "domains", sortable: false },
         { title: "", key: "actions", sortable: false },
     ];
@@ -72,9 +77,9 @@ function getItems(doItems = true, doCount = false) {
     }
 
     if (doItems) {
-        api.limit(tableOptions.itemsPerPage)
-            .offset(tableOptions.itemsPerPage * (tableOptions.page - 1))
-            .orderAsc("name")
+        applyPaging(api);
+        applyOrdering(api);
+        api
             .find((items) => {
                 rows.value = items.map((item) => ({
                     gateway: item,
@@ -270,7 +275,7 @@ function onAddressClicked(address: string) {
         <v-toolbar density="compact" flat color="blue-grey lighten-5" dark>
             <v-toolbar-title>Gateways</v-toolbar-title>
 
-            <v-text-field
+            <v-text-field data-shortcut="search"
                 v-model="searchValue"
                 density="compact"
                 variant="outlined"
@@ -280,7 +285,7 @@ function onAddressClicked(address: string) {
             />
 
             <v-spacer></v-spacer>
-            <v-btn
+            <v-btn data-shortcut="create"
                 small
                 class=""
                 @click="createItem()"
@@ -295,7 +300,9 @@ function onAddressClicked(address: string) {
             :items-length="itemCount"
             :items="rows"
             :loading="isLoading"
-            :items-per-page="50"
+            v-model:page="page"
+            v-model:items-per-page="itemsPerPage"
+            v-model:sort-by="sortBy"
             class="table"
             density="compact"
             @update:options="
@@ -380,14 +387,21 @@ function onAddressClicked(address: string) {
                 </v-menu>
             </template>
 
+            <template v-slot:item.gateway.name="{ item }">
+
+                <name-link @click="onEditItemBtnClicked(item)">{{ item.gateway.name }}</name-link>
+
+            </template>
+
             <template v-slot:item.actions="{ item }">
-                <div class="d-flex justify-end">
+                <div class="d-flex justify-end ga-1">
                     <v-btn
                         variant="plain"
                         color="blue-grey"
-                        size="x-small"
-                        icon
                         @click="onPreviewBtnClicked(item)"
+                        size="small"
+                        density="comfortable"
+                        icon
                     >
                         <v-icon>fa fa-search</v-icon>
                         <v-tooltip activator="parent" location="bottom"
@@ -398,9 +412,10 @@ function onAddressClicked(address: string) {
                     <v-btn
                         variant="plain"
                         color="green"
-                        size="x-small"
-                        icon
                         @click="onDeployBtnClicked(item)"
+                        size="small"
+                        density="comfortable"
+                        icon
                     >
                         <v-icon>fa fa-play</v-icon>
                         <v-tooltip activator="parent" location="bottom"
@@ -410,23 +425,11 @@ function onAddressClicked(address: string) {
 
                     <v-btn
                         variant="plain"
-                        color="orange"
-                        size="x-small"
-                        icon
-                        @click="onTerminateBtnClicked(item)"
-                    >
-                        <v-icon>fa fa-stop</v-icon>
-                        <v-tooltip activator="parent" location="bottom"
-                            >Terminate</v-tooltip
-                        >
-                    </v-btn>
-
-                    <v-btn
-                        variant="plain"
                         color="blue-grey"
-                        size="x-small"
-                        icon
                         @click="onKubernetesStatusBtnClicked(item)"
+                        size="small"
+                        density="comfortable"
+                        icon
                     >
                         <v-icon>fa fa-info-circle</v-icon>
                         <v-tooltip activator="parent" location="bottom"
@@ -437,9 +440,10 @@ function onAddressClicked(address: string) {
                     <v-btn
                         variant="plain"
                         color="blue-grey"
-                        size="x-small"
-                        icon
                         @click="onKubernetesEventsBtnClicked(item)"
+                        size="small"
+                        density="comfortable"
+                        icon
                     >
                         <v-icon>fa fa-list</v-icon>
                         <v-tooltip activator="parent" location="bottom"
@@ -450,9 +454,10 @@ function onAddressClicked(address: string) {
                     <v-btn
                         variant="plain"
                         color="primary"
-                        size="x-small"
-                        icon
                         @click="onEditItemBtnClicked(item)"
+                        size="small"
+                        density="comfortable"
+                        icon
                     >
                         <v-icon>fa fa-pen</v-icon>
                         <v-tooltip activator="parent" location="bottom"
@@ -463,9 +468,10 @@ function onAddressClicked(address: string) {
                     <v-btn
                         variant="plain"
                         color="primary"
-                        size="x-small"
-                        icon
                         @click="onDuplicateItemBtnClicked(item)"
+                        size="small"
+                        density="comfortable"
+                        icon
                     >
                         <v-icon>fa fa-clone</v-icon>
                         <v-tooltip activator="parent" location="bottom"
@@ -473,18 +479,18 @@ function onAddressClicked(address: string) {
                         >
                     </v-btn>
 
-                    <v-btn
-                        variant="plain"
-                        color="red"
-                        size="x-small"
-                        icon
-                        @click="onDeleteItemBtnClicked(item)"
-                    >
-                        <v-icon>fa fa-trash</v-icon>
-                        <v-tooltip activator="parent" location="bottom"
-                            >Delete</v-tooltip
-                        >
-                    </v-btn>
+                    <!-- Terminate and Delete stay out of reach of a slip from Deploy (LIST-3). -->
+                    <v-menu location="bottom end">
+                        <template v-slot:activator="{ props }">
+                            <v-btn v-bind="props" variant="plain" color="primary"  aria-label="More" size="small" density="comfortable" icon>
+                                <v-icon>fa fa-ellipsis-vertical</v-icon>
+                            </v-btn>
+                        </template>
+                        <v-list density="compact">
+                            <v-list-item prepend-icon="fa fa-stop" title="Terminate" base-color="orange" @click="onTerminateBtnClicked(item)" />
+                            <v-list-item prepend-icon="fa fa-trash" title="Delete" base-color="red" @click="onDeleteItemBtnClicked(item)" />
+                        </v-list>
+                    </v-menu>
                 </div>
             </template>
         </v-data-table-server>

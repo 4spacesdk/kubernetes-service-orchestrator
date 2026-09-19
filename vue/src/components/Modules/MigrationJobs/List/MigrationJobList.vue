@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useListState } from "@/composables/useListState";
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
 import {Deployment, MigrationJob} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
@@ -31,19 +32,23 @@ const headers = ref<{
     readonly sortable?: boolean | undefined,
     readonly align?: "end" | "center" | "start" | undefined,
 }[]>([
-    {title: 'Status', key: 'status', sortable: false, align: "center"},
+    {title: 'Status', key: 'status', sortable: true, align: "center"},
     {title: 'Workspace', key: 'item.deployment.workspace.name', sortable: false},
-    {title: 'Deployment', key: 'deployment', sortable: false},
-    {title: 'Created', key: 'created', sortable: false},
-    {title: 'Started', key: 'started', sortable: false},
-    {title: 'Ended', key: 'ended', sortable: false},
+    {title: 'Deployment', key: 'deployment', sortable: true},
+    {title: 'Created', key: 'created', sortable: true},
+    {title: 'Started', key: 'started', sortable: true},
+    {title: 'Ended', key: 'ended', sortable: true},
     {title: '', key: 'actions', sortable: false},
 ]);
 const isLoading = ref(false);
 const options = ref({});
 const wampSubscription = ref<WampSubscription>();
 
-const searchValue = ref('');
+const {search: searchValue, page, itemsPerPage, sortBy, applyOrdering, applyPaging} = useListState({
+    sortable: {"created": "id", "status": "status", "deployment": "deployment.name", "started": "started", "ended": "ended"},
+    defaultSort: {key: "created", order: "desc"},
+    syncWithUrl: !props.filterByDeploymentId && !props.filterByWorkspaceId,
+});
 
 // <editor-fold desc="Functions">
 
@@ -70,8 +75,6 @@ watch(searchValue, debounce(() => {
 }, 500));
 
 function getItems(doItems = true, doCount = false) {
-    // Get options from DataTable
-    const tableOptions: any = options.value;
 
     // Mark as Loading
     isLoading.value = true;
@@ -94,10 +97,9 @@ function getItems(doItems = true, doCount = false) {
     }
 
     if (doItems) {
+        applyPaging(api);
+        applyOrdering(api);
         api
-            .limit(tableOptions.itemsPerPage)
-            .offset(tableOptions.itemsPerPage * (tableOptions.page - 1))
-            .orderDesc('id')
             .find(items => {
                 rows.value = items.map(item => {
                     return {
@@ -164,7 +166,7 @@ function onRerunBtnClicked(row: Row) {
         >
             <v-toolbar-title>Migration Jobs</v-toolbar-title>
 
-            <v-text-field
+            <v-text-field data-shortcut="search"
                 v-model="searchValue"
                 density="compact"
                 variant="outlined"
@@ -181,7 +183,9 @@ function onRerunBtnClicked(row: Row) {
             :items-length="itemCount"
             :items="rows"
             :loading="isLoading"
-            :items-per-page="50"
+            v-model:page="page"
+            v-model:items-per-page="itemsPerPage"
+            v-model:sort-by="sortBy"
             class="table"
             density="compact"
             @update:options="options = $event; getItems()">
@@ -220,23 +224,34 @@ function onRerunBtnClicked(row: Row) {
             </template>
 
             <template v-slot:item.actions="{ item }">
-                <div class="d-flex justify-end gap-1">
+                <div class="d-flex justify-end ga-1">
                     <v-btn
-                        variant="plain" color="primary" size="small" icon
-                        @click="onShowKubernetesLogsBtnClicked(item.item)">
+                        variant="plain" color="primary" 
+                        @click="onShowKubernetesLogsBtnClicked(item.item)"
+                        size="small"
+                        density="comfortable"
+                        icon
+                    >
                         <v-icon>fa fa-rectangle-list</v-icon>
                         <v-tooltip activator="parent" location="bottom">Kubernetes Log</v-tooltip>
                     </v-btn>
                     <v-btn
-                        variant="plain" color="primary" size="small" icon
-                        @click="onShowLogsBtnClicked(item.item)">
+                        variant="plain" color="primary" 
+                        @click="onShowLogsBtnClicked(item.item)"
+                        size="small"
+                        density="comfortable"
+                        icon
+                    >
                         <v-icon>fa fa-rectangle-list</v-icon>
                         <v-tooltip activator="parent" location="bottom">Job Log</v-tooltip>
                     </v-btn>
                     <v-btn
-                        variant="plain" color="warning" size="small" icon
+                        variant="plain" color="warning" 
                         @click="onRerunBtnClicked(item)"
                         :loading="item.isLoadingRerun"
+                        size="small"
+                        density="comfortable"
+                        icon
                     >
                         <v-icon>fa fa-play</v-icon>
                         <v-tooltip activator="parent" location="bottom">Rerun</v-tooltip>

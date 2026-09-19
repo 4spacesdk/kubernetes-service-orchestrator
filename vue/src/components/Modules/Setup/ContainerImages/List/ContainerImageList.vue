@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useListState } from "@/composables/useListState";
+import NameLink from "@/components/Modules/Common/NameLink.vue";
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
@@ -14,17 +16,20 @@ const emit = defineEmits<{
 const itemCount = ref(0);
 const rows = ref<ContainerImage[]>([]);
 const headers = ref([
-    {title: 'Name', key: 'name', sortable: false},
-    {title: 'Url', key: 'url', sortable: false},
-    {title: 'Pull secret', key: 'pull_secret', sortable: false},
-    {title: 'Registry', key: 'container_registry', sortable: false},
-    {title: 'VCS', key: 'version_control_provider', sortable: false},
+    {title: 'Name', key: 'name', sortable: true},
+    {title: 'Url', key: 'url', sortable: true},
+    {title: 'Pull secret', key: 'pull_secret', sortable: true},
+    {title: 'Registry', key: 'container_registry', sortable: true},
+    {title: 'VCS', key: 'version_control_provider', sortable: true},
     {title: '', key: 'actions', sortable: false},
 ]);
 const isLoading = ref(true);
 const options = ref({});
 
-const searchValue = ref('');
+const {search: searchValue, page, itemsPerPage, sortBy, applyOrdering, applyPaging} = useListState({
+    sortable: {"name": "name", "url": "url", "pull_secret": "pull_secret", "container_registry": "container_registry.name", "version_control_provider": "version_control_provider"},
+    defaultSort: {key: "name", order: "asc"},
+});
 
 onMounted(() => {
     bus.on('containerImageSaved', onItemSaved);
@@ -45,8 +50,6 @@ function onItemSaved() {
 }
 
 function getItems(doItems = true, doCount = false) {
-    // Get options from DataTable
-    const tableOptions: any = options.value;
 
     // Mark as Loading
     isLoading.value = true;
@@ -62,10 +65,9 @@ function getItems(doItems = true, doCount = false) {
     }
 
     if (doItems) {
+        applyPaging(api);
+        applyOrdering(api);
         api
-            .limit(tableOptions.itemsPerPage)
-            .offset(tableOptions.itemsPerPage * (tableOptions.page - 1))
-            .orderAsc('name')
             .find(items => {
                 rows.value = items;
                 isLoading.value = false;
@@ -137,7 +139,7 @@ function deleteItem(item: ContainerImage) {
         >
             <v-toolbar-title>Container Images</v-toolbar-title>
 
-            <v-text-field
+            <v-text-field data-shortcut="search"
                 v-model="searchValue"
                 density="compact"
                 variant="outlined"
@@ -152,7 +154,7 @@ function deleteItem(item: ContainerImage) {
             >
                 Import
             </v-btn>
-            <v-btn small class="" @click="createItem()"
+            <v-btn data-shortcut="create" small class="" @click="createItem()"
                    prepend-icon="fa fa-plus"
             >
                 Create
@@ -164,7 +166,9 @@ function deleteItem(item: ContainerImage) {
             :items-length="itemCount"
             :items="rows"
             :loading="isLoading"
-            :items-per-page="50"
+            v-model:page="page"
+            v-model:items-per-page="itemsPerPage"
+            v-model:sort-by="sortBy"
             class="table"
             density="compact"
             @update:options="options = $event; getItems()">
@@ -183,26 +187,41 @@ function deleteItem(item: ContainerImage) {
                     </v-tooltip>
                 </span>
             </template>
+            <template v-slot:item.name="{ item }">
+                <name-link @click="onEditItemBtnClicked(item)">{{ item.name }}</name-link>
+            </template>
             <template v-slot:item.actions="{ item }">
-                <div class="d-flex justify-end gap-1">
+                <div class="d-flex justify-end ga-1">
 
                     <v-btn
-                        variant="plain" color="primary" size="small" icon
-                        @click="onEditItemBtnClicked(item)">
+                        variant="plain" color="primary" 
+                        @click="onEditItemBtnClicked(item)"
+                        size="small"
+                        density="comfortable"
+                        icon
+                    >
                         <v-icon>fa fa-pen</v-icon>
                         <v-tooltip activator="parent" location="bottom">Edit</v-tooltip>
                     </v-btn>
 
                     <v-btn
-                        variant="plain" color="primary" size="small" icon
-                        @click="onDuplicateItemBtnClicked(item)">
+                        variant="plain" color="primary" 
+                        @click="onDuplicateItemBtnClicked(item)"
+                        size="small"
+                        density="comfortable"
+                        icon
+                    >
                         <v-icon>fa fa-clone</v-icon>
                         <v-tooltip activator="parent" location="bottom">Duplicate</v-tooltip>
                     </v-btn>
 
                     <v-btn
-                        variant="plain" color="red" size="small" icon
-                        @click="deleteItem(item)">
+                        variant="plain" color="red" 
+                        @click="deleteItem(item)"
+                        size="small"
+                        density="comfortable"
+                        icon
+                    >
                         <v-icon>fa fa-trash</v-icon>
                         <v-tooltip activator="parent" location="bottom">Delete</v-tooltip>
                     </v-btn>

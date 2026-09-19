@@ -23,12 +23,13 @@ onUnmounted(() => {
 });
 
 function onItemEditDialog_Closed() {
-    router.push({name: 'Webhooks'});
+    router.push({name: 'Webhooks', query: router.currentRoute.value.query});
 }
 
 function onItemEditClicked(item: Webhook) {
     router.push({
         name: 'WebhookById',
+        query: router.currentRoute.value.query,
         params: {
             id: item.id
         }

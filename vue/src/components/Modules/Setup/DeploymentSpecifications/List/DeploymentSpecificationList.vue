@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useListState } from "@/composables/useListState";
+import NameLink from "@/components/Modules/Common/NameLink.vue";
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
@@ -15,18 +17,21 @@ const emit = defineEmits<{
 const itemCount = ref(0);
 const rows = ref<DeploymentSpecification[]>([]);
 const headers = ref([
-    {title: 'Name', key: 'name', sortable: false},
-    {title: 'Workload Type', key: 'workload_type', sortable: false},
-    {title: 'Network Type', key: 'network_type', sortable: false},
-    {title: 'Database', key: 'enable_database', sortable: false},
+    {title: 'Name', key: 'name', sortable: true},
+    {title: 'Workload Type', key: 'workload_type', sortable: true},
+    {title: 'Network Type', key: 'network_type', sortable: true},
+    {title: 'Database', key: 'enable_database', sortable: true},
     {title: 'Domain', key: 'domain', sortable: false},
-    {title: 'RBAC', key: 'enable_rbac', sortable: false},
+    {title: 'RBAC', key: 'enable_rbac', sortable: true},
     {title: '', key: 'actions', sortable: false},
 ]);
 const isLoading = ref(true);
 const options = ref({});
 
-const searchValue = ref('');
+const {search: searchValue, page, itemsPerPage, sortBy, applyOrdering, applyPaging} = useListState({
+    sortable: {"name": "name", "workload_type": "workload_type", "network_type": "network_type", "enable_database": "enable_database", "enable_rbac": "enable_rbac"},
+    defaultSort: {key: "name", order: "asc"},
+});
 
 const showCreateMenu = ref(false);
 const createItems = ref([
@@ -67,8 +72,6 @@ function onItemSaved() {
 }
 
 function getItems(doItems = true, doCount = false) {
-    // Get options from DataTable
-    const tableOptions: any = options.value;
 
     // Mark as Loading
     isLoading.value = true;
@@ -82,10 +85,9 @@ function getItems(doItems = true, doCount = false) {
     }
 
     if (doItems) {
+        applyPaging(api);
+        applyOrdering(api);
         api
-            .limit(tableOptions.itemsPerPage)
-            .offset(tableOptions.itemsPerPage * (tableOptions.page - 1))
-            .orderAsc('name')
             .find(items => {
                 rows.value = items;
                 isLoading.value = false;
@@ -158,7 +160,7 @@ function onEditItemBtnClicked(item: DeploymentSpecification) {
         >
             <v-toolbar-title>Deployment Specifications</v-toolbar-title>
 
-            <v-text-field
+            <v-text-field data-shortcut="search"
                 v-model="searchValue"
                 density="compact"
                 variant="outlined"
@@ -176,7 +178,7 @@ function onEditItemBtnClicked(item: DeploymentSpecification) {
                 min-width="250"
                 offset-y>
                 <template v-slot:activator="{ props }">
-                    <v-btn
+                    <v-btn data-shortcut="create"
                         v-bind="props"
                         small
                         prepend-icon="fa fa-plus">
@@ -204,7 +206,9 @@ function onEditItemBtnClicked(item: DeploymentSpecification) {
             :items-length="itemCount"
             :items="rows"
             :loading="isLoading"
-            :items-per-page="50"
+            v-model:page="page"
+            v-model:items-per-page="itemsPerPage"
+            v-model:sort-by="sortBy"
             class="table"
             density="compact"
             @update:options="options = $event; getItems()">
@@ -221,15 +225,25 @@ function onEditItemBtnClicked(item: DeploymentSpecification) {
                 <span v-if="item.enable_external_access">{{ item.network_type }}</span>
             </template>
 
+            <template v-slot:item.name="{ item }">
+
+                <name-link @click="onEditItemBtnClicked(item)">{{ item.name }}</name-link>
+
+            </template>
+
             <template v-slot:item.actions="{ item }">
-                <div class="d-flex justify-end gap-1">
+                <div class="d-flex justify-end ga-1">
 
                     <v-menu
                         min-width="250">
                         <template v-slot:activator="{ props }">
                             <v-btn
                                 v-bind="props"
-                                variant="plain" color="primary" size="small" icon>
+                                variant="plain" color="primary"
+                                size="small"
+                                density="comfortable"
+                                icon
+                            >
                                 <v-icon>fa fa-cog</v-icon>
                                 <v-tooltip activator="parent" location="bottom">Settings</v-tooltip>
                             </v-btn>
@@ -239,22 +253,34 @@ function onEditItemBtnClicked(item: DeploymentSpecification) {
                     </v-menu>
 
                     <v-btn
-                        variant="plain" color="primary" size="small" icon
-                           @click="onEditItemBtnClicked(item)">
+                        variant="plain" color="primary" 
+                           @click="onEditItemBtnClicked(item)"
+                        size="small"
+                        density="comfortable"
+                        icon
+                    >
                         <v-icon>fa fa-pen</v-icon>
                         <v-tooltip activator="parent" location="bottom">Edit</v-tooltip>
                     </v-btn>
 
                     <v-btn
-                        variant="plain" color="primary" size="small" icon
-                        @click="onDuplicateItemBtnClicked(item)">
+                        variant="plain" color="primary" 
+                        @click="onDuplicateItemBtnClicked(item)"
+                        size="small"
+                        density="comfortable"
+                        icon
+                    >
                         <v-icon>fa fa-clone</v-icon>
                         <v-tooltip activator="parent" location="bottom">Duplicate</v-tooltip>
                     </v-btn>
 
                     <v-btn
-                        variant="plain" color="red" size="small" icon
-                           @click="onDeleteItemBtnClicked(item)">
+                        variant="plain" color="red" 
+                           @click="onDeleteItemBtnClicked(item)"
+                        size="small"
+                        density="comfortable"
+                        icon
+                    >
                         <v-icon>fa fa-trash</v-icon>
                         <v-tooltip activator="parent" location="bottom">Delete</v-tooltip>
                     </v-btn>

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useListState } from "@/composables/useListState";
+import NameLink from "@/components/Modules/Common/NameLink.vue";
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
@@ -28,7 +30,10 @@ const headers = ref<{ title: string, key: string, sortable: boolean }[]>([]);
 const isLoading = ref(true);
 const options = ref({});
 
-const searchValue = ref('');
+const {search: searchValue, page, itemsPerPage, sortBy, applyOrdering, applyPaging} = useListState({
+    sortable: {"domain.name": "name"},
+    defaultSort: {key: "domain.name", order: "asc"},
+});
 
 onMounted(() => {
     bus.on('domainSaved', onItemSaved);
@@ -36,7 +41,7 @@ onMounted(() => {
     getItems(false, true);
 
     headers.value = [
-        {title: 'Name', key: 'domain.name', sortable: false},
+        {title: 'Name', key: 'domain.name', sortable: true},
         {title: 'Certificate', key: 'certificate', sortable: false},
         ...(System.Instance.is_network_istio_supported ? [{
             title: 'Istio Gateway',
@@ -62,8 +67,6 @@ function onItemSaved() {
 }
 
 function getItems(doItems = true, doCount = false) {
-    // Get options from DataTable
-    const tableOptions: any = options.value;
 
     // Mark as Loading
     isLoading.value = true;
@@ -79,10 +82,9 @@ function getItems(doItems = true, doCount = false) {
     }
 
     if (doItems) {
+        applyPaging(api);
+        applyOrdering(api);
         api
-            .limit(tableOptions.itemsPerPage)
-            .offset(tableOptions.itemsPerPage * (tableOptions.page - 1))
-            .orderAsc('name')
             .find(items => {
                 rows.value = items.map(item => ({domain: item}));
                 isLoading.value = false;
@@ -176,7 +178,7 @@ function onCertificateClicked(item: Row) {
         >
             <v-toolbar-title>Domains</v-toolbar-title>
 
-            <v-text-field
+            <v-text-field data-shortcut="search"
                 v-model="searchValue"
                 density="compact"
                 variant="outlined"
@@ -186,7 +188,7 @@ function onCertificateClicked(item: Row) {
             />
 
             <v-spacer></v-spacer>
-            <v-btn small class="" @click="createItem()"
+            <v-btn data-shortcut="create" small class="" @click="createItem()"
                    prepend-icon="fa fa-plus"
             >
                 Create
@@ -198,7 +200,9 @@ function onCertificateClicked(item: Row) {
             :items-length="itemCount"
             :items="rows"
             :loading="isLoading"
-            :items-per-page="50"
+            v-model:page="page"
+            v-model:items-per-page="itemsPerPage"
+            v-model:sort-by="sortBy"
             class="table"
             density="compact"
             @update:options="options = $event; getItems()">
@@ -269,15 +273,25 @@ function onCertificateClicked(item: Row) {
                 </v-menu>
             </template>
 
+            <template v-slot:item.domain.name="{ item }">
+
+                <name-link @click="onEditItemBtnClicked(item)">{{ item.domain.name }}</name-link>
+
+            </template>
+
             <template v-slot:item.actions="{ item }">
-                <div class="d-flex justify-end">
+                <div class="d-flex justify-end ga-1">
 
                     <v-menu
                         min-width="250">
                         <template v-slot:activator="{ props }">
                             <v-btn
                                 v-bind="props"
-                                variant="plain" color="primary" size="small" icon>
+                                variant="plain" color="primary"
+                                size="small"
+                                density="comfortable"
+                                icon
+                            >
                                 <v-icon>fa fa-cog</v-icon>
                                 <v-tooltip activator="parent" location="bottom">Settings</v-tooltip>
                             </v-btn>
@@ -287,22 +301,34 @@ function onCertificateClicked(item: Row) {
                     </v-menu>
 
                     <v-btn
-                        variant="plain" color="primary" size="small" icon
-                        @click="onEditItemBtnClicked(item)">
+                        variant="plain" color="primary" 
+                        @click="onEditItemBtnClicked(item)"
+                        size="small"
+                        density="comfortable"
+                        icon
+                    >
                         <v-icon>fa fa-pen</v-icon>
                         <v-tooltip activator="parent" location="bottom">Edit</v-tooltip>
                     </v-btn>
 
                     <v-btn
-                        variant="plain" color="primary" size="small" icon
-                        @click="onDuplicateItemBtnClicked(item)">
+                        variant="plain" color="primary" 
+                        @click="onDuplicateItemBtnClicked(item)"
+                        size="small"
+                        density="comfortable"
+                        icon
+                    >
                         <v-icon>fa fa-clone</v-icon>
                         <v-tooltip activator="parent" location="bottom">Duplicate</v-tooltip>
                     </v-btn>
 
                     <v-btn
-                        variant="plain" color="red" size="small" icon
-                        @click="onDeleteItemBtnClicked(item)">
+                        variant="plain" color="red" 
+                        @click="onDeleteItemBtnClicked(item)"
+                        size="small"
+                        density="comfortable"
+                        icon
+                    >
                         <v-icon>fa fa-trash</v-icon>
                         <v-tooltip activator="parent" location="bottom">Delete</v-tooltip>
                     </v-btn>

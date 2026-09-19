@@ -8,6 +8,7 @@ import type { ContainerRegistryEditDialog_Input } from "@/components/Dialogs/Int
 import type { ContainerRegistryImportDialog_Input } from "@/components/Dialogs/Integrations/ContainerRegistries/ContainerRegistryImportDialog.vue";
 import type { GithubIntegrationEditDialog_Input } from "@/components/Dialogs/Integrations/GithubIntegrations/GithubIntegrationEditDialog.vue";
 import type { IntegrationDeleteDialog_Input } from "@/components/Dialogs/Integrations/IntegrationDeleteDialog.vue";
+import type { DeploymentBulkUpdateVersionDialog_Input } from "@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentBulkUpdateVersionDialog.vue";
 import type { UserEditDialog_Input } from "@/components/Dialogs/Users/UserEditDialog.vue";
 import {
     ContainerImage,
@@ -177,6 +178,7 @@ export type Events = {
     containerRegistryEditDialog_closed: ContainerRegistry | undefined;
     githubIntegrationEdit: GithubIntegrationEditDialog_Input;
     integrationDelete: IntegrationDeleteDialog_Input;
+    deploymentBulkUpdateVersion: DeploymentBulkUpdateVersionDialog_Input;
     githubIntegrationSaved: GithubIntegration | undefined;
     githubIntegrationEditDialog_closed: GithubIntegration | undefined;
 

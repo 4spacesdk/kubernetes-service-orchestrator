@@ -23,12 +23,13 @@ onUnmounted(() => {
 });
 
 function onItemEditDialog_Closed() {
-    router.push({name: 'Domains'});
+    router.push({name: 'Domains', query: router.currentRoute.value.query});
 }
 
 function onItemEditClicked(item: Domain) {
     router.push({
         name: 'DomainById',
+        query: router.currentRoute.value.query,
         params: {
             id: item.id
         }
