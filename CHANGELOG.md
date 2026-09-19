@@ -8,6 +8,7 @@
 * Custom resources without a namespace landed in `default`
 * Init containers from another registry could not be pulled
 * Setting a deployment's version reported success when the deploy failed
+* A migration job did not migrate when it could not reach kso at the start ([#42](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/42))
 * Harbor: tags beyond the first ten artifacts were missing
 * A failed save in a dialog was silent, and a double click saved twice
 * Creating a workspace refused names starting with Æ, Ø or Å, and namespaces longer than 15 characters

@@ -278,11 +278,13 @@ class MigrationJobStep extends BaseDeploymentStep {
             ->setAttribute('args', [
                 '-c',
 
-                // Tell KSO about migration job started
-                'curl -i -v -X PUT ' . $this->getMigrationStartedUrl()
+                // Tell KSO about migration job started. Only a status, so the migration runs
+                // whether or not kso answers (#42), and the retries are kept short: waiting
+                // on it would hold up the release it is reporting on.
+                'curl --connect-timeout 5 --max-time 30 --retry 5 --retry-delay 5 --retry-max-time 60 -i -v -X PUT ' . $this->getMigrationStartedUrl()
 
                 // Perform migration
-                . ' && ' . $spec->database_migration_command
+                . ' ; ' . $spec->database_migration_command
 
                 // Tell KSO about migration job ended
                 . ' | curl --connect-timeout 5 --max-time 300 --retry 10 --retry-delay 5 --retry-max-time 300 -i -v -X PUT --data-binary @- ' . $this->getMigrationEndedUrl(),

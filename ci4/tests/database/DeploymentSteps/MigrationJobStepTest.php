@@ -118,15 +118,45 @@ class MigrationJobStepTest extends ManifestTestCase {
     }
 
     /**
-     * The first callback is joined to the migration with `&&`, so a kso that cannot be
-     * reached means the migration never runs at all - the job fails on the curl instead.
-     * That is the arrangement issue #42 is about.
+     * A kso that cannot be reached must not stop the migration (#42). The first callback
+     * used to be joined to it with `&&`, so the job failed on the curl and never migrated.
+     *
+     * Run for real: the script goes through `/bin/sh` with a `curl` on the path that fails
+     * every call to `started` and records what `ended` is sent.
      */
-    public function testMigrationOnlyRunsIfTheFirstCallbackSucceeds(): void {
-        $deployment = $this->migratableDeployment([], ['database_migration_command' => 'php spark migrate']);
+    public function testTheMigrationRunsEvenWhenKsoCannotBeReachedAtTheStart(): void {
+        $deployment = $this->migratableDeployment([], ['database_migration_command' => 'echo migrated']);
+        $dir = sys_get_temp_dir() . '/kso-migration-' . uniqid();
+        mkdir($dir);
+        file_put_contents("{$dir}/curl", implode("\n", [
+            '#!/bin/sh',
+            'case "$*" in',
+            "  */started*) echo started >> {$dir}/calls; exit 7 ;;",
+            "  */ended*) echo ended >> {$dir}/calls; cat > {$dir}/ended-body ;;",
+            'esac',
+        ]));
+        chmod("{$dir}/curl", 0755);
+
+        try {
+            exec('PATH=' . escapeshellarg("{$dir}:" . getenv('PATH')) . ' /bin/sh -c ' . escapeshellarg($this->container($deployment)['args'][1]) . ' 2>/dev/null');
+
+            $this->assertSame("started\nended\n", file_get_contents("{$dir}/calls"));
+            $this->assertSame("migrated\n", file_get_contents("{$dir}/ended-body"));
+        } finally {
+            array_map('unlink', glob("{$dir}/*"));
+            rmdir($dir);
+        }
+    }
+
+    /**
+     * The first callback gives up within a minute: it is only a status now, and waiting
+     * longer would hold up the release it reports on.
+     */
+    public function testTheStartedCallbackRetriesBriefly(): void {
+        $deployment = $this->migratableDeployment();
 
         $this->assertMatchesRegularExpression(
-            '#/started\s+&&\s+php spark migrate#',
+            '#curl --connect-timeout 5 --max-time 30 --retry 5 --retry-delay 5 --retry-max-time 60 -i -v -X PUT \S+/started#',
             $this->container($deployment)['args'][1]
         );
     }
