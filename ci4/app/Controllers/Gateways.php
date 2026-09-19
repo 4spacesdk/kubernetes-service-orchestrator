@@ -3,7 +3,9 @@
 use App\Core\ResourceController;
 use App\Entities\Gateway;
 use App\Entities\GatewayAddress;
+use App\Entities\GatewayAnnotation;
 use App\Interfaces\GatewayAddressList;
+use App\Interfaces\GatewayAnnotationList;
 use App\Libraries\GatewaySteps\GatewayStep;
 use App\Libraries\Kubernetes\KubeHelper;
 use App\Models\GatewayModel;
@@ -188,6 +190,56 @@ class Gateways extends ResourceController {
 
             $item->updateGatewayAddresses($values);
         }
+        $this->_setResource($item);
+        $this->success();
+    }
+
+    /**
+     * Replace the gateway's annotations with the ones sent (#65). They reach the cluster on
+     * the next deploy. Nothing is written unless every one of them is valid.
+     *
+     * @route /gateways/{id}/gateway-annotations
+     * @method put
+     * @custom true
+     * @param int $id
+     * @requestSchema GatewayAnnotationList
+     * @return void
+     */
+    public function updateGatewayAnnotations(int $id): void {
+        $item = new Gateway();
+        $item->find($id);
+        if (!$item->exists()) {
+            $this->fail('unknown gateway');
+            return;
+        }
+
+        /** @var GatewayAnnotationList $body */
+        $body = $this->request->getJSON();
+
+        $annotations = [];
+        foreach ($body->values ?? [] as $data) {
+            $annotation = new GatewayAnnotation();
+            $annotation->name = trim((string) ($data->name ?? ''));
+            $annotation->value = (string) ($data->value ?? '');
+            if ($error = $annotation->validate()) {
+                $this->fail($error);
+                return;
+            }
+            // A resource has one value per key; the second would silently win.
+            if (isset($annotations[$annotation->name])) {
+                $this->fail("'{$annotation->name}' is there twice");
+                return;
+            }
+            $annotations[$annotation->name] = $annotation;
+        }
+
+        $values = new GatewayAnnotation();
+        foreach ($annotations as $annotation) {
+            $annotation->save();
+        }
+        $values->all = array_values($annotations);
+
+        $item->updateGatewayAnnotations($values);
         $this->_setResource($item);
         $this->success();
     }

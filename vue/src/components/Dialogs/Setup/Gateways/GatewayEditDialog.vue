@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useDialogSave } from "@/composables/useDialogSave";
 import {onMounted, onUnmounted, ref} from 'vue'
-import {Gateway, GatewayAddress} from "@/core/services/Deploy/models";
+import {Gateway, GatewayAddress, GatewayAnnotation} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
@@ -40,6 +40,17 @@ function removeAddress(index: number) {
     item.value.gateway_addresses?.splice(index, 1);
 }
 
+function addAnnotation() {
+    if (!item.value.gateway_annotations) {
+        item.value.gateway_annotations = [];
+    }
+    item.value.gateway_annotations.push(new GatewayAnnotation());
+}
+
+function removeAnnotation(index: number) {
+    item.value.gateway_annotations?.splice(index, 1);
+}
+
 onMounted(() => {
     if (used.value) {
         return;
@@ -61,12 +72,18 @@ function render() {
                 if (!item.value.gateway_addresses) {
                     item.value.gateway_addresses = [];
                 }
+                if (!item.value.gateway_annotations) {
+                    item.value.gateway_annotations = [];
+                }
                 isLoading.value = false;
             });
     } else {
         item.value = props.input.gateway;
         if (!item.value.gateway_addresses) {
             item.value.gateway_addresses = [];
+        }
+        if (!item.value.gateway_annotations) {
+            item.value.gateway_annotations = [];
         }
         showDialog.value = true;
     }
@@ -86,6 +103,7 @@ function onSaveBtnClicked() {
     // leaves it untouched on a patch, since relations are only applied when present.
     const payload = new Gateway(JSON.parse(JSON.stringify(item.value)));
     payload.gateway_addresses = undefined;
+    payload.gateway_annotations = undefined;
 
     const api = item.value.exists() ? Api.gateways().patchById(item.value.id!) : Api.gateways().post();
     save(api, payload, gateway => {
@@ -93,8 +111,12 @@ function onSaveBtnClicked() {
         // another one.
         item.value.id = gateway.id;
         save(Api.gateways().updateGatewayAddressesPutById(gateway.id!), {values: item.value.gateway_addresses || []}, () => {
-            bus.emit('gatewaySaved', gateway);
-            close();
+            const annotations = (item.value.gateway_annotations || [])
+                .map(annotation => ({name: annotation.name, value: annotation.value ?? ''}));
+            save(Api.gateways().updateGatewayAnnotationsPutById(gateway.id!), {values: annotations}, () => {
+                bus.emit('gatewaySaved', gateway);
+                close();
+            });
         });
     });
 }
@@ -195,6 +217,51 @@ function onCloseBtnClicked() {
                         </v-row>
                         <div v-if="!item.gateway_addresses || item.gateway_addresses.length === 0" class="text-center text-grey text-caption py-4">
                             No addresses defined.
+                        </div>
+                    </v-col>
+                    <v-col cols="12" class="mt-4">
+                        <div class="d-flex align-center">
+                            <div class="text-subtitle-1">Annotations</div>
+                            <v-spacer/>
+                            <v-btn
+                                variant="tonal"
+                                size="small"
+                                prepend-icon="fa fa-plus"
+                                @click="addAnnotation">
+                                Add Annotation
+                            </v-btn>
+                        </div>
+                        <v-divider class="my-2"/>
+                        <v-row v-for="(annotation, index) in item.gateway_annotations" :key="index" dense>
+                            <v-col cols="5">
+                                <v-text-field
+                                    variant="outlined"
+                                    v-model="annotation.name"
+                                    label="Name"
+                                    placeholder="eg. networking.gke.io/certmap"
+                                    hide-details="auto"
+                                    :rules="[v => !!(v ?? '').trim() || 'Required']"
+                                />
+                            </v-col>
+                            <v-col cols="6">
+                                <v-text-field
+                                    variant="outlined"
+                                    v-model="annotation.value"
+                                    label="Value"
+                                    hide-details="auto"
+                                />
+                            </v-col>
+                            <v-col cols="1" class="d-flex mt-1">
+                                <v-btn
+                                    icon="fa fa-trash"
+                                    color="red"
+                                    variant="text"
+                                    size="x-small"
+                                    @click="removeAnnotation(index)"/>
+                            </v-col>
+                        </v-row>
+                        <div v-if="!item.gateway_annotations || item.gateway_annotations.length === 0" class="text-center text-grey text-caption py-4">
+                            No annotations defined.
                         </div>
                     </v-col>
                 </v-row>

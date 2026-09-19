@@ -424,7 +424,7 @@ class IncludeSweepTest extends ControllerTestCase {
             $relations += count($this->relationsOf($modelName));
         }
 
-        $this->assertSame(89, $relations, 'the number of includable relations changed');
+        $this->assertSame(90, $relations, 'the number of includable relations changed');
     }
 
     // </editor-fold>
@@ -459,6 +459,7 @@ class IncludeSweepTest extends ControllerTestCase {
 
         $gateway = Fixtures::gateway();
         Fixtures::gatewayAddress(['gateway_id' => $gateway->id]);
+        Fixtures::gatewayAnnotation(['gateway_id' => $gateway->id]);
         $domain = Fixtures::domain(['gateway_id' => $gateway->id, 'name' => 'sweep.example.org']);
 
         $emailService = Fixtures::emailService();

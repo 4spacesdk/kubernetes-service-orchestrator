@@ -24,6 +24,7 @@ import {User} from "./models";
 import {Webhook} from "./models";
 import {WebhookDelivery} from "./models";
 import {Workspace} from "./models";
+import {GatewayAnnotation} from "./models";
 import {PostUpdateActionCondition} from "./models";
 
 export interface BoolInterface {
@@ -220,6 +221,10 @@ export interface GatewayAddress {
 
 export interface GatewayAddressList {
     values?: GatewayAddress[];
+}
+
+export interface GatewayAnnotationList {
+    values?: GatewayAnnotation[];
 }
 
 export interface GithubIntegrationSetupResponse {
@@ -4739,6 +4744,27 @@ export class GatewaysUpdateGatewayAddressesPutById extends BaseApi<Gateway> {
     }
 }
 
+export class GatewaysUpdateGatewayAnnotationsPutById extends BaseApi<Gateway> {
+
+    public topic = 'Resources.Gateways';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/gateways/${id}/gateway-annotations`;
+    }
+
+    protected convertToResource(data: any): Gateway {
+        return new Gateway(data);
+    }
+
+    public save(data: GatewayAnnotationList, next?: (value: Gateway) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
 class Gateways {
 
     public get(): GatewaysGet {
@@ -4799,6 +4825,10 @@ class Gateways {
 
     public updateGatewayAddressesPutById(id: number): GatewaysUpdateGatewayAddressesPutById {
         return new GatewaysUpdateGatewayAddressesPutById(id);
+    }
+
+    public updateGatewayAnnotationsPutById(id: number): GatewaysUpdateGatewayAnnotationsPutById {
+        return new GatewaysUpdateGatewayAnnotationsPutById(id);
     }
 
 }

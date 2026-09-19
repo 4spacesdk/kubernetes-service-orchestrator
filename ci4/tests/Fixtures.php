@@ -35,6 +35,7 @@ use App\Entities\EnvironmentVariable;
 use App\Entities\Domain;
 use App\Entities\Gateway;
 use App\Entities\GatewayAddress;
+use App\Entities\GatewayAnnotation;
 use App\Entities\User;
 use App\Entities\System;
 use App\Entities\Workspace;
@@ -151,6 +152,16 @@ class Fixtures {
         return self::make(GatewayAddress::class, [
             'type' => 'IPAddress',
             'value' => '10.0.0.1',
+        ], $overrides);
+    }
+
+    /**
+     * @param array<string, mixed> $overrides
+     */
+    public static function gatewayAnnotation(array $overrides = []): GatewayAnnotation {
+        return self::make(GatewayAnnotation::class, [
+            'name' => 'example.org/team',
+            'value' => 'platform',
         ], $overrides);
     }
 

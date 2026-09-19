@@ -189,10 +189,120 @@ class GatewaysWithoutAClusterTest extends ControllerTestCase {
 
     // </editor-fold>
 
+    // <editor-fold desc="Annotations, which never touch the cluster">
+
+    public function testTheAnnotationsReplaceWhatWasThere(): void {
+        $gateway = $this->gateway();
+        Fixtures::gatewayAnnotation(['gateway_id' => $gateway->id, 'name' => 'old', 'value' => 'gone']);
+
+        $body = $this->putAnnotations($gateway->id, [
+            ['name' => 'example.org/team', 'value' => 'platform'],
+            ['name' => 'networking.gke.io/certmap', 'value' => 'store-certs'],
+        ]);
+
+        $this->assertSame('OK', $body['status']);
+        $this->assertSame(
+            ['example.org/team' => 'platform', 'networking.gke.io/certmap' => 'store-certs'],
+            $this->reload($gateway)->getAnnotations()
+        );
+    }
+
+    /**
+     * The edit dialog reads a gateway by id and gets its annotations with it.
+     */
+    public function testAGatewayIsReadWithItsAnnotations(): void {
+        $gateway = $this->gateway();
+        Fixtures::gatewayAnnotation(['gateway_id' => $gateway->id]);
+
+        $body = $this->decode($this->signedIn()->get("gateways/{$gateway->id}"));
+
+        $this->assertSame(['example.org/team'], array_column($body['resource']['gateway_annotations'], 'name'));
+    }
+
+    /**
+     * Refused here, not by the api server on the next deploy, where the message would be
+     * about the Gateway and not about the field.
+     */
+    #[DataProvider('theWaysAnAnnotationCanBeWrong')]
+    public function testAnInvalidAnnotationIsRefusedWithAReason(array $annotation, string $expected): void {
+        $body = $this->putAnnotations($this->gateway()->id, [$annotation]);
+
+        $this->assertNotSame('OK', $body['status']);
+        $this->assertStringContainsString($expected, json_encode($body));
+    }
+
+    /**
+     * @return array<string, array{array<string, string>, string}>
+     */
+    public static function theWaysAnAnnotationCanBeWrong(): array {
+        return [
+            'no name' => [['name' => '', 'value' => 'x'], 'Missing name'],
+            'a space in the name' => [['name' => 'my key', 'value' => 'x'], "Invalid name 'my key'"],
+            'name too long' => [['name' => str_repeat('a', 64), 'value' => 'x'], 'Invalid name'],
+            'prefix in upper case' => [['name' => 'Example.org/team', 'value' => 'x'], "Invalid prefix 'Example.org'"],
+            'empty name after the prefix' => [['name' => 'example.org/', 'value' => 'x'], "Invalid name ''"],
+            'kso\'s own mark' => [['name' => 'app.kubernetes.io/managed-by', 'value' => 'me'], 'is set by kso'],
+        ];
+    }
+
+    /**
+     * A resource has one value per key, so the second of two would win without a word.
+     */
+    public function testTheSameNameTwiceIsRefused(): void {
+        $body = $this->putAnnotations($this->gateway()->id, [
+            ['name' => 'example.org/team', 'value' => 'a'],
+            ['name' => 'example.org/team', 'value' => 'b'],
+        ]);
+
+        $this->assertNotSame('OK', $body['status']);
+        $this->assertSame("'example.org/team' is there twice", $body['error']);
+    }
+
+    public function testARefusedListLeavesTheExistingAnnotationsAlone(): void {
+        $gateway = $this->gateway();
+        Fixtures::gatewayAnnotation(['gateway_id' => $gateway->id, 'name' => 'kept', 'value' => 'yes']);
+
+        $this->putAnnotations($gateway->id, [
+            ['name' => 'example.org/team', 'value' => 'platform'],
+            ['name' => 'not valid', 'value' => 'x'],
+        ]);
+
+        $this->assertSame(['kept' => 'yes'], $this->reload($gateway)->getAnnotations());
+    }
+
+    /**
+     * Unlike the address endpoint next to it, which answers success and stores nothing.
+     */
+    public function testAnnotationsForAnUnknownGatewayAreRefused(): void {
+        $body = $this->putAnnotations(999999, [['name' => 'example.org/team', 'value' => 'platform']]);
+
+        $this->assertNotSame('OK', $body['status']);
+        $this->assertStringContainsString('unknown gateway', json_encode($body));
+    }
+
+    // </editor-fold>
+
     // <editor-fold desc="Fixtures">
 
     private function gateway(): Gateway {
         return Fixtures::gateway(['name' => 'kso-gateway', 'namespace' => 'test']);
+    }
+
+    private function reload(Gateway $gateway): Gateway {
+        $fresh = new Gateway();
+        $fresh->find($gateway->id);
+
+        return $fresh;
+    }
+
+    /**
+     * @param array<array<string, string>> $values
+     * @return array<string, mixed>
+     */
+    private function putAnnotations(int $gatewayId, array $values): array {
+        return $this->decode(
+            $this->withBodyFormat('json')->signedIn()->put("gateways/{$gatewayId}/gateway-annotations", ['values' => $values])
+        );
     }
 
     /**

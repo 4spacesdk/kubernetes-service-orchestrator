@@ -152,6 +152,8 @@ function onDuplicateItemBtnClicked(item: Row) {
         // GatewayEditDialog, where a posted address relation is written again by
         // updateGatewayAddresses.
         copy.gateway_addresses = undefined;
+        // Annotations are copied: they describe the gateway rather than claim something only
+        // one gateway can hold. The edit dialog saves them for the copy.
 
         bus.emit("gatewayEdit", { gateway: copy });
     });

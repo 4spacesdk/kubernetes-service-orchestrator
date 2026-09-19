@@ -176,9 +176,10 @@ class GatewayStep {
             ->onCluster($cluster)
             ->setName($gateway->name)
             ->setNamespace($gateway->namespace)
-            ->setAnnotations([
+            // kso's own mark last, so it is the one that counts.
+            ->setAnnotations(array_merge($gateway->getAnnotations(), [
                 'app.kubernetes.io/managed-by' => '4spaces.kso',
-            ])
+            ]))
             ->buildSpec($gateway);
 
         return $resource;

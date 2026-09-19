@@ -34,6 +34,7 @@ export {EmailService as EmailService} from "./EmailService";
 export {EnvironmentVariable as EnvironmentVariable} from "./EnvironmentVariable";
 export {Gateway as Gateway} from "./Gateway";
 export {GatewayAddress as GatewayAddress} from "./GatewayAddress";
+export {GatewayAnnotation as GatewayAnnotation} from "./GatewayAnnotation";
 export {GithubIntegration as GithubIntegration} from "./GithubIntegration";
 export {InitContainer as InitContainer} from "./InitContainer";
 export {InitContainerEnvironmentVariable as InitContainerEnvironmentVariable} from "./InitContainerEnvironmentVariable";

@@ -1,20 +1,16 @@
 /**
  * Created by ModelParser
  */
-import {Domain} from '../Domain';
-import {GatewayAddress} from '../GatewayAddress';
-import {GatewayAnnotation} from '../GatewayAnnotation';
+import {Gateway} from '../Gateway';
 import {User} from '../User';
 import {Deletion} from '../Deletion';
 import {BaseModel} from '../BaseModel';
 
-export class GatewayDefinition extends BaseModel {
+export class GatewayAnnotationDefinition extends BaseModel {
+    gateway_id?: number;
+    gateway?: Gateway;
     name?: string;
-    gateway_class_name?: string;
-    namespace?: string;
-    domains?: Domain[];
-    gateway_addresses?: GatewayAddress[];
-    gateway_annotations?: GatewayAnnotation[];
+    value?: string;
     id?: number;
     created?: string;
     updated?: string;
@@ -32,12 +28,10 @@ export class GatewayDefinition extends BaseModel {
 
     public populate(data?: any, patch = false) {
         if (!patch) {
+            delete this.gateway_id;
+            delete this.gateway;
             delete this.name;
-            delete this.gateway_class_name;
-            delete this.namespace;
-            delete this.domains;
-            delete this.gateway_addresses;
-            delete this.gateway_annotations;
+            delete this.value;
             delete this.id;
             delete this.created;
             delete this.updated;
@@ -50,23 +44,17 @@ export class GatewayDefinition extends BaseModel {
         }
 
         if (!data) return;
+        if (data.gateway_id != null) {
+            this.gateway_id = data.gateway_id;
+        }
+        if (data.gateway != null) {
+            this.gateway = new Gateway(data.gateway);
+        }
         if (data.name != null) {
             this.name = data.name;
         }
-        if (data.gateway_class_name != null) {
-            this.gateway_class_name = data.gateway_class_name;
-        }
-        if (data.namespace != null) {
-            this.namespace = data.namespace;
-        }
-        if (data.domains != null) {
-            this.domains = data.domains.map((i: any) => new Domain(i));
-        }
-        if (data.gateway_addresses != null) {
-            this.gateway_addresses = data.gateway_addresses.map((i: any) => new GatewayAddress(i));
-        }
-        if (data.gateway_annotations != null) {
-            this.gateway_annotations = data.gateway_annotations.map((i: any) => new GatewayAnnotation(i));
+        if (data.value != null) {
+            this.value = data.value;
         }
         if (data.id != null) {
             this.id = data.id;

@@ -2,16 +2,10 @@
 
 use RestExtension\ResourceModelInterface;
 
-class GatewayModel extends \RestExtension\Models\UserModel implements ResourceModelInterface {
+class GatewayAnnotationModel extends \RestExtension\Models\UserModel implements ResourceModelInterface {
 
     public $hasOne = [
-        DeletionModel::class,
-    ];
-
-    public $hasMany = [
-        DomainModel::class,
-        GatewayAddressModel::class,
-        GatewayAnnotationModel::class,
+        GatewayModel::class,
     ];
 
     public function preRestGet($queryParser, $id) {

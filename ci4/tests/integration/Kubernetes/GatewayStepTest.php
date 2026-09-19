@@ -103,6 +103,22 @@ class GatewayStepTest extends ClusterTestCase {
         );
     }
 
+    /**
+     * The user's annotations reach the Gateway, and kso's own mark stays kso's.
+     */
+    public function testTheUsersAnnotationsAreCarriedAlongsideKsosOwn(): void {
+        $gateway = $this->gatewayWithDomain();
+        Fixtures::gatewayAnnotation(['gateway_id' => $gateway->id, 'name' => 'example.org/team', 'value' => 'platform']);
+        // Only reachable around the endpoint, which refuses it.
+        Fixtures::gatewayAnnotation(['gateway_id' => $gateway->id, 'name' => 'app.kubernetes.io/managed-by', 'value' => 'someone']);
+
+        (new GatewayStep())->deploy($gateway);
+
+        $annotations = $this->gatewayOnCluster($gateway)['metadata']['annotations'];
+        $this->assertSame('platform', $annotations['example.org/team'] ?? null);
+        $this->assertSame('4spaces.kso', $annotations['app.kubernetes.io/managed-by'] ?? null);
+    }
+
     // </editor-fold>
 
     // <editor-fold desc="Reference grants">
