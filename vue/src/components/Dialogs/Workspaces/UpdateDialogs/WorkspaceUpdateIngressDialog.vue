@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ReferenceData } from "@/core/referenceData";
 import { useDialogSave } from "@/composables/useDialogSave";
 import {
     computed,
@@ -54,9 +55,7 @@ function render() {
     showDialog.value = true;
     isLoadingDomains.value = true;
 
-    Api.domains()
-        .get()
-        .find((items) => {
+    ReferenceData.domains().then((items) => {
             domains.value = items;
             isLoadingDomains.value = false;
         });

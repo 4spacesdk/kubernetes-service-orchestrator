@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ReferenceData } from "@/core/referenceData";
 import { computed, onMounted, ref, watch } from "vue";
 import { ContainerRegistry } from "@/core/services/Deploy/models";
 import { Api, type ContainerRegistryRepository } from "@/core/services/Deploy/Api";
@@ -67,10 +68,7 @@ onMounted(() => {
     if (registryId.value) {
         loadRepositories();
     } else {
-        Api.containerRegistries()
-            .get()
-            .orderAsc("name")
-            .find((items) => (registries.value = items));
+        ReferenceData.containerRegistries().then((items) => (registries.value = items));
     }
 });
 

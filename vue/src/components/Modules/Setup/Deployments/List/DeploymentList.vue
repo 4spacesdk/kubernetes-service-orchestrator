@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ReferenceData } from "@/core/referenceData";
 import { useListState } from "@/composables/useListState";
 import NameLink from "@/components/Modules/Common/NameLink.vue";
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
@@ -60,10 +61,7 @@ onMounted(() => {
     getItems(false, true);
 
     if (deploymentSpecs.value.length == 0) {
-        Api.deploymentSpecifications().get()
-            .include('container_image')
-            .orderAsc('name')
-            .find(items => {
+        ReferenceData.deploymentSpecificationsWithImage().then(items => {
                 deploymentSpecs.value = items;
                 showDeploymentSpecsWarning.value = deploymentSpecs.value.length === 0;
             });

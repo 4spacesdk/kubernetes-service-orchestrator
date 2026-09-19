@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ReferenceData } from "@/core/referenceData";
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
@@ -101,9 +102,7 @@ function render() {
             const usedDeploymentSpecificationIds = rows.value
                     ?.map(row => row.deploymentSpecification.id!)
                 ?? []
-            Api.deploymentSpecifications().get()
-                .orderAsc('name')
-                .find(items => {
+            ReferenceData.deploymentSpecifications().then(items => {
                     createItems.value = items.map(item => {
                         return {
                             inUse: usedDeploymentSpecificationIds.includes(item.id!),

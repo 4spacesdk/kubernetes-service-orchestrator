@@ -14,22 +14,24 @@ class ApiService {
         });
     }
 
+    /**
+     * An access token in the url, as when kso runs in an iframe, is the one to use.
+     */
+    public useAccessTokenFromUrl() {
+        const accessToken = new URLSearchParams(window.location.search).get('access_token');
+        if (accessToken) {
+            AuthService.setToken(accessToken, false);
+        }
+        if (AuthService.getToken()) {
+            this.setHeader();
+        }
+    }
+
     public getSettings(callback: () => void) {
         this.apiAxios!
             .get("/settings")
             .then((response: any) => {
                 const data = response.data;
-
-                // Use AccessToken from uri (Used if iframe)
-                const urlParams = new URLSearchParams(window.location.search);
-                const accessToken = urlParams.get('access_token');
-                if (accessToken) {
-                    AuthService.setToken(accessToken, false);
-                }
-
-                if (AuthService.getToken()) {
-                    this.setHeader();
-                }
 
                 System.Instance = new System(data.system);
                 System.certManagerIssuerDefaultName = data.certManagerIssuerDefaultName;

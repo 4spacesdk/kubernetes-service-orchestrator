@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ReferenceData } from "@/core/referenceData";
 import { useDialogSave } from "@/composables/useDialogSave";
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
 import {ContainerImage, InitContainer} from "@/core/services/Deploy/models";
@@ -96,9 +97,7 @@ function render() {
     }
 
     isLoadingContainerImageItems.value = true;
-    Api.containerImages().get()
-        .orderAsc('name')
-        .find(items => {
+    ReferenceData.containerImages().then(items => {
             containerImageItems.value = items;
             isLoadingContainerImageItems.value = false;
         });

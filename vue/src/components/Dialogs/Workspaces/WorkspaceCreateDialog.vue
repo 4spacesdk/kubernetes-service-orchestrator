@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ReferenceData } from "@/core/referenceData";
 import { dnsLabelRule, toDnsLabel } from "@/core/kubernetesNames";
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
 import {DeploymentPackage, Domain, System, Workspace} from "@/core/services/Deploy/models";
@@ -41,8 +42,7 @@ function render() {
     item.value = Workspace.CreateDefault(props.input.deploymentPackage);
 
     isLoadingDomains.value = true;
-    Api.domains().get()
-        .find(items => {
+    ReferenceData.domains().then(items => {
             domains.value = items;
             isLoadingDomains.value = false;
         });

@@ -16,24 +16,13 @@ import AuthService from "@/services/AuthService";
 import { registerSW } from 'virtual:pwa-register'
 import vuetify from "@/plugins/vuetify";
 
-// VueDiff
-import 'vue-diff/dist/index.css';
-import VueDiff from "vue-diff";
 import WampService from "@/services/Wamp/WampService";
-
-// Font Awesome
-import { library } from '@fortawesome/fontawesome-svg-core'
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-import { faUserSecret } from '@fortawesome/free-solid-svg-icons'
-library.add(faUserSecret);
 
 const setupVue = (app: App<Element>) => {
 
     app.use(router);
     app.use(vuetify);
-    app.use(VueDiff);
     moment.locale('da');
-    app.component('font-awesome-icon', FontAwesomeIcon);
 
     app.directive('sortableDataTable', {
         created(el: HTMLElement, binding: DirectiveBinding, vnode: VNode) {
@@ -67,18 +56,18 @@ if (location.origin.includes('localhost')) {
     ApiService.initApi(`${location.origin}/api`);
 }
 
-ApiService.getSettings(() => {
+// Nothing is drawn until both are back, so they are asked for together (PERF-2). The token
+// they need - from the url when kso runs in an iframe - is set before either goes out.
+ApiService.useAccessTokenFromUrl();
+Promise.all([
+    new Promise<void>(resolve => ApiService.getSettings(resolve)),
+    new Promise<void>(resolve => AuthService.refreshMe(() => resolve())),
+]).then(() => {
+    const app = createApp(AppComponent);
 
-    AuthService.refreshMe((response) => {
+    setupVue(app);
 
-        const app = createApp(AppComponent);
+    app.mount('#app');
 
-        setupVue(app);
-
-        app.mount('#app');
-
-        WampService.init();
-
-    });
-
+    WampService.init();
 });

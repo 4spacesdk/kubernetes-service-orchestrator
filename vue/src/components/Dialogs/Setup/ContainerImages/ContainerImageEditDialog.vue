@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ReferenceData } from "@/core/referenceData";
 import { useDialogSave } from "@/composables/useDialogSave";
 import { computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch } from "vue";
 import { ContainerImage, ContainerRegistry, GithubIntegration } from "@/core/services/Deploy/models";
@@ -77,10 +78,7 @@ onMounted(() => {
 });
 
 function loadGithubIntegrations() {
-    Api.githubIntegrations()
-        .get()
-        .orderAsc("name")
-        .find(items => {
+    ReferenceData.githubIntegrations().then(items => {
             githubIntegrations.value = items;
             pickTheOnlyGithubIntegration();
         });
@@ -99,10 +97,7 @@ function pickTheOnlyGithubIntegration() {
 
 function loadRegistries() {
     isLoadingRegistries.value = true;
-    Api.containerRegistries()
-        .get()
-        .orderAsc("name")
-        .find(items => {
+    ReferenceData.containerRegistries().then(items => {
             containerRegistries.value = items;
             isLoadingRegistries.value = false;
         });

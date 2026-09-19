@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ReferenceData } from "@/core/referenceData";
 import { useDialogSave } from "@/composables/useDialogSave";
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
 import {DatabaseService, Workspace} from "@/core/services/Deploy/models";
@@ -39,8 +40,7 @@ function render() {
     showDialog.value = true;
 
     isLoading.value = true;
-    Api.databaseServices().get()
-        .find(response => {
+    ReferenceData.databaseServices().then(response => {
             items.value = response;
             isLoading.value = false;
         });

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ReferenceData } from "@/core/referenceData";
 import { useDialogSave } from "@/composables/useDialogSave";
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
 import {Domain, Gateway, System} from "@/core/services/Deploy/models";
@@ -49,7 +50,7 @@ function render() {
     showGatewayApi.value = System.Instance.is_network_gateway_api_supported ?? false;
 
     if (showGatewayApi.value) {
-        Api.gateways().get().orderAsc('name').find(items => {
+        ReferenceData.gateways().then(items => {
             gateways.value = items;
         });
     }

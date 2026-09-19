@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ReferenceData } from "@/core/referenceData";
 import { dnsLabelRule } from "@/core/kubernetesNames";
 import { useDialogSave } from "@/composables/useDialogSave";
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
@@ -68,22 +69,19 @@ function render() {
     }
 
     isLoadingEmailServices.value = true;
-    Api.emailServices().get()
-        .find(response => {
+    ReferenceData.emailServices().then(response => {
             emailServiceItems.value = response;
             isLoadingEmailServices.value = false;
         });
 
     isLoadingDatabaseServices.value = true;
-    Api.databaseServices().get()
-        .find(response => {
+    ReferenceData.databaseServices().then(response => {
             databaseServiceItems.value = response;
             isLoadingDatabaseServices.value = false;
         });
 
     isLoadingDomains.value = true;
-    Api.domains().get()
-        .find(response => {
+    ReferenceData.domains().then(response => {
             domainItems.value = response;
             isLoadingDomains.value = false;
         });

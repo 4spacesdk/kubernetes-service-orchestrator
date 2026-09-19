@@ -18,6 +18,7 @@
 * Lists: search, filters, page and sort kept in the url, sortable columns, clickable names ([#53](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/53)), keyboard shortcuts
 * Update the version of several deployments at once
 * Duplicate on most setup entities
+* Faster start: the app loads half as much before it shows, and dialogs reuse the lists they pick from
 * Terminate and Delete moved into a menu on workspaces and gateways
 * Upgraded to PHP 8.5, Alpine 3.24 and CodeIgniter 4.7. The image also builds on arm64
 * Added unit, database and integration test suites

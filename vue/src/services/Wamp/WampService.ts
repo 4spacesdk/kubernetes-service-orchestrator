@@ -1,4 +1,3 @@
-import * as autobahn from 'autobahn-browser';
 import AuthService from "@/services/AuthService";
 import {WampSubscription} from "@/services/Wamp/WampSubscription";
 import ApiService from "@/services/ApiService";
@@ -9,11 +8,16 @@ class WampService {
     private subscriptions: WampSubscription[] = [];
     private session?: any;
 
+    /**
+     * The push client is fetched here rather than bundled with the start of the app: it is
+     * a third of what had to load before anything was drawn (PERF-2). Subscriptions made
+     * before it connects wait in `subscriptions`.
+     */
     public init() {
-        this.connect('realm1');
+        import('autobahn-browser').then(autobahn => this.connect(autobahn, 'realm1'));
     }
 
-    private connect(realm: string): void {
+    private connect(autobahn: any, realm: string): void {
         // console.warn('WampService initialize : ', environment.socketUrl);
 
         this.close();

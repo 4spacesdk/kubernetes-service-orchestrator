@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ReferenceData } from "@/core/referenceData";
 import { useDialogSave } from "@/composables/useDialogSave";
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
 import {EmailService, Workspace} from "@/core/services/Deploy/models";
@@ -39,8 +40,7 @@ function render() {
     showDialog.value = true;
 
     isLoading.value = true;
-    Api.emailServices().get()
-        .find(response => {
+    ReferenceData.emailServices().then(response => {
             items.value = response;
             isLoading.value = false;
         });

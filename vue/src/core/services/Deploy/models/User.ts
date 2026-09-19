@@ -5,7 +5,6 @@
  */
 import {UserDefinition} from "./definitions/UserDefinition";
 import {RbacPermission} from "@/core/services/Deploy/models/RbacPermission";
-import _ from "lodash";
 
 export class User extends UserDefinition {
 
@@ -40,7 +39,7 @@ export class User extends UserDefinition {
     }
 
     public hasPermission(value: string | string[]): boolean {
-        if (_.isArray(value)) {
+        if (Array.isArray(value)) {
             return value.some(permission => this.allPermissions.includes(permission));
         } else {
             return this.allPermissions.includes(value);
