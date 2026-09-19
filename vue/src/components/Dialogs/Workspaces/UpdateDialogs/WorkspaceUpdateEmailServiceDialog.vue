@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useDialogSave } from "@/composables/useDialogSave";
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
 import {EmailService, Workspace} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
@@ -10,6 +11,8 @@ export interface WorkspaceUpdateEmailServiceDialog_Input {
 }
 
 const props = defineProps<{ input: WorkspaceUpdateEmailServiceDialog_Input, events: DialogEventsInterface }>();
+
+const { isSaving, save } = useDialogSave();
 
 const used = ref(false);
 const showDialog = ref(false);
@@ -55,20 +58,10 @@ function close() {
 function onSaveBtnClicked() {
     const api = Api.workspaces().updateEmailServiceIdPutById(props.input.workspace.id!)
         .value(value.value!)
-    api.setErrorHandler(response => {
-        if (response.error) {
-            bus.emit('toast', {
-                text: response.error
-            });
-        }
-        return false;
-    });
-    api.save(null, newItem => {
+    save(api, null, newItem => {
         bus.emit('workspaceSaved', newItem);
         close();
     });
-
-    close();
 }
 
 function onCloseBtnClicked() {
@@ -119,6 +112,7 @@ function onCloseBtnClicked() {
                     variant="tonal"
                     prepend-icon="fa fa-check"
                     color="green"
+                    :loading="isSaving"
                     @click="onSaveBtnClicked">
                     Save
                 </v-btn>

@@ -1,6 +1,7 @@
 <?php namespace App\Entities;
 
 use App\Exceptions\ValidationException;
+use App\Libraries\Kubernetes\DnsLabel;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
 use App\Libraries\ZMQ\ChangeEvent;
@@ -63,6 +64,14 @@ class Workspace extends Entity {
         if (strlen($subdomain) == 0) {
             throw new ValidationException("Subdomain missing");
         }
+        // Both end up as names in the cluster. Refused here rather than by Kubernetes on the
+        // first deploy, after the workspace and its deployments exist.
+        if (!DnsLabel::isValid($namespace)) {
+            throw new ValidationException("Invalid namespace '{$namespace}': at most 63 of a-z, 0-9 and -, starting and ending with a letter or digit");
+        }
+        if (!DnsLabel::isValid($subdomain)) {
+            throw new ValidationException("Invalid subdomain '{$subdomain}': at most 63 of a-z, 0-9 and -, starting and ending with a letter or digit");
+        }
         /** @var Workspace $subdomainInUse */
         $subdomainInUse = (new WorkspaceModel())
             ->where('domain_id', $domain->id)
@@ -77,12 +86,9 @@ class Workspace extends Entity {
         $item->deployment_package = $deploymentPackage;
         $item->name_readable = $name;
 
-        $name = strtolower($name); // To lowercase
-        $name = str_replace(' ', '_', $name); // Replace space with _
-        $name = str_replace(',', '', $name); // Remove ,
-        $name = preg_replace("/[^A-Za-z0-9_]/", '', $name); // Remove all non-alphabetic
-        $name = str_replace('_', '-', $name); // Replace _ with -
-        $item->name_system = $name;
+        // "Øster" used to become "ster": strtolower() does not know Ø, and what it left was
+        // stripped.
+        $item->name_system = DnsLabel::from($name);
 
         $item->namespace = $namespace;
         $item->domain_id = $domainId;

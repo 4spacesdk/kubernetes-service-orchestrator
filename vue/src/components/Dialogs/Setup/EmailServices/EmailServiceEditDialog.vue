@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useDialogSave } from "@/composables/useDialogSave";
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
 import {EmailService} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
@@ -10,6 +11,8 @@ export interface EmailServiceEditDialog_Input {
 }
 
 const props = defineProps<{input: EmailServiceEditDialog_Input, events: DialogEventsInterface}>();
+
+const { isSaving, save } = useDialogSave();
 
 const used = ref(false);
 const showDialog = ref(false);
@@ -57,12 +60,10 @@ function close() {
 function onSaveBtnClicked() {
     const api = item.value!.exists() ? Api.emailServices().patchById(item.value!.id!) : Api.emailServices().post();
 
-    api.save(item.value!, newItem => {
+    save(api, item.value!, newItem => {
         bus.emit('emailServiceSaved', newItem);
         close();
     });
-
-    close();
 }
 
 function onCloseBtnClicked() {
@@ -145,6 +146,7 @@ function onCloseBtnClicked() {
                     variant="tonal"
                     prepend-icon="fa fa-check"
                     color="green"
+                    :loading="isSaving"
                     @click="onSaveBtnClicked">
                     Save
                 </v-btn>

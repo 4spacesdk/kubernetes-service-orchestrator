@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useDialogSave } from "@/composables/useDialogSave";
 import { onMounted, ref } from "vue";
 import { ContainerRegistry } from "@/core/services/Deploy/models";
 import { Api } from "@/core/services/Deploy/Api";
@@ -12,6 +13,8 @@ export interface ContainerRegistryEditDialog_Input {
 }
 
 const props = defineProps<{ input: ContainerRegistryEditDialog_Input; events: DialogEventsInterface }>();
+
+const { isSaving, save } = useDialogSave();
 
 const used = ref(false);
 const showDialog = ref(false);
@@ -110,7 +113,7 @@ function onSaveBtnClicked() {
         ? Api.containerRegistries().patchById(item.value.id!)
         : Api.containerRegistries().post();
 
-    api.save(payload(), newItem => {
+    save(api, payload(), newItem => {
         bus.emit("containerRegistrySaved", newItem);
         close();
     });
@@ -440,7 +443,7 @@ function onCloseBtnClicked() {
                 </v-btn>
                 <v-spacer />
                 <v-btn variant="tonal" color="grey" prepend-icon="fa fa-circle-xmark" @click="onCloseBtnClicked"> Close </v-btn>
-                <v-btn flat variant="tonal" prepend-icon="fa fa-check" color="green" @click="onSaveBtnClicked"> Save </v-btn>
+                <v-btn flat variant="tonal" prepend-icon="fa fa-check" color="green" :loading="isSaving" @click="onSaveBtnClicked"> Save </v-btn>
             </v-card-actions>
         </v-card>
     </v-dialog>

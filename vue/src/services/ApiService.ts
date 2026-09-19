@@ -469,6 +469,10 @@ class ApiService {
                         return true;
                     }
                     break;
+                default:
+                    // Any other refusal with a body - a 403 from a delete that is not
+                    // allowed, a 404 - reaches the caller instead of leaving it waiting.
+                    return typeof error.response.data === "object" && error.response.data !== null;
             }
         }
         return false;

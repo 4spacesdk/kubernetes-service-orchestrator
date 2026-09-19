@@ -8,6 +8,8 @@
 * Custom resources without a namespace landed in `default`
 * Init containers from another registry could not be pulled
 * Setting a deployment's version reported success when the deploy failed
+* A failed save in a dialog was silent, and a double click saved twice
+* Creating a workspace refused names starting with Æ, Ø or Å, and namespaces longer than 15 characters
 * Security-related improvements
 
 ### Enhancements

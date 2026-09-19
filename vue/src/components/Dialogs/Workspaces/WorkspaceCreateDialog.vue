@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { dnsLabelRule, toDnsLabel } from "@/core/kubernetesNames";
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
 import {DeploymentPackage, Domain, System, Workspace} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
@@ -52,15 +53,12 @@ function close() {
     props.events.onClose();
 }
 
+/**
+ * The package's namespace and the name, as a DNS label. It used to drop only the first
+ * character Kubernetes does not accept, so "Øster Ås" left an "å" behind.
+ */
 function generateNamespace() {
-    let system = item.value!.name
-        ?.toLocaleLowerCase() // To lowercase
-        ?.replaceAll(' ', '_') // Replace space with _
-        ?.replaceAll(',', '') // Remove ,
-        ?.replace(/[^A-Za-z0-9_]/, '') // Remove all non-alphabetic
-        ?.replaceAll('_', '-') // Replace _ with -
-        ?? '';
-    item.value!.namespace = `${props.input.deploymentPackage.namespace}-${system}`.substring(0, 63);
+    item.value!.namespace = toDnsLabel(`${props.input.deploymentPackage.namespace ?? ''}-${item.value!.name_readable ?? ''}`);
 }
 
 // </editor-fold>
@@ -129,7 +127,7 @@ function onCloseBtnClicked() {
                                 @update:modelValue="onNameChanged"
                                 :rules="[
                                     v => (v?.length ?? 0) >= 4 || 'Must be at least four characters long',
-                                    v => /^[a-zA-Z0-9](.*[a-zA-Z0-9])?$/.test(v) || 'Cannot start or end with a space character'
+                                    v => /^\S(.*\S)?$/.test(v ?? '') || 'Cannot start or end with a space'
                                 ]"
                             />
                         </v-col>
@@ -197,13 +195,11 @@ function onCloseBtnClicked() {
                                 <v-text-field
                                     v-model="item!.namespace"
                                     variant="outlined"
-                                    :rules="[
-                                    v => /^(?!^[0-9]*$)^([a-z0-9]([a-z0-9]|-(?!-)){0,14}(?<!-)$)/.test(v) || 'Invalid format'
-                                ]"
+                                    :rules="[dnsLabelRule]"
                                     label="Namespace"
                                     clearable
                                     persistent-hint
-                                    hint="Max 63 characters, lowercase-only"/>
+                                    hint="Max 63 characters: a-z, 0-9 and -"/>
                             </v-col>
                         </v-row>
                     </v-expand-transition>

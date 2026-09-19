@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useDialogSave } from "@/composables/useDialogSave";
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
 import {Deployment} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
@@ -10,6 +11,8 @@ export interface DeploymentUpdateUpdateManagementDialog_Input {
 }
 
 const props = defineProps<{ input: DeploymentUpdateUpdateManagementDialog_Input, events: DialogEventsInterface }>();
+
+const { isSaving, save } = useDialogSave();
 
 const used = ref(false);
 const showDialog = ref(false);
@@ -52,20 +55,10 @@ function onSaveBtnClicked() {
         .enabled(enabled.value!)
         .tagRegex(tagRegex.value!)
         .requireApproval(requireApproval.value!);
-    api.setErrorHandler(response => {
-        if (response.error) {
-            bus.emit('toast', {
-                text: response.error
-            });
-        }
-        return false;
-    });
-    api.save(null, newItem => {
+    save(api, null, newItem => {
         bus.emit('deploymentSaved', newItem);
         close();
     });
-
-    close();
 }
 
 function onCloseBtnClicked() {
@@ -124,6 +117,7 @@ function onCloseBtnClicked() {
                     variant="tonal"
                     prepend-icon="fa fa-check"
                     color="green"
+                    :loading="isSaving"
                     @click="onSaveBtnClicked">
                     Save
                 </v-btn>

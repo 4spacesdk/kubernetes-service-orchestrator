@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useDialogSave } from "@/composables/useDialogSave";
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
 import {PodioFieldReference, PostUpdateAction} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
@@ -23,6 +24,8 @@ interface Variable {
 }
 
 const props = defineProps<{ input: PostUpdateActionEditDialog_Input, events: DialogEventsInterface }>();
+
+const { isSaving, save } = useDialogSave();
 
 const used = ref(false);
 const showDialog = ref(false);
@@ -110,7 +113,7 @@ function onSaveBtnClicked() {
 
     const api = item.value!.exists() ? Api.postUpdateActions().patchById(item.value!.id!) : Api.postUpdateActions().post();
 
-    api.save(item.value!, newItem => {
+    save(api, item.value!, newItem => {
         bus.emit('postUpdateActionSaved', newItem);
 
         if (props.input.onSaveCallback) {
@@ -118,8 +121,6 @@ function onSaveBtnClicked() {
         }
         close();
     });
-
-    close();
 }
 
 function onCloseBtnClicked() {
@@ -271,6 +272,7 @@ function onVariableClicked(variable: Variable) {
                     variant="tonal"
                     prepend-icon="fa fa-check"
                     color="green"
+                    :loading="isSaving"
                     @click="onSaveBtnClicked">
                     Save
                 </v-btn>

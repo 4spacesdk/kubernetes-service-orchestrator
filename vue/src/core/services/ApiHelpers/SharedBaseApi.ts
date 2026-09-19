@@ -171,6 +171,13 @@ export class SharedBaseApi<T = any> {
     private post(data: any, next?: (value: T) => void): ApiRequest {
         const request = new ApiRequest();
         return ApiService.post(request, this.getAxios(), this.uri!, data, this.getParams(), (response: any) => {
+            // A refusal is a refusal even when it carries a resource. Only for a caller that
+            // set an error handler, so nothing that did not ask for it behaves differently.
+            if (response?.status === "ERROR" && this.errorHandler) {
+                if (!this.errorHandler(response)) {
+                    return;
+                }
+            }
             if (next) {
                 if (response.resources) {
                     next(
@@ -195,6 +202,13 @@ export class SharedBaseApi<T = any> {
     private put(data: any, next?: (value: T) => void): ApiRequest {
         const request = new ApiRequest();
         return ApiService.put(request, this.getAxios(), this.uri!, data, this.getParams(), (response: any) => {
+            // A refusal is a refusal even when it carries a resource. Only for a caller that
+            // set an error handler, so nothing that did not ask for it behaves differently.
+            if (response?.status === "ERROR" && this.errorHandler) {
+                if (!this.errorHandler(response)) {
+                    return;
+                }
+            }
             if (next) {
                 if (response.resources) {
                     next(
@@ -219,6 +233,13 @@ export class SharedBaseApi<T = any> {
     private patch(data: any, next?: (value: T) => void): ApiRequest {
         const request = new ApiRequest();
         return ApiService.patch(request, this.getAxios(), this.uri!, data, this.getParams(), (response: any) => {
+            // A refusal is a refusal even when it carries a resource. Only for a caller that
+            // set an error handler, so nothing that did not ask for it behaves differently.
+            if (response?.status === "ERROR" && this.errorHandler) {
+                if (!this.errorHandler(response)) {
+                    return;
+                }
+            }
             if (next) {
                 if (response.resources) {
                     next(
@@ -243,6 +264,13 @@ export class SharedBaseApi<T = any> {
     protected executeDelete(next?: (value: T) => void): ApiRequest {
         const request = new ApiRequest();
         return ApiService.delete(request, this.getAxios(), this.uri!, this.getParams(), (response: any) => {
+            // A refusal is a refusal even when it carries a resource. Only for a caller that
+            // set an error handler, so nothing that did not ask for it behaves differently.
+            if (response?.status === "ERROR" && this.errorHandler) {
+                if (!this.errorHandler(response)) {
+                    return;
+                }
+            }
             if (next) {
                 if (response.resources) {
                     next(

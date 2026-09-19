@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useDialogSave } from "@/composables/useDialogSave";
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
 import {Deployment} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
@@ -11,6 +12,8 @@ export interface DeploymentUpdateResourceManagementDialog_Input {
 }
 
 const props = defineProps<{ input: DeploymentUpdateResourceManagementDialog_Input, events: DialogEventsInterface }>();
+
+const { isSaving, save } = useDialogSave();
 
 const used = ref(false);
 const showDialog = ref(false);
@@ -65,15 +68,7 @@ function onSaveBtnClicked() {
         .replicas(replicas.value!)
         .knativeConcurrencyLimitSoft(knativeConcurrencyLimitSoft.value!)
         .knativeConcurrencyLimitHard(knativeConcurrencyLimitHard.value!);
-    api.setErrorHandler(response => {
-        if (response.error) {
-            bus.emit('toast', {
-                text: response.error
-            });
-        }
-        return false;
-    });
-    api.save(null, newItem => {
+    save(api, null, newItem => {
         props.input.deployment.cpu_limit = cpuLimit.value!;
         props.input.deployment.cpu_request = cpuRequest.value!;
         props.input.deployment.memory_limit = memoryLimit.value!;
@@ -84,8 +79,6 @@ function onSaveBtnClicked() {
         bus.emit('deploymentSaved', newItem);
         close();
     });
-
-    close();
 }
 
 function onCloseBtnClicked() {
@@ -200,6 +193,7 @@ function onCloseBtnClicked() {
                     variant="tonal"
                     prepend-icon="fa fa-check"
                     color="green"
+                    :loading="isSaving"
                     @click="onSaveBtnClicked">
                     Save
                 </v-btn>

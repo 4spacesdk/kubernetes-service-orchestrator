@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useDialogSave } from "@/composables/useDialogSave";
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
 import {ContainerImage, DeploymentSpecification, System} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
@@ -13,6 +14,8 @@ export interface DeploymentSpecificationEditDialog_Input {
 }
 
 const props = defineProps<{ input: DeploymentSpecificationEditDialog_Input, events: DialogEventsInterface }>();
+
+const { form, isSaving, save } = useDialogSave();
 
 const used = ref(false);
 const showDialog = ref(false);
@@ -142,12 +145,10 @@ function onSaveBtnClicked() {
 
     const api = item.value!.exists() ? Api.deploymentSpecifications().patchById(item.value!.id!) : Api.deploymentSpecifications().post();
 
-    api.save(item.value!, newItem => {
+    save(api, item.value!, newItem => {
         bus.emit('deploymentSpecificationSaved', newItem);
         close();
     });
-
-    close();
 }
 
 function onCloseBtnClicked() {
@@ -180,318 +181,321 @@ function onVariableClicked(text: string) {
             <v-card-text
                 class="mb-4"
             >
-                <v-row
-                    dense
-                >
-                    <v-col cols="12">
-                        <v-text-field
-                            variant="outlined"
-                            v-model="item.name"
-                            :rules="[
-                                v => /^[a-z0-9-]{1,50}$/.test(v) || 'Invalid format'
-                            ]"
-                            label="Name"/>
-                    </v-col>
-
-                    <v-col
-                        v-if="item.workload_type == WorkloadTypes.Deployment || item.workload_type == WorkloadTypes.KNativeService || item.workload_type == WorkloadTypes.DaemonSet"
-                        cols="12"
+                <v-form ref="form" @submit.prevent>
+                    <v-row
+                        dense
                     >
-                        <v-select
-                            v-model="item.container_image_id"
-                            :loading="isLoadingContainerImageItems"
-                            :items="containerImageItems"
-                            item-title="name"
-                            item-value="id"
-                            variant="outlined"
-                            label="Container Image"/>
-                    </v-col>
+                        <v-col cols="12">
+                            <v-text-field
+                                variant="outlined"
+                                v-model="item.name"
+                                :rules="[
+                                    v => /^[a-z0-9-]{1,50}$/.test(v) || 'Invalid format'
+                                ]"
+                                label="Name"/>
+                        </v-col>
 
-                    <v-col cols="12">
-                        <v-card>
-                            <v-checkbox
-                                v-model="item.enable_database"
-                                label="Database"
-                                hide-details
-                            />
-                            <div
-                                v-if="item.enable_database"
-                                class="px-2"
-                            >
-                                <v-row>
-                                    <v-col cols="12">
-                                        <v-switch
-                                            v-model="isCustomMigrationImage"
-                                            variant="outlined"
-                                            label="Use different container image for migration"
-                                            density="compact"
-                                            hide-details
-                                            color="secondary"
-                                        />
-                                    </v-col>
-                                    <v-col cols="12"
-                                           v-if="isCustomMigrationImage"
-                                    >
-                                        <v-select
-                                            v-model="item.database_migration_container_image_id"
-                                            :loading="isLoadingContainerImageItems"
-                                            :items="containerImageItems"
-                                            item-title="name"
-                                            item-value="id"
-                                            variant="outlined"
-                                            label="Container Image"
-                                            density="compact"
-                                            hide-details
-                                        />
-                                    </v-col>
-                                    <v-col cols="12"
-                                           v-if="isCustomMigrationImage"
-                                    >
-                                        <v-row>
-                                            <v-col cols="6">
-                                                <v-select
-                                                    v-model="item.database_migration_container_image_tag_policy"
-                                                    :items="migrationTagPolicies"
-                                                    item-title="name"
-                                                    item-value="identifier"
-                                                    variant="outlined"
-                                                    label="Tag policy"
-                                                    density="compact"
-                                                    hide-details
-                                                />
-                                            </v-col>
-                                            <v-col cols="6"
-                                                   v-if="item.database_migration_container_image_tag_policy == ContainerImageTagPolicies.Static"
-                                            >
-                                                <v-text-field
-                                                    v-model="item.database_migration_container_image_tag_value"
-                                                    variant="outlined"
-                                                    label="Tag"
-                                                    density="compact"
-                                                    hide-details
-                                                />
-                                            </v-col>
-                                        </v-row>
-                                    </v-col>
-
-                                    <v-col cols="12">
-                                        <v-text-field
-                                            variant="outlined"
-                                            v-model="item.database_migration_command"
-                                            label="Migration command"
-                                            hint="cd /var/www/html/ci4 && php spark migrate"
-                                            persistent-hint
-                                        />
-                                    </v-col>
-
-                                    <v-col cols="12">
-                                        <v-row>
-                                            <v-col cols="6">
-                                                <v-select
-                                                    v-model="item.database_migration_verification_type"
-                                                    :items="migrationVerificationTypes"
-                                                    item-title="name"
-                                                    item-value="identifier"
-                                                    variant="outlined"
-                                                    label="Migration verification type"
-                                                    density="compact"
-                                                />
-                                            </v-col>
-                                            <v-col cols="6">
-                                                <v-text-field
-                                                    v-model="item.database_migration_verification_value"
-                                                    variant="outlined"
-                                                    label="Verification value"
-                                                    density="compact"
-                                                    persistent-hint
-                                                    hint="Ex. Done. or (?:[a-z0-9\-]{0,61})?"
-                                                />
-                                            </v-col>
-                                        </v-row>
-                                    </v-col>
-                                </v-row>
-                            </div>
-                        </v-card>
-                    </v-col>
-
-                    <v-col cols="12"
-                           class="mt-4"
-                    >
-                        <v-card>
-                            <v-checkbox
-                                v-model="item.enable_cronjob"
-                                label="Cronjob"
-                                hide-details
-                            />
-                        </v-card>
-                    </v-col>
-
-                    <v-col
-                        cols="12"
-                        class="mt-4"
-                    >
-                        <v-card>
-                            <v-checkbox
-                                v-model="item.enable_external_access"
-                                label="External access"
-                                hide-details
-                            />
-                            <div
-                                v-if="item.enable_external_access"
-                                class="px-2"
-                            >
-                                <v-row>
-                                    <v-col cols="6">
-                                        <v-select
-                                            v-model="item.network_type"
-                                            :items="networkTypes"
-                                            item-title="name"
-                                            item-value="identifier"
-                                            variant="outlined"
-                                            label="Network type"
-                                            density="compact"
-                                        />
-                                    </v-col>
-                                    <v-col cols="6">
-                                        <v-text-field
-                                            variant="outlined"
-                                            v-model="item.domain_tls"
-                                            label="Protocol"
-                                            hint="http, https, ws, wss"
-                                            persistent-hint
-                                        />
-                                    </v-col>
-                                    <v-col cols="6">
-                                        <v-text-field
-                                            variant="outlined"
-                                            v-model="item.domain_prefix"
-                                            label="Domain prefix"
-                                            hint="api-, app-"
-                                            persistent-hint
-                                        />
-                                    </v-col>
-                                    <v-col cols="6">
-                                        <v-text-field
-                                            variant="outlined"
-                                            v-model="item.domain_suffix"
-                                            label="Domain suffix"
-                                            hint="/products, /users"
-                                            persistent-hint
-                                        />
-                                    </v-col>
-                                    <v-col
-                                        v-if="item.network_type == NetworkTypes.NginxIngress"
-                                        cols="6">
-                                        <v-text-field
-                                            variant="outlined"
-                                            v-model="item.domain_aliases"
-                                            label="Aliases"
-                                            persistent-hint
-                                            hint="Comma-seperated: itk,1tk"/>
-                                    </v-col>
-                                    <v-col
-                                        v-if="item.network_type == NetworkTypes.GatewayApi"
-                                        cols="6">
-                                        <v-text-field
-                                            variant="outlined"
-                                            type="number"
-                                            v-model.number="item.gateway_backend_timeout"
-                                            label="Backend timeout (seconds)"
-                                            persistent-hint
-                                            hint="GKE Gateway only. Empty keeps the GCP default of 30s"/>
-                                    </v-col>
-                                </v-row>
-                            </div>
-                        </v-card>
-                    </v-col>
-
-                    <v-col
-                        v-if="item.workload_type == WorkloadTypes.Deployment || item.workload_type == WorkloadTypes.DaemonSet || item.workload_type == WorkloadTypes.CustomResource"
-                        cols="12"
-                        class="mt-4"
-                    >
-                        <v-card>
-                            <v-checkbox
-                                v-model="item.enable_internal_access"
-                                label="Internal access"
-                                hide-details
-                            />
-                        </v-card>
-                    </v-col>
-
-                    <v-col
-                        cols="12"
-                        class="mt-4"
-                    >
-                        <v-card>
-                            <v-checkbox
-                                v-model="item.enable_rbac"
-                                label="RBAC"
-                                hide-details
-                            />
-                            <div
-                                v-if="item.enable_rbac"
-                                class="px-2"
-                            >
-                                <v-row>
-                                    <v-col cols="12">
-                                        <span>Rules can be added from the settings button</span>
-                                    </v-col>
-                                </v-row>
-                            </div>
-                        </v-card>
-                    </v-col>
-
-                    <v-col
-                        cols="12"
-                        class="mt-4"
-                    >
-                        <v-card>
-                            <v-checkbox
-                                v-model="item.enable_volumes"
-                                label="Volumes"
-                                hide-details
-                            />
-                            <div
-                                v-if="item.enable_volumes"
-                                class="px-2"
-                            >
-                                <v-row>
-                                    <v-col cols="12">
-                                        <span>Volumes can be added from the settings button or directly to deployments</span>
-                                    </v-col>
-                                </v-row>
-                            </div>
-                        </v-card>
-                    </v-col>
-
-                    <v-col cols="12">
-                        <div
-                            style="position: relative"
-                            v-if="item.workload_type == WorkloadTypes.CustomResource"
+                        <v-col
+                            v-if="item.workload_type == WorkloadTypes.Deployment || item.workload_type == WorkloadTypes.KNativeService || item.workload_type == WorkloadTypes.DaemonSet"
+                            cols="12"
                         >
-                            <CodeEditor
-                                v-model="item.custom_resource"
-                                :languages="[['yaml']]"
-                                class="w-100"
-                                height="500px"
-                                theme="atom-one-dark"
-                                font-size="13px"
-                                :line-nums="true"
-                            />
+                            <v-select
+                                v-model="item.container_image_id"
+                                :loading="isLoadingContainerImageItems"
+                                :items="containerImageItems"
+                                item-title="name"
+                                item-value="id"
+                                variant="outlined"
+                                :rules="[v => !!v || 'Required']"
+                                label="Container Image"/>
+                        </v-col>
 
-                            <div
-                                style="position: absolute; top: -2px; right: 40px;"
-                            >
-                                <variable-btn
-                                    color="grey"
-                                    @add-variable="newText => onVariableClicked(newText)"
+                        <v-col cols="12">
+                            <v-card>
+                                <v-checkbox
+                                    v-model="item.enable_database"
+                                    label="Database"
+                                    hide-details
                                 />
-                            </div>
-                        </div>
-                    </v-col>
-                </v-row>
+                                <div
+                                    v-if="item.enable_database"
+                                    class="px-2"
+                                >
+                                    <v-row>
+                                        <v-col cols="12">
+                                            <v-switch
+                                                v-model="isCustomMigrationImage"
+                                                variant="outlined"
+                                                label="Use different container image for migration"
+                                                density="compact"
+                                                hide-details
+                                                color="secondary"
+                                            />
+                                        </v-col>
+                                        <v-col cols="12"
+                                               v-if="isCustomMigrationImage"
+                                        >
+                                            <v-select
+                                                v-model="item.database_migration_container_image_id"
+                                                :loading="isLoadingContainerImageItems"
+                                                :items="containerImageItems"
+                                                item-title="name"
+                                                item-value="id"
+                                                variant="outlined"
+                                                label="Container Image"
+                                                density="compact"
+                                                hide-details
+                                            />
+                                        </v-col>
+                                        <v-col cols="12"
+                                               v-if="isCustomMigrationImage"
+                                        >
+                                            <v-row>
+                                                <v-col cols="6">
+                                                    <v-select
+                                                        v-model="item.database_migration_container_image_tag_policy"
+                                                        :items="migrationTagPolicies"
+                                                        item-title="name"
+                                                        item-value="identifier"
+                                                        variant="outlined"
+                                                        label="Tag policy"
+                                                        density="compact"
+                                                        hide-details
+                                                    />
+                                                </v-col>
+                                                <v-col cols="6"
+                                                       v-if="item.database_migration_container_image_tag_policy == ContainerImageTagPolicies.Static"
+                                                >
+                                                    <v-text-field
+                                                        v-model="item.database_migration_container_image_tag_value"
+                                                        variant="outlined"
+                                                        label="Tag"
+                                                        density="compact"
+                                                        hide-details
+                                                    />
+                                                </v-col>
+                                            </v-row>
+                                        </v-col>
 
+                                        <v-col cols="12">
+                                            <v-text-field
+                                                variant="outlined"
+                                                v-model="item.database_migration_command"
+                                                label="Migration command"
+                                                hint="cd /var/www/html/ci4 && php spark migrate"
+                                                persistent-hint
+                                            />
+                                        </v-col>
+
+                                        <v-col cols="12">
+                                            <v-row>
+                                                <v-col cols="6">
+                                                    <v-select
+                                                        v-model="item.database_migration_verification_type"
+                                                        :items="migrationVerificationTypes"
+                                                        item-title="name"
+                                                        item-value="identifier"
+                                                        variant="outlined"
+                                                        label="Migration verification type"
+                                                        density="compact"
+                                                    />
+                                                </v-col>
+                                                <v-col cols="6">
+                                                    <v-text-field
+                                                        v-model="item.database_migration_verification_value"
+                                                        variant="outlined"
+                                                        label="Verification value"
+                                                        density="compact"
+                                                        persistent-hint
+                                                        hint="Ex. Done. or (?:[a-z0-9\-]{0,61})?"
+                                                    />
+                                                </v-col>
+                                            </v-row>
+                                        </v-col>
+                                    </v-row>
+                                </div>
+                            </v-card>
+                        </v-col>
+
+                        <v-col cols="12"
+                               class="mt-4"
+                        >
+                            <v-card>
+                                <v-checkbox
+                                    v-model="item.enable_cronjob"
+                                    label="Cronjob"
+                                    hide-details
+                                />
+                            </v-card>
+                        </v-col>
+
+                        <v-col
+                            cols="12"
+                            class="mt-4"
+                        >
+                            <v-card>
+                                <v-checkbox
+                                    v-model="item.enable_external_access"
+                                    label="External access"
+                                    hide-details
+                                />
+                                <div
+                                    v-if="item.enable_external_access"
+                                    class="px-2"
+                                >
+                                    <v-row>
+                                        <v-col cols="6">
+                                            <v-select
+                                                v-model="item.network_type"
+                                                :items="networkTypes"
+                                                item-title="name"
+                                                item-value="identifier"
+                                                variant="outlined"
+                                                label="Network type"
+                                                density="compact"
+                                            />
+                                        </v-col>
+                                        <v-col cols="6">
+                                            <v-text-field
+                                                variant="outlined"
+                                                v-model="item.domain_tls"
+                                                label="Protocol"
+                                                hint="http, https, ws, wss"
+                                                persistent-hint
+                                            />
+                                        </v-col>
+                                        <v-col cols="6">
+                                            <v-text-field
+                                                variant="outlined"
+                                                v-model="item.domain_prefix"
+                                                label="Domain prefix"
+                                                hint="api-, app-"
+                                                persistent-hint
+                                            />
+                                        </v-col>
+                                        <v-col cols="6">
+                                            <v-text-field
+                                                variant="outlined"
+                                                v-model="item.domain_suffix"
+                                                label="Domain suffix"
+                                                hint="/products, /users"
+                                                persistent-hint
+                                            />
+                                        </v-col>
+                                        <v-col
+                                            v-if="item.network_type == NetworkTypes.NginxIngress"
+                                            cols="6">
+                                            <v-text-field
+                                                variant="outlined"
+                                                v-model="item.domain_aliases"
+                                                label="Aliases"
+                                                persistent-hint
+                                                hint="Comma-seperated: itk,1tk"/>
+                                        </v-col>
+                                        <v-col
+                                            v-if="item.network_type == NetworkTypes.GatewayApi"
+                                            cols="6">
+                                            <v-text-field
+                                                variant="outlined"
+                                                type="number"
+                                                v-model.number="item.gateway_backend_timeout"
+                                                label="Backend timeout (seconds)"
+                                                persistent-hint
+                                                hint="GKE Gateway only. Empty keeps the GCP default of 30s"/>
+                                        </v-col>
+                                    </v-row>
+                                </div>
+                            </v-card>
+                        </v-col>
+
+                        <v-col
+                            v-if="item.workload_type == WorkloadTypes.Deployment || item.workload_type == WorkloadTypes.DaemonSet || item.workload_type == WorkloadTypes.CustomResource"
+                            cols="12"
+                            class="mt-4"
+                        >
+                            <v-card>
+                                <v-checkbox
+                                    v-model="item.enable_internal_access"
+                                    label="Internal access"
+                                    hide-details
+                                />
+                            </v-card>
+                        </v-col>
+
+                        <v-col
+                            cols="12"
+                            class="mt-4"
+                        >
+                            <v-card>
+                                <v-checkbox
+                                    v-model="item.enable_rbac"
+                                    label="RBAC"
+                                    hide-details
+                                />
+                                <div
+                                    v-if="item.enable_rbac"
+                                    class="px-2"
+                                >
+                                    <v-row>
+                                        <v-col cols="12">
+                                            <span>Rules can be added from the settings button</span>
+                                        </v-col>
+                                    </v-row>
+                                </div>
+                            </v-card>
+                        </v-col>
+
+                        <v-col
+                            cols="12"
+                            class="mt-4"
+                        >
+                            <v-card>
+                                <v-checkbox
+                                    v-model="item.enable_volumes"
+                                    label="Volumes"
+                                    hide-details
+                                />
+                                <div
+                                    v-if="item.enable_volumes"
+                                    class="px-2"
+                                >
+                                    <v-row>
+                                        <v-col cols="12">
+                                            <span>Volumes can be added from the settings button or directly to deployments</span>
+                                        </v-col>
+                                    </v-row>
+                                </div>
+                            </v-card>
+                        </v-col>
+
+                        <v-col cols="12">
+                            <div
+                                style="position: relative"
+                                v-if="item.workload_type == WorkloadTypes.CustomResource"
+                            >
+                                <CodeEditor
+                                    v-model="item.custom_resource"
+                                    :languages="[['yaml']]"
+                                    class="w-100"
+                                    height="500px"
+                                    theme="atom-one-dark"
+                                    font-size="13px"
+                                    :line-nums="true"
+                                />
+
+                                <div
+                                    style="position: absolute; top: -2px; right: 40px;"
+                                >
+                                    <variable-btn
+                                        color="grey"
+                                        @add-variable="newText => onVariableClicked(newText)"
+                                    />
+                                </div>
+                            </div>
+                        </v-col>
+                    </v-row>
+
+                </v-form>
             </v-card-text>
             <v-divider/>
             <v-card-actions>
@@ -509,6 +513,7 @@ function onVariableClicked(text: string) {
                     variant="tonal"
                     prepend-icon="fa fa-check"
                     color="green"
+                    :loading="isSaving"
                     @click="onSaveBtnClicked">
                     Save
                 </v-btn>

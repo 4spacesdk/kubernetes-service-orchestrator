@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useDialogSave } from "@/composables/useDialogSave";
 import {onMounted, onUnmounted, ref} from 'vue'
 import {Gateway, GatewayAddress} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
@@ -10,6 +11,8 @@ export interface GatewayEditDialog_Input {
 }
 
 const props = defineProps<{ input: GatewayEditDialog_Input, events: DialogEventsInterface }>();
+
+const { isSaving, save } = useDialogSave();
 
 const used = ref(false);
 const showDialog = ref(false);
@@ -76,17 +79,6 @@ function close() {
 }
 
 function onSaveBtnClicked() {
-    isLoading.value = true;
-
-    const saveAddresses = (gateway: Gateway) => {
-        Api.gateways().updateGatewayAddressesPutById(gateway.id!)
-            .save({values: item.value.gateway_addresses || []}, () => {
-                bus.emit('gatewaySaved', gateway);
-                isLoading.value = false;
-                close();
-            });
-    }
-
     // The addresses belong to updateGatewayAddresses below, which replaces the whole set.
     // Sending them here as well makes the gateway call write address rows that the very
     // next call soft deletes again - on a create, where they carry no id yet, that is a
@@ -95,17 +87,16 @@ function onSaveBtnClicked() {
     const payload = new Gateway(JSON.parse(JSON.stringify(item.value)));
     payload.gateway_addresses = undefined;
 
-    if (item.value.exists()) {
-        Api.gateways().patchById(item.value.id!)
-            .save(payload, newItem => {
-                saveAddresses(newItem);
-            });
-    } else {
-        Api.gateways().post()
-            .save(payload, newItem => {
-                saveAddresses(newItem);
-            });
-    }
+    const api = item.value.exists() ? Api.gateways().patchById(item.value.id!) : Api.gateways().post();
+    save(api, payload, gateway => {
+        // Should the addresses fail, a second Save patches this gateway rather than making
+        // another one.
+        item.value.id = gateway.id;
+        save(Api.gateways().updateGatewayAddressesPutById(gateway.id!), {values: item.value.gateway_addresses || []}, () => {
+            bus.emit('gatewaySaved', gateway);
+            close();
+        });
+    });
 }
 
 function onCloseBtnClicked() {
@@ -224,6 +215,7 @@ function onCloseBtnClicked() {
                     variant="tonal"
                     prepend-icon="fa fa-check"
                     color="green"
+                    :loading="isSaving"
                     @click="onSaveBtnClicked">
                     Save
                 </v-btn>

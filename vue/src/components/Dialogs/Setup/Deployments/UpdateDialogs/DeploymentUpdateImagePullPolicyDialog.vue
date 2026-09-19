@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useDialogSave } from "@/composables/useDialogSave";
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
 import {Deployment} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
@@ -11,6 +12,8 @@ export interface DeploymentUpdateImagePullPolicyDialog_Input {
 }
 
 const props = defineProps<{ input: DeploymentUpdateImagePullPolicyDialog_Input, events: DialogEventsInterface }>();
+
+const { isSaving, save } = useDialogSave();
 
 const used = ref(false);
 const showDialog = ref(false);
@@ -61,20 +64,10 @@ function close() {
 function onSaveBtnClicked() {
     const api = Api.deployments().updateImagePullPolicyPutById(props.input.deployment.id!)
         .value(value.value!)
-    api.setErrorHandler(response => {
-        if (response.error) {
-            bus.emit('toast', {
-                text: response.error
-            });
-        }
-        return false;
-    });
-    api.save(null, newItem => {
+    save(api, null, newItem => {
         bus.emit('deploymentSaved', newItem);
         close();
     });
-
-    close();
 }
 
 function onCloseBtnClicked() {
@@ -125,6 +118,7 @@ function onCloseBtnClicked() {
                     variant="tonal"
                     prepend-icon="fa fa-check"
                     color="green"
+                    :loading="isSaving"
                     @click="onSaveBtnClicked">
                     Save
                 </v-btn>

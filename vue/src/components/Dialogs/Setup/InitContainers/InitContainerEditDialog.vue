@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useDialogSave } from "@/composables/useDialogSave";
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
 import {ContainerImage, InitContainer} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
@@ -19,6 +20,8 @@ interface Argument {
 }
 
 const props = defineProps<{ input: InitContainerEditDialog_Input, events: DialogEventsInterface }>();
+
+const { isSaving, save } = useDialogSave();
 
 const used = ref(false);
 const showDialog = ref(false);
@@ -116,7 +119,7 @@ function onSaveBtnClicked() {
 
     const api = item.value!.exists() ? Api.initContainers().patchById(item.value!.id!) : Api.initContainers().post();
 
-    api.save(item.value!, newItem => {
+    save(api, item.value!, newItem => {
         bus.emit('initContainerSaved', newItem);
 
         if (props.input.onSaveCallback) {
@@ -124,8 +127,6 @@ function onSaveBtnClicked() {
         }
         close();
     });
-
-    close();
 }
 
 function onCloseBtnClicked() {
@@ -330,6 +331,7 @@ function onArgVariableAdded(index: number, value: string) {
                     variant="tonal"
                     prepend-icon="fa fa-check"
                     color="green"
+                    :loading="isSaving"
                     @click="onSaveBtnClicked">
                     Save
                 </v-btn>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useDialogSave } from "@/composables/useDialogSave";
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
 import {OAuthClient, User} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
@@ -10,6 +11,8 @@ export interface OAuthClientEditDialog_Input {
 }
 
 const props = defineProps<{ input: OAuthClientEditDialog_Input, events: DialogEventsInterface }>();
+
+const { isSaving, save } = useDialogSave();
 
 const used = ref(false);
 const showDialog = ref(false);
@@ -92,12 +95,10 @@ function onSaveBtnClicked() {
         ? Api.oAuthClients().patchPatchById(item.value!.client_id!)
         : Api.oAuthClients().post();
 
-    api.save(item.value!, newItem => {
+    save(api, item.value!, newItem => {
         bus.emit('oauthClientSaved', newItem);
         close();
     });
-
-    close();
 }
 
 function onCloseBtnClicked() {
@@ -172,6 +173,7 @@ function onCloseBtnClicked() {
                     variant="tonal"
                     prepend-icon="fa fa-check"
                     color="green"
+                    :loading="isSaving"
                     @click="onSaveBtnClicked">
                     Save
                 </v-btn>

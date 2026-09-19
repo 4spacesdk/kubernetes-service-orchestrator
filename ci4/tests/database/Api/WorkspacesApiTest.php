@@ -60,6 +60,66 @@ class WorkspacesApiTest extends ControllerTestCase {
     }
 
     /**
+     * A name that starts with Ø is a name. The dialog refused it, saying it started with a
+     * space, and the system name lost the letter: "Øster" became "ster".
+     */
+    public function testANameWithDanishLettersIsKeptAndSpelledOutInTheSystemName(): void {
+        $body = $this->create(Fixtures::deploymentPackage()->id, [
+            'name' => 'Øster Ås',
+            'namespace' => 'kb-oester-aas',
+            'domainId' => Fixtures::domain()->id,
+            'subdomain' => 'oester',
+        ]);
+
+        $this->assertSame('OK', $body['status'], $body['error'] ?? '');
+        $this->assertSame('Øster Ås', $body['resource']['name_readable']);
+        $this->assertSame('oester-aas', $body['resource']['name_system']);
+    }
+
+    /**
+     * The namespace becomes a Kubernetes namespace, so what Kubernetes would refuse is
+     * refused here. It used to be taken as given - hiding the field in the dialog was a way
+     * past its (wrong) rule.
+     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('namespacesKubernetesRefuses')]
+    public function testANamespaceKubernetesWouldRefuseIsRefused(string $namespace): void {
+        $error = $this->createExpectingFailure(Fixtures::deploymentPackage()->id, [
+            'name' => 'Acme',
+            'namespace' => $namespace,
+            'domainId' => Fixtures::domain()->id,
+            'subdomain' => 'acme',
+        ]);
+
+        $this->assertStringStartsWith('Invalid namespace', $error);
+    }
+
+    /**
+     * @return array<string, array{0: string}>
+     */
+    public static function namespacesKubernetesRefuses(): array {
+        return [
+            'ends in a hyphen' => ['kb-'],
+            'uppercase' => ['Acme'],
+            'a Danish letter' => ['kb-øster'],
+            '64 characters' => [str_repeat('a', 64)],
+        ];
+    }
+
+    /**
+     * The rule the dialog had allowed 15 characters. A namespace of 63 is fine.
+     */
+    public function testANamespaceOf63CharactersIsAccepted(): void {
+        $body = $this->create(Fixtures::deploymentPackage()->id, [
+            'name' => 'Acme',
+            'namespace' => str_repeat('a', 63),
+            'domainId' => Fixtures::domain()->id,
+            'subdomain' => 'acme',
+        ]);
+
+        $this->assertSame('OK', $body['status'], $body['error'] ?? '');
+    }
+
+    /**
      * Every rejection, one per rule. They run before anything is written, which is what
      * separates this endpoint from the rest of the API.
      */

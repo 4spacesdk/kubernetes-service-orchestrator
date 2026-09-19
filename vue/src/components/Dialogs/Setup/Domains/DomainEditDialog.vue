@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useDialogSave } from "@/composables/useDialogSave";
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
 import {Domain, Gateway, System} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
@@ -10,6 +11,8 @@ export interface DomainEditDialog_Input {
 }
 
 const props = defineProps<{ input: DomainEditDialog_Input, events: DialogEventsInterface }>();
+
+const { form, isSaving, save } = useDialogSave();
 
 const used = ref(false);
 const showDialog = ref(false);
@@ -72,13 +75,10 @@ function onSaveBtnClicked() {
     item.value.gateway = undefined;
     item.value.workspaces = undefined;
 
-    Api.domains().patchById(item.value.id!)
-        .save(item.value!, newItem => {
-            bus.emit('domainSaved', newItem);
-            close();
-        });
-
-    close();
+    save(Api.domains().patchById(item.value.id!), item.value!, newItem => {
+        bus.emit('domainSaved', newItem);
+        close();
+    });
 }
 
 function onCloseBtnClicked() {
@@ -100,130 +100,133 @@ function onCloseBtnClicked() {
             <v-card-title>Domain</v-card-title>
             <v-divider/>
             <v-card-text>
-                <v-row
-                    dense>
-                    <v-col cols="12">
-                        <v-text-field
-                            variant="outlined"
-                            v-model="item.name"
-                            label="Name"
-                            disabled
-                        />
-                    </v-col>
-                    <v-col cols="12">
-                        <v-text-field
-                            variant="outlined"
-                            v-model="item.certificate_name"
-                            label="Certificate Name"
-                            disabled
-                        />
-                    </v-col>
-                    <v-col cols="12">
-                        <v-text-field
-                            variant="outlined"
-                            v-model="item.certificate_namespace"
-                            label="Certificate Namespace"
-                            disabled
-                        />
-                    </v-col>
-                    <v-col cols="12">
-                        <v-text-field
-                            variant="outlined"
-                            v-model="item.issuer_ref_name"
-                            label="Cert manager issuer name"
-                            disabled
-                        />
-                    </v-col>
-                    <v-col cols="12">
-                        <v-row dense>
-                            <v-col
-                                cols="6"
-                            >
-                                <v-switch
-                                    v-model="item.has_certificate_monitoring"
-                                    variant="outlined"
-                                    label="Enable Certificate Monitoring"
-                                    density="compact" hide-details
-                                    color="secondary"
-                                />
-                            </v-col>
-                            <v-col
-                                v-if="item.has_certificate_monitoring"
-                                cols="6"
-                            >
-                                <v-text-field
-                                    variant="outlined"
-                                    v-model.number="item.certificate_monitoring_days_before_expiry"
-                                    label="Threshold (days before expiration)"
-                                    type="number"
-                                />
-                            </v-col>
-                        </v-row>
-                    </v-col>
-                    <v-col
-                        v-if="showIstio"
-                        cols="6"
-                    >
-                        <v-switch
-                            v-model="item.enable_istio_gateway"
-                            variant="outlined"
-                            label="Enable Istio Gateway"
-                            density="compact"
-                            color="secondary"
-                        />
-                    </v-col>
-                    <v-col
-                        v-if="showContour"
-                        cols="6"
-                    >
-                        <v-switch
-                            v-model="item.enable_contour"
-                            variant="outlined"
-                            label="Enable Contour"
-                            density="compact"
-                            color="secondary"
-                        />
-                    </v-col>
-                    <v-col
-                        v-if="showContour && item.enable_contour"
-                        cols="6"
-                    >
-                        <v-text-field
-                            variant="outlined"
-                            v-model="item.contour_ingress_class_name"
-                            label="Contour ingress class name"
-                            hint="Default: contour-external"
-                            persistent-hint
-                        />
-                    </v-col>
-                    <v-col
-                        v-if="showGatewayApi"
-                        cols="12"
-                    >
-                        <v-select
-                            variant="outlined"
-                            v-model="item.gateway_id"
-                            label="Gateway"
-                            :items="gateways"
-                            item-title="name"
-                            item-value="id"
-                            clearable
-                        />
-                    </v-col>
-                    <v-col
-                        v-if="showGatewayApi"
-                        cols="12"
-                    >
-                        <v-switch
-                            v-model="item.https_redirect"
-                            variant="outlined"
-                            label="HTTPS Redirect (Gateway API)"
-                            density="compact"
-                            color="secondary"
-                            hide-details
-                        />
-                    </v-col>
-                </v-row>
+                <v-form ref="form" @submit.prevent>
+                    <v-row
+                        dense>
+                        <v-col cols="12">
+                            <v-text-field
+                                variant="outlined"
+                                v-model="item.name"
+                                :rules="[v => !!(v ?? '').trim() || 'Required', v => !/\s/.test(v ?? '') || 'No spaces']"
+                                label="Name"
+                                disabled
+                            />
+                        </v-col>
+                        <v-col cols="12">
+                            <v-text-field
+                                variant="outlined"
+                                v-model="item.certificate_name"
+                                label="Certificate Name"
+                                disabled
+                            />
+                        </v-col>
+                        <v-col cols="12">
+                            <v-text-field
+                                variant="outlined"
+                                v-model="item.certificate_namespace"
+                                label="Certificate Namespace"
+                                disabled
+                            />
+                        </v-col>
+                        <v-col cols="12">
+                            <v-text-field
+                                variant="outlined"
+                                v-model="item.issuer_ref_name"
+                                label="Cert manager issuer name"
+                                disabled
+                            />
+                        </v-col>
+                        <v-col cols="12">
+                            <v-row dense>
+                                <v-col
+                                    cols="6"
+                                >
+                                    <v-switch
+                                        v-model="item.has_certificate_monitoring"
+                                        variant="outlined"
+                                        label="Enable Certificate Monitoring"
+                                        density="compact" hide-details
+                                        color="secondary"
+                                    />
+                                </v-col>
+                                <v-col
+                                    v-if="item.has_certificate_monitoring"
+                                    cols="6"
+                                >
+                                    <v-text-field
+                                        variant="outlined"
+                                        v-model.number="item.certificate_monitoring_days_before_expiry"
+                                        label="Threshold (days before expiration)"
+                                        type="number"
+                                    />
+                                </v-col>
+                            </v-row>
+                        </v-col>
+                        <v-col
+                            v-if="showIstio"
+                            cols="6"
+                        >
+                            <v-switch
+                                v-model="item.enable_istio_gateway"
+                                variant="outlined"
+                                label="Enable Istio Gateway"
+                                density="compact"
+                                color="secondary"
+                            />
+                        </v-col>
+                        <v-col
+                            v-if="showContour"
+                            cols="6"
+                        >
+                            <v-switch
+                                v-model="item.enable_contour"
+                                variant="outlined"
+                                label="Enable Contour"
+                                density="compact"
+                                color="secondary"
+                            />
+                        </v-col>
+                        <v-col
+                            v-if="showContour && item.enable_contour"
+                            cols="6"
+                        >
+                            <v-text-field
+                                variant="outlined"
+                                v-model="item.contour_ingress_class_name"
+                                label="Contour ingress class name"
+                                hint="Default: contour-external"
+                                persistent-hint
+                            />
+                        </v-col>
+                        <v-col
+                            v-if="showGatewayApi"
+                            cols="12"
+                        >
+                            <v-select
+                                variant="outlined"
+                                v-model="item.gateway_id"
+                                label="Gateway"
+                                :items="gateways"
+                                item-title="name"
+                                item-value="id"
+                                clearable
+                            />
+                        </v-col>
+                        <v-col
+                            v-if="showGatewayApi"
+                            cols="12"
+                        >
+                            <v-switch
+                                v-model="item.https_redirect"
+                                variant="outlined"
+                                label="HTTPS Redirect (Gateway API)"
+                                density="compact"
+                                color="secondary"
+                                hide-details
+                            />
+                        </v-col>
+                    </v-row>
+                </v-form>
             </v-card-text>
             <v-divider/>
             <v-card-actions>
@@ -241,6 +244,7 @@ function onCloseBtnClicked() {
                     variant="tonal"
                     prepend-icon="fa fa-check"
                     color="green"
+                    :loading="isSaving"
                     @click="onSaveBtnClicked">
                     Save
                 </v-btn>

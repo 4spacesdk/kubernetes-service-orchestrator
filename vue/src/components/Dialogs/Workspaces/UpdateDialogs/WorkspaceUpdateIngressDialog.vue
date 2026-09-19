@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useDialogSave } from "@/composables/useDialogSave";
 import {
     computed,
     defineComponent,
@@ -22,6 +23,8 @@ const props = defineProps<{
     input: WorkspaceUpdateIngressDialog_Input;
     events: DialogEventsInterface;
 }>();
+
+const { isSaving, save } = useDialogSave();
 
 const used = ref(false);
 const showDialog = ref(false);
@@ -74,20 +77,10 @@ function onSaveBtnClicked() {
         .domainId(domainId.value!)
         .subdomain(subdomain.value!)
         .aliases(aliases.value!);
-    api.setErrorHandler((response) => {
-        if (response.error) {
-            bus.emit("toast", {
-                text: response.error,
-            });
-        }
-        return false;
-    });
-    api.save(null, (newItem) => {
+    save(api, null, (newItem) => {
         bus.emit("workspaceSaved", newItem);
         close();
     });
-
-    close();
 }
 
 function onCloseBtnClicked() {
@@ -160,6 +153,7 @@ function onCloseBtnClicked() {
                     variant="tonal"
                     prepend-icon="fa fa-check"
                     color="green"
+                    :loading="isSaving"
                     @click="onSaveBtnClicked"
                 >
                     Save

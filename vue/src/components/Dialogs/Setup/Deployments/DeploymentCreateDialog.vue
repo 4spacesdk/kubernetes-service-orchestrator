@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { dnsLabelRule } from "@/core/kubernetesNames";
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
 import {Deployment, DeploymentSpecification, Workspace} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
@@ -252,13 +253,11 @@ function onCloseBtnClicked() {
                             v-model="item.namespace"
                             :disabled="props.input.workspace !== undefined"
                             variant="outlined"
-                            :rules="[
-                                v => /^(?!^[0-9]*$)^([a-z0-9]([a-z0-9]|-(?!-)){0,14}(?<!-)$)/.test(v) || 'Invalid format'
-                            ]"
+                            :rules="[dnsLabelRule]"
                             label="Namespace"
                             clearable
                             persistent-hint
-                            hint="Max 10 characters, lowercase-only"/>
+                            hint="Max 63 characters: a-z, 0-9 and -"/>
                     </v-col>
                     <v-col cols="12">
                         <v-text-field

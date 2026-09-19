@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { dnsLabelRule } from "@/core/kubernetesNames";
+import { useDialogSave } from "@/composables/useDialogSave";
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
 import {DatabaseService, DeploymentPackage, Domain, EmailService} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
@@ -10,6 +12,8 @@ export interface DeploymentPackageCreateDialog_Input {
 }
 
 const props = defineProps<{ input: DeploymentPackageCreateDialog_Input, events: DialogEventsInterface }>();
+
+const { form, isSaving, save } = useDialogSave();
 
 const used = ref(false);
 const showDialog = ref(false);
@@ -98,12 +102,10 @@ function close() {
 function onSaveBtnClicked() {
     const api = item.value!.exists() ? Api.deploymentPackages().patchById(item.value!.id!) : Api.deploymentPackages().post();
 
-    api.save(item.value!, newItem => {
+    save(api, item.value!, newItem => {
         bus.emit('deploymentPackageSaved', newItem);
         close();
     });
-
-    close();
 }
 
 function onCloseBtnClicked() {
@@ -120,7 +122,9 @@ function onCloseBtnClicked() {
         width="60vw"
         v-model="showDialog">
         <v-form
+            ref="form"
             v-model="isFormValid"
+            @submit.prevent
         >
             <v-card
                 class="w-100 h-100">
@@ -142,7 +146,8 @@ function onCloseBtnClicked() {
                                 variant="outlined"
                                 v-model="item.namespace"
                                 label="Namespace"
-                                :rules="rules.required"
+                                :rules="[dnsLabelRule]"
+                                hint="Starts every workspace's namespace: a-z, 0-9 and -"
                             />
                         </v-col>
                         <v-col cols="12">
@@ -197,6 +202,7 @@ function onCloseBtnClicked() {
                         variant="tonal"
                         prepend-icon="fa fa-check"
                         color="green"
+                        :loading="isSaving"
                         @click="onSaveBtnClicked">
                         Save
                     </v-btn>
