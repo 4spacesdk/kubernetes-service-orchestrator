@@ -95,24 +95,41 @@ class DatabaseServicesApiTest extends ControllerTestCase {
     }
 
     /**
-     * **An id that is not there takes the request down.** Every other controller in kso
-     * looks the row up and checks `exists()` before it uses it; this one does not, so a
-     * service deleted between the list loading and the button being pressed reaches
-     * `prepareConnection()` with no driver, and `match ($this->driver)` has no arm for
-     * null.
+     * An id that is not there answers no, like every other way of failing to connect.
      *
-     * `UnhandledMatchError` is an `\Error`, and `testConnection()` catches
-     * `\Exception|DatabaseException` - so the guard that turns every other failure into a
-     * `false` does not catch this one either. The user gets a 500 where the honest answer
-     * is "no".
-     *
-     * Pinned as today's behaviour. Guarding on `exists()`, the way the other controllers
-     * do, should break this test.
+     * It is an ordinary case rather than a mistake: the row can be deleted between the list
+     * loading and somebody pressing the button. It used to take the request down - the
+     * lookup's empty entity reached `prepareConnection()` with no driver, `match` has no arm
+     * for null, and `UnhandledMatchError` is an `\Error`, so `testConnection()`'s
+     * `catch (\Exception|DatabaseException)` did not turn it into a `false` the way it turns
+     * every other failure into one. The user got a 500 where the honest answer is "no".
      */
-    public function testAServiceThatNoLongerExistsFailsWithAPhpErrorInsteadOfAnsweringNo(): void {
+    public function testAServiceThatNoLongerExistsIsAnsweredWithNo(): void {
+        $body = $this->testConnection(999999);
+
+        $this->assertSame('OK', $body['status']);
+        $this->assertFalse($body['resource']['value']);
+    }
+
+    /**
+     * **Pinned, not endorsed.** The same 500, one step further in and still reachable: a
+     * service whose stored `driver` is neither of the two kso knows takes the request down
+     * on the same `match`.
+     *
+     * Not hypothetical - nothing validates the column. `POST /database_services` with
+     * `"driver":"postgres"` is accepted and stored, and the button on that row is then a
+     * 500 for any signed-in caller.
+     *
+     * The guard above cannot close this one; it is the `catch` that is too narrow, which is
+     * a pattern with several sites and is worth fixing as one piece rather than here. Doing
+     * that should break this test.
+     */
+    public function testAStoredDriverThatMatchesNothingStillTakesTheRequestDown(): void {
+        $service = Fixtures::databaseService(['driver' => 'postgres']);
+
         $this->expectException(\UnhandledMatchError::class);
 
-        $this->testConnection(999999);
+        $this->testConnection($service->id);
     }
 
     /**

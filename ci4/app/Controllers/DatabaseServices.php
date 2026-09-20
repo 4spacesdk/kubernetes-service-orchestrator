@@ -34,7 +34,14 @@ class DatabaseServices extends ResourceController {
         $item->find($id);
 
         Data::set('resource', [
-            'value' => $item->testConnection(),
+            // A service that is not there cannot be connected to, and that is a "no" rather
+            // than an error - the row can be deleted between the list loading and somebody
+            // pressing the button. Without the guard the lookup's empty entity reached
+            // `prepareConnection()`, where `match ($this->driver)` has no arm for null;
+            // `UnhandledMatchError` is an `\Error`, so `testConnection()`'s
+            // `catch (\Exception|DatabaseException)` - which turns every other failure into
+            // a `false` - let it past as a 500.
+            'value' => $item->exists() && $item->testConnection(),
         ]);
 
         $this->success();
