@@ -3,75 +3,32 @@
 ## Unreleased
 
 ### Fixed bugs
-* Several gateway, migration job, pod list and shell fixes
-* The shell on a pod that is not running answered an empty box; it says what the cluster said
-* Deploying while a rollout was still running could fail with `409 Conflict`
-* Custom resources without a namespace landed in `default`
-* The status panel died on a resource that has no status yet, or none at all, and on a gateway when the cluster could not be reached
+* Deploys: a rollout still running could fail the next with `409 Conflict`, a custom resource without a namespace landed in `default`, an empty or malformed one was accepted, init containers from another registry could not be pulled, and setting a version reported success when the deploy had failed
+* Deploys: a field kso spells wrong is refused by the cluster instead of dropped without a word, and two fields every Deployment, Job and CronJob carried are gone
+* RBAC: a workspace with no role rules deploys instead of refusing with "Missing Role", terminating one that never had a role binding no longer fails partway through, and rules typed as "get, list" are trimmed rather than refused by Kubernetes
+* Contour: a hostname with no routes made an HTTPProxy Kubernetes refused, so the deploy failed
 * Certificates: a refused certificate was reported as applied, deleting one did nothing, and the nightly expiry check died on the first certificate cert-manager had not finished
-* Contour: a hostname with no routes made an HTTPProxy that Kubernetes refused, so the deploy failed
-* Init containers from another registry could not be pulled
-* Setting a deployment's version reported success when the deploy failed
-* The min scale job logged the wrong schedule's value, so its log did not match what was applied
-* Post-update actions crashed on an image without commit identification or version control; they are skipped now
-* Post-update actions crashed when the commit message had no Podio task link; they are skipped now
-* Auto update missed pushes from a registry with a port in its host when they came over Pub/Sub
-* Auto update: a tag found early in the registry check was announced to nobody, so the update only showed up on a page reload
-* A token without a scope, and a request nobody had signed in, answered with a server error instead of a plain "not allowed"
-* `?app_version=` with nothing after it was read as a version, so every check against a minimum version ran against an empty string
-* A timestamp written as a date and a time with a space between them was read as a day earlier, with the time dropped
-* The Podio field list is sent with a count, like every other list
-* A refused token renewal answers 400; the one for a browser with no refresh token answered 200
-* Retrying a webhook delivery adds an attempt to the log instead of rewriting the one it retries, and the new attempt is stamped with its own time and no leftover response
-* The refresh token cookie is marked Secure behind a TLS-terminating proxy, so a browser no longer sends it over plain http
-* A grant or renewal that carries no id token or no new refresh token is a token, not a server error
-* Database services could not be connected to at all: the test-connection button said no to every service, and a deploy could not create the tenant's database or user
-* Testing the connection to a database service that has been deleted answers no instead of a server error
-* Signing in from a deep link with two-factor authentication lands on the link instead of the front page
-* The password renewal form names the first rule the new password breaks, and says so when the sign-in has expired instead of silently changing nothing
-* The access log records the sign-in redirects and the events a container skips, which used to leave the process without being logged
-* Push events are no longer kept for ever: a nightly job removes those older than a month
-* A cron job whose schedule is not a cron expression no longer stops every other cron job; it is skipped and the row says why
-* A cron job whose command does not exist says so in its log instead of looking like it ran
-* An approved auto update whose deployment has been removed rolls out nothing, instead of creating an empty deployment and deploying it
-* Twenty write endpoints that answered OK with an empty body and wrote nothing are gone; they were never implemented
-* Terminating a workspace with no deployments leaves it terminated instead of putting it back in the default list as a draft
-* Pod logs kept the start of each line, which was cut off - by up to eleven characters, depending on the timestamp - and the live tail now shows the same text as the log page
-* A mistake inside kso while it talks to the cluster is reported instead of answering with a server error: the status panels, the shell, the node list and the connection test all say what went wrong
-* A database service saved with a driver kso does not know says which driver, instead of failing the connection test with no reason
-* The status panel shows a red mark for the one routing step that could not be asked, instead of showing nothing at all
-* A step refused because the cluster could not be reached says so, instead of reporting a missing namespace that was never the problem
-* A workspace with RBAC on and no role rules deploys: its role binding no longer refuses every time with "Missing Role"
-* Terminating a workspace that never had a role binding no longer fails partway through
-* The environments list carries a count like every other list, and asking for one environment by id is gone - it answered with all of them
-* `filter=status:active` narrows to that status; it used to be dropped and answer with every workspace in every status
-* A label filter that cannot be read is refused with what to write instead, rather than failing the request or applying half of itself
-* Changing the permissions on a user role replaces them: a permission taken away is taken away, and the same set twice stays the same set
-* A kubeconfig with more than one user authenticates as the one its current context names, instead of the first in the file
-* A manifest the cluster refuses is reported with the reason the cluster gave, instead of a one-line summary with the field name cut off
-* A field kso spells wrong is refused by the cluster at deploy time instead of being dropped without a word - and two fields every Deployment, Job and CronJob carried are gone
-* The preview of a migration job no longer shows a dozen differences the cluster filled in itself
-* Updating something that does not exist answered OK and wrote nothing; it is refused now
-* Removed `PUT /deployments/{id}/ingress`, which could never work - the workspace endpoint is the one that does this
-* Reading something that does not exist answered a resource with every field null; it answers 404 now
-* Auto update: a tag pattern that cannot compile is refused, and turning it on without one no longer crashes
-* A migration job did not migrate when it could not reach kso at the start ([#42](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/42))
-* Tag policy "Default" on a migration image failed the whole deploy
-* RBAC rules typed as "get, list" were refused by Kubernetes; spaces are trimmed now
-* An empty or malformed custom resource is refused with a message about the field
-* A second volume on a deployment is refused when saved, instead of failing every deploy
-* The volume endpoints also read their fields in camelCase, like every other collection
-* Changing a volume that already has its disk is refused when saved, instead of failing the next deploy with a Kubernetes error
-* Deploying a volume again unbound it from its claim, so the next pod could not mount it
-* A volume with a storage class was left unused while its claim got a disk from elsewhere; a new volume is now reserved for its own claim
-* Harbor: tags beyond the first ten artifacts were missing
-* A failed save in a dialog was silent, and a double click saved twice
-* Creating a workspace refused names starting with Æ, Ø or Å, and namespaces longer than 15 characters
-* Sorting a list by a field or a direction that is not there is refused with a message, instead of a server error or a list sorted the other way
-* A record whose related record has been deleted no longer picks up an unrelated one when it is read a second time
-* A migration verified by a pattern is read as it was meant to be; it used to end the request with a server error and leave the job in no status at all
-* Three endpoints that replaced a whole OAuth client, user or gateway are gone: nothing called them, and a call left out fields that were then erased
-* Five endpoints that could never answer are gone from the API and its documentation; they named code that no longer exists
+* Volumes: a second volume, and a change to one that already has its disk, are refused when saved instead of failing every later deploy; redeploying no longer unbinds a volume from its claim; a volume with a storage class is reserved for its own claim; and the endpoints read camelCase like every other collection
+* Migration jobs: a job did not migrate when it could not reach kso at the start ([#42](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/42)), tag policy "Default" failed the whole deploy, one verified by a pattern ended in a server error and no status at all, and the preview no longer shows differences the cluster filled in itself
+* Cron jobs: one bad schedule no longer stops every other job, and a command that does not exist says so in its log instead of looking like it ran
+* Auto update: pushes from a registry with a port in its host were missed over Pub/Sub, a tag found early was announced to nobody, an approved update whose deployment is gone no longer deploys an empty one, a tag pattern that cannot compile is refused, and Harbor listed no tags beyond the first ten artifacts
+* When kso cannot reach the cluster, or makes a mistake talking to it, the status panels, the shell, the node list and the connection test say what went wrong instead of a server error - which routing step could not be asked, and the cluster's own reason for refusing a manifest. The status panel also died on a resource that has no status yet, or none at all
+* A kubeconfig with more than one user authenticates as the one its current context names, not the first in the file
+* Database services could not be connected to at all: the test button said no to every service, and a deploy could not create the tenant's database or user. A deleted service answers no, and an unknown driver says which driver
+* Sign-in: a deep link with two-factor lands on the link, the refresh token cookie is marked Secure behind a TLS-terminating proxy, a grant carrying no id token is a token rather than a server error, a refused renewal answers 400, and the password form names the first rule the new password breaks
+* A token without a scope, and a request nobody had signed in, answer "not allowed" instead of a server error
+* Endpoints that could not work are gone: twenty that answered OK and wrote nothing, three that replaced a whole OAuth client, user or gateway and erased every field left out, `PUT /deployments/{id}/ingress`, and five naming code that no longer exists
+* Reading something that does not exist answers 404 instead of a resource with every field null; updating something that does not exist is refused instead of answering OK
+* Lists: sorting by a field or direction that is not there is refused, `filter=status:active` narrows to that status instead of answering with every workspace, an unreadable label filter says what to write instead, and the environments and Podio field lists carry a count like every other list
+* Pod logs kept the start of each line, which was cut off by up to eleven characters, and the live tail shows the same text as the log page. The shell on a pod that is not running says what the cluster said instead of an empty box
+* Workspaces: terminating one with no deployments leaves it terminated instead of back in the list as a draft, and names starting with Æ, Ø or Å are allowed again, as are namespaces longer than 15 characters
+* Changing a user role's permissions replaces them: one taken away is taken away, and the same set twice stays the same set
+* A record whose related record has been deleted no longer picks up an unrelated one when read a second time
+* Post-update actions are skipped rather than crashing on an image without commit identification or version control, and on a commit message with no Podio task link
+* Retrying a webhook delivery adds an attempt to the log instead of rewriting the one it retries, stamped with its own time and no leftover response
+* A failed save in a dialog was silent, a double click saved twice, and the min scale job logged the wrong schedule's value
+* `?app_version=` with nothing after it counted as a version, and a timestamp written with a space between date and time came back a day earlier with the time dropped
+* Push events are no longer kept for ever - a nightly job removes those older than a month - and the access log records the sign-in redirects and the events a container skips
 * Security-related improvements
 
 ### Enhancements
