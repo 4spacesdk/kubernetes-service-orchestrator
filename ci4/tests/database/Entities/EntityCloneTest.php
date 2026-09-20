@@ -12,7 +12,8 @@ use App\Fixtures;
  * row the user is looking at. `getClone()` is what decides the contents of that message,
  * so this is not an internal helper - it is the payload a user's screen is updated with.
  *
- * Two decisions are worth holding on to, and neither is written down anywhere else.
+ * Two decisions are worth holding on to; `getClone()`'s own docblock says the same two, and
+ * these are what hold them.
  */
 class EntityCloneTest extends DatabaseTestCase {
 
@@ -28,6 +29,52 @@ class EntityCloneTest extends DatabaseTestCase {
         $this->assertSame('web', $clone->name);
         $this->assertSame('acme', $clone->namespace);
         $this->assertSame('1.2.3', $clone->version);
+    }
+
+    /**
+     * The premise the filter rests on: the row `getClone()` reads is not the row as it was
+     * loaded. OrmExtension's `completeSave()` calls `syncOriginal()`, which folds whatever
+     * is in `attributes` at that moment into `original` - loaded relations and all, each
+     * serialised into a blob carrying the whole related row.
+     *
+     * Without this, the test below would pass on an entity whose `original` never held a
+     * relation in the first place, and the filter it is there to prove would not be doing
+     * anything.
+     */
+    public function testARowRememberedAfterASaveHoldsWhateverRelationsWereLoaded(): void {
+        $deployment = Fixtures::deployableDeployment();
+        $deployment->findDeploymentSpecification();
+        $deployment->workspace->find();
+        $deployment->save();
+
+        $original = (new \ReflectionProperty($deployment, 'original'))->getValue($deployment);
+
+        $this->assertArrayHasKey('workspace', $original);
+        $this->assertArrayHasKey('deployment_specification', $original);
+        $this->assertStringContainsString(
+            '"namespace"',
+            $original['workspace'],
+            'the whole related row, not a reference to it'
+        );
+    }
+
+    /**
+     * And what that costs when it is not filtered out: the blob lands where a column is
+     * expected, and turning the payload into something sendable is a fatal error rather
+     * than a heavy message.
+     */
+    public function testARelationCopiedAcrossAsAColumnCannotBeSent(): void {
+        $deployment = Fixtures::deployableDeployment();
+        $deployment->workspace->find();
+        $deployment->save();
+        $unfiltered = new Deployment();
+        foreach ((new \ReflectionProperty($deployment, 'original'))->getValue($deployment) as $key => $value) {
+            $unfiltered->{$key} = $value;
+        }
+
+        $this->expectException(\Error::class);
+
+        $unfiltered->toArray();
     }
 
     /**
