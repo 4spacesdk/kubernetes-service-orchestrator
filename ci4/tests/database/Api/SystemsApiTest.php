@@ -140,10 +140,10 @@ class SystemsApiTest extends ControllerTestCase {
      * The four inherited REST verbs are switched off with `@ignore true`. Turning any of
      * them back on is a security decision, and this is where it is made.
      *
-     * The three `default_*` routes are listed because they exist in the table, not because
-     * they work: they point at `updateDefaultEmailService`, `updateDefaultDatabaseService`
-     * and `updateDefaultDomain`, none of which is a method on this controller. Calling one
-     * is a 404, as the next test shows.
+     * Two rows, not five. The three `put systems/default_*` ones pointed at
+     * `updateDefaultEmailService`, `updateDefaultDatabaseService` and `updateDefaultDomain`,
+     * none of which is a method here, so every call on them was a 404 - and they are gone
+     * along with the two other routes in the table that named a method that is not there.
      */
     public function testTheSystemRowIsOnlyReachableThroughPatch(): void {
         $rows = $this->db->table('api_routes')
@@ -161,29 +161,7 @@ class SystemsApiTest extends ControllerTestCase {
         $this->assertSame([
             'patch systems',
             'patch systems/([0-9]+)',
-            'put systems/default_database_service_id',
-            'put systems/default_domain_id',
-            'put systems/default_email_service_id',
         ], $actual);
-    }
-
-    /**
-     * The three `default_*` routes are dead. A migration registered them for methods that
-     * were never written, so the row is in `api_routes`, swagger advertises the endpoint,
-     * and the request ends in the framework's "controller method is not found".
-     *
-     * Worth a test because the table is the API's documentation: a client generated from
-     * it offers three calls that cannot work, and nothing else in the codebase says so.
-     */
-    public function testTheDefaultSelectionRoutesPointAtMethodsThatDoNotExist(): void {
-        foreach (['default_domain_id', 'default_database_service_id', 'default_email_service_id'] as $route) {
-            try {
-                $this->withBodyFormat('json')->signedIn()->put("systems/{$route}", ['id' => 1]);
-                $this->fail("systems/{$route} answered, so the method now exists");
-            } catch (\CodeIgniter\Exceptions\PageNotFoundException $e) {
-                $this->assertStringContainsString('Controller method is not found', $e->getMessage());
-            }
-        }
     }
 
     /**

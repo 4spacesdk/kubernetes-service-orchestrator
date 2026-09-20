@@ -74,6 +74,41 @@ class ApiRouteTableTest extends DatabaseTestCase {
         }
     }
 
+    /**
+     * No route may point at a method that is not there.
+     *
+     * Five did. `workspaces/{id}/requestSupportLogin` came from the initial migration in
+     * 2023 and outlived its method by years; `deployment-specifications/{id}/ingress-rule-paths`
+     * and the three `systems/default_*` ones are the same story without a date on it. Every
+     * call on them is a `PageNotFoundException` - there is nothing behind them - but they
+     * were generated into the API client and published in the OpenAPI document all the same.
+     *
+     * This is the sweep that makes the route table answerable to the code, rather than a
+     * list somebody has to remember to prune.
+     */
+    public function testNoRoutePointsAtAMethodThatIsGone(): void {
+        $this->assertSame([], $this->routesPointingAtMethodsThatAreGone());
+    }
+
+    /**
+     * And this one can see such a row, so green above means the table is clean rather than
+     * that the check looks in the wrong place. Written inside the test's own transaction.
+     */
+    public function testTheSweepWouldCatchARouteToAMethodThatIsGone(): void {
+        $this->db->table('api_routes')->insert([
+            'method' => 'get',
+            'from' => 'workspaces/([0-9]+)/requestSupportLogin',
+            'to' => 'App\\Controllers\\Workspaces::requestSupportLogin/$1',
+            'cacheable' => 0,
+            'is_public' => 0,
+        ]);
+
+        $this->assertSame(
+            ['get workspaces/([0-9]+)/requestSupportLogin -> Workspaces::requestSupportLogin'],
+            $this->routesPointingAtMethodsThatAreGone()
+        );
+    }
+
     // <editor-fold desc="Helpers">
 
     /**
@@ -90,13 +125,40 @@ class ApiRouteTableTest extends DatabaseTestCase {
             [, $controller, $method] = $matches;
             $class = "App\\Controllers\\{$controller}";
             if (!method_exists($class, $method)) {
-                // A row naming a method that is gone is a different fault, and it has its
-                // own tests. This one is only about the methods that are deliberately empty.
+                // A row naming a method that is gone is a different fault, sweep and all -
+                // see `routesPointingAtMethodsThatAreGone()`. This one is only about the
+                // methods that are deliberately empty.
                 continue;
             }
 
             $doc = (string) (new \ReflectionMethod($class, $method))->getDocComment();
             if (str_contains($doc, '@ignore true')) {
+                $offenders[] = "{$row['method']} {$row['from']} -> {$controller}::{$method}";
+            }
+        }
+
+        return $offenders;
+    }
+
+    /**
+     * @return string[] one line per row naming a method that does not exist
+     */
+    private function routesPointingAtMethodsThatAreGone(): array {
+        $offenders = [];
+
+        foreach ($this->db->table('api_routes')->orderBy('id')->get()->getResultArray() as $row) {
+            // `\w*`, not `\w+`: the swagger route is written with an empty method part, and
+            // CodeIgniter routes that to `index()`. It is a real endpoint - requiring a
+            // method name here would skip it rather than check it.
+            if (!preg_match('/^App\\\\Controllers\\\\(\w+)::(\w*)/', (string) $row['to'], $matches)) {
+                continue;
+            }
+
+            [, $controller, $method] = $matches;
+            $class = "App\\Controllers\\{$controller}";
+            $method = $method === '' ? 'index' : $method;
+
+            if (!class_exists($class) || !method_exists($class, $method)) {
                 $offenders[] = "{$row['method']} {$row['from']} -> {$controller}::{$method}";
             }
         }

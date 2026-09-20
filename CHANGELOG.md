@@ -71,6 +71,7 @@
 * A record whose related record has been deleted no longer picks up an unrelated one when it is read a second time
 * A migration verified by a pattern is read as it was meant to be; it used to end the request with a server error and leave the job in no status at all
 * Three endpoints that replaced a whole OAuth client, user or gateway are gone: nothing called them, and a call left out fields that were then erased
+* Five endpoints that could never answer are gone from the API and its documentation; they named code that no longer exists
 * Security-related improvements
 
 ### Enhancements

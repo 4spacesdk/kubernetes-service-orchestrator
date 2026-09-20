@@ -593,27 +593,6 @@ class WorkspacesApiTest extends ControllerTestCase {
 
     // </editor-fold>
 
-    /**
-     * A route in the table pointing at a method that no longer exists.
-     *
-     * `requestSupportLogin` was registered by the initial migration in 2023 and the
-     * controller method is gone, so every installation carries a route to nothing. It is a
-     * small thing on its own and a clear example of authorization living in the table: the
-     * routes are data, written once by a migration, and nothing keeps them in step with the
-     * code.
-     */
-    public function testTheSupportLoginRouteStillPointsAtAMethodThatIsGone(): void {
-        $this->assertFalse(
-            method_exists(\App\Controllers\Workspaces::class, 'requestSupportLogin'),
-            'the method is back - remove this test'
-        );
-
-        $this->assertSame(
-            1,
-            $this->db->table('api_routes')->like('from', 'requestSupportLogin')->countAllResults()
-        );
-    }
-
     // <editor-fold desc="Helpers">
 
     /**
