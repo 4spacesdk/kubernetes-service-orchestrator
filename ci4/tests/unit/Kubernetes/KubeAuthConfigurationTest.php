@@ -79,21 +79,24 @@ class KubeAuthConfigurationTest extends CIUnitTestCase {
     }
 
     /**
-     * Today's behaviour, and it is wrong twice over.
+     * Without `REMOTE_CLUSTER_URL`, the cluster is left with no address at all.
      *
-     * php-k8s defaults the api server to `https://kubernetes.default.svc`, which is the
-     * address that always works from inside a pod. kso passes `getenv('REMOTE_CLUSTER_URL')`
-     * to it, and an unset variable is `false`, which a string parameter takes as `''` - so
-     * the default is never reached and the cluster is left with no address at all.
+     * php-k8s defaults the api server to `https://kubernetes.default.svc`, which works from
+     * inside any pod - but kso passes `getenv('REMOTE_CLUSTER_URL')` to it, and an unset
+     * variable is `false`, which a string parameter takes as `''`. The default is never
+     * reached.
      *
-     * The variable is also not the one anybody sets: `ci4/env` documents
-     * `KUBERNETES_REMOTE_CLUSTER_URL`, and `REMOTE_CLUSTER_URL` appears nowhere else in the
-     * repository. So an installation that fills in the documented variable still gets the
-     * empty url, and an installation that fills in nothing gets it too.
+     * **Which is not the failure it looks like.** The helm chart sets both halves of this:
+     * `KUBERNETES_AUTH: in-cluster` is hardcoded, and `REMOTE_CLUSTER_URL` comes from
+     * `deployment.kubernetes.remoteClusterUrl` through helm's `required`, so an installation
+     * without it does not install. `in-cluster` without the variable therefore means kso was
+     * deployed by something other than the chart.
      *
-     * Reported, not fixed - see the report. This is what it does now.
+     * Held as what the code does, so that a fallback added here is added on purpose. The
+     * name is right, by the way: it is `REMOTE_CLUSTER_URL` that the chart sets, and
+     * `KUBERNETES_REMOTE_CLUSTER_URL` in `ci4/env` that nothing reads.
      */
-    public function testInClusterAuthenticationLosesTheDefaultApiServerAddress(): void {
+    public function testInClusterAuthenticationHasNoAddressWithoutTheVariable(): void {
         $this->withAuthMethod('in-cluster', function (): void {
             $cluster = (new KubeAuth())->authenticate();
 
@@ -133,23 +136,26 @@ class KubeAuthConfigurationTest extends CIUnitTestCase {
     }
 
     /**
-     * Today's behaviour. php-k8s resolves the user the **current context** names; kso then
-     * reaches back into the same file and reads `users[0]` to look for an exec block. In a
-     * kubeconfig with more than one user - which is what any developer who has ever run
-     * `gcloud container clusters get-credentials` twice has - those are different people,
-     * and the token of the first is applied to a connection to the second's cluster.
+     * The token comes from the user the **current context** names, which is the same user
+     * php-k8s connected as.
      *
-     * It fails as a 401 from an api server that was reached correctly, which is about the
-     * least informative way this could go wrong. Reported, not fixed.
+     * kso used to reach back into the file and read `users[0]` to look for an exec block. In
+     * a kubeconfig with more than one user - which is what any developer who has ever run
+     * `gcloud container clusters get-credentials` twice has - those are different people,
+     * and the token of the first was applied to a connection to the second's cluster.
+     *
+     * It failed as a 401 from an api server that had been reached correctly, which is about
+     * the least informative way this could go wrong. The kubeconfig below lists the wrong
+     * user first on purpose.
      */
-    public function testTheExecBlockIsTakenFromTheFirstUserRatherThanTheContextsOne(): void {
+    public function testTheExecBlockIsTakenFromTheUserTheContextNames(): void {
         $this->withKubeConfig($this->kubeConfigWhereTheContextNamesTheSecondUser(), function (): void {
             $cluster = (new KubeAuth())->authenticate();
 
             $this->assertSame(
-                'the-other-clusters-token',
+                'kso-test-token',
                 $this->tokenOf($cluster),
-                'the context names the second user, and the first one is what was run'
+                'the first user in the file was run instead of the one the context names'
             );
         });
     }

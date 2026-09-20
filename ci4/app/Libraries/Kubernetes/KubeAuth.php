@@ -49,7 +49,7 @@ class KubeAuth {
         }
 
         $cluster = KubernetesCluster::fromKubeConfigYaml($config);
-        $userConfig = yaml_parse($config)['users'][0];
+        $userConfig = $this->userForTheCurrentContext(yaml_parse($config));
 
         if (isset($userConfig['user']['exec'])) {
             $cluster->withTokenFromCommandProvider(
@@ -60,6 +60,43 @@ class KubeAuth {
         }
 
         return $cluster;
+    }
+
+    /**
+     * The user the kubeconfig's current context names.
+     *
+     * The same user php-k8s connected as: `LoadsFromKubeConfig` reads `current-context`,
+     * finds that context, and takes the cluster and the user it names. This used to read
+     * `users[0]` instead - so in a kubeconfig with more than one user, which is what anybody
+     * who has run `gcloud container clusters get-credentials` twice has, the *first* user's
+     * exec block was run to fetch a token for the *second* user's cluster.
+     *
+     * It failed as a 401 from an api server that had been reached correctly, which is about
+     * the least informative way this could go wrong.
+     *
+     * @param array<string, mixed> $kubeConfig
+     * @return array<string, mixed>|null the user entry, or null when the file names none
+     */
+    private function userForTheCurrentContext(array $kubeConfig): ?array {
+        $contextName = $kubeConfig['current-context'] ?? null;
+
+        foreach ($kubeConfig['contexts'] ?? [] as $context) {
+            if (($context['name'] ?? null) !== $contextName) {
+                continue;
+            }
+
+            $userName = $context['context']['user'] ?? null;
+            foreach ($kubeConfig['users'] ?? [] as $user) {
+                if (($user['name'] ?? null) === $userName) {
+                    return $user;
+                }
+            }
+        }
+
+        // Nothing to hand back. php-k8s has already refused a context it cannot find, so
+        // reaching this means the file names a user the `users` list does not carry - and
+        // an exec block that is not there is better than the wrong one.
+        return null;
     }
 
 }

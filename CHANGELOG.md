@@ -47,6 +47,7 @@
 * `filter=status:active` narrows to that status; it used to be dropped and answer with every workspace in every status
 * A label filter that cannot be read is refused with what to write instead, rather than failing the request or applying half of itself
 * Changing the permissions on a user role replaces them: a permission taken away is taken away, and the same set twice stays the same set
+* A kubeconfig with more than one user authenticates as the one its current context names, instead of the first in the file
 * Updating something that does not exist answered OK and wrote nothing; it is refused now
 * Removed `PUT /deployments/{id}/ingress`, which could never work - the workspace endpoint is the one that does this
 * Reading something that does not exist answered a resource with every field null; it answers 404 now
