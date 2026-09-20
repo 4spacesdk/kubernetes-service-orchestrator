@@ -70,6 +70,7 @@
 * Sorting a list by a field or a direction that is not there is refused with a message, instead of a server error or a list sorted the other way
 * A record whose related record has been deleted no longer picks up an unrelated one when it is read a second time
 * A migration verified by a pattern is read as it was meant to be; it used to end the request with a server error and leave the job in no status at all
+* Three endpoints that replaced a whole OAuth client, user or gateway are gone: nothing called them, and a call left out fields that were then erased
 * Security-related improvements
 
 ### Enhancements

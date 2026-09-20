@@ -4452,48 +4452,6 @@ export class GatewaysPost extends BaseApi<Gateway> {
     }
 }
 
-export class GatewaysPutById extends BaseApi<Gateway> {
-
-    public topic = 'Resources.Gateways';
-    protected method = 'put';
-    protected scope = '';
-    protected summary = '';
-
-    public constructor(id: number) {
-        super();
-        this.uri = `/gateways/${id}`;
-    }
-
-    protected convertToResource(data: any): Gateway {
-        return new Gateway(data);
-    }
-
-    public save(data: Gateway, next?: (value: Gateway) => void) {
-        return super.executeSave(data, next);
-    }
-}
-
-export class GatewaysPut extends BaseApi<Gateway> {
-
-    public topic = 'Resources.Gateways';
-    protected method = 'put';
-    protected scope = '';
-    protected summary = '';
-
-    public constructor() {
-        super();
-        this.uri = `/gateways`;
-    }
-
-    protected convertToResource(data: any): Gateway {
-        return new Gateway(data);
-    }
-
-    public save(data: Gateway, next?: (value: Gateway) => void) {
-        return super.executeSave(data, next);
-    }
-}
-
 export class GatewaysPatchById extends BaseApi<Gateway> {
 
     public topic = 'Resources.Gateways';
@@ -4737,14 +4695,6 @@ class Gateways {
 
     public post(): GatewaysPost {
         return new GatewaysPost();
-    }
-
-    public putById(id: number): GatewaysPutById {
-        return new GatewaysPutById(id);
-    }
-
-    public put(): GatewaysPut {
-        return new GatewaysPut();
     }
 
     public patchById(id: number): GatewaysPatchById {
@@ -6496,48 +6446,6 @@ export class OAuthClientsPost extends BaseApi<OAuthClient> {
     }
 }
 
-export class OAuthClientsPutById extends BaseApi<OAuthClient> {
-
-    public topic = 'Resources.OAuthClients';
-    protected method = 'put';
-    protected scope = '';
-    protected summary = '';
-
-    public constructor(id: number) {
-        super();
-        this.uri = `/o_auth_clients/${id}`;
-    }
-
-    protected convertToResource(data: any): OAuthClient {
-        return new OAuthClient(data);
-    }
-
-    public save(data: OAuthClient, next?: (value: OAuthClient) => void) {
-        return super.executeSave(data, next);
-    }
-}
-
-export class OAuthClientsPut extends BaseApi<OAuthClient> {
-
-    public topic = 'Resources.OAuthClients';
-    protected method = 'put';
-    protected scope = '';
-    protected summary = '';
-
-    public constructor() {
-        super();
-        this.uri = `/o_auth_clients`;
-    }
-
-    protected convertToResource(data: any): OAuthClient {
-        return new OAuthClient(data);
-    }
-
-    public save(data: OAuthClient, next?: (value: OAuthClient) => void) {
-        return super.executeSave(data, next);
-    }
-}
-
 export class OAuthClientsPatchById extends BaseApi<OAuthClient> {
 
     public topic = 'Resources.OAuthClients';
@@ -6676,14 +6584,6 @@ class OAuthClients {
 
     public post(): OAuthClientsPost {
         return new OAuthClientsPost();
-    }
-
-    public putById(id: number): OAuthClientsPutById {
-        return new OAuthClientsPutById(id);
-    }
-
-    public put(): OAuthClientsPut {
-        return new OAuthClientsPut();
     }
 
     public patchById(id: number): OAuthClientsPatchById {
@@ -7796,48 +7696,6 @@ export class UsersPost extends BaseApi<User> {
     }
 }
 
-export class UsersPutById extends BaseApi<User> {
-
-    public topic = 'Resources.Users';
-    protected method = 'put';
-    protected scope = '';
-    protected summary = '';
-
-    public constructor(id: number) {
-        super();
-        this.uri = `/users/${id}`;
-    }
-
-    protected convertToResource(data: any): User {
-        return new User(data);
-    }
-
-    public save(data: User, next?: (value: User) => void) {
-        return super.executeSave(data, next);
-    }
-}
-
-export class UsersPut extends BaseApi<User> {
-
-    public topic = 'Resources.Users';
-    protected method = 'put';
-    protected scope = '';
-    protected summary = '';
-
-    public constructor() {
-        super();
-        this.uri = `/users`;
-    }
-
-    protected convertToResource(data: any): User {
-        return new User(data);
-    }
-
-    public save(data: User, next?: (value: User) => void) {
-        return super.executeSave(data, next);
-    }
-}
-
 export class UsersPatchById extends BaseApi<User> {
 
     public topic = 'Resources.Users';
@@ -8002,14 +7860,6 @@ class Users {
 
     public post(): UsersPost {
         return new UsersPost();
-    }
-
-    public putById(id: number): UsersPutById {
-        return new UsersPutById(id);
-    }
-
-    public put(): UsersPut {
-        return new UsersPut();
     }
 
     public patchById(id: number): UsersPatchById {

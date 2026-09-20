@@ -63,6 +63,9 @@ class ApiRouteTableTest extends DatabaseTestCase {
             \App\Controllers\Workspaces::class,
             \App\Controllers\Deployments::class,
             \App\Controllers\DatabaseServices::class,
+            \App\Controllers\OAuthClients::class,
+            \App\Controllers\Users::class,
+            \App\Controllers\Gateways::class,
         ] as $controller) {
             $this->assertTrue(
                 (new \ReflectionMethod($controller, 'put'))->getDeclaringClass()->getName() === $controller,

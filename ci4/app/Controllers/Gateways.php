@@ -14,6 +14,19 @@ use DebugTool\Data;
 class Gateways extends ResourceController {
 
     /**
+     * No blanket replace. The generic `put()` writes every column of the row, and the ones a
+     * request leaves out become null - on this resource that is the gateway's name, class and namespace. kso updates
+     * with PATCH everywhere, and nothing ever called this; it existed only because the route
+     * generator finds the inherited method.
+     *
+     * @ignore true
+     * @param $id
+     * @return void
+     */
+    public function put($id = 0) {
+    }
+
+    /**
      * @route /gateways/{id}/preview
      * @method get
      * @custom true
