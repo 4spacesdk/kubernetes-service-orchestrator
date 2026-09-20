@@ -140,26 +140,29 @@ class DeploymentsApiTest extends ControllerTestCase {
     }
 
     /**
-     * `POST /deployments` and `PUT /deployments/{id}` are in the route table and reach
-     * methods with empty bodies - the plain REST create and update, which this controller
-     * does not implement. They answer **200 with no body at all**: not the usual envelope
-     * with a status in it, not an error, nothing. `success()` is never called, so there is
-     * nothing for the response to be built from.
+     * `POST /deployments` and `PUT /deployments/{id}` are gone from the route table.
      *
-     * A caller that used them - and they are generated into the API client like every other
-     * route - would be told the write succeeded by the status code and find nothing written.
-     * The same two methods on `Workspaces` are marked `@codeCoverageIgnore`; these are not,
-     * so they are pinned here instead.
+     * They reached methods with empty bodies - the plain REST create and update, which this
+     * controller does not implement - and answered **200 with no body at all**: not the
+     * usual envelope with a status in it, not an error, nothing, because `success()` is
+     * never reached in an empty method. A caller was told the write had gone through by the
+     * only thing it had to go on.
+     *
+     * Removed by migration, not by the `@ignore` annotation on the methods: that keeps a
+     * verb out of the generator and swagger but leaves a row that is already in
+     * `api_routes`. `ApiRouteTableTest` is the sweep that holds all of them at once; this is
+     * the pair that was pinned here.
      */
     #[DataProvider('theEmptyRestEndpoints')]
-    public function testThePlainRestWriteEndpointsDoNothing(string $method, string $path): void {
-        $before = db_connect()->table('deployments')->countAllResults();
-
-        $response = $this->signedIn()->$method($path)->response();
-
-        $this->assertSame(200, $response->getStatusCode());
-        $this->assertSame('', (string) $response->getBody());
-        $this->assertSame($before, db_connect()->table('deployments')->countAllResults());
+    public function testThePlainRestWriteEndpointsAreNotRouted(string $method, string $from): void {
+        $this->assertSame(
+            0,
+            db_connect()->table('api_routes')
+                ->where('method', $method)
+                ->where('from', $from)
+                ->countAllResults(),
+            'the route is back - see ApiRouteTableTest'
+        );
     }
 
     /**
@@ -168,7 +171,8 @@ class DeploymentsApiTest extends ControllerTestCase {
     public static function theEmptyRestEndpoints(): array {
         return [
             'post' => ['post', 'deployments'],
-            'put' => ['put', 'deployments/1'],
+            'put by id' => ['put', 'deployments/([0-9]+)'],
+            'put' => ['put', 'deployments'],
         ];
     }
 

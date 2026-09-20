@@ -136,28 +136,34 @@ class WebhooksApiTest extends ControllerTestCase {
     }
 
     /**
-     * A webhook cannot be edited through the API, and the empty `put()` in the controller is
-     * the only thing making that true - it overrides the one the resource controller would
-     * otherwise give every entity. Deleting it as dead code would open the url, method,
-     * content type and bearer token of every webhook to any signed-in caller, and the route
-     * for it already exists in `api_routes`.
+     * A webhook cannot be edited through the API, and two things make that true.
      *
-     * The answer is an empty body rather than a refusal, because nothing sends a response
-     * at all. That is worth pinning too: a caller has no way to tell that the update was
-     * ignored.
+     * The route is gone: `PUT /webhooks/{id}` used to be in `api_routes`, reaching an empty
+     * method that answered 200 with no body at all - a caller had no way to tell that the
+     * update had been ignored rather than applied.
+     *
+     * The empty `put()` stays, and it is the half that matters. It overrides the one the
+     * resource controller gives every entity, which replaces *every* column - so if the row
+     * ever came back, a partial body would blank the url, method, content type and bearer
+     * token of a subscriber's own system.
      */
     public function testAWebhookCannotBeChangedThroughTheApi(): void {
-        $webhook = $this->webhook(['url' => 'https://subscriber.invalid/hook']);
+        // Named exactly, not matched loosely: `PUT /webhooks/{id}/deliveries/{id}/retry` is
+        // a real endpoint and starts with the same word.
+        $this->assertSame(
+            0,
+            $this->db->table('api_routes')
+                ->where('method', 'put')
+                ->whereIn('from', ['webhooks', 'webhooks/([0-9]+)'])
+                ->countAllResults(),
+            'the route is back - see ApiRouteTableTest'
+        );
 
-        $response = $this->signedIn()->withBodyFormat('json')->put("webhooks/{$webhook->id}", [
-            'url' => 'https://attacker.invalid/hook',
-        ]);
-
-        $this->assertSame('', (string) $response->response()->getBody());
-
-        $stored = new Webhook();
-        $stored->find($webhook->id);
-        $this->assertSame('https://subscriber.invalid/hook', $stored->url);
+        $this->assertSame(
+            \App\Controllers\Webhooks::class,
+            (new \ReflectionMethod(\App\Controllers\Webhooks::class, 'put'))->getDeclaringClass()->getName(),
+            'the controller no longer overrides put(), so the resource controller\'s own would be routed'
+        );
     }
 
     /**
