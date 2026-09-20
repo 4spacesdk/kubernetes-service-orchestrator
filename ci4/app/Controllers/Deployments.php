@@ -15,6 +15,7 @@ use App\Interfaces\EnvironmentVariableList;
 use App\Interfaces\IntArrayInterface;
 use App\Interfaces\LabelList;
 use App\Libraries\DeploymentSteps\BaseDeploymentStep;
+use App\Libraries\RequestField;
 use App\Libraries\DeploymentSteps\CronjobStep;
 use App\Models\KNativeMinScaleScheduleModel;
 use App\Models\MigrationJobModel;
@@ -357,17 +358,17 @@ class Deployments extends ResourceController {
         $values = new DeploymentVolume();
         $values->all = array_map(
             fn($data) => DeploymentVolume::Create(
-                $data->type,
-                $data->mount_path,
-                $data->sub_path,
-                $data->capacity,
-                $data->volume_mode,
-                $data->reclaim_policy,
-                $data->nfs_server,
-                $data->nfs_path,
-                $data->storage_class,
-                $data->csi_driver,
-                $data->csi_volume_handle
+                RequestField::read($data, 'type'),
+                RequestField::read($data, 'mount_path'),
+                RequestField::read($data, 'sub_path'),
+                RequestField::read($data, 'capacity'),
+                RequestField::read($data, 'volume_mode'),
+                RequestField::read($data, 'reclaim_policy'),
+                RequestField::read($data, 'nfs_server'),
+                RequestField::read($data, 'nfs_path'),
+                RequestField::read($data, 'storage_class'),
+                RequestField::read($data, 'csi_driver'),
+                RequestField::read($data, 'csi_volume_handle')
             ),
             $body->values
         );

@@ -1,5 +1,7 @@
 <?php namespace App\Libraries\Kubernetes;
 
+use App\Libraries\RequestField;
+
 /**
  * The parts of a volume that end up in the claim and the disk, in a form two sets can be
  * compared by.
@@ -29,7 +31,9 @@ class VolumeFingerprint {
         foreach ($rows as $row) {
             $values = [];
             foreach (self::Fields as $field) {
-                $values[] = (string) ($row->{$field} ?? '');
+                // Rows name their fields as the columns are named; a request may use either
+                // spelling, so it is read the same way the endpoints read it.
+                $values[] = (string) RequestField::read($row, $field, '');
             }
             $fingerprints[] = implode('|', $values);
         }

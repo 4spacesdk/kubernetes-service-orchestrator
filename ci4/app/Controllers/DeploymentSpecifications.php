@@ -31,6 +31,7 @@ use App\Interfaces\QuickCommandList;
 use App\Interfaces\RoleRuleList;
 use App\Interfaces\ServiceAnnotationList;
 use App\Interfaces\ServicePortList;
+use App\Libraries\RequestField;
 use DebugTool\Data;
 
 class DeploymentSpecifications extends ResourceController {
@@ -393,6 +394,10 @@ class DeploymentSpecifications extends ResourceController {
         /** @var DeploymentSpecificationInitContainersRequest $body */
         $body = $this->request->getJSON();
 
+        // Unlike cron jobs and post update actions next door, an init container's position
+        // is sent rather than taken from where it sits in the list. The call used to be
+        // written like theirs, keys and all, but its closure took one parameter - so the
+        // keys went nowhere and the two shapes only looked alike.
         $values = new DeploymentSpecificationInitContainer();
         $values->all = array_map(
             fn($item) => DeploymentSpecificationInitContainer::Create(
@@ -400,8 +405,7 @@ class DeploymentSpecifications extends ResourceController {
                 $item->position,
                 $item->includeInMigrationJob
             ),
-            $body->values,
-            array_keys($body->values)
+            $body->values
         );
 
         $item->updateInitContainers($values);
@@ -566,17 +570,17 @@ class DeploymentSpecifications extends ResourceController {
         $values = new DeploymentSpecificationVolume();
         $values->all = array_map(
             fn($data) => DeploymentSpecificationVolume::Create(
-                $data->type,
-                $data->mount_path,
-                $data->sub_path,
-                $data->capacity,
-                $data->volume_mode,
-                $data->reclaim_policy,
-                $data->nfs_server,
-                $data->nfs_path,
-                $data->storage_class,
-                $data->csi_driver,
-                $data->csi_volume_handle,
+                RequestField::read($data, 'type'),
+                RequestField::read($data, 'mount_path'),
+                RequestField::read($data, 'sub_path'),
+                RequestField::read($data, 'capacity'),
+                RequestField::read($data, 'volume_mode'),
+                RequestField::read($data, 'reclaim_policy'),
+                RequestField::read($data, 'nfs_server'),
+                RequestField::read($data, 'nfs_path'),
+                RequestField::read($data, 'storage_class'),
+                RequestField::read($data, 'csi_driver'),
+                RequestField::read($data, 'csi_volume_handle')
             ),
             $body->values
         );

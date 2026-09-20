@@ -210,14 +210,11 @@ class DeploymentSpecificationsApiTest extends ControllerTestCase {
     }
 
     /**
-     * Init containers are the exception, and the code does not look like one.
-     *
-     * The call is written exactly like the two above - `array_map` over the values *and*
-     * over `array_keys($body->values)` - but the closure takes a single parameter, so the
-     * keys are passed and dropped on the floor. The position comes from the body instead.
-     *
-     * So two endpoints that look identical answer differently: send the same list in a
-     * different order and the cron jobs reorder, the init containers do not.
+     * Init containers are the exception: the position is sent rather than taken from where
+     * the entry sits in the list. That is deliberate - the dialog sends it - but the call
+     * used to be written exactly like the two above, `array_keys($body->values)` and all,
+     * with a closure that took one parameter and dropped the keys. Two endpoints that looked
+     * identical answered differently. The keys are gone now; the behaviour is unchanged.
      */
     public function testAnInitContainerTakesItsPositionFromTheBodyRatherThanTheOrder(): void {
         $specification = Fixtures::deploymentSpecification();
@@ -315,11 +312,10 @@ class DeploymentSpecificationsApiTest extends ControllerTestCase {
     }
 
     /**
-     * **The one endpoint that does not speak camelCase.** Every other collection maps a
-     * camelCase body onto snake_case columns by hand; volumes take the column names
-     * straight. A client that followed the pattern here would send fields nothing reads,
-     * and the failure is a PHP error on an undefined property rather than a validation
-     * message.
+     * Volumes take the column names straight, where every other collection maps a camelCase
+     * body onto them by hand. The declared shape is still this one - it is what the dialog
+     * sends - but a client that follows the pattern used by everything else is read too,
+     * instead of hitting an undefined property and a 500.
      */
     public function testVolumesTakeTheirFieldsInSnakeCase(): void {
         $specification = Fixtures::deploymentSpecification();
@@ -336,6 +332,31 @@ class DeploymentSpecificationsApiTest extends ControllerTestCase {
             'storage_class' => 'nfs',
             'csi_driver' => '',
             'csi_volume_handle' => '',
+        ]]);
+
+        $row = db_connect()->table('deployment_specification_volumes')
+            ->where('deployment_specification_id', $specification->id)
+            ->get()->getRowArray();
+        $this->assertSame('/data', $row['mount_path']);
+        $this->assertSame('tenant', $row['sub_path']);
+        $this->assertSame('Retain', $row['reclaim_policy']);
+    }
+
+    public function testVolumesAreAlsoReadInCamelCase(): void {
+        $specification = Fixtures::deploymentSpecification();
+
+        $this->putValues("deployment-specifications/{$specification->id}/volumes", [[
+            'type' => 'nfs',
+            'mountPath' => '/data',
+            'subPath' => 'tenant',
+            'capacity' => 10,
+            'volumeMode' => 'Filesystem',
+            'reclaimPolicy' => 'Retain',
+            'nfsServer' => '10.0.0.1',
+            'nfsPath' => '/exports',
+            'storageClass' => 'nfs',
+            'csiDriver' => '',
+            'csiVolumeHandle' => '',
         ]]);
 
         $row = db_connect()->table('deployment_specification_volumes')

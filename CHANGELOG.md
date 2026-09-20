@@ -22,6 +22,7 @@
 * RBAC rules typed as "get, list" were refused by Kubernetes; spaces are trimmed now
 * An empty or malformed custom resource is refused with a message about the field
 * A second volume on a deployment is refused when saved, instead of failing every deploy
+* The volume endpoints also read their fields in camelCase, like every other collection
 * Changing a volume that already has its disk is refused when saved, instead of failing the next deploy with a Kubernetes error
 * Deploying a volume again unbound it from its claim, so the next pod could not mount it
 * A volume with a storage class was left unused while its claim got a disk from elsewhere; a new volume is now reserved for its own claim
