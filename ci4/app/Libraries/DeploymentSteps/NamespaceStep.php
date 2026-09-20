@@ -5,6 +5,7 @@ use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepLevels;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
 use App\Libraries\Kubernetes\KubeAuth;
+use App\Libraries\Kubernetes\KubeHelper;
 use DebugTool\Data;
 use Exception;
 use RenokiCo\PhpK8s\Exceptions\KubernetesAPIException;
@@ -92,14 +93,18 @@ class NamespaceStep extends BaseDeploymentStep {
      */
     public function getStatus(Deployment $deployment): string {
         try {
+            // `exists()` is inside the try, and that is the whole of it: building the
+            // resource touches nothing, and the call to the cluster is this line. With the
+            // try around the line above only, `Namespace_Error` was returned for a
+            // misconfigured client and never for the case it reads as - a cluster that
+            // answers 401, which went straight out and failed the status panel instead.
             $resource = $this->getResource($deployment, true);
+
+            return $resource->exists()
+                ? DeploymentStepHelper::Namespace_Found
+                : DeploymentStepHelper::Namespace_NotFound;
         } catch (\Throwable $e) {
             return DeploymentStepHelper::Namespace_Error;
-        }
-        if ($resource->exists()) {
-            return DeploymentStepHelper::Namespace_Found;
-        } else {
-            return DeploymentStepHelper::Namespace_NotFound;
         }
     }
 
@@ -122,11 +127,17 @@ class NamespaceStep extends BaseDeploymentStep {
             return $invalid;
         }
 
-        return match ($this->getStatus($deployment)) {
-            DeploymentStepHelper::Namespace_Found => null,
-            DeploymentStepHelper::Namespace_Error => 'Could not reach the cluster to look for the namespace',
-            default => 'Missing Namespace',
-        };
+        // Asked here rather than read off `getStatus()`, which answers in constants for a
+        // panel that draws marks. This one is read by a person deciding what to do about it,
+        // and "401 Unauthorized" is the whole of the answer - `Namespace_Error` would say
+        // only that something went wrong.
+        try {
+            $exists = $this->getResource($deployment, true)->exists();
+        } catch (\Throwable $e) {
+            return KubeHelper::PrintException($e);
+        }
+
+        return $exists ? null : 'Missing Namespace';
     }
 
     public function validateDeployCommand(Deployment $deployment): ?string {

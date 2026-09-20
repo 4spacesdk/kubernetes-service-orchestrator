@@ -4,6 +4,7 @@ use App\ClusterOutages;
 use App\ClusterTestCase;
 use App\Entities\Deployment;
 use App\Fixtures;
+use PHPUnit\Framework\Attributes\DataProvider;
 use App\Libraries\DeploymentSteps\BaseDeploymentStep;
 use App\Libraries\DeploymentSteps\ClusterRoleBindingStep;
 use App\Libraries\DeploymentSteps\ClusterRoleStep;
@@ -115,19 +116,39 @@ class RbacStepsTest extends ClusterTestCase {
     }
 
     /**
-     * The one step of the five that catches the cluster failing while it validates. The
-     * others let a `KubernetesAPIException` out of `validateDeployCommand()`, which the
-     * caller reports as a crashed step rather than a refused one.
+     * Every step that asks the cluster something while validating reports a cluster that
+     * refuses, rather than throwing out of `validateDeployCommand()` - which the caller
+     * shows as a crashed step instead of a refused one.
+     *
+     * Only the service account step did. The two bindings ask a sibling step for its
+     * status, which is a call to the cluster of its own, and let the
+     * `KubernetesAPIException` straight out.
+     *
+     * The two role steps are not here because neither of them touches the cluster to
+     * validate: a Role checks its name, a ClusterRole its name and namespace, and there is
+     * nothing to catch.
      */
-    public function testAClusterThatRefusesUsIsReportedRatherThanThrown(): void {
+    #[DataProvider('theStepsThatAskTheClusterWhileValidating')]
+    public function testAClusterThatRefusesUsIsReportedRatherThanThrown(string $step): void {
         $deployment = $this->deploymentInANamespace();
 
-        $this->withCredentialsTheClusterRejects(function () use ($deployment) {
-            $error = (new ServiceAccountStep())->validateDeployCommand($deployment);
+        $this->withCredentialsTheClusterRejects(function () use ($deployment, $step) {
+            $error = (new $step())->validateDeployCommand($deployment);
 
-            $this->assertNotNull($error);
-            $this->assertStringContainsString('401', $error);
+            $this->assertNotNull($error, $step);
+            $this->assertStringContainsString('401', $error, $step);
         });
+    }
+
+    /**
+     * @return array<string, array{0: class-string}>
+     */
+    public static function theStepsThatAskTheClusterWhileValidating(): array {
+        return [
+            'service account' => [ServiceAccountStep::class],
+            'role binding' => [RoleBindingStep::class],
+            'cluster role binding' => [ClusterRoleBindingStep::class],
+        ];
     }
 
     // </editor-fold>
@@ -314,21 +335,22 @@ class RbacStepsTest extends ClusterTestCase {
     }
 
     /**
-     * Today's behaviour, and it stops a deploy dead. The binding demands `Role_Found`
-     * literally, where the cluster role binding asks its role for `getSuccessStatus()`.
-     * A specification with RBAC switched on but no role rules therefore has a Role step
-     * that correctly creates nothing, and a Role Binding step that refuses for ever -
-     * `deployAllSteps()` reports "Role Binding: Missing Role" on every deploy. See the
-     * cluster role binding below for the shape this one should have had.
+     * A specification with RBAC switched on and no role rules has a Role step that
+     * correctly creates nothing - and the binding accepts that as finished.
+     *
+     * It used to demand `Role_Found` literally, where the cluster role binding asks its
+     * role for `getSuccessStatus()`. So the Role step was done, the binding refused for
+     * ever, and `deployAllSteps()` reported "Role Binding: Missing Role" on every single
+     * deploy with nothing wrong.
      */
-    public function testTheBindingRefusesForeverWhenTheSpecificationHasNoRoleRules(): void {
+    public function testTheBindingAcceptsARoleThatCorrectlyCreatedNothing(): void {
         $deployment = $this->deploymentInANamespace();
         (new RoleStep())->startDeployCommand($deployment);
         (new ServiceAccountStep())->startDeployCommand($deployment);
         $step = new RoleStep();
 
         $this->assertSame($step->getSuccessStatus($deployment), $step->getStatus($deployment), 'the Role step is finished');
-        $this->assertSame('Missing Role', (new RoleBindingStep())->validateDeployCommand($deployment));
+        $this->assertNull((new RoleBindingStep())->validateDeployCommand($deployment));
     }
 
     /**
@@ -437,16 +459,20 @@ class RbacStepsTest extends ClusterTestCase {
     }
 
     /**
-     * Today's behaviour, and an asymmetry worth having written down: `RoleStep` checks
-     * `exists()` before deleting and this one does not, so terminating a workspace that
-     * never had a cluster role throws where the namespaced one stays quiet.
+     * Terminating a binding that was never created is quiet, like the role steps beside it.
+     *
+     * The two bindings used to delete without asking `exists()` first, so a workspace whose
+     * specification has no rules - which never got a binding - answered 404 in the middle of
+     * terminating everything else. Both bindings, because a specification without role rules
+     * usually has no cluster role rules either.
      */
-    public function testTerminatingAClusterRoleBindingThatWasNeverCreatedThrows(): void {
+    public function testTerminatingABindingThatWasNeverCreatedIsQuiet(): void {
         $deployment = $this->deploymentInANamespace();
 
-        $this->expectException(\RenokiCo\PhpK8s\Exceptions\KubernetesAPIException::class);
-
         (new ClusterRoleBindingStep())->startTerminateCommand($deployment);
+        (new RoleBindingStep())->startTerminateCommand($deployment);
+
+        $this->assertTrue(true, 'neither terminate threw');
     }
 
     /**

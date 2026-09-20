@@ -70,7 +70,6 @@ class ServiceAccountStep extends BaseDeploymentStep {
             unset($remote['metadata']['uid']);
             unset($remote['metadata']['resourceVersion']);
             unset($remote['metadata']['creationTimestamp']);
-            unset($remote['secrets']);
             $remote = json_encode($remote);
         }
 

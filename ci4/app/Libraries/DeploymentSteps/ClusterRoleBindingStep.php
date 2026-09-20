@@ -6,6 +6,7 @@ use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepLevels;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
 use App\Libraries\Kubernetes\KubeAuth;
+use App\Libraries\Kubernetes\KubeHelper;
 use App\Models\DeploymentSpecificationClusterRoleRuleModel;
 use DebugTool\Data;
 use RenokiCo\PhpK8s\Exceptions\KubernetesAPIException;
@@ -132,14 +133,21 @@ class ClusterRoleBindingStep extends BaseDeploymentStep {
         if ($namespaceIsNotUsable !== null) {
             return $namespaceIsNotUsable;
         }
-        $clusterRoleStep = new ClusterRoleStep();
-        if ($clusterRoleStep->getStatus($deployment) != $clusterRoleStep->getSuccessStatus($deployment)) {
-            return 'Missing Cluster Role';
+        // See `RoleBindingStep`: a sibling step's status is a call to the cluster, and a
+        // cluster that is down belongs in the refusal rather than in a stack trace.
+        try {
+            $clusterRoleStep = new ClusterRoleStep();
+            if ($clusterRoleStep->getStatus($deployment) != $clusterRoleStep->getSuccessStatus($deployment)) {
+                return 'Missing Cluster Role';
+            }
+            $serviceAccount = new ServiceAccountStep();
+            if ($serviceAccount->getStatus($deployment) != DeploymentStepHelper::ServiceAccount_Found) {
+                return 'Missing Service Account';
+            }
+        } catch (KubernetesAPIException $e) {
+            return KubeHelper::PrintException($e);
         }
-        $serviceAccount = new ServiceAccountStep();
-        if ($serviceAccount->getStatus($deployment) != DeploymentStepHelper::ServiceAccount_Found) {
-            return 'Missing Service Account';
-        }
+
         return null;
     }
 
@@ -150,8 +158,13 @@ class ClusterRoleBindingStep extends BaseDeploymentStep {
 
     public function startTerminateCommand(Deployment $deployment): void {
         $resource = $this->getResource($deployment, true);
-        $resource->synced();
-        $resource->delete();
+        // Guarded like the Role and ClusterRole steps: a workspace whose specification has
+        // no rules never got a binding, and deleting one that is not there is a 404 in the
+        // middle of terminating everything else.
+        if ($resource->exists()) {
+            $resource->synced();
+            $resource->delete();
+        }
     }
 
     public function getKubernetesEvents(Deployment $deployment): array {

@@ -6,6 +6,7 @@ use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepLevels;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
 use App\Libraries\Kubernetes\KubeAuth;
+use App\Libraries\Kubernetes\KubeHelper;
 use App\Models\DeploymentSpecificationRoleRuleModel;
 use RenokiCo\PhpK8s\Exceptions\KubernetesAPIException;
 use RenokiCo\PhpK8s\Instances\Subject;
@@ -131,14 +132,29 @@ class RoleBindingStep extends BaseDeploymentStep {
         if ($namespaceIsNotUsable !== null) {
             return $namespaceIsNotUsable;
         }
-        $roleStep = new RoleStep();
-        if ($roleStep->getStatus($deployment) != DeploymentStepHelper::Role_Found) {
-            return 'Missing Role';
+        // Asked what success looks like rather than held against `Role_Found` literally,
+        // which is what `ClusterRoleBindingStep` has always done. A specification with
+        // `enable_rbac` and no role rules has a Role step that correctly creates nothing
+        // and answers `Role_NotFoundNotExpected` - and this refused it every single time,
+        // so `deployAllSteps()` reported "Role Binding: Missing Role" on every deploy with
+        // nothing wrong.
+        // Wrapped like `ServiceAccountStep` does. Asking a sibling step for its status is
+        // a call to the cluster, and a cluster that is down threw straight out of here - so
+        // the deploy reported a crashed step where the honest answer is a refusal with the
+        // reason in it.
+        try {
+            $roleStep = new RoleStep();
+            if ($roleStep->getStatus($deployment) != $roleStep->getSuccessStatus($deployment)) {
+                return 'Missing Role';
+            }
+            $serviceAccount = new ServiceAccountStep();
+            if ($serviceAccount->getStatus($deployment) != DeploymentStepHelper::ServiceAccount_Found) {
+                return 'Missing Service Account';
+            }
+        } catch (KubernetesAPIException $e) {
+            return KubeHelper::PrintException($e);
         }
-        $serviceAccount = new ServiceAccountStep();
-        if ($serviceAccount->getStatus($deployment) != DeploymentStepHelper::ServiceAccount_Found) {
-            return 'Missing Service Account';
-        }
+
         return null;
     }
 
@@ -149,8 +165,13 @@ class RoleBindingStep extends BaseDeploymentStep {
 
     public function startTerminateCommand(Deployment $deployment): void {
         $resource = $this->getResource($deployment, true);
-        $resource->synced();
-        $resource->delete();
+        // Guarded like the Role and ClusterRole steps: a workspace whose specification has
+        // no rules never got a binding, and deleting one that is not there is a 404 in the
+        // middle of terminating everything else.
+        if ($resource->exists()) {
+            $resource->synced();
+            $resource->delete();
+        }
     }
 
     public function getKubernetesEvents(Deployment $deployment): array {

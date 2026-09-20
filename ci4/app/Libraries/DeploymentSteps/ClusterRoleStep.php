@@ -122,6 +122,13 @@ class ClusterRoleStep extends BaseDeploymentStep {
         if (strlen($deployment->name) == 0) {
             return 'Missing name';
         }
+        // The namespace is half the name - `getResource()` calls the object
+        // `<name>.<namespace>` - and a cluster role is not namespaced, so one created as
+        // `api.` sits at the cluster level with nothing to tie it back to a workspace and
+        // nothing to clean it up.
+        if (strlen($deployment->namespace) == 0) {
+            return 'Missing namespace';
+        }
 
         return null;
     }

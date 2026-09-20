@@ -449,18 +449,20 @@ class RbacStepsTest extends ManifestTestCase {
     }
 
     /**
-     * The two role steps validate the name and nothing else, so they accept without a
-     * cluster being reachable at all - this test runs with the credentials cleared.
+     * Neither role step asks the cluster anything to validate, so both answer with the
+     * credentials cleared, as they are here. What they check is what their object is named
+     * after.
      *
-     * For `ClusterRoleStep` that is more than tidiness: the object's name is
-     * `<name>.<namespace>`, so a deployment with an empty namespace produces a cluster
-     * role called `api.` and no check anywhere says a word. Reported, not fixed.
+     * A Role is namespaced, so its name is the deployment's and nothing else. A ClusterRole
+     * is not, and its name is `<name>.<namespace>` - so an empty namespace used to produce a
+     * cluster role called `api.`, sitting at the cluster level with nothing tying it to a
+     * workspace and nothing to clean it up.
      */
-    public function testTheRoleStepsValidateNothingButTheName(): void {
+    public function testTheRoleStepsValidateWhatTheirNameIsMadeOf(): void {
         $deployment = Fixtures::deployableDeployment(['namespace' => '']);
 
         $this->assertNull((new RoleStep())->validateDeployCommand($deployment));
-        $this->assertNull((new ClusterRoleStep())->validateDeployCommand($deployment));
+        $this->assertSame('Missing namespace', (new ClusterRoleStep())->validateDeployCommand($deployment));
     }
 
     // </editor-fold>
