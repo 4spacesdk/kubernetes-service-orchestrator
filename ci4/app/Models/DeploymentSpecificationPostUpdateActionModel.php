@@ -38,10 +38,4 @@ class DeploymentSpecificationPostUpdateActionModel extends Model implements Reso
 
     }
 
-    public function ignoredRestGetOnRelations() {
-        return [
-
-        ];
-    }
-
 }

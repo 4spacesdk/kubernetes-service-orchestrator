@@ -38,10 +38,4 @@ class PostUpdateActionConditionModel extends Model implements ResourceModelInter
 
     }
 
-    public function ignoredRestGetOnRelations(): array {
-        return [
-
-        ];
-    }
-
 }

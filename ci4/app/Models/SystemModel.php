@@ -64,10 +64,5 @@ class SystemModel extends Model implements ResourceModelInterface {
     }
 
     /** @codeCoverageIgnore */
-    public function ignoredRestGetOnRelations(): array {
-        return [
-
-        ];
-    }
 
 }

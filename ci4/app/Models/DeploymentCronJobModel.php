@@ -15,9 +15,10 @@ class DeploymentCronJobModel extends Model implements ResourceModelInterface {
     ];
 
     public function preRestGet($queryParser, $id) {
-        $this
-            ->includeRelated(K8sCronJobModel::class)
-            ->includeRelated([K8sCronJobModel::class, ContainerImageModel::class]);
+        // The two-element call adds both joins - the relation and the one below it - so
+        // naming the first one on its own beforehand was a second call that found the join
+        // already there and did nothing.
+        $this->includeRelated([K8sCronJobModel::class, ContainerImageModel::class]);
     }
 
     public function postRestGet($queryParser, $items) {
@@ -38,12 +39,6 @@ class DeploymentCronJobModel extends Model implements ResourceModelInterface {
 
     public function appleRestGetManyRelations($items) {
 
-    }
-
-    public function ignoredRestGetOnRelations() {
-        return [
-
-        ];
     }
 
 }

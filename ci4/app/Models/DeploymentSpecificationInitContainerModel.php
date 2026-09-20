@@ -15,7 +15,7 @@ class DeploymentSpecificationInitContainerModel extends Model implements Resourc
     ];
 
     public function preRestGet($queryParser, $id) {
-        $this->includeRelated(InitContainerModel::class);
+        // See `DeploymentCronJobModel`: the two-element call makes both joins.
         $this->includeRelated([InitContainerModel::class, ContainerImageModel::class]);
     }
 
@@ -37,12 +37,6 @@ class DeploymentSpecificationInitContainerModel extends Model implements Resourc
 
     public function appleRestGetManyRelations($items) {
 
-    }
-
-    public function ignoredRestGetOnRelations() {
-        return [
-
-        ];
     }
 
 }

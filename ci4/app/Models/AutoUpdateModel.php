@@ -37,10 +37,4 @@ class AutoUpdateModel extends Model implements ResourceModelInterface {
 
     }
 
-    public function ignoredRestGetOnRelations(): array {
-        return [
-
-        ];
-    }
-
 }

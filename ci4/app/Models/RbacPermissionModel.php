@@ -37,10 +37,4 @@ class RbacPermissionModel extends Model implements ResourceModelInterface {
 
     }
 
-    public function ignoredRestGetOnRelations(): array {
-        return [
-
-        ];
-    }
-
 }
