@@ -1,9 +1,12 @@
 <?php namespace App\Models;
 
+use App\Models\Concerns\FiltersByLabel;
 use RestExtension\Core\Model;
 use RestExtension\ResourceModelInterface;
 
 class DeploymentSpecificationModel extends Model implements ResourceModelInterface {
+
+    use FiltersByLabel;
 
     public $hasOne = [
         ContainerImageModel::class,
@@ -38,23 +41,7 @@ class DeploymentSpecificationModel extends Model implements ResourceModelInterfa
     public function preRestGet($queryParser, $id) {
         $this->includeRelated(ContainerImageModel::class);
 
-        if ($queryParser->hasFilter('label')) {
-            $queryParser->getFilter('label')[0]->ignoreAuto = true;
-            $selectors = explode(',', $queryParser->getFilter('label')[0]->value);
-
-            foreach ($selectors as $selector) {
-                [$name, $value] = explode('=', $selector);
-
-                $labelSubQuery = (new LabelModel())
-                    ->select('COUNT(*) as count', true, false)
-                    ->whereRelated(DeploymentSpecificationModel::class, 'id', '${parent}.id', false)
-                    ->where('name', $name)
-                    ->where('value', $value)
-                    ->having('count >', 0, true, false);
-
-                $this->whereSubQuery($labelSubQuery, '', null, false);
-            }
-        }
+        $this->applyLabelFilter($queryParser);
     }
 
     public function postRestGet($queryParser, $items) {

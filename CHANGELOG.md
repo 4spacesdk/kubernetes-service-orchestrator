@@ -44,6 +44,8 @@
 * A workspace with RBAC on and no role rules deploys: its role binding no longer refuses every time with "Missing Role"
 * Terminating a workspace that never had a role binding no longer fails partway through
 * The environments list carries a count like every other list, and asking for one environment by id is gone - it answered with all of them
+* `filter=status:active` narrows to that status; it used to be dropped and answer with every workspace in every status
+* A label filter that cannot be read is refused with what to write instead, rather than failing the request or applying half of itself
 * Updating something that does not exist answered OK and wrote nothing; it is refused now
 * Removed `PUT /deployments/{id}/ingress`, which could never work - the workspace endpoint is the one that does this
 * Reading something that does not exist answered a resource with every field null; it answers 404 now

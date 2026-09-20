@@ -3,12 +3,15 @@
 use App\Entities\Deployment;
 use App\Entities\DeploymentsLabel;
 use App\Entities\Workspace;
+use App\Models\Concerns\FiltersByLabel;
 use DebugTool\Data;
 use RestExtension\Core\Model;
 use RestExtension\QueryParser;
 use RestExtension\ResourceModelInterface;
 
 class WorkspaceModel extends Model implements ResourceModelInterface {
+
+    use FiltersByLabel;
 
     public $hasOne = [
         DeletionModel::class,
@@ -30,29 +33,29 @@ class WorkspaceModel extends Model implements ResourceModelInterface {
             $queryParser->getInclude('deployment')->ignoreAuto = true;
         }
 
-        if ($queryParser->hasFilter('label')) {
-            $queryParser->getFilter('label')[0]->ignoreAuto = true;
-            $selectors = explode(',', $queryParser->getFilter('label')[0]->value);
-
-            foreach ($selectors as $selector) {
-                [$name, $value] = explode('=', $selector);
-
-                $labelSubQuery = (new LabelModel())
-                    ->select('COUNT(*) as count', true, false)
-                    ->whereRelated(WorkspaceModel::class, 'id', '${parent}.id', false)
-                    ->where('name', $name)
-                    ->where('value', $value)
-                    ->having('count >', 0, true, false);
-
-                $this->whereSubQuery($labelSubQuery, '', null, false);
-            }
-        }
+        $this->applyLabelFilter($queryParser);
 
         if ($queryParser->hasFilter('status')) {
-            $queryParser->getFilter('status')[0]->ignoreAuto = true;
-            $statuses = $queryParser->getFilter('status')[0]->value;
+            $filter = $queryParser->getFilter('status')[0];
+            $statuses = $filter->value;
+
+            // `ignoreAuto` is set only where a condition is actually added, and that is the
+            // whole of this fix. It used to be set two lines earlier, before the guard - so
+            // `filter=status:active`, which parses to a string rather than a list, fell
+            // through the guard *and* told the extension not to apply it. The answer was
+            // `200 OK`, shaped exactly like a filtered one, carrying every status there is.
+            //
+            // A scalar needs no branch of its own now: left alone, the extension applies it
+            // as the ordinary `status = 'active'` it always was on every other resource.
             if (is_array($statuses) && count($statuses) > 0 && $statuses[0] !== '') {
+                // An empty list means "all", which is what a cleared status picker sends -
+                // `whereIn('status', [''])` would answer nothing at all.
                 $this->whereIn('status', $statuses);
+                $filter->ignoreAuto = true;
+            } else if (is_array($statuses)) {
+                // Nothing to add, and nothing for the extension to add either: a list of
+                // one empty string is not a column value.
+                $filter->ignoreAuto = true;
             }
         }
     }

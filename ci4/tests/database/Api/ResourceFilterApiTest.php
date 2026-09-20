@@ -3,6 +3,7 @@
 use App\ControllerTestCase;
 use App\Entities\Workspace;
 use App\Fixtures;
+use RestExtension\Exceptions\InvalidRequestException;
 use CodeIgniter\Database\Exceptions\DatabaseException;
 use CodeIgniter\Test\TestResponse;
 
@@ -81,34 +82,44 @@ class ResourceFilterApiTest extends ControllerTestCase {
     }
 
     /**
-     * Today's behaviour for the unquoted form the filter syntax suggests.
+     * The unquoted form is refused, with the quoting it needs in the message.
      *
      * `QueryParser::parseFilter()` splits on commas outside brackets and quotes, so
      * `label:environment=production,tier=web` arrives as two filters: `label` with the
-     * value `environment=production`, and a second one whose property is the empty string.
-     * The empty one has no `ignoreAuto`, so the extension applies it as an ordinary
-     * condition on a column called `''`.
+     * first selector, and a second one whose property is the empty string. That second one
+     * used to be applied as an ordinary condition on a column called `''`, and the request
+     * ended as a database error - `= 'ier=web'`, the leading character eaten as the
+     * separator and the rest compared against nothing at all.
      *
-     * The result is not a wrong row - it is a database error - and it is pinned because
-     * the shape reads as supported: the model splits its own value on commas, so somebody
-     * wrote it expecting to receive more than one selector that way.
-     *
-     * `tier=web` has no colon in it, so `QueryFilter::parse()` takes the property to be the
-     * empty string and the value to be everything after the first character. The condition
-     * that reaches MySQL is `= 'ier=web'`, with no column in front of it. Reported, not
-     * fixed.
+     * Refused rather than dropped, and that is the decision worth writing down. Dropping the
+     * stray filter would have answered `200 OK` with the first selector applied and the
+     * second silently gone: a narrower question answered wider, which is the same fault as
+     * the status filter below and harder to notice than a refusal.
      */
-    public function testAnUnquotedSecondSelectorIsParsedAsAFilterOfItsOwn(): void {
+    public function testAnUnquotedSecondSelectorIsRefusedRatherThanHalfApplied(): void {
         $this->workspaceNamed('both', ['environment' => 'production', 'tier' => 'web']);
+        $this->workspaceNamed('only-one-of-them', ['environment' => 'production']);
 
-        try {
-            $this->signedIn()->get('workspaces?filter=label:environment=production,tier=web');
-            $this->fail('the unquoted form started working - good, and this pin is now the fix');
-        } catch (DatabaseException $e) {
-            // The leading character of the second selector is eaten as the separator, and
-            // what is left is compared against nothing at all.
-            $this->assertStringContainsString("= 'ier=web'", $e->getMessage());
-        }
+        $this->expectException(InvalidRequestException::class);
+        $this->expectExceptionMessage('has to be quoted');
+
+        $this->signedIn()->get('workspaces?filter=label:environment=production,tier=web');
+    }
+
+    /**
+     * A selector that is not `name=value` is refused too.
+     *
+     * `explode('=', $selector)` on one without an `=` hands back a single element, and the
+     * `[$name, $value] = ...` below it read `[1]` off that: `Undefined array key 1`, a 500
+     * for a query string anybody can type. All three label filters had the same line.
+     */
+    public function testALabelSelectorThatIsNotNameEqualsValueIsRefused(): void {
+        $this->workspaceNamed('has-labels', ['environment' => 'production']);
+
+        $this->expectException(InvalidRequestException::class);
+        $this->expectExceptionMessage('has to be name=value');
+
+        $this->signedIn()->get('workspaces?filter=label:environment');
     }
 
     // </editor-fold>
@@ -153,32 +164,24 @@ class ResourceFilterApiTest extends ControllerTestCase {
     }
 
     /**
-     * **A scalar status filter is dropped in silence, and the caller gets every workspace.**
+     * A scalar status filter narrows, like the same syntax does on every other resource.
      *
-     * `filter=status:active` is the ordinary filter syntax, and it is what every other
-     * filterable field on every other resource accepts. Here it parses to the string
-     * `active`, the `is_array()` guard rejects it, and nothing is added - but `ignoreAuto`
-     * has already been set two lines above, so the extension will not apply it either.
+     * It used to be dropped in silence. `filter=status:active` parses to the string
+     * `active`, the `is_array()` guard rejected it and added nothing - but `ignoreAuto` had
+     * been set two lines above, so the extension did not apply it either. The response was
+     * `200 OK`, shaped exactly like a filtered one, carrying rows in every other status.
      *
-     * The response is `200 OK`, it is shaped exactly like a filtered one, and it contains
-     * rows in every other status. Reported, not fixed.
-     *
-     * The assertion is deliberately the wrong-looking way round: it asserts the draft
-     * workspace **is** in the answer. The day the branch learns to handle a scalar, this
-     * test fails and that failure is the fix landing.
+     * The fix is not a branch for scalars: it is setting `ignoreAuto` only where a condition
+     * is actually added. Left alone, the extension applies `status = 'active'` itself, which
+     * is what it does for every other field.
      */
-    public function testAScalarStatusFilterIsDroppedAndAnswersEveryStatus(): void {
+    public function testAScalarStatusFilterNarrowsToThatStatus(): void {
         $this->workspaceNamed('is-active', [], \WorkspaceStatusTypes::Active);
         $this->workspaceNamed('is-draft', [], \WorkspaceStatusTypes::Draft);
 
         $names = $this->namesOf($this->signedIn()->get('workspaces?filter=status:active'));
 
-        $this->assertContains('is-active', $names);
-        $this->assertContains(
-            'is-draft',
-            $names,
-            'a scalar status filter started narrowing - good, and this pin is now the fix'
-        );
+        $this->assertSame(['is-active'], $names);
     }
 
     // </editor-fold>

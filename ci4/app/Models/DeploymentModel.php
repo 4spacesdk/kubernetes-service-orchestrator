@@ -1,10 +1,13 @@
 <?php namespace App\Models;
 
 use App\Entities\Deployment;
+use App\Models\Concerns\FiltersByLabel;
 use RestExtension\Core\Model;
 use RestExtension\ResourceModelInterface;
 
 class DeploymentModel extends Model implements ResourceModelInterface {
+
+    use FiltersByLabel;
 
     public $hasOne = [
         DeletionModel::class,
@@ -37,23 +40,7 @@ class DeploymentModel extends Model implements ResourceModelInterface {
             ->includeRelated([DeploymentSpecificationModel::class, ContainerImageModel::class])
             ->includeRelated('last_migration_job');
 
-        if ($queryParser->hasFilter('label')) {
-            $queryParser->getFilter('label')[0]->ignoreAuto = true;
-            $selectors = explode(',', $queryParser->getFilter('label')[0]->value);
-
-            foreach ($selectors as $selector) {
-                [$name, $value] = explode('=', $selector);
-
-                $labelSubQuery = (new LabelModel())
-                    ->select('COUNT(*) as count', true, false)
-                    ->whereRelated(DeploymentModel::class, 'id', '${parent}.id', false)
-                    ->where('name', $name)
-                    ->where('value', $value)
-                    ->having('count >', 0, true, false);
-
-                $this->whereSubQuery($labelSubQuery, '', null, false);
-            }
-        }
+        $this->applyLabelFilter($queryParser);
     }
 
     /**
