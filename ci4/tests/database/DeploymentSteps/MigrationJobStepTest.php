@@ -82,21 +82,21 @@ class MigrationJobStepTest extends ManifestTestCase {
     }
 
     /**
-     * The dialog offers three tag policies for the migration image, but this step handles
-     * only two: "Default" reaches a `match` with no arm for it and throws. Nothing else
-     * goes wrong first, so the whole deploy fails while the manifest is being built.
-     * Held as a test so the fix is a deliberate one.
+     * The third of the three tag policies the dialog offers. It used to reach a `match` with
+     * no arm for it, so picking it threw while the manifest was built and the whole deploy
+     * failed. Cron jobs and init containers have always taken the image's own default tag.
      */
-    public function testDefaultTagPolicyOnTheMigrationImageIsUnhandled(): void {
-        $migrationImage = Fixtures::containerImage(['url' => 'registry.example.org/migrator']);
+    public function testDefaultTagPolicyOnTheMigrationImageUsesTheImagesDefaultTag(): void {
+        $migrationImage = Fixtures::containerImage([
+            'url' => 'registry.example.org/migrator',
+            'default_tag' => 'stable',
+        ]);
         $deployment = $this->migratableDeployment([], [
             'database_migration_container_image_id' => $migrationImage->id,
             'database_migration_container_image_tag_policy' => \ContainerImageTagPolicies::Default,
         ]);
 
-        $this->expectException(\UnhandledMatchError::class);
-
-        $this->build($deployment);
+        $this->assertSame('registry.example.org/migrator:stable', $this->container($deployment)['image']);
     }
 
     /**

@@ -260,7 +260,8 @@ class MigrationJobStep extends BaseDeploymentStep {
             $containerImage->find($spec->database_migration_container_image_id);
             $tag = match ($spec->database_migration_container_image_tag_policy) {
                 \ContainerImageTagPolicies::MatchDeployment => $deployment->version,
-                \ContainerImageTagPolicies::Static => $spec->database_migration_container_image_tag_value
+                \ContainerImageTagPolicies::Static => $spec->database_migration_container_image_tag_value,
+                \ContainerImageTagPolicies::Default => $containerImage->default_tag,
             };
         } else {
             $containerImage->find($spec->container_image_id);
