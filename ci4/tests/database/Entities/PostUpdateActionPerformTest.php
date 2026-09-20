@@ -68,10 +68,34 @@ class PostUpdateActionPerformTest extends DatabaseTestCase {
     }
 
     /**
-     * Today's behaviour, and the same shape as the conditions' crash on an image without a
-     * commit identification: a commit message with no task url leaves the item id empty, and
-     * the id is pulled apart before anything is guarded. The action dies rather than
-     * skipping quietly.
+     * An image with no commit identification or version control set up - the default - used
+     * to take the action down on a call to null, after the release had already finished.
+     * The action is skipped instead.
+     */
+    public function testAnImageWithoutTheIntegrationsSkipsTheComment(): void {
+        $fakes = $this->fakesWithCommit('Fixes https://podio.com/acme/app/1/items/4217');
+        $fakes->shortSha = null;
+        [$action, $deployment] = $this->commentAction('Deployed');
+
+        $action->perform($deployment);
+
+        $this->assertSame([], $fakes->podio()->comments);
+    }
+
+    public function testAnImageWithoutVersionControlSkipsTheFieldUpdate(): void {
+        $fakes = $this->fakesWithCommit('Fixes https://podio.com/acme/app/1/items/4217');
+        $fakes->commitMessage = null;
+        [$action, $deployment] = $this->fieldUpdateAction('done');
+
+        $action->perform($deployment);
+
+        $this->assertSame([], $fakes->podio()->fieldUpdates);
+    }
+
+    /**
+     * Today's behaviour, and separate from the guards above: a commit message with no task
+     * url leaves the item id empty, and the id is pulled apart before anything is guarded.
+     * The action dies rather than skipping quietly.
      */
     public function testACommitWithoutATaskUrlCrashes(): void {
         $this->fakesWithCommit('Tidy up the logging');

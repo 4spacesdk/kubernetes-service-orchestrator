@@ -61,8 +61,13 @@ class PostUpdateAction extends Entity {
                 if (!$spec->container_image->exists()) {
                     $spec->container_image->find();
                 }
-                $shortSha = $spec->container_image->getCommitIdentification()->getCommitShortSha($deployment);
+                $shortSha = $spec->container_image->getCommitShortSha($deployment);
                 $vcs = $spec->container_image->getVersionControlSystem();
+                if ($shortSha === null || $vcs === null) {
+                    // The default for an image: no commit identification, no version control.
+                    Data::debug('ERROR Cannot look up the commit for', $spec->container_image->name);
+                    return;
+                }
                 $commitUrl = $vcs->getCommitUrl($shortSha);
                 $commitMessage = $vcs->getCommitMessage($shortSha);
                 // Grab url from commit
@@ -96,8 +101,12 @@ class PostUpdateAction extends Entity {
                 if (!$spec->container_image->exists()) {
                     $spec->container_image->find();
                 }
-                $shortSha = $spec->container_image->getCommitIdentification()->getCommitShortSha($deployment);
+                $shortSha = $spec->container_image->getCommitShortSha($deployment);
                 $vcs = $spec->container_image->getVersionControlSystem();
+                if ($shortSha === null || $vcs === null) {
+                    Data::debug('ERROR Cannot look up the commit for', $spec->container_image->name);
+                    return;
+                }
                 $commitMessage = $vcs->getCommitMessage($shortSha);
                 // Grab url from commit
                 preg_match_all('#\bhttps?://[^,\s()<>]+(?:\([\w\d]+\)|([^,[:punct:]\s]|/))#', $commitMessage, $match);

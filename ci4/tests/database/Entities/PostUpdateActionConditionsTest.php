@@ -141,37 +141,28 @@ class PostUpdateActionConditionsTest extends DatabaseTestCase {
     // <editor-fold desc="The condition's own refusals">
 
     /**
-     * An image with no commit identification configured crashes the check.
-     *
-     * `getCommitIdentification()` returns null for an image that has none - which is the
-     * default, and what every image starts as - and the result is used without asking.
-     * The condition is careful about everything after this point and not about this. The
-     * failure lands in the post-update run after a deployment, so a customer's release
-     * finishes and the follow-up work dies.
+     * An image with no commit identification set up - the default, and what every image
+     * starts as - used to crash the check on a call to null. The failure landed in the
+     * post-update run after a deployment, so a customer's release finished and the
+     * follow-up work died. The condition simply does not hold now.
      */
-    public function testAnImageWithoutCommitIdentificationCrashesTheCheck(): void {
+    public function testAnImageWithoutCommitIdentificationFailsTheCheck(): void {
         $fakes = FakeIntegrations::install();
         $fakes->shortSha = null;
         $fakes->commitMessage = 'Fixes https://podio.com/x/items/42';
 
-        $this->expectException(\Error::class);
-        $this->expectExceptionMessage('getCommitShortSha() on null');
-
-        $this->checkPodioCondition();
+        $this->assertFalse($this->checkPodioCondition());
     }
 
     /**
-     * The same one line later: a sha, but no version control configured to ask about it.
+     * The same one line later: a sha, but no version control set up to ask about it.
      */
-    public function testAnImageWithoutVersionControlCrashesTheCheck(): void {
+    public function testAnImageWithoutVersionControlFailsTheCheck(): void {
         $fakes = FakeIntegrations::install();
         $fakes->shortSha = 'abc1234';
         $fakes->commitMessage = null;
 
-        $this->expectException(\Error::class);
-        $this->expectExceptionMessage('getCommitMessage() on null');
-
-        $this->checkPodioCondition();
+        $this->assertFalse($this->checkPodioCondition());
     }
 
     /**

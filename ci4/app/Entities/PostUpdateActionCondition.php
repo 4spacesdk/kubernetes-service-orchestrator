@@ -23,16 +23,24 @@ class PostUpdateActionCondition extends Entity {
                 if (!$spec->container_image->exists()) {
                     $spec->container_image->find();
                 }
-                $shortSha = $spec->container_image->getCommitIdentification()->getCommitShortSha($deployment);
+                $shortSha = $spec->container_image->getCommitShortSha($deployment);
 
-                if (!strlen($shortSha)) {
+                if ($shortSha === null) {
                     Data::debug('ERROR Could not find commit short sha');
                     return false;
                 }
 
                 Data::debug('Commit short sha', $shortSha);
 
+                // Null for an image with no version control set up, which is the default. It
+                // used to be called on anyway, and the condition died in the post-update run
+                // after a deployment - the release finished and the follow-up work did not.
                 $vcs = $spec->container_image->getVersionControlSystem();
+                if ($vcs === null) {
+                    Data::debug('ERROR No version control is set up on', $spec->container_image->name);
+                    return false;
+                }
+
                 $commitMessage = $vcs->getCommitMessage($shortSha);
                 if (!strlen($commitMessage)) {
                     Data::debug('ERROR Could not find commit message');
