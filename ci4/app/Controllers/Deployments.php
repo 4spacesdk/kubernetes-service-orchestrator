@@ -350,6 +350,10 @@ class Deployments extends ResourceController {
             $this->fail($problem);
             return;
         }
+        if ($problem = $item->volumeChangeProblem($body->values ?? [])) {
+            $this->fail($problem);
+            return;
+        }
         $values = new DeploymentVolume();
         $values->all = array_map(
             fn($data) => DeploymentVolume::Create(

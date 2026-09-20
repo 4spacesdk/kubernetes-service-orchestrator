@@ -519,6 +519,34 @@ class DeploymentsApiTest extends ControllerTestCase {
     }
 
     /**
+     * Saving the volumes it already has is not a change, so the cluster is not asked - which
+     * matters because this suite has none: a call would fail, and the save would be refused
+     * with the reason.
+     */
+    public function testSavingTheSameVolumeAgainIsNotAChange(): void {
+        $deployment = Fixtures::deployableDeployment();
+        Fixtures::deploymentVolume(array_merge(['deployment_id' => $deployment->id], $this->volume()));
+
+        $body = $this->putVolumes($deployment, [$this->volume()]);
+
+        $this->assertSame('OK', $body['status']);
+    }
+
+    /**
+     * Whether the change is allowed can only be answered by the cluster, and a cluster that
+     * cannot be reached is not an answer - so the save is refused with the reason rather
+     * than stored and left to fail on the next deploy.
+     */
+    public function testAChangedVolumeIsRefusedWhenTheClusterCannotBeAsked(): void {
+        $deployment = Fixtures::deployableDeployment();
+        Fixtures::deploymentVolume(array_merge(['deployment_id' => $deployment->id], $this->volume()));
+
+        $body = $this->putVolumes($deployment, [array_merge($this->volume(), ['capacity' => 50])]);
+
+        $this->assertStringContainsString('could not be asked', $body['error'] ?? '');
+    }
+
+    /**
      * A deployment mounts one volume: every volume is named after it, so a second makes the
      * Deployment invalid and every deploy of it fails. Refused when saved, before a row is
      * written.

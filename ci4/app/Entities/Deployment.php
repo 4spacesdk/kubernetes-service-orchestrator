@@ -2,6 +2,8 @@
 
 use App\Core\Entity;
 use App\Exceptions\ValidationException;
+use App\Libraries\DeploymentSteps\PersistentVolumeClaimStep;
+use App\Libraries\Kubernetes\VolumeFingerprint;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepTriggers;
@@ -9,6 +11,7 @@ use App\Libraries\ZMQ\ChangeEvent;
 use App\Libraries\ZMQ\Events;
 use App\Libraries\ZMQ\ZMQProxy;
 use App\Models\DeploymentModel;
+use App\Models\DeploymentVolumeModel;
 use App\Models\DomainModel;
 use App\Models\EnvironmentVariableModel;
 use App\Models\WorkspaceModel;
@@ -235,6 +238,40 @@ class Deployment extends Entity {
             }
         }
         return null;
+    }
+
+    /**
+     * Why the deployment's volumes cannot be changed to the ones sent, or null when they
+     * can.
+     *
+     * A claim's spec is fixed once the claim exists, so an edit that reaches the cluster is
+     * a `422` in the middle of a deploy, with the workspace left on its old disk. The
+     * cluster is only asked when something that ends up in the claim actually changed.
+     *
+     * @param iterable<object> $incoming
+     */
+    public function volumeChangeProblem(iterable $incoming): ?string {
+        $stored = (new DeploymentVolumeModel())->where('deployment_id', $this->id)->find();
+        $before = VolumeFingerprint::of($stored);
+        $after = VolumeFingerprint::of($incoming);
+
+        // Adding the first volume changes no disk, and neither does removing one - the claim
+        // is left where it is. Only an edit to a volume that is there can meet a claim, and
+        // only then is the cluster worth asking.
+        if ($before === [] || $after === [] || $before === $after) {
+            return null;
+        }
+
+        try {
+            if (!(new PersistentVolumeClaimStep())->claimExists($this)) {
+                return null;
+            }
+        } catch (\Throwable $e) {
+            return 'The cluster could not be asked whether the volume is already there: ' . $e->getMessage();
+        }
+
+        return "'{$this->name}' already has its disk, and a disk cannot be changed after it is made."
+            . ' Remove the volume and add it again to start over - the old disk is kept or deleted by its reclaim policy.';
     }
 
     public function updateDeploymentVolumes(DeploymentVolume $values): void {

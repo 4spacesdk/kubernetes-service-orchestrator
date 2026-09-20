@@ -17,6 +17,7 @@ use App\Libraries\DeploymentSteps\KServiceStep;
 use App\Libraries\DeploymentSteps\MigrationJobStep;
 use App\Libraries\DeploymentSteps\NamespaceStep;
 use App\Libraries\DeploymentSteps\PersistentVolumeClaimStep;
+use App\Libraries\Kubernetes\VolumeFingerprint;
 use App\Libraries\DeploymentSteps\PersistentVolumeStep;
 use App\Libraries\DeploymentSteps\RegistryPullSecretStep;
 use App\Libraries\DeploymentSteps\RoleBindingStep;
@@ -32,6 +33,7 @@ use App\Models\DeploymentSpecificationHttpProxyRouteModel;
 use App\Models\DeploymentSpecificationInitContainerModel;
 use App\Models\DeploymentSpecificationServiceAnnotationModel;
 use App\Models\DeploymentSpecificationServicePortModel;
+use App\Models\DeploymentModel;
 use App\Models\DeploymentSpecificationVolumeModel;
 use App\Models\DeploymentVolumeModel;
 use App\Models\InitContainerModel;
@@ -570,6 +572,43 @@ class DeploymentSpecification extends Entity {
                 return 'These deployments have a volume of their own: ' . implode(', ', $names);
             }
         }
+        return null;
+    }
+
+    /**
+     * The same for a specification's volumes, which every deployment on it mounts. The
+     * first deployment that already has its disk is the one named: one is enough to say
+     * why the change cannot be made, and asking about all of them would be a cluster call
+     * per deployment.
+     *
+     * @param iterable<object> $incoming
+     */
+    public function volumeChangeProblem(iterable $incoming): ?string {
+        $stored = (new DeploymentSpecificationVolumeModel())->where('deployment_specification_id', $this->id)->find();
+        $before = VolumeFingerprint::of($stored);
+        $after = VolumeFingerprint::of($incoming);
+
+        // Adding the first volume changes no disk, and neither does removing one - the claim
+        // is left where it is. Only an edit to a volume that is there can meet a claim, and
+        // only then is the cluster worth asking.
+        if ($before === [] || $after === [] || $before === $after) {
+            return null;
+        }
+
+        $step = new PersistentVolumeClaimStep();
+        /** @var Deployment $deployments */
+        $deployments = (new DeploymentModel())->where('deployment_specification_id', $this->id)->find();
+        foreach ($deployments as $deployment) {
+            try {
+                if ($step->claimExists($deployment)) {
+                    return "'{$deployment->name}' already has its disk, and a disk cannot be changed after it is made."
+                        . ' Remove the volume and add it again to start over - the old disk is kept or deleted by its reclaim policy.';
+                }
+            } catch (\Throwable $e) {
+                return 'The cluster could not be asked whether the volumes are already there: ' . $e->getMessage();
+            }
+        }
+
         return null;
     }
 

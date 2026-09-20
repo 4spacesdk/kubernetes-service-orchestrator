@@ -109,6 +109,22 @@ class PersistentVolumeClaimStep extends BaseDeploymentStep {
         return $found ? DeploymentStepHelper::PersistentVolumeClaim_Found : DeploymentStepHelper::PersistentVolumeClaim_NotFound;
     }
 
+    /**
+     * Whether the deployment's claim is in the cluster. Asked when a volume is edited: the
+     * claim's spec cannot change, so the edit is refused before it is stored rather than
+     * failing the next deploy with a raw 422.
+     *
+     * @throws \Exception When the cluster cannot be reached.
+     */
+    public function claimExists(Deployment $deployment): bool {
+        $claim = new K8sPersistentVolumeClaim();
+        $claim->setName($deployment->name)
+            ->setNamespace($deployment->namespace)
+            ->onCluster((new KubeAuth())->authenticate());
+
+        return $claim->exists();
+    }
+
     public function validateDeployCommand(Deployment $deployment): ?string {
         if (strlen($deployment->name) == 0) {
             return 'Missing name';

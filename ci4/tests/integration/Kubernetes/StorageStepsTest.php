@@ -70,10 +70,10 @@ class StorageStepsTest extends ClusterTestCase {
 
     /**
      * A claim's spec cannot be changed after it is created - the api server refuses
-     * anything but growing `resources.requests` on an already bound claim. kso does not
-     * know that, so **editing a workspace's volume and deploying again throws**, and the
-     * deploy stops at that step. The workspace keeps the old disk and the error is a raw
-     * 422 from Kubernetes.
+     * anything but growing `resources.requests` on an already bound claim. Saving such an
+     * edit is refused now, so the only way here is a row changed behind the endpoint's
+     * back; what it shows is why the refusal exists. The deploy stops at that step, the
+     * workspace keeps the old disk, and the error is a raw 422 from Kubernetes.
      */
     public function testChangingAVolumeMakesTheNextDeployFail(): void {
         $deployment = $this->deploymentInANamespace();
