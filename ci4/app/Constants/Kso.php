@@ -46,6 +46,12 @@ class WorkspaceStatusTypes {
     const string Active = 'active';
     const string Inactive = 'inactive';
     const string Error = 'error';
+
+    /**
+     * Set by a person and left alone by `Workspace::checkStatus()`, unlike the five above,
+     * which are recomputed from the deployments every time anything happens to one.
+     */
+    const string Paused = 'paused';
 }
 
 class KeelHookStatusTypes {

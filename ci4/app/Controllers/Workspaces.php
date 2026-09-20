@@ -242,6 +242,55 @@ class Workspaces extends ResourceController {
     }
 
     /**
+     * Pause: terminate the workspace and remember that a person decided to, so the pause
+     * cannot fall off when the status is recomputed.
+     *
+     * @route /workspaces/{id}/pause
+     * @method put
+     * @custom true
+     * @param int $id
+     * @return void
+     */
+    public function pause(int $id = 0): void {
+        $item = new Workspace();
+        $item->find($id);
+        if (!$item->exists()) {
+            $this->fail('unknown workspace');
+            return;
+        }
+
+        $errors = $item->pause();
+        if ($errors) {
+            $this->fail($errors);
+            return;
+        }
+        $this->_setResource($item);
+        $this->success();
+    }
+
+    /**
+     * Take the pause off. The workspace stays terminated until someone deploys it.
+     *
+     * @route /workspaces/{id}/resume
+     * @method put
+     * @custom true
+     * @param int $id
+     * @return void
+     */
+    public function resume(int $id = 0): void {
+        $item = new Workspace();
+        $item->find($id);
+        if (!$item->exists()) {
+            $this->fail('unknown workspace');
+            return;
+        }
+
+        $item->resume();
+        $this->_setResource($item);
+        $this->success();
+    }
+
+    /**
      * @route /workspaces/{id}/status
      * @method get
      * @custom true

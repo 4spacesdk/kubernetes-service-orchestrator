@@ -71,7 +71,13 @@ function render() {
     deploymentsInInactiveStatus.value = deployments.value.filter((deployment) => deployment.status == DeploymentStatusTypes.Inactive);
     deploymentsInErrorStatus.value = deployments.value.filter((deployment) => deployment.status == DeploymentStatusTypes.Error);
 
-    if (deploymentsInErrorStatus.value.length) {
+    // A pause is a decision somebody made, and it outranks whatever the deployments add up
+    // to: the status is recomputed from them, so it drifts on its own.
+    if (props.workspace.is_paused) {
+        icon.value = "fa fa-pause";
+        color.value = "grey";
+        text.value = "Paused";
+    } else if (deploymentsInErrorStatus.value.length) {
         icon.value = "fa fa-circle-xmark";
         color.value = "red";
         text.value = "Error";

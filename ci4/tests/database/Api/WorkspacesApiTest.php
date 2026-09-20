@@ -493,6 +493,78 @@ class WorkspacesApiTest extends ControllerTestCase {
 
     // </editor-fold>
 
+    // <editor-fold desc="Pausing">
+
+    /**
+     * A pause is the same shutdown as Terminate, plus a decision that is remembered. The
+     * status the recompute would have written - Draft, for a workspace with no deployments -
+     * is exactly what used to make the pause fall off.
+     */
+    public function testPausingShutsTheWorkspaceDownAndSaysSo(): void {
+        $workspace = Fixtures::workspace(['status' => \WorkspaceStatusTypes::Active]);
+
+        $body = $this->decode($this->signedIn()->put("workspaces/{$workspace->id}/pause"));
+
+        $this->assertSame('OK', $body['status']);
+        $this->assertSame(\WorkspaceStatusTypes::Paused, $this->reload($workspace)->status);
+        $this->assertSame(1, (int) $this->reload($workspace)->is_paused);
+    }
+
+    /**
+     * The three ways it used to fall off, all at once: the status is recomputed whenever
+     * anything happens to a deployment, and a paused workspace must come out of that still
+     * paused.
+     */
+    public function testAPauseSurvivesEveryRecompute(): void {
+        $deployment = Fixtures::deployableDeployment();
+        $workspace = new Workspace();
+        $workspace->find($deployment->workspace_id);
+        $workspace->pause();
+
+        foreach ([\DeploymentStatusTypes::Deploying, \DeploymentStatusTypes::Error, \DeploymentStatusTypes::Active] as $status) {
+            $deployment->status = $status;
+            $deployment->save();
+            $this->reload($workspace)->checkStatus();
+
+            $this->assertSame(
+                \WorkspaceStatusTypes::Paused,
+                $this->reload($workspace)->status,
+                "a deployment in {$status} took the pause off"
+            );
+        }
+    }
+
+    /**
+     * Resuming takes the pause off and leaves the workspace shut down: bringing it back up
+     * is Deploy, and that is a decision of its own.
+     */
+    public function testResumingTakesThePauseOffAndLeavesItTerminated(): void {
+        $workspace = Fixtures::workspace(['status' => \WorkspaceStatusTypes::Active]);
+        $this->signedIn()->put("workspaces/{$workspace->id}/pause");
+
+        $body = $this->decode($this->signedIn()->put("workspaces/{$workspace->id}/resume"));
+
+        $this->assertSame('OK', $body['status']);
+        $this->assertSame(0, (int) $this->reload($workspace)->is_paused);
+        $this->assertNotSame(\WorkspaceStatusTypes::Paused, $this->reload($workspace)->status);
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('thePauseEndpoints')]
+    public function testAnUnknownWorkspaceIsRefused(string $path): void {
+        $body = $this->decode($this->signedIn()->put("workspaces/999999/{$path}"));
+
+        $this->assertSame('unknown workspace', $body['error'] ?? null);
+    }
+
+    /**
+     * @return array<string, array{0: string}>
+     */
+    public static function thePauseEndpoints(): array {
+        return ['pause' => ['pause'], 'resume' => ['resume']];
+    }
+
+    // </editor-fold>
+
     /**
      * A route in the table pointing at a method that no longer exists.
      *

@@ -27,6 +27,7 @@ export class WorkspaceDefinition extends BaseModel {
     database_service_id?: number;
     database_service?: DatabaseService;
     status?: string;
+    is_paused?: boolean;
     deployments?: Deployment[];
     labels?: Label[];
     id?: number;
@@ -61,6 +62,7 @@ export class WorkspaceDefinition extends BaseModel {
             delete this.database_service_id;
             delete this.database_service;
             delete this.status;
+            delete this.is_paused;
             delete this.deployments;
             delete this.labels;
             delete this.id;
@@ -119,6 +121,9 @@ export class WorkspaceDefinition extends BaseModel {
         }
         if (data.status != null) {
             this.status = data.status;
+        }
+        if (data.is_paused != null) {
+            this.is_paused = data.is_paused;
         }
         if (data.deployments != null) {
             this.deployments = data.deployments.map((i: any) => new Deployment(i));

@@ -8819,6 +8819,48 @@ export class WorkspacesTerminatePutById extends BaseApi<Workspace> {
     }
 }
 
+export class WorkspacesPausePutById extends BaseApi<Workspace> {
+
+    public topic = 'Resources.Workspaces';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/workspaces/${id}/pause`;
+    }
+
+    protected convertToResource(data: any): Workspace {
+        return new Workspace(data);
+    }
+
+    public save(data: any, next?: (value: Workspace) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class WorkspacesResumePutById extends BaseApi<Workspace> {
+
+    public topic = 'Resources.Workspaces';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/workspaces/${id}/resume`;
+    }
+
+    protected convertToResource(data: any): Workspace {
+        return new Workspace(data);
+    }
+
+    public save(data: any, next?: (value: Workspace) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
 export class WorkspacesGetStatusGetById extends BaseApi<Workspace> {
 
     public topic = 'Resources.Workspaces';
@@ -8934,6 +8976,14 @@ class Workspaces {
 
     public terminatePutById(id: number): WorkspacesTerminatePutById {
         return new WorkspacesTerminatePutById(id);
+    }
+
+    public pausePutById(id: number): WorkspacesPausePutById {
+        return new WorkspacesPausePutById(id);
+    }
+
+    public resumePutById(id: number): WorkspacesResumePutById {
+        return new WorkspacesResumePutById(id);
     }
 
     public getStatusGetById(id: number): WorkspacesGetStatusGetById {

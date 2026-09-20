@@ -306,6 +306,7 @@ export const WorkspaceStatusTypes = {
     Active: "active",
     Inactive: "inactive",
     Error: "error",
+    Paused: "paused",
 };
 
 export const MigrationJobStatusTypes = {

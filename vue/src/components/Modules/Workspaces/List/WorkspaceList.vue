@@ -58,6 +58,10 @@ const statusOptions = ref([
         value: WorkspaceStatusTypes.Error,
         title: "Error",
     },
+    {
+        value: WorkspaceStatusTypes.Paused,
+        title: "Paused",
+    },
 ]);
 const selectedStatus = ref([WorkspaceStatusTypes.Deploying, WorkspaceStatusTypes.Active, WorkspaceStatusTypes.Error]);
 const {search: searchValue, page, itemsPerPage, sortBy, applyOrdering, applyPaging} = useListState({
@@ -225,6 +229,62 @@ function onTerminateItemBtnClicked(item: Workspace) {
             }
         },
     });
+}
+
+/**
+ * Pause terminates the workspace and records that a person decided to, so the pause is not
+ * recomputed away. The confirmation says what that costs: it is the same shutdown as
+ * Terminate, disks and all.
+ */
+function onPauseItemBtnClicked(item: Workspace) {
+    bus.emit("confirm", {
+        body:
+            `Do you want to pause <strong>${item.name}</strong>?` +
+            "<br><br>This shuts the workspace down like Terminate does, and its disks go with it" +
+            " unless their reclaim policy keeps them. The pause stays until someone takes it off.",
+        confirmIcon: "fa fa-pause",
+        confirmColor: "red",
+
+        responseCallback: (confirmed: boolean) => {
+            if (confirmed) {
+                const workerProps = {
+                    title: `Pausing ${item.name}`,
+                    body: "This may take a minute",
+                    onFinishBody: "All done",
+                    onIsWorkingChangeEventEmitter: new EventEmitter<boolean>(),
+                };
+                bus.emit("worker", workerProps);
+
+                workerProps.onIsWorkingChangeEventEmitter.emit(true);
+                const api = Api.workspaces().pausePutById(item.id!);
+                api.setErrorHandler((response) => {
+                    if (response.error) {
+                        workerProps.onFinishBody = response.error.replaceAll("\n", "<br>");
+                    }
+                    return true;
+                });
+                api.save(null, () => {
+                    workerProps.onIsWorkingChangeEventEmitter.emit(false);
+                    bus.emit("workspaceSaved");
+                });
+            }
+        },
+    });
+}
+
+/**
+ * Takes the pause off. The workspace stays shut down - Deploy is the button that brings it
+ * back, and that is a decision of its own.
+ */
+function onResumeItemBtnClicked(item: Workspace) {
+    const api = Api.workspaces().resumePutById(item.id!);
+    api.setErrorHandler((response) => {
+        if (response.error) {
+            bus.emit("toast", {text: response.error});
+        }
+        return false;
+    });
+    api.save(null, () => bus.emit("workspaceSaved"));
 }
 
 function onDeleteItemBtnClicked(item: Row) {
@@ -458,6 +518,19 @@ function onDeploymentPackagesShortcutClicked() {
                             </v-btn>
                         </template>
                         <v-list density="compact">
+                            <v-list-item
+                                v-if="rbacDeveloper && !item.workspace.is_paused"
+                                prepend-icon="fa fa-pause"
+                                title="Pause"
+                                base-color="red"
+                                @click="onPauseItemBtnClicked(item.workspace)"
+                            />
+                            <v-list-item
+                                v-if="rbacDeveloper && item.workspace.is_paused"
+                                prepend-icon="fa fa-play"
+                                title="Resume"
+                                @click="onResumeItemBtnClicked(item.workspace)"
+                            />
                             <v-list-item
                                 v-if="rbacDeveloper"
                                 prepend-icon="fa fa-skull"

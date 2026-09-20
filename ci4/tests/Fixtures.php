@@ -679,9 +679,10 @@ class Fixtures {
      */
     public static function autoUpdatableDeployment(array $overrides = []): Deployment {
         $workspaceStatus = $overrides['workspace_status'] ?? \WorkspaceStatusTypes::Active;
-        unset($overrides['workspace_status']);
+        $workspacePaused = $overrides['workspace_paused'] ?? false;
+        unset($overrides['workspace_status'], $overrides['workspace_paused']);
 
-        $workspace = self::workspace(['status' => $workspaceStatus]);
+        $workspace = self::workspace(['status' => $workspaceStatus, 'is_paused' => $workspacePaused]);
 
         return self::deployment(array_merge([
             'workspace_id' => $workspace->id,

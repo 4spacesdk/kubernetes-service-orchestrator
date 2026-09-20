@@ -156,6 +156,26 @@ class Deployment extends Entity {
      * manifest, so all this has to do is ask for a redeploy. It used to take a value and
      * ignore it, which is an invitation to pass the wrong one.
      */
+    /**
+     * Whether the deployment belongs to a workspace nobody is expecting to change - paused
+     * by a person, or switched off.
+     *
+     * The workspace is looked up by id rather than read off the relation: `find()` on a
+     * deployment loads its own row, and the relation is then an empty entity whose status is
+     * null. Held against `Inactive` that is never true, which is why the guard on the
+     * rollout did nothing at all.
+     */
+    public function isInAPausedOrInactiveWorkspace(): bool {
+        if (!$this->workspace_id) {
+            return false;
+        }
+
+        $workspace = new Workspace();
+        $workspace->find($this->workspace_id);
+
+        return (bool) $workspace->is_paused || $workspace->status === \WorkspaceStatusTypes::Inactive;
+    }
+
     public function updateKNativeMinScale(): void {
         DeploymentStepHelper::EmitTrigger(DeploymentStepTriggers::Deployment_KNativeMinScale_Updated, $this);
     }

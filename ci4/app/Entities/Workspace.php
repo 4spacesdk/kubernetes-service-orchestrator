@@ -34,6 +34,7 @@ use App\Core\Entity;
  * @property int $database_service_id
  * @property DatabaseService $database_service
  * @property string $status
+ * @property bool $is_paused
  *
  * Many
  * @property Deployment $deployments
@@ -380,6 +381,18 @@ class Workspace extends Entity {
             return;
         }
 
+        // A pause is a decision, not a state to derive. Everything below reads the
+        // deployments and writes what they add up to, which is exactly how a pause used to
+        // fall off: a workspace with no deployments went back to Draft, one deployment
+        // deploying made the whole workspace Deploying, and a failing one made it Error -
+        // and Error is a status auto update acts on.
+        if ($this->is_paused) {
+            if ($this->status != \WorkspaceStatusTypes::Paused) {
+                $this->updateStatus(\WorkspaceStatusTypes::Paused);
+            }
+            return;
+        }
+
         $oldStatus = $this->status;
 
         /** @var Deployment $deployments */
@@ -477,6 +490,41 @@ class Workspace extends Entity {
         $this->checkStatus();
 
         return count($allErrors) ? implode("\n", $allErrors) : null;
+    }
+
+    /**
+     * Pause the workspace: terminate it and remember that a person decided to.
+     *
+     * The status is recomputed from the deployments, so it cannot hold a pause - a
+     * workspace with none goes back to Draft on its own, one deployment deploying makes the
+     * whole workspace Deploying, and a failing one makes it Error, which auto update does
+     * *not* skip. The flag is what the lists, auto update and the notifications go by.
+     *
+     * The workload is shut down, as before. Volumes go with it, by their reclaim policy -
+     * that is the part still to be decided before this is offered as anything more.
+     */
+    public function pause(): ?string {
+        $this->is_paused = true;
+        $this->save();
+
+        $errors = $this->terminate();
+        $this->checkStatus();
+
+        return $errors;
+    }
+
+    /**
+     * Take the pause off. The workspace is still terminated - deploying it again is a
+     * separate decision, and the button for it is right there.
+     */
+    public function resume(): void {
+        $this->is_paused = false;
+        // Back to whatever the deployments say, which after a pause is a terminated
+        // workspace: deploying it again is the next decision, and its own button.
+        $this->status = \WorkspaceStatusTypes::Inactive;
+        $this->save();
+
+        $this->checkStatus();
     }
 
     public function terminate(): ?string {

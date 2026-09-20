@@ -268,24 +268,35 @@ class ZMQTest extends DatabaseTestCase {
     }
 
     /**
-     * **Today's behaviour, and it is a bug.** `rollout()` starts by holding
-     * `$deployment->workspace->status` up against Inactive and going home when the
-     * workspace is switched off. The workspace here *is* switched off, and the rollout
-     * happens anyway.
-     *
-     * The relation is not loaded: `$deployment->find($id)` reads the deployment's own row,
-     * and `->workspace` hands back an empty entity whose `status` is null, which is never
-     * equal to Inactive. The guard is dead, and a switched-off workspace has its
-     * deployments updated like everybody else's. Fix it and this test goes red, and that
-     * failure is the fix landing.
+     * A switched-off workspace has its deployments left alone. The guard was there all
+     * along and did nothing: `$deployment->find($id)` loads the deployment's own row, and
+     * `->workspace` was then an empty entity whose status is null, which is never Inactive.
+     * The workspace is looked up by id now.
      */
-    public function testAnInactiveWorkspaceDoesNotStopTheRolloutEvenThoughItSaysItDoes(): void {
-        $autoUpdate = $this->anApprovedAutoUpdate('image', '2.0.0');
+    public function testAnInactiveWorkspaceStopsTheRollout(): void {
+        $autoUpdate = $this->anApprovedAutoUpdate('image', '2.0.0', [
+            'workspace_status' => \WorkspaceStatusTypes::Inactive,
+        ]);
 
         $this->handle('autoUpdateApproved', ['id' => $autoUpdate->id]);
 
-        $this->assertStringNotContainsString('Skip rollout because workspace is inactive', $this->debugLog());
-        $this->assertSame('2.0.0', $this->versionOf($autoUpdate->deployment_id));
+        $this->assertStringContainsString('Skip rollout because the workspace is paused or inactive', $this->debugLog());
+        $this->assertSame('old', $this->versionOf($autoUpdate->deployment_id));
+    }
+
+    /**
+     * And a paused one, which is the point of the flag: the status is recomputed from the
+     * deployments and can be anything, so `Inactive` alone is not enough to go by.
+     */
+    public function testAPausedWorkspaceStopsTheRollout(): void {
+        $autoUpdate = $this->anApprovedAutoUpdate('image', '2.0.0', [
+            'workspace_status' => \WorkspaceStatusTypes::Active,
+            'workspace_paused' => true,
+        ]);
+
+        $this->handle('autoUpdateApproved', ['id' => $autoUpdate->id]);
+
+        $this->assertSame('old', $this->versionOf($autoUpdate->deployment_id));
     }
 
     // </editor-fold>
@@ -379,10 +390,11 @@ class ZMQTest extends DatabaseTestCase {
             ->getResultArray();
     }
 
-    private function anApprovedAutoUpdate(string $image, string $tag): AutoUpdate {
-        $deployment = Fixtures::autoUpdatableDeployment([
-            'workspace_status' => \WorkspaceStatusTypes::Inactive,
-        ]);
+    /**
+     * @param array<string, mixed> $workspace What the deployment's workspace looks like.
+     */
+    private function anApprovedAutoUpdate(string $image, string $tag, array $workspace = []): AutoUpdate {
+        $deployment = Fixtures::autoUpdatableDeployment($workspace);
 
         $autoUpdate = new AutoUpdate();
         $autoUpdate->deployment_id = $deployment->id;
