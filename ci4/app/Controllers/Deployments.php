@@ -187,38 +187,6 @@ class Deployments extends ResourceController {
     }
 
     /**
-     * @route /deployments/{id}/ingress
-     * @method put
-     * @custom true
-     * @param int $id
-     * @parameter int $domainId parameterType=query
-     * @parameter string $subdomain parameterType=query
-     * @parameter string $aliases parameterType=query
-     * @return void
-     */
-    public function updateIngress(int $id): void {
-        $item = new Deployment();
-        $item->find($id);
-        if (!$item->exists()) {
-            $this->fail('unknown deployment');
-            return;
-        }
-
-        try {
-            $item->updateIngress(
-                $this->request->getGet('domainId'),
-                $this->request->getGet('subdomain'),
-                $this->request->getGet('aliases') ?? ''
-            );
-        } catch (ValidationException $e) {
-            $this->fail($e->getMessage());
-            return;
-        }
-        $this->_setResource($item);
-        $this->success();
-    }
-
-    /**
      * @route /deployments/{id}/resourceManagement
      * @method put
      * @custom true

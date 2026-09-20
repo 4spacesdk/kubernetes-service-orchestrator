@@ -3238,42 +3238,6 @@ export class DeploymentsUpdateDatabaseServiceIdPutById extends BaseApi<Deploymen
     }
 }
 
-export class DeploymentsUpdateIngressPutById extends BaseApi<Deployment> {
-
-    public topic = 'Resources.Deployments';
-    protected method = 'put';
-    protected scope = '';
-    protected summary = '';
-
-    public constructor(id: number) {
-        super();
-        this.uri = `/deployments/${id}/ingress`;
-    }
-
-    protected convertToResource(data: any): Deployment {
-        return new Deployment(data);
-    }
-
-    public domainId(value: number): DeploymentsUpdateIngressPutById {
-        this.addQueryParameter('domainId', value);
-        return this;
-    }
-
-    public subdomain(value: string): DeploymentsUpdateIngressPutById {
-        this.addQueryParameter('subdomain', value);
-        return this;
-    }
-
-    public aliases(value: string): DeploymentsUpdateIngressPutById {
-        this.addQueryParameter('aliases', value);
-        return this;
-    }
-
-    public save(data: any, next?: (value: Deployment) => void) {
-        return super.executeSave(data, next);
-    }
-}
-
 export class DeploymentsUpdateResourceManagementPutById extends BaseApi<Deployment> {
 
     public topic = 'Resources.Deployments';
@@ -3625,10 +3589,6 @@ class Deployments {
 
     public updateDatabaseServiceIdPutById(id: number): DeploymentsUpdateDatabaseServiceIdPutById {
         return new DeploymentsUpdateDatabaseServiceIdPutById(id);
-    }
-
-    public updateIngressPutById(id: number): DeploymentsUpdateIngressPutById {
-        return new DeploymentsUpdateIngressPutById(id);
     }
 
     public updateResourceManagementPutById(id: number): DeploymentsUpdateResourceManagementPutById {

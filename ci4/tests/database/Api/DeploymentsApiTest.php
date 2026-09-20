@@ -657,26 +657,23 @@ class DeploymentsApiTest extends ControllerTestCase {
     // </editor-fold>
 
     /**
-     * **Today's behaviour: `PUT /deployments/{id}/ingress` cannot work.**
+     * `PUT /deployments/{id}/ingress` is gone. It could never work - the controller called a
+     * method that exists only on Workspace, so every call was a fatal error before it
+     * reached any validation - and a deployment has no domain or subdomain of its own
+     * anyway. `/workspaces/{id}/ingress` is the endpoint that does this.
      *
-     * The controller calls `$item->updateIngress(...)` on a Deployment, and that method
-     * exists only on Workspace - so every call is a fatal error before it reaches any
-     * validation. A deployment has no domain or subdomain of its own either; those live on
-     * the workspace, and the UI edits them through `/workspaces/{id}/ingress`, which works.
-     *
-     * Nothing in the frontend calls this one. It is still generated into the API client and
-     * published in the OpenAPI document, so it reads as a supported endpoint.
+     * The route is removed by migration, not by the `@ignore` annotation: that keeps a verb
+     * out of the generator and swagger but leaves a row that is already in `api_routes`.
      */
-    public function testTheDeploymentIngressEndpointFailsOnEveryCall(): void {
-        $deployment = Fixtures::deployableDeployment();
-        $domain = Fixtures::domain(['name' => 'other.example.org']);
-
-        $this->expectException(\Error::class);
-        $this->expectExceptionMessage('Call to undefined method');
-
-        $this->signedIn()->put(
-            "deployments/{$deployment->id}/ingress?domainId={$domain->id}&subdomain=tenant&aliases="
+    public function testTheDeploymentIngressEndpointIsGone(): void {
+        $this->assertSame(
+            0,
+            db_connect()->table('api_routes')
+                ->where('from', 'deployments/([0-9]+)/ingress')
+                ->countAllResults(),
+            'the route is back - remove this test'
         );
+        $this->assertFalse(method_exists(\App\Controllers\Deployments::class, 'updateIngress'));
     }
 
     // <editor-fold desc="Status without a cluster">

@@ -15,6 +15,7 @@
 * Post-update actions crashed when the commit message had no Podio task link; they are skipped now
 * Auto update missed pushes from a registry with a port in its host when they came over Pub/Sub
 * Updating something that does not exist answered OK and wrote nothing; it is refused now
+* Removed `PUT /deployments/{id}/ingress`, which could never work - the workspace endpoint is the one that does this
 * Reading something that does not exist answered a resource with every field null; it answers 404 now
 * Auto update: a tag pattern that cannot compile is refused, and turning it on without one no longer crashes
 * A migration job did not migrate when it could not reach kso at the start ([#42](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/42))
