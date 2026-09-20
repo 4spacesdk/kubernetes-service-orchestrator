@@ -42,6 +42,15 @@ class DatabaseService extends Entity {
             'DBDriver' => match ($this->driver) {
                 \DatabaseDrivers::MySQL => 'MySQLi',
                 \DatabaseDrivers::MSSQL => 'SQLSRV',
+
+                // Said in words rather than left to `UnhandledMatchError`. Nothing
+                // validates the column - `POST /database_services` takes any string - so a
+                // driver kso does not know is something a caller can store, and "the
+                // connection failed" would send whoever reads it looking at a host, a port
+                // and a password that are all perfectly correct.
+                default => throw new DatabaseException(
+                    "Unknown database driver '{$this->driver}'"
+                ),
             },
             'DBPrefix' => '',
             'pConnect' => false,
@@ -81,7 +90,13 @@ class DatabaseService extends Entity {
                     break;
             }
             return true;
-        } catch (\Exception|DatabaseException $e) {
+        } catch (\Throwable $e) {
+            // Throwable, not `\Exception|DatabaseException`. The whole point of this method
+            // is that a service which cannot be connected to answers no rather than failing
+            // the request - and the most reachable way for it to fail was not an exception
+            // at all: a `driver` the `match` in `prepareConnection()` does not know is an
+            // `UnhandledMatchError`, which is an `\Error`. Nothing validates that column, so
+            // a service stored with one was a 500 on the button for any signed-in caller.
             Data::debug($e->getMessage());
         }
         return false;

@@ -57,7 +57,7 @@ class Kubernetes extends \App\Core\BaseController {
             }
 
             Data::set('resources', $items);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->fail(KubeHelper::PrintException($e));
             return;
         }
@@ -101,7 +101,7 @@ class Kubernetes extends \App\Core\BaseController {
                 'lines' => KubeHelper::ExecOutputLines($messages),
             ]);
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->fail(KubeHelper::PrintException($e));
             return;
         }
@@ -126,7 +126,7 @@ class Kubernetes extends \App\Core\BaseController {
             Data::debug($namespace, $pod, $container);
             $logs = $kubeLog->getLogs($namespace, $pod, $container);
             Data::set('resources', $logs);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->fail(KubeHelper::PrintException($e));
             return;
         }
@@ -148,7 +148,7 @@ class Kubernetes extends \App\Core\BaseController {
         try {
             $kubeLog = new KubeLog($kubeAuth->authenticate());
             $kubeLog->watchLog($namespace, $pod, $container);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->fail(KubeHelper::PrintException($e));
             return;
         }
@@ -206,7 +206,10 @@ class Kubernetes extends \App\Core\BaseController {
                 'details' => $e->getPayload(),
                 'nodes' => [],
             ]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            // Throwable, like everywhere else that turns a cluster failure into an answer:
+            // this endpoint exists to report that the cluster cannot be reached, so an
+            // `\Error` on the way to finding that out must not become a 500 instead.
             Data::set('resource', [
                 'status' => 'error',
                 'message' => $e->getMessage(),

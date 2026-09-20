@@ -25,7 +25,7 @@ class RunJobHelper {
 
         try {
             $this->applyJob($deployment, $command, $jobId);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Data::debug(KubeHelper::PrintException($e));
             Data::debug("failed to apply job");
             return null;
@@ -34,7 +34,7 @@ class RunJobHelper {
 
         try {
             $this->waitForCompletion($deployment, $jobId);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Data::debug(KubeHelper::PrintException($e));
             Data::debug("failed to wait for completion");
             return null;
@@ -42,7 +42,7 @@ class RunJobHelper {
 
         try {
             $logs = $this->getLogs($deployment, $jobId);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Data::debug(KubeHelper::PrintException($e));
             Data::debug("failed to get logs");
             return null;
@@ -50,7 +50,7 @@ class RunJobHelper {
 
         try {
             $this->deleteJob($deployment, $jobId);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Data::debug(KubeHelper::PrintException($e));
             Data::debug("failed to delete job");
             return null;
@@ -168,8 +168,12 @@ class RunJobHelper {
                 do {
                     $existing = $resource->get();
                 } while ($existing->exists() && $stop-- > 0 && sleep(2) === 0);
-            } catch (\Exception $e) {
-                // Keep going.
+            } catch (\Throwable $e) {
+                // Keep going: this is best-effort cleanup of a job that may not be there,
+                // and failing it would take down the deploy it is making room for. Written
+                // down rather than swallowed, because a `\Throwable` here is as likely to
+                // be a mistake in this file as a cluster that said no.
+                Data::debug('RunJobHelper cleanup', KubeHelper::PrintException($e));
             }
         }
 

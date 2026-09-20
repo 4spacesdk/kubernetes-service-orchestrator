@@ -56,7 +56,7 @@ class DeploymentSteps extends \App\Core\BaseController {
             Data::set('resource', [
                 'values' => is_array($status) ? $status : [$status],
             ]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->fail(KubeHelper::PrintException($e));
             return;
         }
@@ -93,7 +93,7 @@ class DeploymentSteps extends \App\Core\BaseController {
             Data::set('resource', [
                 'value' => $step->getPreview($deployment)
             ]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->fail(KubeHelper::PrintException($e));
             return;
         }
@@ -157,7 +157,7 @@ class DeploymentSteps extends \App\Core\BaseController {
 
         try {
             $step->startTerminateCommand($deployment);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->fail(KubeHelper::PrintException($e));
             return;
         }
@@ -197,7 +197,7 @@ class DeploymentSteps extends \App\Core\BaseController {
             Data::set('resource', [
                 'value' => $step->getKubernetesStatus($deployment)
             ]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->fail(KubeHelper::PrintException($e));
             return;
         }
@@ -234,7 +234,7 @@ class DeploymentSteps extends \App\Core\BaseController {
             Data::set('resource', [
                 'value' => $step->getKubernetesEvents($deployment)
             ]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->fail(KubeHelper::PrintException($e));
             return;
         }

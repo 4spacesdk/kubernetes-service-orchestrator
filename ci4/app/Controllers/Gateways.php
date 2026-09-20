@@ -33,7 +33,7 @@ class Gateways extends ResourceController {
             Data::set('resource', [
                 'value' => $step->getPreview($gateway)
             ]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->fail(KubeHelper::PrintException($e));
             return;
         }
@@ -58,7 +58,7 @@ class Gateways extends ResourceController {
         $step = new GatewayStep();
         try {
             $step->deploy($gateway);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->fail(KubeHelper::PrintException($e));
             return;
         }
@@ -84,7 +84,7 @@ class Gateways extends ResourceController {
         $step = new GatewayStep();
         try {
             $step->terminate($gateway);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $this->fail(KubeHelper::PrintException($e));
             return;
         }

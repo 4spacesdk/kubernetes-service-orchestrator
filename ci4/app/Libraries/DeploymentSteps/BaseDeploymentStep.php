@@ -85,7 +85,7 @@ abstract class BaseDeploymentStep {
         try {
             $deployment->updateStatus(DeploymentStatusTypes::Deploying, true);
             $this->startDeployCommand($deployment, $reason);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return KubeHelper::PrintException($e);
         }
         return null;
@@ -95,7 +95,7 @@ abstract class BaseDeploymentStep {
         Data::debug($deployment->namespace, $deployment->name, 'tryExecuteTerminateCommand', get_class($this));
         try {
             $this->startTerminateCommand($deployment);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return KubeHelper::PrintException($e);
         }
         return null;

@@ -112,24 +112,30 @@ class DatabaseServicesApiTest extends ControllerTestCase {
     }
 
     /**
-     * **Pinned, not endorsed.** The same 500, one step further in and still reachable: a
-     * service whose stored `driver` is neither of the two kso knows takes the request down
-     * on the same `match`.
+     * A service whose stored `driver` is neither of the two kso knows answers no, and says
+     * which driver it did not know.
      *
      * Not hypothetical - nothing validates the column. `POST /database_services` with
-     * `"driver":"postgres"` is accepted and stored, and the button on that row is then a
-     * 500 for any signed-in caller.
+     * `"driver":"postgres"` is accepted and stored, and the button on that row used to be a
+     * 500 for any signed-in caller: the `match` in `prepareConnection()` raised an
+     * `UnhandledMatchError`, which is an `\Error` and so went straight past a `catch` that
+     * named only `\Exception`.
      *
-     * The guard above cannot close this one; it is the `catch` that is too narrow, which is
-     * a pattern with several sites and is worth fixing as one piece rather than here. Doing
-     * that should break this test.
+     * The reason is asserted, not just the `false`. "The connection failed" would send
+     * whoever reads it looking at a host, a port and a password that are all correct.
      */
-    public function testAStoredDriverThatMatchesNothingStillTakesTheRequestDown(): void {
+    public function testAStoredDriverThatMatchesNothingIsAnsweredWithNoAndAReason(): void {
         $service = Fixtures::databaseService(['driver' => 'postgres']);
 
-        $this->expectException(\UnhandledMatchError::class);
+        $body = $this->testConnection($service->id);
 
-        $this->testConnection($service->id);
+        $this->assertSame('OK', $body['status']);
+        $this->assertFalse($body['resource']['value']);
+        $this->assertStringContainsString(
+            "Unknown database driver 'postgres'",
+            json_encode($body['debug'] ?? []),
+            'the answer does not say what was wrong with it'
+        );
     }
 
     /**
