@@ -166,12 +166,14 @@ class ContourHttpProxyStepTest extends ManifestTestCase {
     }
 
     /**
-     * Today's behaviour, and a wart. The hostnames are collected from every deployment in
-     * the workspace, but only Contour ones contribute routes - so a deployment on another
-     * network type, on a hostname of its own, produces an HTTPProxy with an empty route
-     * list that serves nothing.
+     * The hostnames are collected from every deployment in the workspace, but only Contour
+     * ones contribute routes - so a deployment on another network type, on a hostname of its
+     * own, used to produce an HTTPProxy with an empty route list. Contour's schema refuses
+     * that, and the 422 named a field nobody wrote, so the whole deploy failed on a hostname
+     * the workspace was not even serving through Contour. There is nothing to route, so
+     * there is no proxy.
      */
-    public function testADeploymentOnAnotherNetworkTypeStillGetsAnEmptyProxy(): void {
+    public function testAHostnameWithNoContourRoutesGetsNoProxy(): void {
         $workspace = Fixtures::workspaceOnGateway();
         $contour = $this->contourDeployment($workspace);
 
@@ -188,14 +190,10 @@ class ContourHttpProxyStepTest extends ManifestTestCase {
             'name' => 'other-deployment',
         ]);
 
-        $manifests = $this->build($contour);
-        $empty = array_values(array_filter(
-            $manifests,
-            static fn (array $manifest) => $manifest['metadata']['name'] === 'other-tenant.test.example.org'
-        ));
+        $names = array_column(array_column($this->build($contour), 'metadata'), 'name');
 
-        $this->assertCount(1, $empty);
-        $this->assertSame([], $empty[0]['spec']['routes']);
+        $this->assertNotContains('other-tenant.test.example.org', $names);
+        $this->assertContains('tenant.test.example.org', $names, 'the Contour hostname is still served');
     }
 
     public function testEveryTimeoutIsWrittenWhenTheRouteSetsThemAll(): void {

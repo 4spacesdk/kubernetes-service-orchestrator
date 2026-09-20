@@ -6,6 +6,7 @@
 * Several gateway, migration job, pod list and shell fixes
 * Deploying while a rollout was still running could fail with `409 Conflict`
 * Custom resources without a namespace landed in `default`
+* Contour: a hostname with no routes made an HTTPProxy that Kubernetes refused, so the deploy failed
 * Init containers from another registry could not be pulled
 * Setting a deployment's version reported success when the deploy failed
 * Post-update actions crashed on an image without commit identification or version control; they are skipped now

@@ -8,6 +8,7 @@ use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
 use App\Libraries\Kubernetes\CustomResourceDefinitions\K8sContourHttpProxy;
 use App\Libraries\Kubernetes\KubeAuth;
 use App\Models\DeploymentModel;
+use DebugTool\Data;
 use Exception;
 use RenokiCo\PhpK8s\Exceptions\KubernetesAPIException;
 use RenokiCo\PhpK8s\Kinds\K8sEvent;
@@ -234,6 +235,17 @@ class ContourHttpProxyStep extends BaseDeploymentStep {
         $resources = [];
 
         foreach ($fqdns as $fqdn => $deployments) {
+            $routes = $this->getWorkspaceHttpProxyRoutes($deployments, $fqdn);
+
+            // Hostnames come from every deployment in the workspace, but only Contour ones
+            // have routes - and a specification can have none at all. A proxy with an empty
+            // route list is refused by Contour's schema, and php-k8s sends `[]` as `{}`
+            // anyway, so the 422 names a field nobody wrote. Nothing to route, no proxy.
+            if ($routes === []) {
+                Data::debug('no Contour routes for', $fqdn, ', no HTTPProxy');
+                continue;
+            }
+
             $resource = new K8sContourHttpProxy();
             $resource
                 ->setName($fqdn)
@@ -243,7 +255,7 @@ class ContourHttpProxyStep extends BaseDeploymentStep {
                 ])
                 ->setAttribute('spec', [
                     'ingressClassName' => $domain->contour_ingress_class_name,
-                    'routes' => $this->getWorkspaceHttpProxyRoutes($deployments, $fqdn),
+                    'routes' => $routes,
                     'virtualhost' => [
                         'fqdn' => $fqdn,
                         'tls' => [

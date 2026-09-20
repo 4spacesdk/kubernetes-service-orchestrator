@@ -209,23 +209,19 @@ class RoutingStepsTest extends ClusterTestCase {
     }
 
     /**
-     * Today's behaviour, and a bug the manifest tests could never see. Contour builds one
-     * proxy per hostname whether or not there are routes to put in it, so a specification
-     * with none sends `routes: []` - and php-k8s rewrites **every** empty list in the
-     * payload to `{}` before sending it, by string replacement, with three hardcoded
-     * exceptions. Contour's schema wants an array, so the deploy fails with a 422 that
-     * names a field nobody wrote.
+     * Contour used to build one proxy per hostname whether or not there were routes to put
+     * in it, so a specification with none sent `routes: []` - and php-k8s rewrites **every**
+     * empty list in the payload to `{}` before sending it, by string replacement, with three
+     * hardcoded exceptions. Contour's schema wants an array, so the deploy failed with a 422
+     * naming a field nobody wrote. Nothing to route, no proxy - the same as the Gateway API
+     * step above.
      */
-    public function testAContourSpecificationWithoutRoutesIsRefusedByTheSchema(): void {
+    public function testAContourSpecificationWithoutRoutesGetsNoProxy(): void {
         $deployment = $this->routableDeployment(\NetworkTypes::Contour, [], [], withRoute: false);
 
-        try {
-            (new ContourHttpProxyStep())->startDeployCommand($deployment);
-            $this->fail('the api server should have refused the empty routes list');
-        } catch (KubernetesAPIException $e) {
-            $this->assertSame(422, $e->getCode());
-            $this->assertSame('spec.routes', $e->getPayload()['details']['causes'][0]['field']);
-        }
+        (new ContourHttpProxyStep())->startDeployCommand($deployment);
+
+        $this->assertSame([], $this->httpProxiesIn($this->testNamespace));
     }
 
     public function testAnHttpProxyIsDeployableOnceItsNamespaceExists(): void {
@@ -770,6 +766,16 @@ class RoutingStepsTest extends ClusterTestCase {
 
     /**
      * @return array<int, array<string, mixed>>
+     */
+    /**
+     * @return array<array<string, mixed>>
+     */
+    private function httpProxiesIn(string $namespace): array {
+        return $this->get("/apis/projectcontour.io/v1/namespaces/{$namespace}/httpproxies")['items'] ?? [];
+    }
+
+    /**
+     * @return array<array<string, mixed>>
      */
     private function routesIn(string $namespace): array {
         return $this->get("/apis/gateway.networking.k8s.io/v1/namespaces/{$namespace}/httproutes")['items'] ?? [];
