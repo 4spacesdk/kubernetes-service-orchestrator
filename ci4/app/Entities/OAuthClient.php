@@ -45,9 +45,13 @@ class OAuthClient extends Entity {
         if (isset($userId)) {
             $item->user_id = $userId;
         }
-        $saveClientId = $item->client_id;
+        // No saving and restoring of `client_id` around the insert. That was guarding
+        // against `EntityTrait::insert()` overwriting the primary key with the id the model
+        // handed back - and it cannot: the model calls CodeIgniter's insert with
+        // `$returnID = false`, so it always answers a bool, and the overwrite is behind
+        // `if (!is_bool($result))`.
         $item->insert();
-        $item->client_id = $saveClientId;
+
         return $item;
     }
 

@@ -108,9 +108,13 @@ class RbacRolesAndPermissionsTest extends DatabaseTestCase {
     }
 
     /**
-     * A role with nothing linked to it yet does not go looking for something to unlink -
-     * `exists()` on the empty result is what stops it, and an entity with no id would take
-     * every join row of every role with it if it did not.
+     * A role with nothing linked to it yet takes nobody else's rows with it.
+     *
+     * There is nothing to loop over, which is the whole of the protection now. It used to be
+     * an `exists()` guard around a delete that was handed the empty collection - and that
+     * delete would have been `WHERE rbac_role_id = X AND rbac_permission_id IS NULL`, which
+     * matches nothing either way. The count is asserted rather than the role's own rows,
+     * because the failure this guards against is elsewhere in the table.
      */
     public function testARoleWithNoPermissionsYetJustGetsTheOnesItIsGiven(): void {
         $role = RbacRole::Create('roles/sweeper', 'Sweeper', 'Sweeps');
@@ -142,23 +146,17 @@ class RbacRolesAndPermissionsTest extends DatabaseTestCase {
     }
 
     /**
-     * **Today's behaviour, and it is wrong.** The method reads like "replace the set", and
-     * it is what the name says and what the migration relies on. It is not what happens.
+     * The method reads like "replace the set", and now it is.
      *
-     * `$this->delete($existingPermissions)` is handed the whole collection, but the delete
-     * underneath reads a single id off it - the first row's - and deletes that one join row.
-     * Every other permission the role already had stays linked, and is then linked a second
-     * time by the loop below.
+     * It was not. `$this->delete($existingPermissions)` was handed the whole collection, and
+     * the delete underneath reads a single id off it - the first row's - so one join row
+     * went and every other permission the role already had stayed linked, then was linked a
+     * second time by the loop after it.
      *
-     * So calling it twice with the same two permissions leaves three join rows, one of them
-     * a duplicate. Calling it with a *smaller* set does not take anything away: a permission
-     * removed from the list keeps its row. Nothing reads these rows today, which is
-     * the only reason it has not bitten - the day RBAC is enforced, revoking a permission
-     * will not revoke it.
-     *
-     * Pinned rather than fixed. The test says what it sees.
+     * Calling it twice with the same two permissions therefore left **three** rows, one of
+     * them a duplicate.
      */
-    public function testReplacingPermissionsUnlinksOnlyTheFirstOfThem(): void {
+    public function testReplacingPermissionsWithTheSameSetLeavesThatSet(): void {
         $role = RbacRole::Create('roles/sweeper', 'Sweeper', 'Sweeps');
         $read = RbacPermission::Create('sweep.read', 'Read a sweep');
         $write = RbacPermission::Create('sweep.write', 'Write a sweep');
@@ -166,20 +164,20 @@ class RbacRolesAndPermissionsTest extends DatabaseTestCase {
 
         $role->updatePermissions([$read, $write]);
 
-        // Read's row was the one that went, and both were written again on top of what
-        // was left: three rows where there should be two, and `sweep.write` twice.
         $this->assertSame(
-            [(int) $write->id, (int) $read->id, (int) $write->id],
-            $this->permissionIdsOf((int) $role->id),
-            'the whole set is replaced now - the delete takes the collection'
+            [(int) $read->id, (int) $write->id],
+            $this->permissionIdsOf((int) $role->id)
         );
     }
 
     /**
-     * The same gap from the other side: taking a permission out of the list does not take it
-     * off the role. `sweep.write` is not in the new set and is still linked afterwards.
+     * The same promise from the other side, and the half that matters: taking a permission
+     * out of the list takes it off the role.
+     *
+     * It did not. A permission left out of the new set kept its link, so revoking a
+     * permission revoked nothing - and it would have done so silently.
      */
-    public function testAPermissionLeftOutOfTheNewSetKeepsItsLink(): void {
+    public function testAPermissionLeftOutOfTheNewSetIsRevoked(): void {
         $role = RbacRole::Create('roles/sweeper', 'Sweeper', 'Sweeps');
         $read = RbacPermission::Create('sweep.read', 'Read a sweep');
         $write = RbacPermission::Create('sweep.write', 'Write a sweep');
@@ -187,11 +185,7 @@ class RbacRolesAndPermissionsTest extends DatabaseTestCase {
 
         $role->updatePermissions([$read]);
 
-        $this->assertContains(
-            (int) $write->id,
-            $this->permissionIdsOf((int) $role->id),
-            'a permission left out is revoked now - this test has done its job'
-        );
+        $this->assertSame([(int) $read->id], $this->permissionIdsOf((int) $role->id));
     }
 
     // </editor-fold>

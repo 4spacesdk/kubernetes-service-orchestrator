@@ -39,9 +39,21 @@ class RbacRole extends Entity {
         $existingPermissions = (new RbacPermissionModel())
             ->whereRelated(RbacRoleModel::class, 'id', $this->id)
             ->find();
-        if ($existingPermissions->exists()) {
-            $this->delete($existingPermissions);
+
+        // One at a time. `delete()` takes an entity and reads a single id off it, so handing
+        // it the whole collection removed the *first* row's link and left every other one in
+        // place - which is not what "replace the set" means, in either direction: calling
+        // this twice with the same two permissions left three join rows, and a permission
+        // left out of the new set kept its link and was never revoked.
+        //
+        // The `exists()` guard that used to wrap this is gone with it. It read as the thing
+        // stopping an empty collection from deleting everything, and it was not: the delete
+        // it guarded would have been `WHERE rbac_role_id = X AND rbac_permission_id IS NULL`,
+        // which matches nothing. An empty collection is now simply nothing to loop over.
+        foreach ($existingPermissions as $existingPermission) {
+            $this->delete($existingPermission);
         }
+
         foreach ($permissions as $permission) {
             $this->save($permission);
         }
