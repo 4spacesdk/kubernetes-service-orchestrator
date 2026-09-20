@@ -464,15 +464,43 @@ class WorkspacesApiTest extends ControllerTestCase {
      * there is no guard for a workspace that was never deployed.
      *
      * It sets Inactive first and then recomputes from the deployments, and the recompute
-     * wins: an empty workspace ends up Draft, not Inactive. Worth pinning, because the
-     * status the endpoint writes is not the status the caller ends up with.
+     * used to win: a workspace with none fell through every branch of `checkStatus()` to the
+     * Draft it starts from, so the status the endpoint wrote was not the status the caller
+     * ended up with. A workspace that was switched off now stays switched off.
      */
-    public function testTerminatingAWorkspaceWithoutDeploymentsSucceeds(): void {
+    public function testTerminatingAWorkspaceWithoutDeploymentsLeavesItInactive(): void {
         $workspace = Fixtures::workspace(['status' => \WorkspaceStatusTypes::Active]);
 
         $body = $this->decode($this->signedIn()->put("workspaces/{$workspace->id}/terminate"));
 
         $this->assertSame('OK', $body['status']);
+        $this->assertSame(\WorkspaceStatusTypes::Inactive, $this->reload($workspace)->status);
+    }
+
+    /**
+     * And it stays that way when nothing has happened since. The recompute runs from more
+     * than the terminate endpoint - a deployment changing status calls it too - so a
+     * switched-off workspace that is merely asked about must not drift back to Draft.
+     */
+    public function testAskingAgainLeavesATerminatedEmptyWorkspaceInactive(): void {
+        $workspace = Fixtures::workspace(['status' => \WorkspaceStatusTypes::Active]);
+        $this->signedIn()->put("workspaces/{$workspace->id}/terminate");
+
+        $this->reload($workspace)->checkStatus();
+
+        $this->assertSame(\WorkspaceStatusTypes::Inactive, $this->reload($workspace)->status);
+    }
+
+    /**
+     * The other side of the same line: a workspace nobody has deployed yet is Draft, and
+     * stays Draft. Without it the guard above would read as "an empty workspace is always
+     * Inactive", which would make every new workspace look switched off.
+     */
+    public function testAWorkspaceThatWasNeverDeployedIsStillDraft(): void {
+        $workspace = Fixtures::workspace(['status' => \WorkspaceStatusTypes::Draft]);
+
+        $this->reload($workspace)->checkStatus();
+
         $this->assertSame(\WorkspaceStatusTypes::Draft, $this->reload($workspace)->status);
     }
 

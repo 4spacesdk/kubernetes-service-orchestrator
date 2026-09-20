@@ -35,6 +35,7 @@
 * A cron job whose command does not exist says so in its log instead of looking like it ran
 * An approved auto update whose deployment has been removed rolls out nothing, instead of creating an empty deployment and deploying it
 * Twenty write endpoints that answered OK with an empty body and wrote nothing are gone; they were never implemented
+* Terminating a workspace with no deployments leaves it terminated instead of putting it back in the default list as a draft
 * Updating something that does not exist answered OK and wrote nothing; it is refused now
 * Removed `PUT /deployments/{id}/ingress`, which could never work - the workspace endpoint is the one that does this
 * Reading something that does not exist answered a resource with every field null; it answers 404 now

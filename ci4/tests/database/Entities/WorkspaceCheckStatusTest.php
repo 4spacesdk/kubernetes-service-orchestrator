@@ -72,17 +72,30 @@ class WorkspaceCheckStatusTest extends DatabaseTestCase {
     }
 
     /**
-     * Documents PAUSE-2, case 1, as it behaves today.
+     * A workspace that was switched off stays switched off when there is nothing left to
+     * derive a status from.
      *
-     * A terminated workspace with no deployments left loses its status: the branch that
-     * preserves Inactive requires anyDraft, which nothing sets when there are no
-     * deployments to look at. The workspace reappears in the default list on its own.
-     *
-     * Change this assertion when pause becomes something the system is told rather than
-     * something it infers.
+     * It used to lose it: the branch that preserves Inactive asked for `anyDraft`, which
+     * nothing sets when there are no deployments to look at, so every other branch fell
+     * through to the Draft this starts from. A terminated workspace therefore reappeared in
+     * the default list on its own - and `terminate()` itself ends by calling this, so the
+     * status the endpoint wrote was never the one that stuck.
      */
-    public function testInactiveWithoutDeploymentsFallsBackToDraft(): void {
+    public function testInactiveWithoutDeploymentsStaysInactive(): void {
         $workspace = $this->workspaceWith([], \WorkspaceStatusTypes::Inactive);
+
+        $workspace->checkStatus();
+
+        $this->assertSame(\WorkspaceStatusTypes::Inactive, $workspace->status);
+    }
+
+    /**
+     * And the other side of that line: a workspace nobody has deployed yet has no
+     * deployments either, and it is Draft rather than switched off. The old status is what
+     * tells the two apart.
+     */
+    public function testDraftWithoutDeploymentsStaysDraft(): void {
+        $workspace = $this->workspaceWith([], \WorkspaceStatusTypes::Draft);
 
         $workspace->checkStatus();
 
@@ -90,10 +103,12 @@ class WorkspaceCheckStatusTest extends DatabaseTestCase {
     }
 
     /**
-     * Documents PAUSE-2, case 2, as it behaves today.
+     * Deploying a single deployment inside a switched-off workspace pulls the whole
+     * workspace out of Inactive, and it does not find its way back.
      *
-     * Deploying a single deployment inside a paused workspace pulls the whole workspace
-     * out of Inactive, and it does not find its way back.
+     * That is what the remembered pause is for: `is_paused` is a decision, and
+     * `checkStatus()` returns before any of this when it is set. Without the flag, a status
+     * derived from the deployments can always be moved by one of them.
      */
     public function testDeployingOneDeploymentTakesAPausedWorkspaceOutOfInactive(): void {
         $workspace = $this->workspaceWith(

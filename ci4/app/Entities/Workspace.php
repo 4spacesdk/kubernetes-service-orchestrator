@@ -437,7 +437,16 @@ class Workspace extends Entity {
             $newStatus = \WorkspaceStatusTypes::Deploying;
         } else if ($allActive) {
             $newStatus = \WorkspaceStatusTypes::Active;
-        } else if ($oldStatus == \WorkspaceStatusTypes::Inactive && $anyDraft) {
+        } else if ($oldStatus == \WorkspaceStatusTypes::Inactive && ($anyDraft || $deployments->count() == 0)) {
+            // A workspace that was switched off stays switched off until something is
+            // actually running in it again. The `count() == 0` half is what `terminate()`
+            // needs: it writes Inactive and then calls this to reflect what happened to the
+            // deployments, and a workspace with none fell through every branch below to the
+            // Draft this starts as - so the status the endpoint wrote was not the status the
+            // caller ended up with.
+            //
+            // A workspace that was never deployed still becomes Draft, because its old
+            // status is Draft rather than Inactive.
             $newStatus = \WorkspaceStatusTypes::Inactive;
         } else if ($anyDraft) {
             $newStatus = \WorkspaceStatusTypes::Draft;

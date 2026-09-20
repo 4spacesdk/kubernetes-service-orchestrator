@@ -213,8 +213,9 @@ class DatabaseStepTest extends DatabaseTestCase {
     }
 
     /**
-     * Deliberate: terminating a workspace must not drop the customer's data. This is one
-     * of the two steps that refuse - see PAUSE-3, where the volume steps do not.
+     * Deliberate: terminating a workspace must not drop the customer's data. This and the
+     * namespace step are the two that refuse; the volume steps do not, and what survives
+     * there depends on the volume's own reclaim policy.
      */
     public function testTerminateRefusesToDropTheDatabase(): void {
         $deployment = Fixtures::deployment();

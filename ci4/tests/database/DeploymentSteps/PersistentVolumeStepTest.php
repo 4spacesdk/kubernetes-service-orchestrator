@@ -9,8 +9,8 @@ use App\ManifestTestCase;
  * The PersistentVolume behind a deployment's storage.
  *
  * This is the manifest where a mistake costs data rather than uptime: the reclaim policy
- * decides whether the disk survives a Terminate, and PAUSE-3 is entirely about that one
- * field. The tests below hold today's behaviour in place so it can be changed on purpose.
+ * decides whether the disk survives a Terminate, and it is the only thing that does. The
+ * tests below hold today's behaviour in place so it can be changed on purpose.
  */
 class PersistentVolumeStepTest extends ManifestTestCase {
 
@@ -38,7 +38,7 @@ class PersistentVolumeStepTest extends ManifestTestCase {
     }
 
     /**
-     * The field PAUSE-3 turns on: `Retain` keeps the disk when the volume is deleted,
+     * The field everything turns on: `Retain` keeps the disk when the volume is deleted,
      * `Delete` throws it away. Terminate deletes the PV either way.
      */
     public function testReclaimPolicyIsCarriedOver(): void {
