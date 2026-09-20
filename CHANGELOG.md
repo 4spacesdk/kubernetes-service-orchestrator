@@ -7,6 +7,7 @@
 * Deploying while a rollout was still running could fail with `409 Conflict`
 * Custom resources without a namespace landed in `default`
 * The status panel died on a resource that has no status yet, or none at all, and on a gateway when the cluster could not be reached
+* Certificates: a refused certificate was reported as applied, deleting one did nothing, and the nightly expiry check died on the first certificate cert-manager had not finished
 * Contour: a hostname with no routes made an HTTPProxy that Kubernetes refused, so the deploy failed
 * Init containers from another registry could not be pulled
 * Setting a deployment's version reported success when the deploy failed

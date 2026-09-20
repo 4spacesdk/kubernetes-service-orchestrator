@@ -24,10 +24,14 @@ class KubeIstioGateway {
         return true;
     }
 
+    /**
+     * Marked as synced first, for the same reason as `KubeCertificate::delete()`: php-k8s
+     * returns true without sending anything for a resource it did not read from the cluster.
+     */
     public function delete(KubernetesCluster $cluster): bool|string {
         $certificate = $this->getResource($cluster);
         try {
-            $certificate->delete();
+            $certificate->synced()->delete();
         } catch (Exception $e) {
             return KubeHelper::PrintException($e);
         }
@@ -46,7 +50,7 @@ class KubeIstioGateway {
     public function getStatus(KubernetesCluster $cluster): array {
         $certificate = $this->getResource($cluster);
         if ($certificate->exists()) {
-            return $certificate->get()->getAttribute('status');
+            return $certificate->get()->getAttribute('status') ?? [];
         } else {
             return [];
         }

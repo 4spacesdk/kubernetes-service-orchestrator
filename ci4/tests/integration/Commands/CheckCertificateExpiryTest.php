@@ -51,24 +51,22 @@ class CheckCertificateExpiryTest extends ClusterTestCase {
     }
 
     /**
-     * **Today's behaviour, and the sharp end of a certificate bug.** A certificate cert-manager has
-     * not got to yet has no status, `KubeCertificate::getStatus()` is declared to return an
-     * array and returns null, and PHP raises a `TypeError`.
-     *
-     * A `TypeError` is an `Error`, not an `Exception`, so the `catch (\Exception)` inside
-     * the loop does not catch it: **the whole nightly job dies on the first such domain**,
-     * and every domain after it is never checked. That is the ordinary state of a
-     * certificate requested an hour ago - and of every certificate in a cluster where
-     * cert-manager is not installed.
+     * A certificate cert-manager has not got to yet has no status. `getStatus()` is declared
+     * to return an array and used to hand the null back, and a `TypeError` is an `Error`,
+     * not an `Exception` - so the `catch` inside the loop did not catch it and **the whole
+     * nightly job died on the first such domain**, leaving every domain after it unchecked.
+     * That is the ordinary state of a certificate requested an hour ago, and of every
+     * certificate in a cluster without cert-manager.
      */
-    public function testACertificateWithoutAnExpiryKillsTheWholeJob(): void {
+    public function testACertificateWithoutAnExpiryIsPassedOver(): void {
         $domain = $this->monitoredDomain();
         (new KubeCertificate($domain))->apply($this->cluster());
+        $other = $this->monitoredDomain(['name' => 'later.example.org']);
+        $this->certificateExpiringIn($other, 1);
 
-        $this->expectException(\TypeError::class);
-        $this->expectExceptionMessage('must be of type array, null returned');
+        $log = $this->runTheJob();
 
-        $this->runTheJob();
+        $this->assertStringContainsString($other->name, $log, 'the domains after it are still checked');
     }
 
     /**

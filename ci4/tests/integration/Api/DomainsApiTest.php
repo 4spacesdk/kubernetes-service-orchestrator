@@ -57,19 +57,18 @@ class DomainsApiTest extends ClusterControllerTestCase {
     }
 
     /**
-     * **Today's behaviour, and a bug seen from the endpoint.** cert-manager writes
-     * the status, and its controller is not installed - so `getStatus()` returns null from
-     * a method declared to return an array, and the page dies. The same happens in any
-     * cluster where cert-manager is missing or has not got to this certificate yet.
+     * cert-manager writes the status, and its controller is not installed here - so there
+     * is none. The method is declared to return an array and used to hand the null back, so
+     * the page died. That happens in any cluster where cert-manager is missing or has not
+     * got to this certificate yet.
      */
-    public function testTheStatusPanelDiesUntilCertManagerHasWrittenAStatus(): void {
+    public function testTheStatusPanelIsEmptyUntilCertManagerHasWrittenAStatus(): void {
         $domain = $this->domainInTheTestNamespace();
         $this->signedIn()->put("domains/{$domain->id}/certificate/apply");
 
-        $this->expectException(\TypeError::class);
-        $this->expectExceptionMessage('must be of type array, null returned');
+        $body = $this->decode($this->signedIn()->get("domains/{$domain->id}/certificate/status"));
 
-        $this->signedIn()->get("domains/{$domain->id}/certificate/status");
+        $this->assertSame('OK', $body['status']);
     }
 
     /**
@@ -225,18 +224,17 @@ class DomainsApiTest extends ClusterControllerTestCase {
     }
 
     /**
-     * Today's behaviour, and a bug: `KubeIstioGateway::delete()` has
-     * the same missing `synced()` as the certificate class, so terminating reports success
-     * and leaves the gateway where it was.
+     * `KubeIstioGateway::delete()` had the same missing `synced()` as the certificate class,
+     * so terminating reported success and left the gateway where it was.
      */
-    public function testTerminatingTheIstioGatewayLeavesItBehind(): void {
+    public function testTerminatingTheIstioGatewayRemovesIt(): void {
         $domain = $this->domainInTheTestNamespace();
         $this->signedIn()->put("domains/{$domain->id}/istio-gateway/apply");
 
         $body = $this->decode($this->signedIn()->put("domains/{$domain->id}/istio-gateway/terminate"));
 
         $this->assertSame('OK', $body['status']);
-        $this->assertNotSame([], $this->istioGateways(), 'it said it removed it, and it did not');
+        $this->assertSame([], $this->istioGateways(), 'and it is gone');
     }
 
     // </editor-fold>

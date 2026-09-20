@@ -85,24 +85,20 @@ class KubeCertificateTest extends ClusterTestCase {
     }
 
     /**
-     * **Today's behaviour: deleting does nothing at all.**
-     *
-     * `delete()` builds the resource from the domain's fields rather than fetching it, so
-     * php-k8s has not marked it as coming from the cluster - and its `delete()` opens with
-     * `if (! $this->isSynced()) return true;`. It returns success without sending a
-     * request. Every deployment step calls `synced()` first; these two certificate classes
-     * do not.
-     *
-     * Nothing calls this today, which is the only reason it has not been noticed.
+     * Deleting used to do nothing at all: `delete()` builds the resource from the domain's
+     * fields rather than fetching it, so php-k8s had not marked it as coming from the
+     * cluster - and its `delete()` opens with `if (! $this->isSynced()) return true;`. It
+     * answered success without sending a request. Every deployment step calls `synced()`
+     * first, and now so does this.
      */
-    public function testDeletingDoesNothingAtAll(): void {
+    public function testDeletingRemovesTheCertificate(): void {
         $domain = $this->domainInTheTestNamespace();
         $certificate = new KubeCertificate($domain);
         $certificate->apply($this->cluster());
 
-        $certificate->delete($this->cluster());
+        $this->assertTrue($certificate->delete($this->cluster()));
 
-        $this->assertCount(1, $this->certificatesInTheTestNamespace(), 'it is still there');
+        $this->assertSame([], $this->certificatesInTheTestNamespace(), 'it is gone');
     }
 
     /**
@@ -127,34 +123,33 @@ class KubeCertificateTest extends ClusterTestCase {
      * running, or has not got to this certificate yet. The expiry cron job and the domain's
      * certificate panel both go through here.
      */
-    public function testTheStatusOfAFreshCertificateDiesUntilCertManagerWritesOne(): void {
+    public function testTheStatusOfAFreshCertificateIsEmptyUntilCertManagerWritesOne(): void {
         $domain = $this->domainInTheTestNamespace();
         $certificate = new KubeCertificate($domain);
         $certificate->apply($this->cluster());
 
-        $this->expectException(\TypeError::class);
-        $this->expectExceptionMessage('must be of type array, null returned');
-
-        $certificate->getStatus($this->cluster());
+        $this->assertSame([], $certificate->getStatus($this->cluster()));
     }
 
     /**
-     * Today's behaviour. `apply()` catches everything and hands it to a method that formats
-     * it into a string, which is then dropped - so a certificate the api server refused
-     * looks exactly like one it accepted, and the endpoint answers success either way.
+     * `apply()` used to catch everything, format it into a string and drop it - so a
+     * certificate the api server refused looked exactly like one it accepted, and the
+     * endpoint answered success either way. It answers with the reason now.
      *
      * A namespace that is not there is the realistic way in: a domain keeps pointing at one
      * after it is removed.
      */
-    public function testACertificateThatCouldNotBeCreatedIsSwallowedWithoutAWord(): void {
+    public function testACertificateThatCouldNotBeCreatedSaysWhy(): void {
         $domain = $this->domainInTheTestNamespace([
             'certificate_namespace' => $this->testNamespace . '-not-a-namespace',
         ]);
         $certificate = new KubeCertificate($domain);
 
-        $certificate->apply($this->cluster());
+        $refusal = $certificate->apply($this->cluster());
 
-        $this->assertSame([], $certificate->getStatus($this->cluster()), 'nothing was created, and nothing said so');
+        $this->assertIsString($refusal);
+        $this->assertStringContainsString('not-a-namespace', $refusal);
+        $this->assertSame([], $certificate->getStatus($this->cluster()), 'and nothing was created');
     }
 
     // <editor-fold desc="Fixtures">

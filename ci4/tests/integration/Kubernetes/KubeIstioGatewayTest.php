@@ -4,6 +4,7 @@ use App\ClusterTestCase;
 use App\Entities\Domain;
 use App\Fixtures;
 use App\Libraries\Kubernetes\KubeIstioGateway;
+use RenokiCo\PhpK8s\Exceptions\KubernetesAPIException;
 use RenokiCo\PhpK8s\ResourcesList;
 
 /**
@@ -159,15 +160,12 @@ class KubeIstioGatewayTest extends ClusterTestCase {
      * be a fatal error on a domain that was applied successfully, which is the worst moment
      * for it. Reported, not fixed.
      */
-    public function testTheStatusPanelWouldDieOnAGatewayThatIsActuallyThere(): void {
+    public function testTheStatusOfAGatewayWithoutOneIsEmpty(): void {
         $domain = $this->domainInTheTestNamespace();
         $gateway = new KubeIstioGateway($domain);
         $gateway->apply($this->cluster());
 
-        $this->expectException(\TypeError::class);
-        $this->expectExceptionMessage('must be of type array, null returned');
-
-        $gateway->getStatus($this->cluster());
+        $this->assertSame([], $gateway->getStatus($this->cluster()));
     }
 
     // </editor-fold>
@@ -175,22 +173,20 @@ class KubeIstioGatewayTest extends ClusterTestCase {
     // <editor-fold desc="Removing it">
 
     /**
-     * Today's behaviour, and the same bug `KubeCertificate` has. `delete()` builds the resource
-     * fresh and never calls `synced()`, and php-k8s answers `delete()` on an unsynced
-     * resource with `return true` before it sends anything. So it reports success, sends
-     * nothing, and the gateway stays where it was.
-     *
-     * The `catch` in the method is unreachable for the same reason: nothing is sent, so
-     * nothing can fail. Its lines stay uncovered, and that is the finding rather than a gap.
+     * `delete()` used to build the resource fresh and never call `synced()`, and php-k8s
+     * answers `delete()` on an unsynced resource with `return true` before it sends
+     * anything - so it reported success, sent nothing, and the gateway stayed where it was.
+     * The same bug `KubeCertificate` had, and the reason the method's `catch` could never
+     * be reached.
      */
-    public function testDeletingReportsSuccessAndLeavesTheGatewayBehind(): void {
+    public function testDeletingRemovesTheGateway(): void {
         $domain = $this->domainInTheTestNamespace();
         $gateway = new KubeIstioGateway($domain);
         $gateway->apply($this->cluster());
 
         $this->assertTrue($gateway->delete($this->cluster()));
 
-        $this->assertNotSame([], $this->gatewayOnCluster($domain), 'it said it removed it, and it did not');
+        $this->assertFalse($this->gatewayIsOnCluster($domain), 'it is gone');
     }
 
     // </editor-fold>
@@ -238,6 +234,19 @@ class KubeIstioGatewayTest extends ClusterTestCase {
                 'lastTimestamp' => gmdate('Y-m-d\TH:i:s\Z'),
             ])
         );
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function gatewayIsOnCluster(Domain $domain): bool {
+        try {
+            $this->gatewayOnCluster($domain);
+        } catch (KubernetesAPIException $e) {
+            return false;
+        }
+
+        return true;
     }
 
     /**

@@ -6,6 +6,7 @@ use App\Entities\User;
 use App\Libraries\EmailLib;
 use App\Libraries\Kubernetes\KubeAuth;
 use App\Libraries\Kubernetes\KubeCertificate;
+use App\Libraries\Kubernetes\KubeHelper;
 use App\Models\DomainModel;
 use App\Models\UserModel;
 use CodeIgniter\CLI\BaseCommand;
@@ -60,8 +61,11 @@ class CheckCertificateExpiry extends BaseCommand {
                 } else {
                     Data::debug('no expiry known for', $domain->name);
                 }
-            } catch (\Exception $e) {
-
+            } catch (\Throwable $e) {
+                // One domain must not end the run: a `\Throwable`, because an `\Error` is
+                // not an `\Exception` and this loop used to die on the first domain whose
+                // certificate cert-manager had not finished.
+                Data::debug('skipped', $domain->name, KubeHelper::PrintException($e));
             }
         }
 

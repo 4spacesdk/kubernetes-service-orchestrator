@@ -27,7 +27,11 @@ class Domains extends ResourceController {
             $auth = new KubeAuth();
             $cluster = $auth->authenticate();
             $certificate = new KubeCertificate($item);
-            $certificate->apply($cluster);
+            $applied = $certificate->apply($cluster);
+            if (is_string($applied)) {
+                $this->fail($applied);
+                return;
+            }
         }
         $this->_setResource($item);
         $this->success();
