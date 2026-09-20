@@ -260,8 +260,8 @@ class LoginApiTest extends ControllerTestCase {
     public function testTheDestinationSurvivesTheRoundTripThroughTheForm(): void {
         $this->get('login?request_uri=' . urlencode('https://deep.example/link'));
 
-        $this->assertSame('https://deep.example/link', $_SESSION['requestUrl'] ?? null);
-        $this->assertArrayHasKey('requestUrl', $_SESSION['__ci_vars'] ?? [], 'kept as flashdata, not for ever');
+        $this->assertSame('https://deep.example/link', $_SESSION['request_url'] ?? null);
+        $this->assertArrayHasKey('request_url', $_SESSION['__ci_vars'] ?? [], 'kept as flashdata, not for ever');
     }
 
     /**
@@ -271,7 +271,7 @@ class LoginApiTest extends ControllerTestCase {
     public function testWhatTheFormRememberedIsWhereTheSignInGoes(): void {
         Fixtures::user(['username' => 'operator', 'password' => 'the-right-one']);
 
-        $this->withSession($this->rememberedDestination('requestUrl', 'https://deep.example/link'));
+        $this->withSession($this->rememberedDestination('request_url', 'https://deep.example/link'));
         $response = $this->post('login', ['username' => 'operator', 'password' => 'the-right-one']);
 
         $this->assertSame('https://deep.example/link', $this->location($response));
@@ -417,31 +417,14 @@ class LoginApiTest extends ControllerTestCase {
     }
 
     /**
-     * Today's behaviour, and it is a bug rather than a decision. `index()` stores the
-     * destination under `requestUrl` and `twoFactor()` reads it back under `request_url`,
-     * so the two never meet: an operator who followed a deep link and has a second factor
-     * is always delivered to the frontend's front page instead.
+     * A deep link survives the second factor.
      *
-     * Spelling the two keys the same way turns this test red.
+     * It did not: `index()` stored the destination under `requestUrl` and `twoFactor()`
+     * read it back under `request_url`, so the two never met and an operator who followed a
+     * deep link and has a second factor was always delivered to the frontend's front page.
+     * One constant on the controller spells it now.
      */
-    public function testTheDestinationIsLostOnTheWayThroughTheSecondFactor(): void {
-        $user = $this->userWithASecondFactor(['username' => 'mfa-operator']);
-
-        $this->withSession(array_merge(
-            ['2fa_in_progress' => 'mfa-operator'],
-            $this->rememberedDestination('requestUrl', 'https://deep.example/link')
-        ));
-        $response = $this->post('login/twoFactor', ['code' => $this->currentCodeFor($user)]);
-
-        $this->assertSame(getFrontendUrl(), $this->location($response));
-    }
-
-    /**
-     * Under the name `twoFactor()` actually reads, the destination does survive. Held
-     * separately from the test above so that fixing the spelling leaves one of the two
-     * green rather than leaving nothing behind.
-     */
-    public function testTheDestinationIsUsedWhenItIsSpeltTheWayTwoFactorReadsIt(): void {
+    public function testTheDestinationSurvivesTheSecondFactor(): void {
         $user = $this->userWithASecondFactor(['username' => 'mfa-operator']);
 
         $this->withSession(array_merge(
@@ -451,6 +434,38 @@ class LoginApiTest extends ControllerTestCase {
         $response = $this->post('login/twoFactor', ['code' => $this->currentCodeFor($user)]);
 
         $this->assertSame('https://deep.example/link', $this->location($response));
+    }
+
+    /**
+     * The whole way through, which is the shape the bug actually had: each half was
+     * self-consistent and the two disagreed about the name in the middle.
+     */
+    public function testADeepLinkArrivesAtItsDestinationThroughTheWholeSignIn(): void {
+        $user = $this->userWithASecondFactor(['username' => 'mfa-operator', 'password' => 'the-right-one']);
+
+        $this->get('login?request_uri=' . urlencode('https://deep.example/link'));
+        $this->withSession()->post('login', ['username' => 'mfa-operator', 'password' => 'the-right-one']);
+        $response = $this->withSession()->post('login/twoFactor', ['code' => $this->currentCodeFor($user)]);
+
+        $this->assertSame('https://deep.example/link', $this->location($response));
+    }
+
+    /**
+     * The marker that says a password has been checked does not outlive the code being
+     * accepted, or it would still be there for the next visitor on a shared browser.
+     *
+     * It is cleared through the session library now rather than with
+     * `unset($_SESSION[...])`, which reaches around whatever handler is configured. This
+     * test cannot tell the two apart - the harness's session *is* `$_SESSION` - so it holds
+     * the outcome, not the mechanism.
+     */
+    public function testTheSecondFactorMarkerIsClearedOnceTheCodeIsAccepted(): void {
+        $user = $this->userWithASecondFactor(['username' => 'mfa-operator']);
+
+        $this->withSession(['2fa_in_progress' => 'mfa-operator']);
+        $this->post('login/twoFactor', ['code' => $this->currentCodeFor($user)]);
+
+        $this->assertArrayNotHasKey('2fa_in_progress', $_SESSION);
     }
 
     // </editor-fold>
@@ -526,15 +541,18 @@ class LoginApiTest extends ControllerTestCase {
     /**
      * The renewal form is served to anybody, and the change is only made for a session that
      * names a user. A stranger posting a perfectly valid password therefore changes nothing
-     * at all - which is the right outcome, though the form says nothing about it.
+     * at all - and is told so, which used to be the missing half: the form came back with no
+     * message, indistinguishable from a password that was accepted.
      */
     public function testAStrangerCannotRenewAnybodysPassword(): void {
         Fixtures::user(['username' => 'untouched', 'password' => 'the-old-one']);
 
-        $this->post('login/renewPassword', [
+        $page = $this->body($this->post('login/renewPassword', [
             'password' => 'A-brand-new-1',
             'password_confirm' => 'A-brand-new-1',
-        ]);
+        ]));
+
+        $this->assertSame('Your sign-in has expired. Sign in again.', $this->theWarningShownOn($page));
 
         $stillWorks = $this->post('login', ['username' => 'untouched', 'password' => 'the-old-one']);
         $this->assertSame(getFrontendUrl(), $this->location($stillWorks));
@@ -565,11 +583,10 @@ class LoginApiTest extends ControllerTestCase {
      * opinion about password strength at all, so a rule quietly dropped here is a rule
      * dropped everywhere.
      *
-     * The message names the *last* rule that failed, not the first: the four checks each
-     * overwrite the same variable rather than stopping at the first complaint. That is why
-     * '12345678' below is told about capitals and not about letters - and why "At least one
-     * letter" can never be the message, since a password with no letter has no capital
-     * either and the capital rule is checked afterwards.
+     * The message names the *first* rule that failed. The four checks used to write to one
+     * variable without stopping, so it named whichever was checked last - and "At least one
+     * letter" could never be it, because a password with no letter has no capital either
+     * and the capital rule ran afterwards.
      */
     #[DataProvider('theWaysANewPasswordIsRefused')]
     public function testAWeakPasswordIsRefusedAndTheOldOneKept(string $password, string $expected): void {
@@ -595,7 +612,14 @@ class LoginApiTest extends ControllerTestCase {
             'seven characters' => ['Abcdef1', 'At least eight characters'],
             'no digit' => ['Abcdefgh', 'At least one number'],
             'no capital' => ['abcdefg1', 'At least one uppercase letter'],
-            'digits only' => ['12345678', 'At least one uppercase letter'],
+
+            // The one that could not be reached: no letter and no capital, and the capital
+            // rule used to be the one that got the last word.
+            'digits only' => ['12345678', 'At least one letter'],
+
+            // Too short *and* missing three of the four. The most basic complaint is the
+            // one worth showing.
+            'nothing at all' => ['abc', 'At least eight characters'],
         ];
     }
 
@@ -748,21 +772,30 @@ class LoginApiTest extends ControllerTestCase {
     }
 
     /**
-     * Today's behaviour, and it is broken. `AuthExtension::checkSession()` hands back an
-     * `App\Entities\User`, which has no `name()` - only the auth extension's own user
-     * entity does - so the page fatals for precisely the visitors it is meant to greet.
+     * A signed-in visitor is greeted by name.
      *
-     * Nothing in kso links here, which is why it has survived. Giving the entity a `name()`
-     * turns this test red, and it should then assert on the greeting instead.
+     * The page used to fatal for precisely the visitors it exists to greet:
+     * `AuthExtension::checkSession()` is typed for the auth extension's own user entity,
+     * which has a `name()`, but in kso the model hands back `App\Entities\User`, which did
+     * not. Nothing in kso links here, which is why it survived.
      */
-    public function testTheSuccessPageFatalsForASignedInUser(): void {
+    public function testTheSuccessPageGreetsASignedInUserByName(): void {
         $user = Fixtures::user(['username' => 'greeted', 'first_name' => 'Ada', 'last_name' => 'Lovelace']);
 
         $this->withSession(['user_id' => $user->id]);
 
-        $this->expectException(\Error::class);
-        $this->expectExceptionMessage('name()');
-        $this->get('login/success');
+        $this->assertStringContainsString('Ada Lovelace', $this->body($this->get('login/success')));
+    }
+
+    /**
+     * A user with no surname is greeted by the name they do have, not by it plus a space.
+     */
+    public function testAUserWithNoSurnameIsGreetedByTheNameTheyHave(): void {
+        $user = Fixtures::user(['username' => 'greeted', 'first_name' => 'Ada', 'last_name' => '']);
+
+        $this->withSession(['user_id' => $user->id]);
+
+        $this->assertStringContainsString('Welcome Ada', $this->body($this->get('login/success')));
     }
 
     // </editor-fold>

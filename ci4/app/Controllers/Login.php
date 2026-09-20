@@ -10,15 +10,24 @@ use DebugTool\Data;
 
 class Login extends \App\Core\BaseController {
 
+    /**
+     * The session key the destination is remembered under, from the form through the second
+     * factor and the renewal.
+     *
+     * A constant because it was spelt `requestUrl` in `index()` and `request_url` in every
+     * other method here, so the two never met: an operator who followed a deep link and has
+     * a second factor was always delivered to the frontend's front page instead.
+     */
+    private const string RememberedDestination = 'request_url';
+
     public function requireAuth(string $method): bool {
         return false;
     }
 
     public function index() {
         $data = [];
-        $scopes = '';
 
-        $requestUrl = session()->getFlashdata('requestUrl');
+        $requestUrl = session()->getFlashdata(self::RememberedDestination);
         if ($this->request->getGet('request_uri')) {
             $requestUrl = $this->request->getGet('request_uri');
         }
@@ -28,7 +37,7 @@ class Login extends \App\Core\BaseController {
         if (!$requestUrl) {
             $requestUrl = getFrontendUrl();
         }
-        session()->setFlashdata('requestUrl', $requestUrl);
+        session()->setFlashdata(self::RememberedDestination, $requestUrl);
         $data['requestUrl'] = $requestUrl;
 
         if ($this->request->getPostGet('error_message')) {
@@ -41,7 +50,7 @@ class Login extends \App\Core\BaseController {
             $username = $this->request->getPost('username');
             $password = $this->request->getPost('password');
 
-            $loginResponse = AuthExtension::checkLoginWithUsernamePassword($username, $password, $scopes);
+            $loginResponse = AuthExtension::checkLoginWithUsernamePassword($username, $password);
             $data['loginResponse'] = $loginResponse;
             switch ($loginResponse) {
                 case LoginResponse::Success:
@@ -80,6 +89,11 @@ class Login extends \App\Core\BaseController {
                     $data['loginResponse'] = 'Unknown username';
                     break;
 
+                // kso asks for no scope at all - the argument above used to be an empty
+                // string that was never assigned - so the authorisation check inside
+                // `checkLoginWithUsernamePassword()` does not run and this cannot be
+                // reached today. Kept so that asking for one later is a one-line change
+                // rather than a raw constant shown to the user.
                 case LoginResponse::WrongScope:
                     $data['loginResponse'] = "You don't have access to this site";
                     break;
@@ -92,7 +106,7 @@ class Login extends \App\Core\BaseController {
 
     public function twoFactor(): string {
         /** @var string $requestUrl */
-        $requestUrl = session()->getFlashdata('request_url');
+        $requestUrl = session()->getFlashdata(self::RememberedDestination);
         if (!$requestUrl) {
             $requestUrl = getFrontendUrl();
         }
@@ -125,7 +139,10 @@ class Login extends \App\Core\BaseController {
             $mfaLib = new MFALib();
             $verify = $mfaLib->verifyCode($user->getMFASSecret(), $code);
             if ($verify) {
-                unset($_SESSION[ '2fa_in_progress' ]);
+                // Through the session library rather than `unset($_SESSION[...])`, which
+                // reaches around whatever handler is configured and leaves the session's
+                // own bookkeeping thinking the key is still there.
+                session()->remove('2fa_in_progress');
                 AuthExtension::saveUserSession($user->id);
                 if ($user->renew_password) {
                     $this->response->redirect(base_url('login/renewPassword'));
@@ -137,7 +154,7 @@ class Login extends \App\Core\BaseController {
             }
         }
 
-        session()->setFlashdata('request_url', $requestUrl);
+        session()->setFlashdata(self::RememberedDestination, $requestUrl);
         return view('Login/MFA', $data);
     }
 
@@ -152,7 +169,7 @@ class Login extends \App\Core\BaseController {
 
     public function renewPassword(): string {
         /** @var string $requestUrl */
-        $requestUrl = session()->getFlashdata('request_url');
+        $requestUrl = session()->getFlashdata(self::RememberedDestination);
         if (!$requestUrl) {
             $requestUrl = getFrontendUrl();
         }
@@ -164,23 +181,9 @@ class Login extends \App\Core\BaseController {
 
             if ($password == $passwordConfirm) {
 
-                if (strlen($password) < 8) {
-                    $passError = 'At least eight characters';
-                }
+                $passError = $this->firstUnsatisfiedPasswordRule((string) $password);
 
-                if (!preg_match("#[0-9]+#", $password)) {
-                    $passError = 'At least one number';
-                }
-
-                if (!preg_match("#[a-zA-Z]+#", $password)) {
-                    $passError = 'At least one letter';
-                }
-
-                if (!preg_match("#[A-Z]+#", $password)) {
-                    $passError = 'At least one uppercase letter';
-                }
-
-                if (!isset($passError)) {
+                if ($passError === null) {
 
                     $user = AuthExtension::checkSession();
                     if ($user) {
@@ -193,6 +196,12 @@ class Login extends \App\Core\BaseController {
                         exit;
                     }
 
+                    // Nobody to change the password of. The form used to come back with no
+                    // message at all, which is indistinguishable from a password that was
+                    // accepted - so a session that had quietly expired looked like a
+                    // renewal that had quietly worked.
+                    Data::set('description', 'Your sign-in has expired. Sign in again.');
+
                 } else {
                     Data::set('description', $passError);
                 }
@@ -202,13 +211,41 @@ class Login extends \App\Core\BaseController {
             }
         }
 
-        session()->setFlashdata('request_url', $requestUrl);
+        session()->setFlashdata(self::RememberedDestination, $requestUrl);
 
         return view('Login/PasswordRenewal', Data::getStore());
     }
 
+    /**
+     * The first rule a new password does not satisfy, or null when it satisfies all four.
+     *
+     * First rather than last. The four checks used to write to one variable without
+     * stopping, so the message named whichever rule was checked last - and "At least one
+     * letter" could never be it, because anything without a letter has no capital either
+     * and the capital was checked afterwards.
+     *
+     * The order is from the most basic complaint to the most specific, so that a password
+     * failing several rules is told the one worth fixing first.
+     */
+    private function firstUnsatisfiedPasswordRule(string $password): ?string {
+        if (strlen($password) < 8) {
+            return 'At least eight characters';
+        }
+        if (!preg_match("#[a-zA-Z]+#", $password)) {
+            return 'At least one letter';
+        }
+        if (!preg_match("#[0-9]+#", $password)) {
+            return 'At least one number';
+        }
+        if (!preg_match("#[A-Z]+#", $password)) {
+            return 'At least one uppercase letter';
+        }
+
+        return null;
+    }
+
     public function forgotPassword(): string {
-        session()->setFlashdata('request_url', session()->getFlashdata('request_url'));
+        session()->setFlashdata(self::RememberedDestination, session()->getFlashdata(self::RememberedDestination));
 
         if ($this->request->getPost('username')) {
             /** @var User $user */

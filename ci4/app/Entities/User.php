@@ -101,6 +101,18 @@ class User extends \RestExtension\Entities\User {
         );
     }
 
+    /**
+     * What to call this user on screen.
+     *
+     * The auth extension's own user entity has this, and `AuthExtension::checkSession()`
+     * is typed for that one - but in kso the model hands back this entity instead, so
+     * anything greeting the signed-in user was a fatal error. `Login::success()` was the
+     * one page that did.
+     */
+    public function name(): string {
+        return trim($this->first_name . ' ' . $this->last_name);
+    }
+
     public function hasMFASecret(): bool {
         return strlen((string) $this->mfa_secret_hash) > 0;
     }

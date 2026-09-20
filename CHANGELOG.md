@@ -27,6 +27,8 @@
 * A grant or renewal that carries no id token or no new refresh token is a token, not a server error
 * Database services could not be connected to at all: the test-connection button said no to every service, and a deploy could not create the tenant's database or user
 * Testing the connection to a database service that has been deleted answers no instead of a server error
+* Signing in from a deep link with two-factor authentication lands on the link instead of the front page
+* The password renewal form names the first rule the new password breaks, and says so when the sign-in has expired instead of silently changing nothing
 * Updating something that does not exist answered OK and wrote nothing; it is refused now
 * Removed `PUT /deployments/{id}/ingress`, which could never work - the workspace endpoint is the one that does this
 * Reading something that does not exist answered a resource with every field null; it answers 404 now
