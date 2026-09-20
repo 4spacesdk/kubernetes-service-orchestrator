@@ -130,9 +130,19 @@ class DatabaseStep extends BaseDeploymentStep {
      * The password that user is created with.
      *
      * Thirteen characters: a leading `@`, which MSSQL's complexity rules want, and twelve
-     * from the alphabet below. **`rand()` is not a cryptographic source** - it is seeded
-     * from the process and its output is predictable to anyone who can watch enough of it.
-     * That is a finding of its own; this is here so that what it produces can be looked at.
+     * from the alphabet below.
+     *
+     * **`random_int()`, not `rand()`.** This is the password to a customer's database, and
+     * `rand()` is a Mersenne Twister seeded from the process: its whole state can be
+     * recovered from enough of its output, and a rough idea of when a deployment was created
+     * narrows the seed to something searchable. The two are one character apart to write and
+     * nothing alike to attack. `random_int()` takes its bytes from the operating system, and
+     * throws rather than falling back on a weaker source when it cannot.
+     *
+     * The alphabet is unchanged. Twelve characters out of sixty-two is about seventy-one
+     * bits, which is not the weak part of this and was not worth changing along with it.
+     *
+     * @throws \Random\RandomException when the system has no randomness to give
      */
     public static function GeneratePassword(): string {
         $chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -140,7 +150,7 @@ class DatabaseStep extends BaseDeploymentStep {
 
         $password = "@"; // Must include @  for MSSQL
         for ($i = 0; $i < 12; $i++) {
-            $index = rand(0, $count - 1);
+            $index = random_int(0, $count - 1);
             $password .= mb_substr($chars, $index, 1);
         }
 

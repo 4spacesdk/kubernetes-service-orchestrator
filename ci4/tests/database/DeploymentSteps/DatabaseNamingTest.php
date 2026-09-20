@@ -13,9 +13,9 @@ use PHPUnit\Framework\Attributes\DataProvider;
  * data ends up under and the password that guards it, which makes them worth looking at
  * directly.
  *
- * Two of the tests below hold behaviour that is **not** right and is not fixed here - the
- * collisions and the source of randomness are decisions of their own. They are here so the
- * day somebody changes them, it is on purpose.
+ * One of the tests below holds behaviour that is **not** right and is not fixed here: the
+ * name collisions are a decision of their own, and the test is here so the day somebody
+ * changes them, it is on purpose. The source of randomness used to be the other one.
  */
 class DatabaseNamingTest extends DatabaseTestCase {
 
@@ -113,15 +113,91 @@ class DatabaseNamingTest extends DatabaseTestCase {
         $this->assertSame(1, preg_match('/^@[A-Za-z0-9]{12}$/', $password));
     }
 
-    /**
-     * **Pinned, not endorsed.** Two passwords in a row differ, which is all `rand()`
-     * promises - and all this test can say. `rand()` is not a cryptographic source: it is
-     * seeded per process and its output is predictable to anyone who can watch enough of
-     * it. Replacing it is a decision of its own; this is here so the replacement is a
-     * deliberate edit.
-     */
     public function testTwoPasswordsAreNotTheSame(): void {
         $this->assertNotSame(DatabaseStep::GeneratePassword(), DatabaseStep::GeneratePassword());
+    }
+
+    /**
+     * The password comes from a cryptographic source, asserted by sweeping the source for
+     * the ones that are not.
+     *
+     * It was `rand()`: a Mersenne Twister, seeded per process, whose state can be recovered
+     * from enough of its output - and the rough time a deployment was created narrows the
+     * seed to something searchable. Nothing a test can observe tells the two apart, so this
+     * reads the code instead, and it reads all of it rather than the one method: the next
+     * thing that generates a secret will be written somewhere else.
+     *
+     * `uniqid()` is not swept for on purpose. It is used for a Kubernetes job name and an
+     * error id, where the requirement is that two do not collide, not that nobody can guess
+     * the next one.
+     */
+    public function testNothingInTheApplicationDrawsSecretsFromAWeakSource(): void {
+        $offenders = [];
+
+        $files = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator(APPPATH));
+        foreach ($files as $file) {
+            if ($file->getExtension() !== 'php') {
+                continue;
+            }
+
+            if ($this->callsAWeakSource((string) file_get_contents($file->getPathname()))) {
+                $offenders[] = str_replace(APPPATH, '', $file->getPathname());
+            }
+        }
+
+        sort($offenders);
+
+        $this->assertSame([], $offenders, 'use random_int() or random_bytes()');
+    }
+
+    /**
+     * And the sweep can see one, so an empty list above means the application is clean
+     * rather than that the check looks in the wrong place. Both halves: a call is found, and
+     * the same name in a comment or a string is not.
+     */
+    public function testTheSweepTellsACallFromAMentionOfOne(): void {
+        $this->assertTrue($this->callsAWeakSource('<?php $i = rand(0, 9);'));
+        $this->assertTrue($this->callsAWeakSource('<?php $i = mt_rand(0, 9);'));
+
+        $this->assertFalse($this->callsAWeakSource('<?php /** rand() is the wrong one */ $i = random_int(0, 9);'));
+        $this->assertFalse($this->callsAWeakSource('<?php $why = "rand() is the wrong one";'));
+        $this->assertFalse($this->callsAWeakSource('<?php $i = $generator->rand(0, 9);'));
+    }
+
+    /**
+     * Tokenised rather than searched as text.
+     *
+     * A comment explaining why `rand()` is the wrong function is not a call to it, and the
+     * method this test guards has one - a plain search made the file its own offender. So
+     * comments and strings are dropped and what is left is read as identifiers.
+     */
+    private function callsAWeakSource(string $source): bool {
+        $weak = ['rand', 'mt_rand', 'srand', 'mt_srand'];
+
+        $tokens = array_values(array_filter(
+            token_get_all($source),
+            static fn ($token) => !is_array($token)
+                || !in_array($token[0], [T_COMMENT, T_DOC_COMMENT, T_WHITESPACE, T_CONSTANT_ENCAPSED_STRING], true)
+        ));
+
+        foreach ($tokens as $i => $token) {
+            if (!is_array($token) || $token[0] !== T_STRING || !in_array(strtolower($token[1]), $weak, true)) {
+                continue;
+            }
+
+            // A call, not a method of the same name: `$this->rand(` has an object operator
+            // in front of it, and `function rand(` a `function`.
+            $before = $tokens[$i - 1] ?? null;
+            if (is_array($before) && in_array($before[0], [T_OBJECT_OPERATOR, T_DOUBLE_COLON, T_FUNCTION], true)) {
+                continue;
+            }
+
+            if (($tokens[$i + 1] ?? null) === '(') {
+                return true;
+            }
+        }
+
+        return false;
     }
 
 }

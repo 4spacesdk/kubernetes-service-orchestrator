@@ -22,6 +22,7 @@
 * Lists: sorting by a field or direction that is not there is refused, `filter=status:active` narrows to that status instead of answering with every workspace, an unreadable label filter says what to write instead, and the environments and Podio field lists carry a count like every other list
 * Pod logs kept the start of each line, which was cut off by up to eleven characters, and the live tail shows the same text as the log page. The shell on a pod that is not running says what the cluster said instead of an empty box
 * Workspaces: terminating one with no deployments leaves it terminated instead of back in the list as a draft, and names starting with Æ, Ø or Å are allowed again, as are namespaces longer than 15 characters
+* A customer's database password is drawn from the system's own randomness; it used to come from a generator whose output can be worked out from enough of it
 * Responses carry the usual browser protections - `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `X-Permitted-Cross-Domain-Policies`, and HSTS when the request came over TLS - and no longer announce the Apache and PHP versions
 * Stored credentials are encrypted in the database: registry, database and email passwords, Podio and GitHub secrets, webhook tokens, a tenant's database password and the two-factor secret. The key comes from the installation's own `ENCRYPTION_KEY` - **it has to be set, and kept**
 * Two-factor authentication can be turned off again; removing it used to fail with a database error and leave the second factor in place
