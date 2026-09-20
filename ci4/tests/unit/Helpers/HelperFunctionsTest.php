@@ -154,6 +154,37 @@ class HelperFunctionsTest extends CIUnitTestCase {
     }
 
     /**
+     * A MySQL shaped datetime - a date, a space, a time - is the ordinary way one arrives
+     * from anywhere that is not Kubernetes, and it has to mean what it says.
+     *
+     * The swap used to happen first, and it did not tell this space from the one in front
+     * of an offset: `2024-05-01 10:00:00` became `2024-05-01+10:00:00`, midnight at UTC+10,
+     * and came back as the day before with the time gone. The parse *succeeded*, so the
+     * fallback never got a chance to try the original. Latent only because every caller
+     * today is handed RFC 3339 - and one column away, `CheckCertificateExpiry` decides on
+     * this answer whether to warn that a certificate is about to expire.
+     */
+    public function testAnOrdinarySpacedDatetimeIsTheTimeItSays(): void {
+        $this->assertSame(
+            strtotime('2024-05-01 10:00:00'),
+            strtotime_('2024-05-01 10:00:00'),
+            'a date and a time separated by a space, not a date at an offset'
+        );
+    }
+
+    /**
+     * The repair is a fallback, not the first thing tried, so it only ever sees a value
+     * `strtotime()` could make nothing of at all - which is exactly the offset that lost
+     * its sign. Both forms have to come out as the same instant.
+     */
+    public function testAnOffsetThatLostItsPlusMeansTheSameAsOneThatKeptIt(): void {
+        $this->assertSame(
+            strtotime_('2024-05-01T10:00:00+02:00'),
+            strtotime_('2024-05-01T10:00:00 02:00')
+        );
+    }
+
+    /**
      * A cluster that has not got round to filling a field in yet sends an empty string or
      * a placeholder, and callers wrap this in `date()`. Answering `false` is what makes
      * that show the epoch rather than throwing in the middle of rendering a page.
@@ -326,38 +357,6 @@ class HelperFunctionsTest extends CIUnitTestCase {
     }
 
     // </editor-fold>
-
-    /**
-     * **Today's behaviour, and it is wrong.** `strtotime_()` swaps every space for a `+`
-     * before parsing, to undo what a query string does to the `+` in an offset like
-     * `10:00:00+02:00`. It does not distinguish that space from the one between a date and
-     * a time, so an ordinary `2024-05-01 10:00:00` becomes `2024-05-01+10:00:00` - midnight
-     * at UTC+10 - and comes back as the day before.
-     *
-     * The parse *succeeds*, so the `if (!$time)` fallback never gets a chance to try the
-     * original string.
-     *
-     * It is latent only because every caller today is handed RFC 3339 by Kubernetes or
-     * cert-manager. The moment a MySQL-shaped datetime reaches it - and one column away,
-     * `CheckCertificateExpiry` decides whether to warn on the answer - it is silently a day
-     * out.
-     */
-    public function testAnOrdinarySpacedDatetimeComesBackADayEarly(): void {
-        $parsed = strtotime_('2024-05-01 10:00:00');
-
-        $this->assertSame('2024-04-30T14:00:00+00:00', gmdate('c', $parsed));
-    }
-
-    /**
-     * What the space-to-plus swap is actually for: an offset that lost its `+` on the way
-     * through a query string still parses.
-     */
-    public function testAnOffsetThatLostItsPlusIsStillUnderstood(): void {
-        $this->assertSame(
-            strtotime_('2024-05-01T10:00:00+02:00'),
-            strtotime_('2024-05-01T10:00:00 02:00')
-        );
-    }
 
     // <editor-fold desc="Fixtures">
 
