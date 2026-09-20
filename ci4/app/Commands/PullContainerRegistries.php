@@ -51,26 +51,25 @@ class PullContainerRegistries extends BaseCommand {
             if (count($acrProjects)) {
                 Data::debug('found', count($acrProjects), 'ACR projects');
                 for ($i = 0; $i < 5; $i++) {
-                    $hasCreatedAutoUpdate = $this->runAcrProjects($acrProjects);
+                    // Collected across the five pulls, not overwritten: a tag found by the
+                    // first pull and nothing by the four after it is still a tag found.
+                    // The call goes first so it is made on every pass - the other order
+                    // would stop pulling once something had been found.
+                    $hasCreatedAutoUpdate = $this->runAcrProjects($acrProjects) || $hasCreatedAutoUpdate;
                     sleep(2);
                 }
             }
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            // Throwable rather than Exception: a TypeError inside the pull loop is not an
+            // Exception, and letting it past here skips last_log and the closing save() -
+            // leaving the job page showing the previous run's log as if nothing happened.
             \DebugTool\Data::debug($e->getMessage());
         }
 
-        // Not measured: a PUSH socket with nobody listening blocks on send, and nothing
-        // listens in a test container. Reaching this would hang the build rather than
-        // assert anything.
-        // @codeCoverageIgnoreStart
         if ($hasCreatedAutoUpdate) {
-            ZMQProxy::getInstance()->send(
-                Events::AutoUpdate_Created(),
-                (new ChangeEvent(null, []))->toArray()
-            );
+            $this->announceAutoUpdates();
         }
-        // @codeCoverageIgnoreEnd
 
         $job->last_log = json_encode(Data::getDebugger(), JSON_PRETTY_PRINT);
         $job->save();
@@ -116,6 +115,20 @@ class PullContainerRegistries extends BaseCommand {
             }
         }
         return $hasCreatedAutoUpdate;
+    }
+
+    /**
+     * Tells any open UI that an update is waiting. Without it the update only appears when
+     * somebody reloads the page.
+     *
+     * Protected rather than inline so a test can see that it was reached: the run's own
+     * log says nothing about it, and the socket records nothing either.
+     */
+    protected function announceAutoUpdates(): void {
+        ZMQProxy::getInstance()->send(
+            Events::AutoUpdate_Created(),
+            (new ChangeEvent(null, []))->toArray()
+        );
     }
 
     private function emitNewTag(string $image, string $tag): void {

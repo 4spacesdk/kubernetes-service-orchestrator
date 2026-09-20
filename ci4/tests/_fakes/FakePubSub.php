@@ -60,7 +60,13 @@ class FakePubSub extends BasePubSub {
             throw $this->failPullWith;
         }
 
-        return $this->messages[$project] ?? [];
+        // A pull acknowledges what it read, so the queue is empty the next time. Handing
+        // the same message back on every pull would make the five pulls in
+        // `PullContainerRegistries::run()` look like five pushes.
+        $messages = $this->messages[$project] ?? [];
+        $this->messages[$project] = [];
+
+        return $messages;
     }
 
 }

@@ -16,11 +16,15 @@ use App\Tests\Fakes\FakeIntegrations;
  * customer's workspace learns that a new version exists, and until Pub/Sub had an interface
  * none of it could be looked at.
  *
- * `run()` is tested only as far as the point where it decides there is something to pull:
- * from there it sleeps two seconds five times over, which a test suite cannot wait for.
- * `runAcrProjects()` - the part that decides anything - is tested directly instead.
+ * `run()` pulls five times two seconds apart. The suite makes `sleep()` instant inside
+ * `App\Commands` - see `tests/_fakes/NoSleepInCommands.php` - so the whole run is tested
+ * here; `runAcrProjects()`, the part that decides anything, is also reached directly, so a
+ * single pull can be examined without the five around it.
  */
 class PullContainerRegistriesTest extends DatabaseTestCase {
+
+    /** The command the last `runTheJob()` used, counting its own announcements. */
+    private PullContainerRegistries $lastRun;
 
     public function tearDown(): void {
         FakeIntegrations::uninstall();
@@ -269,6 +273,54 @@ class PullContainerRegistriesTest extends DatabaseTestCase {
         $this->assertNotSame('', (string) $this->cronJob()['last_log'], 'the run still finished');
     }
 
+    /**
+     * A `TypeError` is not an `Exception`, and the run used to let it past - skipping
+     * `last_log` and the closing `save()`, so the job page kept showing the *previous*
+     * run's log with no sign that anything had gone wrong.
+     */
+    public function testAnErrorInThePullIsAlsoWrittenToTheLog(): void {
+        $fakes = FakeIntegrations::install();
+        $fakes->pubSub()->failPullWith = new \TypeError('pull() got null');
+        $this->artifactRegistry();
+
+        $log = $this->runTheJob();
+
+        $this->assertStringContainsString('pull() got null', $log);
+    }
+
+    /**
+     * The run pulls five times, and a push usually arrives on one of them. The result used
+     * to be assigned rather than collected, so a tag found by the first pull was erased by
+     * the four empty ones after it: no event went over the push socket, and the update only
+     * appeared once somebody reloaded the page.
+     */
+    public function testATagFoundByAnEarlyPullIsStillAnnouncedAfterTheEmptyOnes(): void {
+        $fakes = FakeIntegrations::install();
+        $deployment = $this->autoUpdatingDeployment();
+        $this->artifactRegistry();
+        $fakes->pubSub()->messages['the-project'] = [
+            $this->push('registry.example.org/team/api:v2.0.0'),
+        ];
+
+        $this->runTheJob();
+
+        $this->assertCount(1, $this->updatesFor($deployment->id), 'the first pull found it');
+        $this->assertSame(1, $this->announcements(), 'and the four empty pulls did not erase it');
+    }
+
+    /**
+     * Five pulls that find nothing are the ordinary minute, and announcing an update then
+     * would have every open UI ask for a list that has not changed.
+     */
+    public function testAQuietRunAnnouncesNothing(): void {
+        FakeIntegrations::install();
+        $this->artifactRegistry();
+
+        $this->runTheJob();
+
+        $this->assertSame(0, $this->announcements());
+    }
+
     // <editor-fold desc="Fixtures">
 
     /**
@@ -292,9 +344,24 @@ class PullContainerRegistriesTest extends DatabaseTestCase {
         $store = (new \ReflectionClass(\DebugTool\Data::class))->getProperty('store');
         $store->setValue(null, ['status' => null]);
 
-        (new PullContainerRegistries(service('logger'), service('commands')))->run([]);
+        $this->lastRun = new class (service('logger'), service('commands')) extends PullContainerRegistries {
+            public int $announced = 0;
+
+            protected function announceAutoUpdates(): void {
+                $this->announced++;
+                // Still the real one, over the suite's silenced socket: whether it sends is
+                // half of what is being asked here.
+                parent::announceAutoUpdates();
+            }
+        };
+        $this->lastRun->run([]);
 
         return (string) $this->cronJob()['last_log'];
+    }
+
+    /** How many times the last run told the open UIs that an update is waiting. */
+    private function announcements(): int {
+        return $this->lastRun->announced;
     }
 
     /**
