@@ -93,18 +93,37 @@ class PostUpdateActionPerformTest extends DatabaseTestCase {
     }
 
     /**
-     * Today's behaviour, and separate from the guards above: a commit message with no task
-     * url leaves the item id empty, and the id is pulled apart before anything is guarded.
-     * The action dies rather than skipping quietly.
+     * A commit message with no task url used to leave the item id empty and take the action
+     * down on `Undefined array key 1`. There is nothing to comment on, so it is skipped.
      */
-    public function testACommitWithoutATaskUrlCrashes(): void {
-        $this->fakesWithCommit('Tidy up the logging');
+    public function testACommitWithoutATaskUrlSkipsTheComment(): void {
+        $fakes = $this->fakesWithCommit('Tidy up the logging');
         [$action, $deployment] = $this->commentAction('Deployed');
 
-        $this->expectException(\ErrorException::class);
-        $this->expectExceptionMessage('Undefined array key 1');
+        $action->perform($deployment);
+
+        $this->assertSame([], $fakes->podio()->comments);
+    }
+
+    public function testACommitWithoutATaskUrlSkipsTheFieldUpdate(): void {
+        $fakes = $this->fakesWithCommit('Tidy up the logging');
+        [$action, $deployment] = $this->fieldUpdateAction('done');
 
         $action->perform($deployment);
+
+        $this->assertSame([], $fakes->podio()->fieldUpdates);
+    }
+
+    /**
+     * A url that is a link to something else in Podio, not to an item.
+     */
+    public function testACommitLinkingSomewhereElseSkipsTheComment(): void {
+        $fakes = $this->fakesWithCommit('See https://podio.com/acme/app/1/apps');
+        [$action, $deployment] = $this->commentAction('Deployed');
+
+        $action->perform($deployment);
+
+        $this->assertSame([], $fakes->podio()->comments);
     }
 
     // </editor-fold>

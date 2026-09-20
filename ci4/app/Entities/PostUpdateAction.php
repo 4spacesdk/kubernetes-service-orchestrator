@@ -3,6 +3,7 @@
 use App\Models\PostUpdateActionConditionModel;
 use DebugTool\Data;
 use App\Core\Entity;
+use App\Libraries\Podio\PodioItemUrl;
 
 /**
  * Class PostUpdateAction
@@ -85,7 +86,11 @@ class PostUpdateAction extends Entity {
                     $comment = $fn($comment);
                 }
 
-                [$_, $itemId] = explode('items/', $podioItemUrl);
+                $itemId = PodioItemUrl::itemId($podioItemUrl);
+                if ($itemId === null) {
+                    Data::debug('No Podio item in the commit message for', $deployment->name);
+                    return;
+                }
                 if (!$this->podio_add_comment_integration->exists()) {
                     $this->podio_add_comment_integration->find();
                 }
@@ -112,7 +117,11 @@ class PostUpdateAction extends Entity {
                 preg_match_all('#\bhttps?://[^,\s()<>]+(?:\([\w\d]+\)|([^,[:punct:]\s]|/))#', $commitMessage, $match);
                 $podioItemUrl = count($match[0]) ? $match[0][0] : '';
 
-                [$_, $itemId] = explode('items/', $podioItemUrl);
+                $itemId = PodioItemUrl::itemId($podioItemUrl);
+                if ($itemId === null) {
+                    Data::debug('No Podio item in the commit message for', $deployment->name);
+                    return;
+                }
                 if (!$this->podio_field_update_field_reference->exists()) {
                     $this->podio_field_update_field_reference->find();
                 }

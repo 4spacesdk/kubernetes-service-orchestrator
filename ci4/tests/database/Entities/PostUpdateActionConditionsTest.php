@@ -178,6 +178,18 @@ class PostUpdateActionConditionsTest extends DatabaseTestCase {
     }
 
     /**
+     * One url, but not to a task: nothing to read a field from. It used to be `Undefined
+     * array key 1` while the id was pulled out of the url.
+     */
+    public function testACommitLinkingSomewhereElseSaysNo(): void {
+        $fakes = FakeIntegrations::install();
+        $fakes->shortSha = 'abc1234';
+        $fakes->commitMessage = 'See https://podio.com/acme/app/1/apps';
+
+        $this->assertFalse($this->checkPodioCondition());
+    }
+
+    /**
      * And two urls is as bad as none: it refuses rather than guessing which task the
      * commit belongs to.
      */

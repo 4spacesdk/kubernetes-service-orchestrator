@@ -9,6 +9,7 @@
 * Init containers from another registry could not be pulled
 * Setting a deployment's version reported success when the deploy failed
 * Post-update actions crashed on an image without commit identification or version control; they are skipped now
+* Post-update actions crashed when the commit message had no Podio task link; they are skipped now
 * Updating something that does not exist answered OK and wrote nothing; it is refused now
 * Reading something that does not exist answered a resource with every field null; it answers 404 now
 * Auto update: a tag pattern that cannot compile is refused, and turning it on without one no longer crashes

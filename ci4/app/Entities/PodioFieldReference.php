@@ -3,6 +3,7 @@
 use App\Models\PodioFieldReferenceModel;
 use DebugTool\Data;
 use App\Core\Entity;
+use App\Libraries\Podio\PodioItemUrl;
 
 /**
  * Class PodioFieldReference
@@ -28,17 +29,19 @@ class PodioFieldReference extends Entity {
     }
 
     /**
-     * The value of this field on the item the url points at.
-     *
-     * The url is a Podio task link; everything after `items/` is the id. A url without
-     * that segment is not handled and fails with `Undefined array key 1`.
+     * The value of this field on the item the url points at, or null when the url names no
+     * item - it comes out of a commit message, so it is often something else.
      */
     public function getFieldValue(string $url): ?string {
+        $itemId = PodioItemUrl::itemId($url);
+        if ($itemId === null) {
+            Data::debug('No Podio item in', $url);
+            return null;
+        }
+
         if (!$this->podio_integration->exists()) {
             $this->podio_integration->find();
         }
-
-        [$_, $itemId] = explode('items/', $url);
 
         return service('integrations')->podio()->fieldValue($this->podio_integration, $this->field_id, $itemId);
     }
