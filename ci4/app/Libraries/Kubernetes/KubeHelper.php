@@ -143,6 +143,45 @@ class KubeHelper {
         return preg_split('/\r?\n/', rtrim($output, "\r\n"));
     }
 
+    /**
+     * The dated rows a container's log becomes, from the text Kubernetes returned.
+     *
+     * Split on the first space rather than at a character position. With `timestamps` on,
+     * Kubernetes prefixes each line with RFC3339Nano and a space - and that prefix is **not
+     * a fixed width**: trailing zeroes in the fraction are dropped, so a whole second is
+     * `2026-09-20T08:00:00Z`, twenty characters, while `2026-09-20T08:00:00.123456789Z` is
+     * thirty. Cutting at thirty therefore ate the first characters of the line itself
+     * whenever the clock was round, which it is whenever anything logs on a timer.
+     *
+     * The two callers disagreed on top of that - one took `substr($log, 30)`, the other
+     * `substr($log, 31)` - so the log page and the live tail of the same container showed
+     * lines that differed by one character.
+     *
+     * @return array<array{date: string, line: string}> one row per non-empty line
+     */
+    public static function LogLines(string $log): array {
+        $lines = [];
+
+        foreach (explode("\n", $log) as $line) {
+            if (!strlen($line)) {
+                continue;
+            }
+
+            $space = strpos($line, ' ');
+            if ($space === false) {
+                // No prefix to take off. Cannot happen while `timestamps` is on, and
+                // keeping the text is the right way to be wrong about it - a line shown
+                // under no date is readable, a date with the line inside it is not.
+                $lines[] = ['date' => '', 'line' => $line];
+                continue;
+            }
+
+            $lines[] = ['date' => substr($line, 0, $space), 'line' => substr($line, $space + 1)];
+        }
+
+        return $lines;
+    }
+
     public static function GetMyNamespace(): string {
         if (file_exists('/var/run/secrets/kubernetes.io/serviceaccount/namespace')) {
             return file_get_contents('/var/run/secrets/kubernetes.io/serviceaccount/namespace');

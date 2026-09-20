@@ -236,9 +236,10 @@ class KubernetesApiTest extends ClusterControllerTestCase {
 
         $this->assertCount(1, $rows);
         $this->assertStringStartsWith(date('Y-m-d') . 'T', $rows[0]['date']);
-        // Not the whole marker: the timestamp Kubernetes writes is not a fixed width, and
-        // the split is by character position. See the note about `KubeLog::getLogs()`.
-        $this->assertStringEndsWith('log-marker', $rows[0]['line']);
+        // The whole marker, against a real timestamp from a real cluster. The split used to
+        // be by character position and ate the start of the line whenever the timestamp was
+        // shorter than thirty characters - see `KubeHelper::LogLines()`.
+        $this->assertSame('kso-log-marker', $rows[0]['line']);
     }
 
     /**

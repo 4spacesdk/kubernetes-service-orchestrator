@@ -36,6 +36,7 @@
 * An approved auto update whose deployment has been removed rolls out nothing, instead of creating an empty deployment and deploying it
 * Twenty write endpoints that answered OK with an empty body and wrote nothing are gone; they were never implemented
 * Terminating a workspace with no deployments leaves it terminated instead of putting it back in the default list as a draft
+* Pod logs kept the start of each line, which was cut off - by up to eleven characters, depending on the timestamp - and the live tail now shows the same text as the log page
 * Updating something that does not exist answered OK and wrote nothing; it is refused now
 * Removed `PUT /deployments/{id}/ingress`, which could never work - the workspace endpoint is the one that does this
 * Reading something that does not exist answered a resource with every field null; it answers 404 now
