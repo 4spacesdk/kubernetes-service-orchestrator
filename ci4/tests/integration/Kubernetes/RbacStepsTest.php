@@ -151,6 +151,27 @@ class RbacStepsTest extends ClusterTestCase {
     }
 
     /**
+     * The point of trimming, seen from the cluster: a rule typed with spaces after the
+     * commas used to be refused by the api server, and the whole Role failed to apply.
+     */
+    public function testARuleTypedWithSpacesIsAccepted(): void {
+        $deployment = $this->deploymentInANamespace();
+        Fixtures::roleRule([
+            'deployment_specification_id' => $deployment->deployment_specification_id,
+            'api_group' => '',
+            'resource' => 'configmaps',
+            'verbs' => 'get, list, watch',
+        ]);
+
+        (new RoleStep())->startDeployCommand($deployment);
+
+        $this->assertSame(
+            ['get', 'list', 'watch'],
+            $this->cluster()->getRoleByName($deployment->name, $this->testNamespace)->getAttribute('rules')[0]['verbs']
+        );
+    }
+
+    /**
      * A specification with no rules gets no Role at all - the step returns before it
      * applies. That is not a detail: an empty Role would be a resource nobody asked for,
      * and the status has a value of its own for it.

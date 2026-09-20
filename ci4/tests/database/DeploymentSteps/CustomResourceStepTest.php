@@ -74,26 +74,49 @@ class CustomResourceStepTest extends ManifestTestCase {
     }
 
     /**
-     * Today's behaviour. An empty field parses to null and the constructor wants an array,
-     * so the deploy dies on a raw TypeError with nothing pointing at the specification.
+     * An empty field used to parse to null and die in the constructor on a raw TypeError,
+     * with nothing pointing at the specification. Now the deploy is refused with a message,
+     * and a field of only spaces counts as empty.
      */
-    public function testEmptyCustomResourceFailsWithATypeError(): void {
-        $deployment = $this->deploymentWithCustomResource('');
+    public function testAnEmptyCustomResourceIsRefusedWithAMessage(): void {
+        $step = new CustomResourceStep();
 
-        $this->expectException(\TypeError::class);
-
-        $this->build($deployment);
+        $this->assertSame('Missing custom resource', $step->validateDeployCommand($this->deploymentWithCustomResource('')));
+        $this->assertSame('Missing custom resource', $step->validateDeployCommand($this->deploymentWithCustomResource("  \n ")));
     }
 
     /**
-     * Malformed YAML at least fails loudly, but as a converted parser warning rather than
-     * as a message about the specification.
+     * Malformed YAML failed loudly, but as the parser's own warning about `yaml_parse`
+     * rather than as something about the field. The parser's reason is kept - it says which
+     * line - behind a sentence that names what is wrong.
      */
-    public function testMalformedYamlThrowsTheParserError(): void {
+    public function testMalformedYamlIsRefusedWithTheParsersReason(): void {
         $deployment = $this->deploymentWithCustomResource("foo: [1, 2\n  bar: :::");
 
-        $this->expectException(\ErrorException::class);
-        $this->expectExceptionMessageMatches('/yaml_parse/');
+        $message = (new CustomResourceStep())->validateDeployCommand($deployment);
+
+        $this->assertStringStartsWith('The custom resource is not valid YAML', $message);
+        $this->assertStringContainsString('yaml_parse', $message);
+    }
+
+    /**
+     * YAML that parses to something other than a mapping - a bare string, say - would reach
+     * the constructor, which wants an array.
+     */
+    public function testYamlThatIsNotAMappingIsRefused(): void {
+        $message = (new CustomResourceStep())->validateDeployCommand($this->deploymentWithCustomResource('just a string'));
+
+        $this->assertSame('The custom resource is not valid YAML', $message);
+    }
+
+    /**
+     * Building it still throws rather than answering with something half-made: the deploy
+     * is refused before this point, and preview and status have their own guards.
+     */
+    public function testBuildingAnEmptyCustomResourceThrows(): void {
+        $deployment = $this->deploymentWithCustomResource('');
+
+        $this->expectExceptionMessage('Missing custom resource');
 
         $this->build($deployment);
     }

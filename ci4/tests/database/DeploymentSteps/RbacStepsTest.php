@@ -69,19 +69,37 @@ class RbacStepsTest extends ManifestTestCase {
     }
 
     /**
-     * Today's behaviour, and a trap. The verbs are split on commas and nothing is trimmed,
-     * so a specification written as "get, list" - which is how anyone would type it -
-     * produces a verb of " list" with a leading space. Kubernetes rejects it, and the whole
-     * Role fails to apply.
+     * "get, list" is how anyone would type it. The space used to travel into the manifest as
+     * a verb of its own, and Kubernetes refused the whole Role. Spaces around the commas are
+     * trimmed now, and an empty entry from a trailing comma is dropped.
      */
-    public function testVerbsAreSplitOnCommasWithoutTrimming(): void {
+    public function testVerbsAreTrimmedAsTheyAreSplit(): void {
         $deployment = Fixtures::deployableDeployment();
         Fixtures::roleRule([
             'deployment_specification_id' => $deployment->deployment_specification_id,
-            'verbs' => 'get, list',
+            'verbs' => ' get , list,',
         ]);
 
-        $this->assertSame(['get', ' list'], $this->manifest(RoleStep::class, $deployment)['rules'][0]['verbs']);
+        $this->assertSame(['get', 'list'], $this->manifest(RoleStep::class, $deployment)['rules'][0]['verbs']);
+    }
+
+    /**
+     * The api group and the resource are single fields, and a space around either is the
+     * same mistake with the same result.
+     */
+    public function testTheApiGroupAndResourceAreTrimmedToo(): void {
+        $deployment = Fixtures::deployableDeployment();
+        Fixtures::roleRule([
+            'deployment_specification_id' => $deployment->deployment_specification_id,
+            'api_group' => ' apps ',
+            'resource' => ' deployments ',
+            'verbs' => 'get',
+        ]);
+
+        $rule = $this->manifest(RoleStep::class, $deployment)['rules'][0];
+
+        $this->assertSame(['apps'], $rule['apiGroups']);
+        $this->assertSame(['deployments'], $rule['resources']);
     }
 
     public function testSeveralRulesAreAllCarriedOver(): void {
