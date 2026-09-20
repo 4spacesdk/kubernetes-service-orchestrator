@@ -112,22 +112,38 @@ class UsersApiTest extends ControllerTestCase {
     }
 
     /**
-     * **Today's behaviour: two-factor authentication cannot be turned off.**
+     * Two-factor authentication can be turned off again.
      *
-     * `User::removeMFASecret()` sets the column to null and saves, and `mfa_secret_hash` is
-     * `NOT NULL`. The endpoint throws a database exception, the secret stays, and the
-     * account keeps a second factor its owner asked to remove.
+     * `User::removeMFASecret()` sets the column to null and saves, and the column was
+     * `NOT NULL`: the endpoint threw `Column 'mfa_secret_hash' cannot be null`, the secret
+     * stayed, and the account kept a second factor its owner had asked to remove. The column
+     * is nullable now - it was widened and made nullable along with every other credential
+     * column when they were encrypted at rest, and "no second factor" is a state it has to
+     * be able to hold.
+     *
+     * The other half of that fault is still there: `has_mfa_secret_hash` is always false, so
+     * the page offering this does not know the user has one. See
+     * `testMeAlwaysSaysTheUserHasNoSecondFactor`.
      */
-    public function testRemovingTheSecondFactorFails(): void {
+    public function testRemovingTheSecondFactorClearsIt(): void {
         $secret = (new MFALib())->createSecret();
         $this->withSession(['mfa_secret' => $secret])
             ->signedIn()
             ->put('users/mfa/setup/verify?code=' . (new MFALib())->getSetupCode($secret));
 
-        $this->expectException(\CodeIgniter\Database\Exceptions\DatabaseException::class);
-        $this->expectExceptionMessage("Column 'mfa_secret_hash' cannot be null");
+        $this->assertNotSame('', (string) $this->storedSecondFactor());
 
+        $this->forgetTheLastRequest();
         $this->signedIn()->put('users/mfa/setup/remove');
+
+        $this->assertSame('', (string) $this->storedSecondFactor());
+    }
+
+    private function storedSecondFactor(): ?string {
+        return $this->db->table('users')
+            ->where('id', $this->signedInUserId())
+            ->get()
+            ->getRowArray()['mfa_secret_hash'];
     }
 
     // <editor-fold desc="Fixtures">

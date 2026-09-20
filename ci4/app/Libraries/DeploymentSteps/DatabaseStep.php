@@ -60,13 +60,17 @@ class DatabaseStep extends BaseDeploymentStep {
     }
 
     public function getStatus(Deployment $deployment): string {
-        if (strlen($deployment->database_name) > 0
-            && strlen($deployment->database_user) > 0
-            && strlen($deployment->database_pass) > 0) {
+        // Cast: `database_pass` is nullable since it was encrypted at rest, and a deployment
+        // whose database has not been made yet has null rather than the empty string the
+        // column used to be stuck with. `strlen(null)` is a deprecation, which this suite
+        // turns into a failed test and production turns into a log line nobody reads.
+        if (strlen((string) $deployment->database_name) > 0
+            && strlen((string) $deployment->database_user) > 0
+            && strlen((string) $deployment->database_pass) > 0) {
             return DeploymentStepHelper::DatabaseStatus_Success;
-        } else if (strlen($deployment->database_name) > 0
-            || strlen($deployment->database_user) > 0
-            || strlen($deployment->database_pass) > 0) {
+        } else if (strlen((string) $deployment->database_name) > 0
+            || strlen((string) $deployment->database_user) > 0
+            || strlen((string) $deployment->database_pass) > 0) {
             return DeploymentStepHelper::DatabaseStatus_Failed;
         } else {
             return DeploymentStepHelper::DatabaseStatus_NotPerformed;

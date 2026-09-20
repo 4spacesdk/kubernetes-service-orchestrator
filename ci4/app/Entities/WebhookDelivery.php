@@ -2,6 +2,7 @@
 
 use DebugTool\Data;
 use App\Core\Entity;
+use App\Entities\Concerns\EncryptsFields;
 use App\Entities\Concerns\WriteOnlySecrets;
 
 /**
@@ -21,6 +22,10 @@ use App\Entities\Concerns\WriteOnlySecrets;
  * @property int $response_time
  */
 class WebhookDelivery extends Entity {
+
+    public const array EncryptedFields = self::SecretFields;
+
+    use EncryptsFields;
 
     /**
      * A delivery keeps the webhook's bearer token so a retry sends the same request, which

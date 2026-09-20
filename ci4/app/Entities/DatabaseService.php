@@ -6,6 +6,7 @@ use Config\Database;
 use DatabaseDrivers;
 use DebugTool\Data;
 use App\Core\Entity;
+use App\Entities\Concerns\EncryptsFields;
 use App\Entities\Concerns\WriteOnlySecrets;
 
 /**
@@ -25,6 +26,10 @@ use App\Entities\Concerns\WriteOnlySecrets;
  * @property Deployment $deployments
  */
 class DatabaseService extends Entity {
+
+    public const array EncryptedFields = self::SecretFields;
+
+    use EncryptsFields;
 
     public const array SecretFields = ['pass'];
 

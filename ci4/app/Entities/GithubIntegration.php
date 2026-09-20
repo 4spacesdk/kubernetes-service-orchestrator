@@ -1,6 +1,7 @@
 <?php namespace App\Entities;
 
 use App\Core\Entity;
+use App\Entities\Concerns\EncryptsFields;
 use App\Libraries\Github\BaseGithub;
 use App\Models\GithubIntegrationModel;
 
@@ -47,6 +48,10 @@ use App\Models\GithubIntegrationModel;
  * @property ContainerImage $container_images
  */
 class GithubIntegration extends Entity {
+
+    public const array EncryptedFields = self::SecretFields;
+
+    use EncryptsFields;
 
     public const array SecretFields = ['client_secret', 'private_key', 'webhook_secret'];
 

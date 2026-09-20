@@ -22,6 +22,8 @@
 * Lists: sorting by a field or direction that is not there is refused, `filter=status:active` narrows to that status instead of answering with every workspace, an unreadable label filter says what to write instead, and the environments and Podio field lists carry a count like every other list
 * Pod logs kept the start of each line, which was cut off by up to eleven characters, and the live tail shows the same text as the log page. The shell on a pod that is not running says what the cluster said instead of an empty box
 * Workspaces: terminating one with no deployments leaves it terminated instead of back in the list as a draft, and names starting with Æ, Ø or Å are allowed again, as are namespaces longer than 15 characters
+* Stored credentials are encrypted in the database: registry, database and email passwords, Podio and GitHub secrets, webhook tokens, a tenant's database password and the two-factor secret. The key comes from the installation's own `ENCRYPTION_KEY` - **it has to be set, and kept**
+* Two-factor authentication can be turned off again; removing it used to fail with a database error and leave the second factor in place
 * Stored credentials are no longer handed to anyone signed in: a database or email service's password, a Podio client secret and app token, a webhook's bearer token - in the delivery log too - and an OAuth client secret are write-only now. A form says whether one is stored and keeps it when left empty, and the OAuth clients list no longer prints the secret in a column
 * Changing a user role's permissions replaces them: one taken away is taken away, and the same set twice stays the same set
 * A record whose related record has been deleted no longer picks up an unrelated one when read a second time
@@ -49,10 +51,11 @@
 * Added unit, database and integration test suites
 
 ### Upgrade guide
-1. Deploy new image
-2. Run migrations [(Guide)](https://github.com/4spacesdk/kubernetes-service-orchestrator?tab=readme-ov-file#migrate-database-helm). Registry credentials and the GitHub App move to Integrations automatically
-3. Harbor and Azure: open each container registry and click "Set up auto update", then remove the old webhooks from the registry
-4. Artifact Registry: the service account only needs Artifact Registry Reader now
+1. Set `deployment.encryptionKey` in the chart to 32 characters of your own. It is what the stored credentials are encrypted with, and it has to stay the same afterwards - change it and they cannot be read back. Rotating it later means putting the old one in `deployment.previousEncryptionKeys` and saving each affected record once
+2. Deploy new image
+3. Run migrations [(Guide)](https://github.com/4spacesdk/kubernetes-service-orchestrator?tab=readme-ov-file#migrate-database-helm). Registry credentials and the GitHub App move to Integrations automatically
+4. Harbor and Azure: open each container registry and click "Set up auto update", then remove the old webhooks from the registry
+5. Artifact Registry: the service account only needs Artifact Registry Reader now
 
 ### Notes
 * An image built for arm64 has no MSSQL driver

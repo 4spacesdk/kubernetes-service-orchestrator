@@ -1,5 +1,6 @@
 <?php namespace App\Entities;
 
+use App\Entities\Concerns\EncryptsFields;
 use App\Libraries\EmailLib;
 use App\Models\UserModel;
 
@@ -73,6 +74,10 @@ class User extends \RestExtension\Entities\User {
         ];
     }
 
+    public const array EncryptedFields = ['mfa_secret_hash'];
+
+    use EncryptsFields;
+
     public $hiddenFields = ['password', 'mfa_secret_hash'];
 
     public function getScopes(): array {
@@ -117,49 +122,22 @@ class User extends \RestExtension\Entities\User {
         return strlen((string) $this->mfa_secret_hash) > 0;
     }
 
+    /**
+     * The second factor, which is a secret and not a hash whatever the column is called: a
+     * TOTP code is checked by computing it, so the value has to be recoverable.
+     *
+     * It was encrypted here with a passphrase written into the method -
+     * `hex2bin('c17319112b52...')`, the same on every installation and in the repository -
+     * which is encoding, not encryption. It now goes through the same key as every other
+     * stored credential, so rotating that one rotates this too.
+     */
     public function updateMFASecret(string $value): void {
-        $cipher = 'AES-256-CBC';
-        $passPhrase = hex2bin('c17319112b52d6b472136d7938121233783d723814746a67c81a451c4d238d18');
-        $nonceSize = openssl_cipher_iv_length($cipher);
-        $nonce = openssl_random_pseudo_bytes($nonceSize);
-
-        $ciphertext = openssl_encrypt(
-            $value,
-            $cipher,
-            $passPhrase,
-            OPENSSL_RAW_DATA,
-            $nonce
-        );
-
-        $this->mfa_secret_hash = base64_encode($nonce . $ciphertext);
+        $this->mfa_secret_hash = $value;
         $this->save();
     }
 
-    /**
-     * @throws \Exception
-     */
     public function getMFASSecret(): string {
-        $cipher = 'AES-256-CBC';
-        $passPhrase = hex2bin('c17319112b52d6b472136d7938121233783d723814746a67c81a451c4d238d18');
-
-        $message = base64_decode($this->mfa_secret_hash, true);
-        if ($message === false) {
-            throw new \Exception('Encryption failure');
-        }
-
-        $nonceSize = openssl_cipher_iv_length($cipher);
-        $nonce = mb_substr($message, 0, $nonceSize, '8bit');
-        $ciphertext = mb_substr($message, $nonceSize, null, '8bit');
-
-        $plaintext = openssl_decrypt(
-            $ciphertext,
-            $cipher,
-            $passPhrase,
-            OPENSSL_RAW_DATA,
-            $nonce
-        );
-
-        return $plaintext;
+        return (string) $this->mfa_secret_hash;
     }
 
     public function removeMFASecret(): void {

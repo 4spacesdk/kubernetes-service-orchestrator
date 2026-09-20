@@ -13,6 +13,11 @@ KUBERNETES_KUBECONFIG=
 KUBERNETES_REMOTE_CLUSTER_URL=
 KUBERNETES_MY_NAMESPACE=
 
+# Required. What the stored credentials and the refresh-token cookie are encrypted with.
+ENCRYPTION_KEY=
+# Old keys, comma separated, kept readable while rows are re-saved after a rotation.
+ENCRYPTION_PREVIOUS_KEYS=
+
 # Google Cloud Settings
 ## Build docker with KSO_GKE_AUTH_ENABLED=true to install gke-auth
 GCLOUD_PROJECT_ID=

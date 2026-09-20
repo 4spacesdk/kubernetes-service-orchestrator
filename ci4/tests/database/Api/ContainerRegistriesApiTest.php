@@ -2,6 +2,7 @@
 
 use App\ControllerTestCase;
 use App\Fixtures;
+use App\Libraries\Crypt;
 use App\Tests\Fakes\FakeIntegrations;
 
 /**
@@ -283,7 +284,20 @@ class ContainerRegistriesApiTest extends ControllerTestCase {
         $this->assertSame('OK', $body['status'], json_encode($body));
     }
 
+    /**
+     * The credential as it is stored, decrypted.
+     *
+     * Read off the column rather than through the entity on purpose: the entity decrypts on
+     * the way out, so asking it would prove nothing about what is in the table. This way the
+     * assertion fails both when the wrong value was written and when nothing encrypted it -
+     * `Crypt::Decrypt()` hands back an unmarked value unchanged, and the raw check below
+     * catches that.
+     */
     private function stored(int $id, string $column): string {
+        return (string) Crypt::Decrypt($this->storedRaw($id, $column));
+    }
+
+    private function storedRaw(int $id, string $column): string {
         return (string) $this->db->table('container_registries')->where('id', $id)->get()->getRow()->{$column};
     }
 

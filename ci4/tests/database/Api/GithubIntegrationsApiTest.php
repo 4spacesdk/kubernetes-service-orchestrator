@@ -2,6 +2,7 @@
 
 use App\ControllerTestCase;
 use App\Fixtures;
+use App\Libraries\Crypt;
 use App\Tests\Fakes\FakeIntegrations;
 
 /**
@@ -268,8 +269,14 @@ class GithubIntegrationsApiTest extends ControllerTestCase {
         return $body['resource'];
     }
 
+    /**
+     * The column as it is stored, decrypted - the credentials among these are encrypted at
+     * rest, and reading the column raw would compare ciphertext to what was written.
+     */
     private function stored(int $id, string $column): string {
-        return (string) $this->db->table('github_integrations')->where('id', $id)->get()->getRowArray()[$column];
+        return (string) Crypt::Decrypt(
+            (string) $this->db->table('github_integrations')->where('id', $id)->get()->getRowArray()[$column]
+        );
     }
 
     /**

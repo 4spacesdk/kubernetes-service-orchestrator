@@ -1,6 +1,8 @@
 <?php namespace App\Entities;
 
 use App\Core\Entity;
+use App\Entities\Concerns\EncryptsFields;
+use App\Entities\Concerns\WriteOnlySecrets;
 use App\Exceptions\ValidationException;
 use App\Libraries\DeploymentSteps\PersistentVolumeClaimStep;
 use App\Libraries\Kubernetes\VolumeFingerprint;
@@ -39,7 +41,8 @@ use DebugTool\Data;
  * @property DatabaseService $database_service
  * @property string $database_user
  * @property string $database_name
- * @property string $database_pass
+ * @property string $database_pass write-only and encrypted at rest
+ * @property bool $has_database_pass
  *
  * # Update management
  * @property bool $auto_update_enabled
@@ -73,6 +76,26 @@ use DebugTool\Data;
  * @property string $url_internal
  */
 class Deployment extends Entity {
+
+    /**
+     * The tenant's own database password, made by `DatabaseStep` and never typed by anyone.
+     *
+     * It was returned by `GET /deployments` in cleartext - every customer's database
+     * password, to anyone signed in. It is not in the `SecretFields` sweep's list of names
+     * either, which is how it went unnoticed while the six around it were found: the sweep
+     * matches field names, and nobody thought of this one.
+     *
+     * Nothing reads it back over the API. The one place it is used is
+     * `${database.pass}` in an environment variable, and that is substituted here.
+     */
+    public const array SecretFields = ['database_pass'];
+
+    public const array EncryptedFields = self::SecretFields;
+
+    use EncryptsFields;
+    use WriteOnlySecrets;
+
+    public $hiddenFields = self::SecretFields;
 
     /**
      * @throws ValidationException

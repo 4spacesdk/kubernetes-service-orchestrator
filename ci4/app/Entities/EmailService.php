@@ -1,6 +1,7 @@
 <?php namespace App\Entities;
 
 use App\Core\Entity;
+use App\Entities\Concerns\EncryptsFields;
 use App\Entities\Concerns\WriteOnlySecrets;
 
 /**
@@ -19,6 +20,10 @@ use App\Entities\Concerns\WriteOnlySecrets;
  * @property Deployment $deployments
  */
 class EmailService extends Entity {
+
+    public const array EncryptedFields = self::SecretFields;
+
+    use EncryptsFields;
 
     public const array SecretFields = ['pass'];
 

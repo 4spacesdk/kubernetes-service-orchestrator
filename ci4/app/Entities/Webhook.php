@@ -1,6 +1,7 @@
 <?php namespace App\Entities;
 
 use App\Core\Entity;
+use App\Entities\Concerns\EncryptsFields;
 use App\Entities\Concerns\WriteOnlySecrets;
 
 /**
@@ -18,6 +19,10 @@ use App\Entities\Concerns\WriteOnlySecrets;
  * @property WebhookDelivery $webhook_deliveries
  */
 class Webhook extends Entity {
+
+    public const array EncryptedFields = self::SecretFields;
+
+    use EncryptsFields;
 
     public const array SecretFields = ['auth_bearer_token'];
 

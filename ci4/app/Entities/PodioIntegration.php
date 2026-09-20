@@ -3,6 +3,7 @@
 use App\Interfaces\PodioIntegrationGetFieldsResponse;
 use DebugTool\Data;
 use App\Core\Entity;
+use App\Entities\Concerns\EncryptsFields;
 use App\Entities\Concerns\WriteOnlySecrets;
 
 /**
@@ -20,6 +21,10 @@ use App\Entities\Concerns\WriteOnlySecrets;
  * @property PodioFieldReference $podio_field_references
  */
 class PodioIntegration extends Entity {
+
+    public const array EncryptedFields = self::SecretFields;
+
+    use EncryptsFields;
 
     public const array SecretFields = ['client_secret', 'app_token'];
 

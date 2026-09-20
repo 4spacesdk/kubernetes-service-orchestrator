@@ -33,6 +33,7 @@ export class DeploymentDefinition extends BaseModel {
     database_user?: string;
     database_name?: string;
     database_pass?: string;
+    has_database_pass?: boolean;
     auto_update_enabled?: boolean;
     auto_update_tag_regex?: string;
     auto_update_require_approval?: boolean;
@@ -89,6 +90,7 @@ export class DeploymentDefinition extends BaseModel {
             delete this.database_user;
             delete this.database_name;
             delete this.database_pass;
+            delete this.has_database_pass;
             delete this.auto_update_enabled;
             delete this.auto_update_tag_regex;
             delete this.auto_update_require_approval;
@@ -175,6 +177,9 @@ export class DeploymentDefinition extends BaseModel {
         }
         if (data.database_pass != null) {
             this.database_pass = data.database_pass;
+        }
+        if (data.has_database_pass != null) {
+            this.has_database_pass = data.has_database_pass;
         }
         if (data.auto_update_enabled != null) {
             this.auto_update_enabled = data.auto_update_enabled;

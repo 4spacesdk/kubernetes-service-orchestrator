@@ -3,6 +3,7 @@
 use App\ControllerTestCase;
 use App\Entities\GithubIntegration;
 use App\Fixtures;
+use App\Libraries\Crypt;
 use App\Tests\Fakes\FakeIntegrations;
 
 /**
@@ -266,8 +267,14 @@ class GithubAppApiTest extends ControllerTestCase {
         return $item;
     }
 
+    /**
+     * The credential as it is stored, decrypted. See the note on the same helper in
+     * `ContainerRegistriesApiTest`.
+     */
     private function stored(int $id, string $column): string {
-        return (string) $this->db->table('github_integrations')->where('id', $id)->get()->getRowArray()[$column];
+        return (string) Crypt::Decrypt(
+            (string) $this->db->table('github_integrations')->where('id', $id)->get()->getRowArray()[$column]
+        );
     }
 
     /**

@@ -1,6 +1,7 @@
 <?php namespace App\Entities;
 
 use App\Core\Entity;
+use App\Entities\Concerns\EncryptsFields;
 use App\Libraries\ContainerRegistries\BaseContainerRegistry;
 use App\Models\ContainerImageModel;
 use App\Libraries\Integrations\IntegrationFactory;
@@ -58,6 +59,10 @@ use App\Libraries\Integrations\IntegrationFactory;
  * @property ContainerImage $container_images
  */
 class ContainerRegistry extends Entity {
+
+    public const array EncryptedFields = [...self::SecretFields, self::WebhookSecret];
+
+    use EncryptsFields;
 
     public const array SecretFields = ['gcloud_credentials', 'azure_client_secret', 'harbor_password', 'pull_password'];
 

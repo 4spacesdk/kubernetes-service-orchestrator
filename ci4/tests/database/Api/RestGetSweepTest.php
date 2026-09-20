@@ -38,6 +38,7 @@ class RestGetSweepTest extends ControllerTestCase {
         'webhook_secret',
         'pass',
         'password',
+        'database_pass',
         'client_secret',
         'app_token',
         'auth_bearer_token',
