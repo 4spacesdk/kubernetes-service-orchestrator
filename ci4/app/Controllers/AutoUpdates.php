@@ -3,6 +3,7 @@
 use App\Core\ResourceController;
 use App\Entities\AutoUpdate;
 use App\Entities\ContainerRegistry;
+use App\Libraries\ContainerRegistries\ImageReference;
 use App\Libraries\ZMQ\ChangeEvent;
 use App\Libraries\ZMQ\Events;
 use App\Libraries\ZMQ\ZMQProxy;
@@ -81,9 +82,10 @@ class AutoUpdates extends ResourceController {
         $resource = $payload['event_data']['resources'][0] ?? null;
         $resourceUrl = $resource['resource_url'] ?? null; // Eg. 651p8071.c1.de1.container-registry.ovh.net/taksinto/backend/api:hotfix
         $tag = $resource['tag'] ?? null;
+        [$image, $urlTag] = ImageReference::split($resourceUrl);
         if (strtoupper((string) ($payload['type'] ?? '')) === 'PUSH_ARTIFACT'
-            && is_string($resourceUrl) && is_string($tag) && str_contains($resourceUrl, ':')) {
-            $this->newTag($registry, substr($resourceUrl, 0, strrpos($resourceUrl, ':')), $tag);
+            && is_string($resourceUrl) && is_string($tag) && $urlTag !== null) {
+            $this->newTag($registry, $image, $tag);
         }
 
         $this->success();

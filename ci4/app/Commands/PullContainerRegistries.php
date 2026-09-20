@@ -3,6 +3,7 @@
 use App\Entities\AutoUpdate;
 use App\Entities\ContainerRegistry;
 use App\Entities\CronJob;
+use App\Libraries\ContainerRegistries\ImageReference;
 use App\Libraries\GoogleCloud\GcrSubscription;
 use App\Libraries\ZMQ\ChangeEvent;
 use App\Libraries\ZMQ\Events;
@@ -103,7 +104,11 @@ class PullContainerRegistries extends BaseCommand {
                         break;
                     case 'INSERT':
                         Data::debug('tag added, continue');
-                        [$image, $tag] = explode(':', $data['tag']);
+                        [$image, $tag] = ImageReference::split($data['tag'] ?? null);
+                        if ($tag === null) {
+                            Data::debug('no tag in', $data['tag'] ?? 'nothing', ', ignored');
+                            break;
+                        }
                         $this->emitNewTag($image, $tag);
                         $hasCreatedAutoUpdate = true;
                         break;

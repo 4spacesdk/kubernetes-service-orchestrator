@@ -77,17 +77,30 @@ class PullContainerRegistriesTest extends DatabaseTestCase {
     }
 
     /**
-     * Today's behaviour, and a trap the webhooks avoid. The webhook splits on the **last**
-     * colon; this splits on the first, so a registry that publishes a host with a port
-     * gives an image of `registry.example.org` and a tag of `5000/team/api`. Nothing
-     * matches, and no update is created - silently.
+     * A registry reachable on a port puts a colon in the host too. This used to split on the
+     * first one, so the image became `registry.example.org` and the tag `5000/team/api`:
+     * nothing matched and no update was created, silently. Both halves split the same way
+     * now - on the last colon after the last slash.
      */
-    public function testARegistryHostWithAPortIsSplitInTheWrongPlace(): void {
+    public function testARegistryHostWithAPortStillFindsTheTag(): void {
         $fakes = FakeIntegrations::install();
         $deployment = $this->autoUpdatingDeployment(['image' => 'registry.example.org:5000/team/api']);
         $fakes->pubSub()->messages['the-project'] = [
             $this->push('registry.example.org:5000/team/api:v2.0.0'),
         ];
+
+        $this->pull(['the-project' => 'the-key']);
+
+        $this->assertSame('v2.0.0', $this->updatesFor($deployment->id)[0]->next_tag);
+    }
+
+    /**
+     * A message with no tag in it at all is ignored rather than read as one.
+     */
+    public function testAMessageWithoutATagIsIgnored(): void {
+        $fakes = FakeIntegrations::install();
+        $deployment = $this->autoUpdatingDeployment(['image' => 'registry.example.org/team/api']);
+        $fakes->pubSub()->messages['the-project'] = [$this->push('registry.example.org/team/api')];
 
         $this->pull(['the-project' => 'the-key']);
 
