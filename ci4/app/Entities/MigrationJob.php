@@ -81,7 +81,14 @@ class MigrationJob extends Entity {
                 $isValid = str_ends_with($this->log, $spec->database_migration_verification_value);
                 break;
             case \MigrationVerificationTypes::Regex:
-                $isValid = preg_match($this->log, $spec->database_migration_verification_value) == 1;
+                $match = $this->logMatches($spec->database_migration_verification_value);
+                if (is_null($match)) {
+                    $this->log .= "\nThe verification value is not a regular expression kso can read: {$spec->database_migration_verification_value}";
+                    $this->save();
+                    $this->updateStatus(\MigrationJobStatusTypes::Failed_LogVerification);
+                    return;
+                }
+                $isValid = $match;
                 break;
         }
 
@@ -119,6 +126,42 @@ class MigrationJob extends Entity {
         } else {
             $this->updateStatus(\MigrationJobStatusTypes::Failed_LogVerification);
         }
+    }
+
+    /**
+     * Whether the log matches this pattern, or null when the pattern cannot be read.
+     *
+     * Two things about it. **The arguments used to be the other way round** - the log was
+     * handed to `preg_match()` as the pattern and the pattern as the subject - and a log
+     * does not begin with a delimiter, so every migration verified by regex ended as
+     * `preg_match(): Delimiter must not be alphanumeric` instead of as a verdict. That is
+     * thrown here rather than warned about, so the request that reports a finished
+     * migration answered with a server error and the job was left in the status it had:
+     * neither completed nor failed, waiting for somebody to look.
+     *
+     * **And the stored value carries no delimiters.** The field's own hint asks for a bare
+     * pattern - `(?:[a-z0-9\-]{0,61})?` - so one has to be put around it, and it has to be
+     * a character the pattern does not use itself, or a pattern matching a path would end
+     * at its first slash.
+     */
+    private function logMatches(string $pattern): ?bool {
+        $delimiter = null;
+        foreach (['/', '#', '~', '%', '!', '@', '|'] as $candidate) {
+            if (!str_contains($pattern, $candidate)) {
+                $delimiter = $candidate;
+                break;
+            }
+        }
+        if (is_null($delimiter)) {
+            return null;
+        }
+
+        // Suppressed, and the return value read instead: a pattern somebody typed into a
+        // form is an ordinary thing to get wrong, and a warning here is an exception that
+        // leaves the job in no status at all.
+        $result = @preg_match($delimiter . $pattern . $delimiter, $this->log);
+
+        return $result === false ? null : $result === 1;
     }
 
     /**
