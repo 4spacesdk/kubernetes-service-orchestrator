@@ -14,10 +14,6 @@ use App\Core\Entity;
  */
 class CronJob extends Entity {
 
-    public function run() {
-
-    }
-
     /**
      * @return \ArrayIterator|Entity[]|\Traversable|CronJob[]
      */
