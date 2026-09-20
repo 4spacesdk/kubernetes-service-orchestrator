@@ -150,7 +150,13 @@ class Deployment extends Entity {
         DeploymentStepHelper::EmitTrigger(DeploymentStepTriggers::Deployment_Environment_Updated, $this);
     }
 
-    public function updateKNativeMinScale(int $value): void {
+    /**
+     * Takes no value on purpose: the KService step reads the schedules itself
+     * (`KNativeMinScaleSchedule::GetCurrentValueForDeployment()`) when it builds the
+     * manifest, so all this has to do is ask for a redeploy. It used to take a value and
+     * ignore it, which is an invitation to pass the wrong one.
+     */
+    public function updateKNativeMinScale(): void {
         DeploymentStepHelper::EmitTrigger(DeploymentStepTriggers::Deployment_KNativeMinScale_Updated, $this);
     }
 

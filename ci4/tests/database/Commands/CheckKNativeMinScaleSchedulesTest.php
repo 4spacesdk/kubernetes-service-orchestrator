@@ -73,14 +73,12 @@ class CheckKNativeMinScaleSchedulesTest extends DatabaseTestCase {
     }
 
     /**
-     * **Today's behaviour, and it is a bug.** `checkForDue()` finds the schedule that is
-     * due and then returns the whole **collection** rather than the one it found, so
-     * `applyMinScale()` reads the first schedule's value - the one with the lowest priority
-     * number - whichever one was actually due.
-     *
-     * Here the due schedule asks for 9 and the log says 1.
+     * The value that is logged is the one from the schedule that fired. `checkForDue()` used
+     * to find that schedule and then return the whole collection, so the log showed the
+     * first schedule's value - the lowest priority number - whichever one had actually
+     * fired. That log is what an operator reads when a workspace scales unexpectedly.
      */
-    public function testTheLoggedValueComesFromTheFirstScheduleNotTheDueOne(): void {
+    public function testTheLoggedValueComesFromTheScheduleThatIsDue(): void {
         $deployment = $this->deploymentWithSchedules([
             ['cron_expression' => '0 0 1 1 *', 'timezone' => 'UTC', 'min_scale' => 1, 'priority' => 0],
             ['cron_expression' => '* * * * *', 'timezone' => 'UTC', 'min_scale' => 9, 'priority' => 1],
@@ -88,8 +86,8 @@ class CheckKNativeMinScaleSchedulesTest extends DatabaseTestCase {
 
         $log = $this->runTheJob();
 
-        $this->assertStringContainsString("applying min scale 1 to deployment {$deployment->name}", $log);
-        $this->assertStringNotContainsString('applying min scale 9', $log);
+        $this->assertStringContainsString("applying min scale 9 to deployment {$deployment->name}", $log);
+        $this->assertStringNotContainsString('applying min scale 1', $log);
     }
 
     public function testTheJobRecordsWhenItLastRan(): void {

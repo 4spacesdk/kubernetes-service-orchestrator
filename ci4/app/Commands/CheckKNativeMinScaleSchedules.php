@@ -65,7 +65,10 @@ class CheckKNativeMinScaleSchedules extends BaseCommand {
             $timezone = new DateTimeZone($schedule->timezone);
             $nowInTimezone = new DateTime('now', $timezone);
             if ($cron->isDue($nowInTimezone)) {
-                return $schedules;
+                // The one that is due, not the collection it came from: returning the
+                // collection handed `applyMinScale()` the first schedule's value - the
+                // lowest priority number - whichever one had actually fired.
+                return $schedule;
             }
         }
         return null;
@@ -73,7 +76,7 @@ class CheckKNativeMinScaleSchedules extends BaseCommand {
 
     private function applyMinScale(Deployment $deployment, KNativeMinScaleSchedule $schedule): void {
         Data::debug('applying min scale', $schedule->min_scale, 'to deployment', $deployment->name);
-        $deployment->updateKNativeMinScale($schedule->min_scale);
+        $deployment->updateKNativeMinScale();
     }
 
 }

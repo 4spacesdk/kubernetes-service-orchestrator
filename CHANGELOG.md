@@ -12,6 +12,7 @@
 * Contour: a hostname with no routes made an HTTPProxy that Kubernetes refused, so the deploy failed
 * Init containers from another registry could not be pulled
 * Setting a deployment's version reported success when the deploy failed
+* The min scale job logged the wrong schedule's value, so its log did not match what was applied
 * Post-update actions crashed on an image without commit identification or version control; they are skipped now
 * Post-update actions crashed when the commit message had no Podio task link; they are skipped now
 * Auto update missed pushes from a registry with a port in its host when they came over Pub/Sub
