@@ -73,9 +73,10 @@ class RestGetSweepTest extends ControllerTestCase {
     /**
      * Every resource the table routes a numeric by-id read to.
      *
-     * `o_auth_clients` also has a `(.*)` variant, because its primary key is a client id
-     * rather than an integer. Only the numeric routes are swept here; the other one is a
-     * different shape and is called out in `testAResourceKeyedByAStringHasNoReachableNumericById()`.
+     * `o_auth_clients` is read through a `(.*)` route instead, because its primary key is a
+     * client id rather than an integer. Only the numeric routes are swept here; that one is
+     * a different shape and is called out in
+     * `testAResourceKeyedByAStringIsReadThroughItsOwnRoute()`.
      *
      * @return list<string>
      */
@@ -137,16 +138,7 @@ class RestGetSweepTest extends ControllerTestCase {
             }
         }
 
-        $this->assertSame(
-            [
-                // `Environments` is not a resource controller. It answers from the
-                // `Environments` enum, sets `resources` by hand and never sets `count`,
-                // so a client that reads the count off this envelope reads whatever the
-                // field means when it is absent. Pinned, not endorsed - see the report.
-                'environments' => 'no count in the envelope',
-            ],
-            $deviations
-        );
+        $this->assertSame([], $deviations);
     }
 
     /**
@@ -242,31 +234,34 @@ class RestGetSweepTest extends ControllerTestCase {
             ]);
         }
 
+        // Every one of them, with nothing exempted. `environments` used to be: its `get()`
+        // takes no parameters, PHP accepted the extra argument without a word, and asking
+        // for one environment by id handed back all of them - under `resources`, which is
+        // not the field a by-id caller reads. There is nothing to address there either, so
+        // the route is gone rather than taught to answer.
         $expected = array_fill_keys($this->byIdResources(), '404 ERROR ResourceNotFound without a resource');
-
-        // `Environments` is not a resource controller and its `get()` takes no id, but the
-        // route table sends `environments/([0-9]+)` to it anyway. PHP accepts the extra
-        // argument silently, so asking for one environment by id hands back all of them -
-        // under `resources`, which is not the field a by-id caller reads. Reported, not
-        // fixed: the id is not wrong here, it is not looked at.
-        $expected['environments'] = '200 OK no error code without a resource';
 
         $this->assertSame($expected, $answers);
     }
 
     /**
-     * `o_auth_clients` is keyed by `client_id`, a string, and the table carries both a
-     * `([0-9]+)` route and a `(.*)` route to the same method. The numeric one can never
-     * match a real client id, so the only thing it can ever answer is the hollow resource
-     * above - which is why the by-id sweep skips it rather than pretending to read a row.
+     * `o_auth_clients` is keyed by `client_id`, a string, and it is read through a `(.*)`
+     * route because of it.
      *
-     * Held here so that the sweep's silence about this resource is deliberate rather than
-     * an oversight.
+     * The table used to carry a `([0-9]+)` route beside it for each of `get`, `patch` and
+     * `delete` - the generator makes a numeric by-id route for everything - and each of them
+     * matched a strict subset of what the `(.*)` route already matched, handing it to the
+     * same method. Written down here so the sweep's silence about this resource is
+     * deliberate rather than an oversight.
      */
-    public function testAResourceKeyedByAStringHasNoReachableNumericById(): void {
-        $primaryKey = (new \App\Models\OAuthClientModel())->getPrimaryKey();
+    public function testAResourceKeyedByAStringIsReadThroughItsOwnRoute(): void {
+        $this->assertSame('client_id', (new \App\Models\OAuthClientModel())->getPrimaryKey());
 
-        $this->assertSame('client_id', $primaryKey);
+        $numeric = $this->db->table('api_routes')
+            ->where('from', 'o_auth_clients/([0-9]+)')
+            ->whereIn('method', ['get', 'patch', 'delete'])
+            ->countAllResults();
+        $this->assertSame(0, $numeric, 'a numeric by-id route is back beside the one that matches');
 
         $body = $this->decode($this->signedIn()->get('o_auth_clients'));
         $this->assertNotEmpty($body['resources'], 'the sign-in fixture client should be in the list');
@@ -275,7 +270,7 @@ class RestGetSweepTest extends ControllerTestCase {
             $this->assertArrayNotHasKey(
                 'id',
                 $client,
-                'an oauth client has no integer id for the numeric route to match'
+                'an oauth client has no integer id, which is why the route is not numeric'
             );
         }
     }
@@ -372,7 +367,12 @@ class RestGetSweepTest extends ControllerTestCase {
         }
 
         $this->assertCount(24, $collections, 'the number of plain collection reads changed');
-        $this->assertCount(24, $this->byIdResources(), 'the number of plain by-id reads changed');
+
+        // Two fewer by-id reads than collections, and both on purpose: `environments` has
+        // nothing to address, and `o_auth_clients` is read through a `(.*)` route because
+        // its key is a string. The numeric routes the generator made for the two were
+        // removed by migration.
+        $this->assertCount(22, $this->byIdResources(), 'the number of plain by-id reads changed');
     }
 
     /**

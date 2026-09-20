@@ -11,7 +11,15 @@ class Environments extends \App\Core\BaseController {
      * @responseSchema EnvironmentsGetResponse
      */
     public function get() {
-        Data::set('resources', array_map(fn (string $name) => ['name' => $name], \Environments::All()));
+        $environments = array_map(fn (string $name) => ['name' => $name], \Environments::All());
+
+        // `count` beside `resources`, like every other collection in the API - see
+        // `ResourceController::_setRawResources()`, which this cannot use because this is
+        // not a resource controller. A generated client reads the total off the envelope,
+        // and this one answered with the field simply missing.
+        Data::set('count', count($environments));
+        Data::set('resources', $environments);
+
         $this->success();
     }
 
