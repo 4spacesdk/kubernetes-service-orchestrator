@@ -59,9 +59,12 @@ class ContainerImage extends Entity {
     /**
      * The image's registry connection, or null when it has none or it is gone.
      *
-     * Loaded by id, once. `find()` on the `container_registry` relation can only be asked
-     * once: the first call uses up the join, and a second is a query without it that
-     * answers with the first connection in the table.
+     * Loaded by id, once. This was written when a second `find()` on the
+     * `container_registry` relation answered with the first connection in the table; the
+     * ORM keeps the relation's condition across queries now, so it is no longer what stands
+     * between an image and somebody else's registry. It stays because it is still one query
+     * per image rather than one per ask, and because "no registry" and "registry is gone"
+     * arrive here as the same null on purpose.
      */
     private function registry(): ?ContainerRegistry {
         if (!$this->container_registry_id) {

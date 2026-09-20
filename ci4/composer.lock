@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "3113e3f123940368d92c4dbd73e9d4a1",
+    "content-hash": "ba9823bfda41aff4f6a583c81236ad47",
     "packages": [
         {
             "name": "4spacesdk/ci4authextension",
@@ -92,16 +92,16 @@
         },
         {
             "name": "4spacesdk/ci4ormextension",
-            "version": "v1.1.4",
+            "version": "v1.1.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/4spacesdk/CI4OrmExtension.git",
-                "reference": "69e8a4116778a14dd798c8111c804d7ab500abf3"
+                "reference": "f3dff61aaf5ac364d6d661e802ec4afe08ccd257"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/4spacesdk/CI4OrmExtension/zipball/69e8a4116778a14dd798c8111c804d7ab500abf3",
-                "reference": "69e8a4116778a14dd798c8111c804d7ab500abf3",
+                "url": "https://api.github.com/repos/4spacesdk/CI4OrmExtension/zipball/f3dff61aaf5ac364d6d661e802ec4afe08ccd257",
+                "reference": "f3dff61aaf5ac364d6d661e802ec4afe08ccd257",
                 "shasum": ""
             },
             "require": {
@@ -127,9 +127,9 @@
             "description": "ORM Extension for CodeIgniter 4",
             "support": {
                 "issues": "https://github.com/4spacesdk/CI4OrmExtension/issues",
-                "source": "https://github.com/4spacesdk/CI4OrmExtension/tree/v1.1.4"
+                "source": "https://github.com/4spacesdk/CI4OrmExtension/tree/v1.1.5"
             },
-            "time": "2026-08-25T10:29:30+00:00"
+            "time": "2026-09-20T16:18:10+00:00"
         },
         {
             "name": "4spacesdk/ci4restextension",
