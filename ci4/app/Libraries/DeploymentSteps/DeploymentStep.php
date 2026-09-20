@@ -487,8 +487,10 @@ class DeploymentStep extends BaseDeploymentStep {
                     'role' => 'app',
                 ],
             ])
-            ->setSpec('replicas', $deployment->replicas)
             ->setTemplate(KubeHelper::AsTemplate($template))
+            // Once. `setReplicas()` is `setSpec('replicas', ...)`, so the line that used to
+            // sit above this one wrote the same field and was overwritten - with the
+            // difference that it passed a null through where this defaults to one.
             ->setReplicas($deployment->replicas ?? 1);
 
         if ($auth) {

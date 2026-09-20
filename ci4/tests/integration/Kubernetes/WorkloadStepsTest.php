@@ -16,16 +16,13 @@ use App\Libraries\DeploymentSteps\NamespaceStep;
  * created - which is why the migration step deletes before it creates, and why that
  * deletion is the part worth watching.
  *
- * One thing the preview test below deliberately does not assert. `MigrationJobStep::
- * getPreview()` strips `spec.concurrencyPolicy`, `spec.jobTemplate.*`,
- * `spec.successfulJobsHistoryLimit` and `spec.failedJobsHistoryLimit`, which are CronJob
- * fields - the step builds a Job, and a Job has none of them. Those `unset()` calls do
- * nothing and no test can make them matter. The Job's own defaults, which the api server
- * does fill in and which do reach the diff - `spec.parallelism`, `spec.completions`,
- * `spec.backoffLimit`, `spec.selector`, `spec.manualSelector`, `spec.completionMode`,
- * `spec.podReplacementPolicy` and the whole of `spec.template.spec` - are not stripped at
- * all. That looks like the list was copied from `CronjobStep` and never adjusted; it is
- * reported rather than fixed here, because changing it changes what users see.
+ * `MigrationJobStep::getPreview()` used to strip `spec.concurrencyPolicy`,
+ * `spec.jobTemplate.*` and the two history limits - CronJob fields, on a step that builds a
+ * Job. Every one of those calls did nothing, while the Job's own server-filled defaults went
+ * straight into the diff. The list is rebased now, and
+ * `testAPreviewOfAFreshlyAppliedMigrationShowsNoDifference()` is what holds it: it compares
+ * the two halves by shape, so a default added by a later Kubernetes shows up as a name here
+ * rather than as a mystery in the UI.
  */
 class WorkloadStepsTest extends ClusterTestCase {
 
@@ -250,12 +247,61 @@ class WorkloadStepsTest extends ClusterTestCase {
         $this->assertArrayNotHasKey('suspend', $remote['spec']);
         $this->assertArrayNotHasKey('status', $remote);
 
-        // Not asserted, because they cannot fail: `getPreview()` also strips
-        // `metadata.annotations`, `spec.concurrencyPolicy`, `spec.jobTemplate.*`,
-        // `spec.successfulJobsHistoryLimit` and `spec.failedJobsHistoryLimit`. A Job
-        // carries none of those - they belong to a CronJob - and kso writes no annotations
-        // on this one, so every one of those `unset()` calls is a no-op. See the note in
-        // the class docblock.
+    }
+
+    /**
+     * The whole point of the stripping: a preview taken straight after a deploy shows
+     * **nothing** the user did not ask for.
+     *
+     * The list used to be a copy of the cron job step's, aimed at `spec.jobTemplate.*` and
+     * the CronJob fields beside it - none of which a Job has, so every one of those calls
+     * was a no-op, while the Job's own server-filled defaults went straight into the diff.
+     * Somebody previewing a migration saw half a dozen removals they could do nothing
+     * about, every single time.
+     *
+     * Asserted as a set rather than field by field, because what matters is that the two
+     * sides *agree* - a new default in a later Kubernetes shows up here as a name, which is
+     * the whole of the maintenance this needs.
+     */
+    public function testAPreviewOfAFreshlyAppliedMigrationShowsNoDifference(): void {
+        $deployment = $this->migratableDeployment();
+        $step = new MigrationJobStep();
+        $step->startDeployCommand($deployment);
+
+        $preview = json_decode($step->getPreview($deployment), true);
+        $local = json_decode($preview['local'], true);
+        $remote = json_decode($preview['remote'], true);
+
+        $this->assertSame(
+            [],
+            array_diff($this->pathsIn($remote), $this->pathsIn($local)),
+            'the preview shows fields the api server filled in, which nobody can act on'
+        );
+    }
+
+    /**
+     * Every leaf of a manifest as a dotted path, for comparing two of them by shape rather
+     * than by value. A list is a leaf: the containers are compared whole, which is what a
+     * reader of a preview cares about.
+     *
+     * @param array<string, mixed> $manifest
+     * @return string[]
+     */
+    private function pathsIn(array $manifest, string $prefix = ''): array {
+        $paths = [];
+
+        foreach ($manifest as $key => $value) {
+            $path = $prefix === '' ? (string) $key : "{$prefix}.{$key}";
+
+            if (is_array($value) && $value !== [] && !array_is_list($value)) {
+                $paths = array_merge($paths, $this->pathsIn($value, $path));
+                continue;
+            }
+
+            $paths[] = $path;
+        }
+
+        return $paths;
     }
 
     /**

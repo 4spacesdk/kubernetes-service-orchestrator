@@ -277,10 +277,18 @@ class RunJobHelper {
         foreach ($job->getPods() as $pod) {
             $pod->delete();
         }
+        // `Background`, not `DeletePropagationBackground`. The api server knows `Orphan`,
+        // `Background` and `Foreground`; the longer name is the Go constant's identifier,
+        // not its value, and the api server answers 422 for it.
+        //
+        // It never got that far. php-k8s puts `propagationPolicy` inside `preconditions`
+        // (`RunsClusterOperations.php:274`), where the api server does not look for it - so
+        // two faults hid each other, and the day the library moves the field, this deletion
+        // would have started failing with the reason pointing at php-k8s rather than here.
         $job->delete(
             ['pretty' => 1],
             null,
-            'DeletePropagationBackground'
+            'Background'
         );
     }
 
