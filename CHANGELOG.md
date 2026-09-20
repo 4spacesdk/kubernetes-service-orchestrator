@@ -22,6 +22,7 @@
 * A timestamp written as a date and a time with a space between them was read as a day earlier, with the time dropped
 * The Podio field list is sent with a count, like every other list
 * A refused token renewal answers 400; the one for a browser with no refresh token answered 200
+* Retrying a webhook delivery adds an attempt to the log instead of rewriting the one it retries, and the new attempt is stamped with its own time and no leftover response
 * Updating something that does not exist answered OK and wrote nothing; it is refused now
 * Removed `PUT /deployments/{id}/ingress`, which could never work - the workspace endpoint is the one that does this
 * Reading something that does not exist answered a resource with every field null; it answers 404 now

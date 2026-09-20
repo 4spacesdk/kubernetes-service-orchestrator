@@ -20,11 +20,44 @@ use App\Core\Entity;
  */
 class WebhookDelivery extends Entity {
 
+    /**
+     * Send this delivery again as a new one, leaving the delivery it retries where it is.
+     *
+     * `$new = $this` was not a copy - objects are assigned by reference - so this used to
+     * clear the id on the delivery it was asked to retry and save *that* as the new row.
+     * The original row stayed in the database, but the entity in memory had become the
+     * retry, so a second retry on the same object re-ran the retry rather than the delivery.
+     */
     public function retry(): WebhookDelivery {
-        $new = $this;
-        $new->id = null;
+        $new = $this->asFreshAttempt();
         $new->save();
         $new->run();
+        return $new;
+    }
+
+    /**
+     * The row a retry starts from: the same request, none of the last attempt's answer, and
+     * an identity of its own.
+     *
+     * Its own identity matters beyond the id. A `clone` would carry `created` across too,
+     * and `completeSave()` leaves a `created` that is already set alone - so every retry
+     * would be listed as having happened when the delivery it retries did, which is the one
+     * thing a list of attempts is read for.
+     *
+     * Separate from `retry()` because `run()` under it is a real HTTP request with no seam
+     * in front of it. This is the part that can be looked at.
+     */
+    public function asFreshAttempt(): WebhookDelivery {
+        $new = $this->getCopy();
+
+        // The previous attempt's answer is not this attempt's. `run()` fills these in, but
+        // it saves the row first, so without this the new delivery carries the old response
+        // until the call comes back - and keeps it forever if it never does.
+        $new->response_code = null;
+        $new->response_headers = null;
+        $new->response_body = null;
+        $new->response_time = null;
+
         return $new;
     }
 
