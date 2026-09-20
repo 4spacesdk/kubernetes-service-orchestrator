@@ -151,12 +151,6 @@ class Deployment extends Entity {
     }
 
     /**
-     * Takes no value on purpose: the KService step reads the schedules itself
-     * (`KNativeMinScaleSchedule::GetCurrentValueForDeployment()`) when it builds the
-     * manifest, so all this has to do is ask for a redeploy. It used to take a value and
-     * ignore it, which is an invitation to pass the wrong one.
-     */
-    /**
      * Whether the deployment belongs to a workspace nobody is expecting to change - paused
      * by a person, or switched off.
      *
@@ -176,6 +170,12 @@ class Deployment extends Entity {
         return (bool) $workspace->is_paused || $workspace->status === \WorkspaceStatusTypes::Inactive;
     }
 
+    /**
+     * Takes no value on purpose: the KService step reads the schedules itself
+     * (`KNativeMinScaleSchedule::GetCurrentValueForDeployment()`) when it builds the
+     * manifest, so all this has to do is ask for a redeploy. It used to take a value and
+     * ignore it, which is an invitation to pass the wrong one.
+     */
     public function updateKNativeMinScale(): void {
         DeploymentStepHelper::EmitTrigger(DeploymentStepTriggers::Deployment_KNativeMinScale_Updated, $this);
     }

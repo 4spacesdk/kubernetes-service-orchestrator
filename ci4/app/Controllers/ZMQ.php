@@ -143,8 +143,18 @@ class ZMQ extends Controller {
     public function autoUpdateApproved(): void {
         $changeEvent = ChangeEvent::Parse(json_decode($this->event->data, true));
 
+        // The event is handled out of band, so by the time it arrives the update may have
+        // been rolled out by hand, or deleted with its deployment. Asked before it is used:
+        // an id that is not there used to reach `rollout()` on an empty entity, where
+        // `updateVersion(null)` is a `TypeError` - the whole run lost, rather than a line
+        // saying there was nothing to do.
         $autoUpdate = new AutoUpdate();
-        $autoUpdate->find($changeEvent->next['id']);
+        $autoUpdate->find($changeEvent->next['id'] ?? 0);
+        if (!$autoUpdate->exists()) {
+            Data::debug('No auto update with id', $changeEvent->next['id'] ?? 'none', '- nothing to roll out');
+            return;
+        }
+
         $autoUpdate->rollout();
 
         Data::debug('OK');

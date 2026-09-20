@@ -81,6 +81,18 @@ class AutoUpdate extends Entity {
         $deployment = new Deployment();
         $deployment->find($this->deployment_id);
 
+        // Both halves, and neither is idle. Without `exists()` an update whose deployment
+        // has been removed went on to `updateVersion()`, which sets a version and saves -
+        // and saving an entity that was never loaded **inserts a new row**, so a rollout
+        // created a nameless deployment in no workspace and then asked Kubernetes to deploy
+        // it. And without the id check, `find(null)` loads the whole table and answers
+        // `exists()` from the first row, so an update with no deployment on it would have
+        // rolled its tag out onto somebody else's deployment.
+        if (!$this->deployment_id || !$deployment->exists()) {
+            Data::debug('Skip rollout because the deployment is gone');
+            return;
+        }
+
         if ($deployment->isInAPausedOrInactiveWorkspace()) {
             Data::debug('Skip rollout because the workspace is paused or inactive');
             return;

@@ -315,6 +315,68 @@ class ZMQTest extends DatabaseTestCase {
         $this->assertSame('old', $this->versionOf($autoUpdate->deployment_id));
     }
 
+    /**
+     * An update whose deployment has been removed rolls out nothing - and, above all, does
+     * not create one.
+     *
+     * `updateVersion()` sets the version and saves, and saving an entity that was never
+     * loaded **inserts a row**: a rollout on a deleted deployment used to write a nameless
+     * deployment in no workspace and then ask Kubernetes to deploy it. The same shape as a
+     * write against an id that was not found elsewhere in kso.
+     */
+    public function testAnUpdateWhoseDeploymentIsGoneRollsOutNothingAndCreatesNothing(): void {
+        $autoUpdate = $this->anApprovedAutoUpdate('image', '2.0.0');
+        $before = $this->db->table('deployments')->countAllResults();
+        $this->db->table('deployments')->where('id', $autoUpdate->deployment_id)->delete();
+
+        $this->handle('autoUpdateApproved', ['id' => $autoUpdate->id]);
+
+        $this->assertSame($before - 1, $this->db->table('deployments')->countAllResults(), 'a deployment was created');
+        $this->assertStringContainsString('Skip rollout because the deployment is gone', $this->debugLog());
+    }
+
+    /**
+     * An update carrying no deployment at all rolls out onto nobody.
+     *
+     * `find(null)` does not answer "not found" - it loads the whole table and reads as
+     * existing, from the first row. So the `exists()` check alone would have rolled this
+     * update's tag out onto whichever deployment happened to be first.
+     */
+    public function testAnUpdateWithNoDeploymentOnItDoesNotRollOutOntoSomebodyElses(): void {
+        $bystander = Fixtures::autoUpdatableDeployment();
+        $autoUpdate = new AutoUpdate();
+        $autoUpdate->image = 'image';
+        $autoUpdate->next_tag = '2.0.0';
+        $autoUpdate->previous_tag = 'old';
+        $autoUpdate->is_approved = true;
+        $autoUpdate->save();
+
+        $this->handle('autoUpdateApproved', ['id' => $autoUpdate->id]);
+
+        $this->assertSame('old', $this->versionOf($bystander->id));
+    }
+
+    /**
+     * The event is handled out of band, so the update named by it may have been rolled out
+     * by hand or deleted with its deployment before this arrives. That is a line in the log,
+     * not the end of the run: it used to reach `rollout()` on an empty entity, where
+     * `updateVersion(null)` is a `TypeError`.
+     */
+    public function testAnEventNamingAnUpdateThatIsGoneIsALineInTheLog(): void {
+        $this->handle('autoUpdateApproved', ['id' => 424242]);
+
+        $this->assertStringContainsString('No auto update with id', $this->debugLog());
+    }
+
+    /**
+     * And an event with no id on it at all, which is the same question one step earlier.
+     */
+    public function testAnEventWithNoIdOnItRollsOutNothing(): void {
+        $this->handle('autoUpdateApproved', []);
+
+        $this->assertStringContainsString('No auto update with id', $this->debugLog());
+    }
+
     // </editor-fold>
 
     // <editor-fold desc="Fixtures">

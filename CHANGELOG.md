@@ -33,6 +33,7 @@
 * Push events are no longer kept for ever: a nightly job removes those older than a month
 * A cron job whose schedule is not a cron expression no longer stops every other cron job; it is skipped and the row says why
 * A cron job whose command does not exist says so in its log instead of looking like it ran
+* An approved auto update whose deployment has been removed rolls out nothing, instead of creating an empty deployment and deploying it
 * Updating something that does not exist answered OK and wrote nothing; it is refused now
 * Removed `PUT /deployments/{id}/ingress`, which could never work - the workspace endpoint is the one that does this
 * Reading something that does not exist answered a resource with every field null; it answers 404 now
