@@ -40,9 +40,11 @@ class PublicSurfaceTest extends ControllerTestCase {
 
         'get home',
 
-        // The cron runner.
+        // The cron runner, called once a minute by a CronJob the chart installs. Public in
+        // the table because the caller has no access token - it is a curl container inside
+        // the cluster - but every call has to carry `CRON_TOKEN`, see JobbyApiTest. The
+        // by-id route next to it is gone: nothing reached it over HTTP.
         'get jobby',
-        'get jobby/run/([0-9]+)',
 
         // Signing in, which by definition happens without a token.
         'get login',

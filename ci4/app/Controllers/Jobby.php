@@ -6,11 +6,56 @@ use DebugTool\Data;
 
 class Jobby extends \App\Core\BaseController {
 
+    /**
+     * The header the scheduler proves itself with.
+     *
+     * Not an OAuth token: the caller is a `curl` container in a CronJob the chart installs,
+     * started once a minute from inside the cluster, and there is nobody to sign it in. A
+     * value both sides are given is what stands in for that.
+     */
+    public const string TokenHeader = 'X-Cron-Token';
+
+    /**
+     * No OAuth on this controller, which is why the check below exists.
+     *
+     * The route stays `is_public` in the table for the same reason: closing it there means
+     * "needs an access token", and the scheduler has none. What it has is `CRON_TOKEN`.
+     */
     public function requireAuth(string $method): bool {
         return false;
     }
 
+    /**
+     * Whether this request came from the scheduler.
+     *
+     * `GET /api/jobby` runs **every** cron job in the installation, and it answered anyone
+     * who could reach the API, as often as they asked. There is nothing behind it to abuse
+     * beyond that - the jobs are the ones an operator configured - but starting all of them
+     * on demand is enough: a job that deploys, sends mail or talks to a registry, run on
+     * somebody else's schedule.
+     *
+     * `hash_equals()` rather than `==`, so a wrong token takes the same time as a right one.
+     *
+     * Unset `CRON_TOKEN` refuses rather than waves through. It is the chart that supplies
+     * it, from a Secret it generates itself, so there is nothing for an operator to set -
+     * and an installation where it is missing is one where this endpoint would otherwise be
+     * open to everyone.
+     */
+    private function isTheScheduler(): bool {
+        $expected = (string) getenv('CRON_TOKEN');
+        if ($expected === '') {
+            return false;
+        }
+
+        return hash_equals($expected, (string) $this->request->getHeaderLine(self::TokenHeader));
+    }
+
     public function index() {
+        if (!$this->isTheScheduler()) {
+            $this->fail('Not allowed', 401);
+            return;
+        }
+
         $jobby = new \Jobby\Jobby();
 
         $jobs = new CronJob();

@@ -22,18 +22,20 @@
 * Lists: sorting by a field or direction that is not there is refused, `filter=status:active` narrows to that status instead of answering with every workspace, an unreadable label filter says what to write instead, and the environments and Podio field lists carry a count like every other list
 * Pod logs kept the start of each line, which was cut off by up to eleven characters, and the live tail shows the same text as the log page. The shell on a pod that is not running says what the cluster said instead of an empty box
 * Workspaces: terminating one with no deployments leaves it terminated instead of back in the list as a draft, and names starting with Æ, Ø or Å are allowed again, as are namespaces longer than 15 characters
-* A customer's database password is drawn from the system's own randomness; it used to come from a generator whose output can be worked out from enough of it
-* Responses carry the usual browser protections - `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `X-Permitted-Cross-Domain-Policies`, and HSTS when the request came over TLS - and no longer announce the Apache and PHP versions
-* Stored credentials are encrypted in the database: registry, database and email passwords, Podio and GitHub secrets, webhook tokens, a tenant's database password and the two-factor secret. The key comes from the installation's own `ENCRYPTION_KEY` - **it has to be set, and kept**
 * Two-factor authentication can be turned off again; removing it used to fail with a database error and leave the second factor in place
-* Stored credentials are no longer handed to anyone signed in: a database or email service's password, a Podio client secret and app token, a webhook's bearer token - in the delivery log too - and an OAuth client secret are write-only now. A form says whether one is stored and keeps it when left empty, and the OAuth clients list no longer prints the secret in a column
 * Changing a user role's permissions replaces them: one taken away is taken away, and the same set twice stays the same set
 * A record whose related record has been deleted no longer picks up an unrelated one when read a second time
 * Post-update actions are skipped rather than crashing on an image without commit identification or version control, and on a commit message with no Podio task link
 * Retrying a webhook delivery adds an attempt to the log instead of rewriting the one it retries, stamped with its own time and no leftover response
 * A failed save in a dialog was silent, a double click saved twice, and the min scale job logged the wrong schedule's value
 * `?app_version=` with nothing after it counted as a version, and a timestamp written with a space between date and time came back a day earlier with the time dropped
-* Push events are no longer kept for ever - a nightly job removes those older than a month - and the access log records the sign-in redirects and the events a container skips
+
+### Security
+* The cron endpoint no longer runs every scheduled job for whoever asks: it takes a token the chart generates and gives to both kso and the scheduler. The endpoint that ran a single named job is gone; nothing called it
+* A customer's database password is drawn from the system's own randomness; it used to come from a generator whose output can be worked out from enough of it
+* Responses carry the usual browser protections - `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `X-Permitted-Cross-Domain-Policies`, and HSTS when the request came over TLS - and no longer announce the Apache and PHP versions
+* Stored credentials are encrypted in the database: registry, database and email passwords, Podio and GitHub secrets, webhook tokens, a tenant's database password and the two-factor secret. The key comes from the installation's own `ENCRYPTION_KEY` - **it has to be set, and kept**
+* Stored credentials are no longer handed to anyone signed in: a database or email service's password, a Podio client secret and app token, a webhook's bearer token - in the delivery log too - and an OAuth client secret are write-only now. A form says whether one is stored and keeps it when left empty, and the OAuth clients list no longer prints the secret in a column
 * Security-related improvements
 
 ### Enhancements
@@ -50,6 +52,7 @@
 * Faster start: the app loads half as much before it shows, and dialogs reuse the lists they pick from
 * Terminate and Delete moved into a menu on workspaces and gateways
 * Upgraded to PHP 8.5, Alpine 3.24 and CodeIgniter 4.7. The image also builds on arm64
+* Push events are no longer kept for ever - a nightly job removes those older than a month - and the access log records the sign-in redirects and the events a container skips
 * Added unit, database and integration test suites
 
 ### Upgrade guide

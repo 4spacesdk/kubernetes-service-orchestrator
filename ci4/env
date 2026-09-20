@@ -18,6 +18,9 @@ ENCRYPTION_KEY=
 # Old keys, comma separated, kept readable while rows are re-saved after a rotation.
 ENCRYPTION_PREVIOUS_KEYS=
 
+# Required for the scheduler. What `GET /api/jobby` checks the X-Cron-Token header against.
+CRON_TOKEN=
+
 # Google Cloud Settings
 ## Build docker with KSO_GKE_AUTH_ENABLED=true to install gke-auth
 GCLOUD_PROJECT_ID=
