@@ -55,17 +55,30 @@ class ClientTest extends CIUnitTestCase {
             'only the first word ever survives' => ['1.2.3 (build 44) debug', '1.2.3'],
             'no parameter means the oldest'     => [null, '1.0.0'],
 
-            // An empty parameter is not a missing parameter: the client did send something, so
-            // the fallback does not apply and the version ends up empty. Pinned because a
-            // version comparison against an empty string is a different bug to hunt than a
-            // version comparison against 1.0.0.
-            'an empty parameter stays empty'    => ['', ''],
+            // `?app_version=` is a client that sent no version, whatever the presence of the
+            // parameter says. It used to end up as an empty string, and a comparison against
+            // an empty string is a different bug to hunt than one against 1.0.0.
+            'an empty parameter means the oldest'  => ['', '1.0.0'],
+            'only whitespace means the oldest'     => ["  \t ", '1.0.0'],
 
-            // `strpos()` returns 0 for a leading space, which is falsy, so the split never
-            // happens and the whole string survives. This is current behaviour, not intended
-            // behaviour - see the note in the report.
-            'a leading space defeats the split' => [' 1.2.3 (build 44)', ' 1.2.3 (build 44)'],
+            // A leading space is position 0, and `strpos()` was used as a truth value, so the
+            // split never happened and ` 1.2.3 (build 44)` survived whole. Trimmed first now,
+            // so the space around a version is not part of it.
+            'a leading space no longer defeats the split' => [' 1.2.3 (build 44)', '1.2.3'],
+            'trailing space is not part of the version'   => ['2.4.1  ', '2.4.1'],
         ];
+    }
+
+    /**
+     * `?app_version[]=1.2.3` hands PHP an array, and every string function below it would be
+     * a fatal error on a query string anybody can write. It counts as no version sent.
+     */
+    public function testAnAppVersionThatIsNotAStringCountsAsNoneSent(): void {
+        $_GET['app_version'] = ['1.2.3'];
+
+        Client::Init();
+
+        $this->assertSame('1.0.0', Client::$appVersion);
     }
 
     // </editor-fold>
@@ -100,6 +113,37 @@ class ClientTest extends CIUnitTestCase {
         Client::SetUser($this->user(type: 'user'));
 
         $this->assertTrue(Client::IsAuthorized());
+    }
+
+    /**
+     * `IsAuthorized()` was the only one of the questions with the guard. The other four read
+     * the static straight, so asking any of them before a user is set was a fatal error - and
+     * that only stayed hidden while every caller remembered to ask `IsAuthorized()` first. A
+     * request nobody signed in has to read as "no" from all of them, not as a 500.
+     *
+     * Same for the token: `HasScope()` on a request that arrived without one is "no".
+     */
+    #[RunInSeparateProcess]
+    #[PreserveGlobalState(false)]
+    public function testARequestThatNobodySignedInIsNoneOfTheThingsEither(): void {
+        $this->assertFalse(Client::IsService(), 'IsService()');
+        $this->assertFalse(Client::IsDeveloper(), 'IsDeveloper()');
+        $this->assertFalse(Client::IsOwner(), 'IsOwner()');
+        $this->assertFalse(Client::IsAdmin(), 'IsAdmin()');
+        $this->assertFalse(Client::HasScope('system:read'), 'HasScope()');
+    }
+
+    /**
+     * A lookup that found nobody still returns a `User`, and its type is null. Reading that
+     * as a level would hand an anonymous caller whatever the ladder answers for null.
+     */
+    public function testAUserThatWasNeverFoundReachesNoLevel(): void {
+        Client::SetUser(new User());
+
+        $this->assertFalse(Client::IsService());
+        $this->assertFalse(Client::IsDeveloper());
+        $this->assertFalse(Client::IsOwner());
+        $this->assertFalse(Client::IsAdmin());
     }
 
     // </editor-fold>
@@ -171,6 +215,17 @@ class ClientTest extends CIUnitTestCase {
      */
     public function testATokenWithoutScopesGrantsNothing(): void {
         Client::SetToken(['scope' => '']);
+
+        $this->assertFalse(Client::HasScope('system:read'));
+    }
+
+    /**
+     * The oauth store can hand over a token row with no scope column set at all. Reading the
+     * scope then raised, so the one question authorisation is decided on answered with a 500
+     * instead of "no" - see `AuthTokenTest`.
+     */
+    public function testATokenWithNoScopeClaimAtAllGrantsNothing(): void {
+        Client::SetToken([]);
 
         $this->assertFalse(Client::HasScope('system:read'));
     }

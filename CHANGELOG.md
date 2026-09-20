@@ -17,6 +17,8 @@
 * Post-update actions crashed when the commit message had no Podio task link; they are skipped now
 * Auto update missed pushes from a registry with a port in its host when they came over Pub/Sub
 * Auto update: a tag found early in the registry check was announced to nobody, so the update only showed up on a page reload
+* A token without a scope, and a request nobody had signed in, answered with a server error instead of a plain "not allowed"
+* `?app_version=` with nothing after it was read as a version, so every check against a minimum version ran against an empty string
 * Updating something that does not exist answered OK and wrote nothing; it is refused now
 * Removed `PUT /deployments/{id}/ingress`, which could never work - the workspace endpoint is the one that does this
 * Reading something that does not exist answered a resource with every field null; it answers 404 now

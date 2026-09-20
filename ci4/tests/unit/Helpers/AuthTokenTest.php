@@ -2,7 +2,6 @@
 
 use App\Helpers\AuthToken;
 use CodeIgniter\Test\CIUnitTestCase;
-use Error;
 use PHPUnit\Framework\Attributes\DataProvider;
 use ReflectionProperty;
 
@@ -107,16 +106,44 @@ class AuthTokenTest extends CIUnitTestCase {
     }
 
     /**
-     * A token the oauth store returned without a scope at all is not the same as a token that
-     * grants nothing, and this is where the difference shows: it raises rather than answering
-     * an empty list. That is the safe direction - the request fails instead of being let
-     * through - but it is a fatal error rather than a 401, so it is pinned here to make sure
-     * nobody "fixes" it into silently granting nothing.
+     * A token the oauth store returned without a scope claim at all grants nothing, the same
+     * as one whose claim is empty. Both used to be the safe answer, but only one of them was
+     * an answer: reading the uninitialised property raised, so `HasScope()` - the question
+     * authorisation is decided on - was a 500 where the answer was "no".
+     *
+     * The fields are still left unset, so the difference between "no scope" and "no claim"
+     * is not lost; it is only `getScopes()` that treats them alike, which is the one place
+     * where they mean the same thing.
      */
-    public function testATokenWithoutAScopeAtAllCannotBeAskedWhatItGrants(): void {
-        $this->expectException(Error::class);
+    public function testATokenWithoutAScopeAtAllGrantsNothing(): void {
+        $this->assertSame([], (new AuthToken([]))->getScopes());
+    }
 
-        (new AuthToken([]))->getScopes();
+    /**
+     * `expires` is not handed over as it was stored: the auth extension runs the column
+     * through `strtotime()` first, and that answers `false` for anything it cannot read.
+     * `false` on an `int` property is a fatal error on a request that is otherwise valid, so
+     * it is cast like the user id above. Zero is the epoch, which reads as long expired.
+     */
+    #[DataProvider('theExpiriesATokenCanArriveWith')]
+    public function testAnExpiryThatIsNotANumberReadsAsLongExpired(mixed $expires, int $expected): void {
+        $this->assertSame($expected, (new AuthToken(['expires' => $expires]))->expires);
+    }
+
+    /**
+     * @return array<string, array{0: mixed, 1: int}>
+     */
+    public static function theExpiriesATokenCanArriveWith(): array {
+        return [
+            'a timestamp'                   => [1700000000, 1700000000],
+            'a timestamp as a string'       => ['1700000000', 1700000000],
+            'strtotime() could not read it' => [false, 0],
+
+            // A date string that reached this unparsed casts to its leading number - the
+            // year - which as a unix timestamp is half an hour into 1970. Not a meaningful
+            // expiry, but an expired one, which is the direction that matters here.
+            'a date that never got parsed'  => ['2026-09-20 10:00:00', 2026],
+        ];
     }
 
 }

@@ -19,15 +19,31 @@ class AuthToken {
             $this->userId = (int)$data['user_id'];
         }
         if (isset($data['expires'])) {
-            $this->expires = $data['expires'];
+            // Cast like the user id above: the auth extension runs the column through
+            // `strtotime()`, which answers `false` for a timestamp it cannot read, and
+            // `false` on an `int` property is a fatal error. Zero is the epoch, so such a
+            // token reads as long expired - the safe direction.
+            $this->expires = (int) $data['expires'];
         }
         if (isset($data['scope'])) {
             $this->scope = $data['scope'];
         }
     }
 
+    /**
+     * A token that carries no scope claim at all grants nothing, the same as one whose
+     * claim is empty. The properties stay without defaults - see the constructor - so this
+     * asks rather than reading an uninitialised one, which is a fatal error and turns the
+     * answer "no" into a 500.
+     *
+     * @return string[]
+     */
     public function getScopes(): array {
-        return strlen($this->scope) ? explode(' ', $this->scope) : [];
+        if (!isset($this->scope) || !strlen($this->scope)) {
+            return [];
+        }
+
+        return explode(' ', $this->scope);
     }
 
 }
