@@ -197,21 +197,34 @@ class OAuthAgentApiTest extends ControllerTestCase {
     }
 
     /**
-     * Today's behaviour, and the one that is actually in production: kso is reached over
-     * TLS terminated by an ingress, so `HTTPS` is not set on the request that arrives and
-     * the original scheme is in `X-Forwarded-Proto`. CodeIgniter only believes that header
-     * from a trusted proxy and `Config\App::$proxyIPs` is empty, so `isSecure()` is false
-     * and **the refresh token cookie is issued without `Secure`**.
+     * The case that is actually in production: kso is reached over TLS terminated by an
+     * ingress, so `HTTPS` is not set on the request that arrives and the original scheme is
+     * in `X-Forwarded-Proto`.
      *
-     * The consequence is a cookie the browser will attach to an http request to the same
-     * host - which is a request kso answers, since `SslRedirect` is off by default. Fixing
-     * it is a configuration change rather than a change here, which is why this test pins
-     * the current answer rather than the one we want.
+     * CodeIgniter believes that header only from an IP listed in `Config\App::$proxyIPs`,
+     * and there is none to list - the ingress pod's address is not known to the
+     * installation - so `isSecure()` was false on every request kso serves and the cookie
+     * went out **without `Secure`**. The browser would then attach a year of access to an
+     * http request to the same host, which kso answers unless `SSL_REDIRECT` is on.
      */
-    public function testTheCookieIsNotMarkedSecureBehindAProxyThatTerminatedTls(): void {
+    public function testTheCookieIsMarkedSecureBehindAProxyThatTerminatedTls(): void {
         $this->theAuthorisationServerAnswers(self::aGrant());
 
         $response = $this->withHeaders(['X-Forwarded-Proto' => 'https'])
+            ->post('oauth-agent/token', ['grant_type' => 'authorization_code']);
+
+        $this->assertTrue($this->cookieOf($response)->isSecure());
+    }
+
+    /**
+     * And not otherwise. A development machine reaches kso over plain http, and a cookie
+     * flagged `Secure` there is one the browser refuses to store at all - which is a sign-in
+     * that silently never persists.
+     */
+    public function testTheCookieIsNotMarkedSecureOnAPlainHttpRequest(): void {
+        $this->theAuthorisationServerAnswers(self::aGrant());
+
+        $response = $this->withHeaders(['X-Forwarded-Proto' => 'http'])
             ->post('oauth-agent/token', ['grant_type' => 'authorization_code']);
 
         $this->assertFalse($this->cookieOf($response)->isSecure());
@@ -277,22 +290,23 @@ class OAuthAgentApiTest extends ControllerTestCase {
 
     /**
      * Today's behaviour, and a gap rather than a decision: `access_token` is the only
-     * field checked before all six are read, so an answer that is a perfectly valid OAuth
-     * grant without an `id_token` ends as an uncaught error - a 500 page for the client
-     * instead of either a token or a refusal.
+     * field a grant must carry, and it used to be the only one checked before all six were
+     * read - so a perfectly valid OAuth grant without an `id_token` ended as an uncaught
+     * `Undefined array key`: a 500 page for the client instead of a token.
      *
      * It is reachable without anything going wrong: `client_credentials`, and
      * `authorization_code` without the `openid` scope, both answer without an id token.
-     * Whoever gives these fields a default will have to change this test, which is the
-     * point of it.
+     * The field is still in the envelope, empty, so a client reading it finds the key
+     * where it has always been.
      */
-    public function testAnAnswerWithoutAnIdTokenIsNotHandledAtAll(): void {
+    public function testAnAnswerWithoutAnIdTokenIsStillAGrant(): void {
         $this->theAuthorisationServerAnswers('{"access_token":"AT","expires_in":3600,"scope":"workspaces","token_type":"Bearer"}');
 
-        $this->expectException(\ErrorException::class);
-        $this->expectExceptionMessage('Undefined array key "id_token"');
+        $body = $this->bodyOf($this->post('oauth-agent/token', ['grant_type' => 'client_credentials']));
 
-        $this->post('oauth-agent/token', ['grant_type' => 'client_credentials']);
+        $this->assertSame('AT', $body['access_token']);
+        $this->assertNull($body['id_token']);
+        $this->assertSame('workspaces', $body['scope']);
     }
 
     /**
@@ -475,18 +489,24 @@ class OAuthAgentApiTest extends ControllerTestCase {
     }
 
     /**
-     * The same gap on the renewal, where it is worse: an authorisation server that does
+     * The same gap on the renewal, where it was worse: an authorisation server that does
      * not rotate refresh tokens answers a renewal without a `refresh_token`, which is
-     * allowed, and every renewal would then end in a server error rather than a token.
+     * allowed, and every renewal then ended in a server error rather than a token.
+     *
+     * The cookie is left as it is rather than overwritten with nothing. Clearing it would
+     * throw away the token the browser is holding and send the user back to sign in on the
+     * next renewal - a session that drops an hour after sign-in, against a server that is
+     * behaving correctly.
      */
-    public function testARenewalWithoutANewRefreshTokenIsNotHandledEither(): void {
+    public function testARenewalWithoutANewRefreshTokenKeepsTheOneTheBrowserHas(): void {
         $this->theAuthorisationServerAnswers('{"access_token":"AT","expires_in":3600,"scope":"workspaces","token_type":"Bearer","id_token":"IT"}');
         $this->aBrowserHoldingARefreshToken('still-good');
 
-        $this->expectException(\ErrorException::class);
-        $this->expectExceptionMessage('Undefined array key "refresh_token"');
+        $response = $this->post('oauth-agent/refresh', ['grant_type' => 'refresh_token']);
 
-        $this->post('oauth-agent/refresh', ['grant_type' => 'refresh_token']);
+        $this->assertSame('AT', $this->bodyOf($response)['access_token']);
+        $this->assertNull($response->response()->getCookie(self::COOKIE_NAME, self::COOKIE_PREFIX),
+            'nothing was written over the cookie the browser already holds');
     }
 
     // </editor-fold>

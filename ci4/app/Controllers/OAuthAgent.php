@@ -45,21 +45,20 @@ class OAuthAgent extends \App\Core\BaseController {
             return;
         }
 
-        $accessToken = $response['access_token'];
-        $expiresIn = $response['expires_in'];
-        $idToken = $response['id_token'];
-        $refreshToken = $response['refresh_token'];
-        $scope = $response['scope'];
-        $tokenType = $response['token_type'];
-
-        $this->setCookieAttribute('refreshToken', $refreshToken);
+        // `access_token` is the only field checked above and the only one a grant must
+        // carry. The rest are optional in OAuth and their absence is ordinary rather than
+        // an error: `client_credentials`, and `authorization_code` without the `openid`
+        // scope, both answer without an `id_token`. Reading them as required turned a
+        // perfectly valid grant into an uncaught `Undefined array key` - a 500 for the
+        // client instead of a token.
+        $this->keepTheRefreshToken($response);
 
         $this->response->setJSON([
-            'access_token' => $accessToken,
-            'expires_in' => $expiresIn,
-            'id_token' => $idToken,
-            'scope' => $scope,
-            'token_type' => $tokenType,
+            'access_token' => $response['access_token'],
+            'expires_in' => $response['expires_in'] ?? null,
+            'id_token' => $response['id_token'] ?? null,
+            'scope' => $response['scope'] ?? null,
+            'token_type' => $response['token_type'] ?? null,
         ]);
         $this->response->send();
     }
@@ -98,21 +97,17 @@ class OAuthAgent extends \App\Core\BaseController {
             return;
         }
 
-        $accessToken = $response['access_token'];
-        $expiresIn = $response['expires_in'];
-        $refreshToken = $response['refresh_token'];
-        $scope = $response['scope'];
-        $tokenType = $response['token_type'];
-        $idToken = $response['id_token'];
-
-        $this->setCookieAttribute('refreshToken', $refreshToken);
+        // As in `token()`: only `access_token` is promised. A server that does not rotate
+        // refresh tokens answers a renewal without one, which is allowed, and every
+        // renewal used to end in a server error rather than a token.
+        $this->keepTheRefreshToken($response);
 
         $this->response->setJSON([
-            'access_token' => $accessToken,
-            'expires_in' => $expiresIn,
-            'scope' => $scope,
-            'token_type' => $tokenType,
-            'id_token' => $idToken,
+            'access_token' => $response['access_token'],
+            'expires_in' => $response['expires_in'] ?? null,
+            'scope' => $response['scope'] ?? null,
+            'token_type' => $response['token_type'] ?? null,
+            'id_token' => $response['id_token'] ?? null,
         ]);
         $this->response->send();
     }
@@ -121,10 +116,45 @@ class OAuthAgent extends \App\Core\BaseController {
 
     // <editor-fold desc="Cookie">
 
+    /**
+     * Put the grant's refresh token in the cookie, when it carried one.
+     *
+     * Only when it did: overwriting the cookie with nothing would throw away the token the
+     * browser is holding, and the next renewal would find none and send the user back to
+     * sign in. A renewal that rotates nothing means the one already there is still current.
+     *
+     * @param array<string, mixed> $response
+     */
+    private function keepTheRefreshToken(array $response): void {
+        if (isset($response['refresh_token'])) {
+            $this->setCookieAttribute('refreshToken', $response['refresh_token']);
+        }
+    }
+
+
     public static string $COOKIE_NAME = 'Tokens';
     public static string $COOKIE_PREFIX = 'OAuthAgent-';
 
     private Cookie $cookie;
+
+    /**
+     * Whether TLS ended in front of kso rather than at this process.
+     *
+     * `IncomingRequest::isSecure()` covers the second case only. It does look at
+     * `X-Forwarded-Proto`, but believes it only from an IP listed in
+     * `Config\App::$proxyIPs` - and kso has none to list, because TLS is terminated by an
+     * ingress whose pod address the installation does not know. So it was false on every
+     * request kso actually serves, and the refresh token cookie went out **without
+     * `Secure`**: the browser would attach a year of access to plain http to the same host,
+     * which kso answers unless `SSL_REDIRECT` is on.
+     *
+     * The same signal `Config\App::__construct()` builds the base URL from and
+     * `SslRedirect` redirects on.
+     */
+    private function arrivedOverForwardedTls(): bool {
+        return $this->request->hasHeader('X-Forwarded-Proto')
+            && strtolower($this->request->header('X-Forwarded-Proto')->getValue()) === 'https';
+    }
 
     private function getCookie(): Cookie {
         if (!isset($this->cookie)) {
@@ -137,7 +167,7 @@ class OAuthAgent extends \App\Core\BaseController {
                     'prefix' => self::$COOKIE_PREFIX,
                     'path' => '/',
                     'domain' => '',
-                    'secure' => $this->request->isSecure(),
+                    'secure' => $this->request->isSecure() || $this->arrivedOverForwardedTls(),
                     'httponly' => true,
                     'raw' => false,
                     'samesite' => CookieInterface::SAMESITE_STRICT,
