@@ -210,7 +210,7 @@ class MigrationJobStep extends BaseDeploymentStep {
         $container = $template->getContainers()[0];
         $container->addEnv('MIGRATION_JOB_ID', (string)$migrationJob->id);
         $template->setContainers([$container]);
-        $resource->setTemplate($template);
+        $resource->setTemplate(KubeHelper::AsTemplate($template));
 
         $migrationJob->image = $container->getAttribute('image');
         $migrationJob->command = $deployment->findDeploymentSpecification()->database_migration_command;
@@ -412,7 +412,7 @@ class MigrationJobStep extends BaseDeploymentStep {
         $resource
             ->setName($deployment->name)
             ->setNamespace($deployment->namespace)
-            ->setTemplate($template)
+            ->setTemplate(KubeHelper::AsTemplate($template))
             ->setSpec('activeDeadlineSeconds', 21600);
 
         if ($auth) {

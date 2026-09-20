@@ -9,6 +9,29 @@ use RenokiCo\PhpK8s\Kinds\K8sResource;
 class KubeHelper {
 
     /**
+     * What every write kso sends carries, and the reason it is not just `pretty`.
+     *
+     * Kubernetes **drops a field it does not recognise** and answers with a warning header
+     * and a `201 Created` - not an error - unless the client asks for `fieldValidation`.
+     * `kubectl apply` asks; php-k8s does not. So a field spelt wrong, renamed in a newer
+     * api version, or put one level too deep was removed on the way in: the resource was
+     * created without it, nothing failed, nothing was logged, and the missing behaviour
+     * turned up later as an operational fault somewhere else.
+     *
+     * Verified against a live api server both ways: `kubectl apply` refuses
+     * `spec.selectorX` with a strict decoding error, while the same manifest posted through
+     * php-k8s came back `201 Created` with `selector` simply absent from the stored spec.
+     *
+     * `Strict` makes that a hard failure at deploy time. An api server older than 1.23 does
+     * not know the parameter and ignores it, which is the behaviour kso had anyway.
+     *
+     * `pretty` is kept because it is php-k8s' own default for these calls.
+     *
+     * @var array<string, int|string>
+     */
+    public const StrictQuery = ['pretty' => 1, 'fieldValidation' => 'Strict'];
+
+    /**
      * How Kubernetes says "somebody else wrote to this while you were reading it".
      */
     public const ConflictCode = 409;
@@ -45,7 +68,7 @@ class KubeHelper {
     public static function Apply(K8sResource $resource, int $attempts = 4): void {
         for ($attempt = 1; ; $attempt++) {
             try {
-                $resource->createOrUpdate();
+                $resource->createOrUpdate(self::StrictQuery);
 
                 return;
             } catch (KubernetesAPIException $e) {
@@ -189,6 +212,32 @@ class KubeHelper {
         }
 
         return $lines;
+    }
+
+    /**
+     * A resource as the template inside another resource.
+     *
+     * php-k8s serialises a `K8sPod` or a `K8sJob` whole, `apiVersion` and `kind` included -
+     * but a `PodTemplateSpec` and a `JobTemplateSpec` have neither. With
+     * `fieldValidation=Strict` the api server refuses the manifest and says exactly that:
+     *
+     *     strict decoding error: unknown field "spec.template.apiVersion",
+     *                            unknown field "spec.template.kind"
+     *     strict decoding error: unknown field "spec.jobTemplate.apiVersion",
+     *                            unknown field "spec.jobTemplate.kind"
+     *
+     * Without the flag - which is how it stood until now - the two fields were quietly
+     * dropped on the way in, and every Deployment, Job and CronJob kso has ever applied
+     * carried them.
+     *
+     * @return array<string, mixed>
+     */
+    public static function AsTemplate(K8sResource $resource): array {
+        $template = $resource->toArray();
+
+        unset($template['apiVersion'], $template['kind']);
+
+        return $template;
     }
 
     public static function GetMyNamespace(): string {

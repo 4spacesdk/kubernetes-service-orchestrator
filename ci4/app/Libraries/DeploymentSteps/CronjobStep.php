@@ -1,6 +1,7 @@
 <?php namespace App\Libraries\DeploymentSteps;
 
 use App\Entities\Deployment;
+use App\Libraries\Kubernetes\KubeHelper;
 use App\Entities\Domain;
 use App\Entities\EnvironmentVariable;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
@@ -368,9 +369,9 @@ class CronjobStep extends BaseDeploymentStep {
                 ->setNamespace($deployment->namespace)
                 ->setSchedule(new CronExpression($cronJob->schedule))
                 ->setSpec('concurrencyPolicy', $cronJob->concurrency_policy)
-                ->setJobTemplate((new K8sJob())
-                    ->setTemplate($template)
-                );
+                ->setJobTemplate(KubeHelper::AsTemplate(
+                    (new K8sJob())->setTemplate(KubeHelper::AsTemplate($template))
+                ));
 
             if (is_numeric($cronJob->successful_jobs_history_limit)) {
                 $resource->setSpec('successfulJobsHistoryLimit', (int)$cronJob->successful_jobs_history_limit);

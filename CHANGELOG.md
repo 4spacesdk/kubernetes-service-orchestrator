@@ -49,6 +49,7 @@
 * Changing the permissions on a user role replaces them: a permission taken away is taken away, and the same set twice stays the same set
 * A kubeconfig with more than one user authenticates as the one its current context names, instead of the first in the file
 * A manifest the cluster refuses is reported with the reason the cluster gave, instead of a one-line summary with the field name cut off
+* A field kso spells wrong is refused by the cluster at deploy time instead of being dropped without a word - and two fields every Deployment, Job and CronJob carried are gone
 * Updating something that does not exist answered OK and wrote nothing; it is refused now
 * Removed `PUT /deployments/{id}/ingress`, which could never work - the workspace endpoint is the one that does this
 * Reading something that does not exist answered a resource with every field null; it answers 404 now

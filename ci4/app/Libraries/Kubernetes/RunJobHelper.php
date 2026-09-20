@@ -149,7 +149,7 @@ class RunJobHelper {
         $resource
             ->setName($this->getJobName($deployment, $jobId))
             ->setNamespace($deployment->namespace)
-            ->setTemplate($template)
+            ->setTemplate(KubeHelper::AsTemplate($template))
             ->setSpec('activeDeadlineSeconds', MINUTE)
             ->setSpec('completions', 1)
             ->setSpec('parallelism', 1)

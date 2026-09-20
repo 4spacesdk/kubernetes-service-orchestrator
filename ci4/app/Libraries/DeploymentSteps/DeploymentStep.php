@@ -2,6 +2,7 @@
 
 use App\Entities\DatabaseService;
 use App\Entities\Deployment;
+use App\Libraries\Kubernetes\KubeHelper;
 use App\Entities\DeploymentSpecificationDeploymentAnnotation;
 use App\Entities\DeploymentSpecificationInitContainer;
 use App\Entities\DeploymentSpecificationVolume;
@@ -196,7 +197,7 @@ class DeploymentStep extends BaseDeploymentStep {
         $annotations = $template->getAnnotations();
         $annotations['4spaces.kso/update-time'] = date('Y-m-d H:i:s');
         $template->setAnnotations($annotations);
-        $resource->setTemplate($template);
+        $resource->setTemplate(KubeHelper::AsTemplate($template));
 
         $this->apply($resource);
     }
@@ -487,7 +488,7 @@ class DeploymentStep extends BaseDeploymentStep {
                 ],
             ])
             ->setSpec('replicas', $deployment->replicas)
-            ->setTemplate($template)
+            ->setTemplate(KubeHelper::AsTemplate($template))
             ->setReplicas($deployment->replicas ?? 1);
 
         if ($auth) {
