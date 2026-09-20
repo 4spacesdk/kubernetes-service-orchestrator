@@ -50,16 +50,19 @@ class DeploymentPackages extends ResourceController {
     public function updateDeploymentSpecifications(int $id): void {
         $item = new DeploymentPackage();
         $item->find($id);
-        if ($item->exists()) {
-            /** @var DeploymentPackageDeploymentSpecificationList $body */
-            $body = $this->request->getJSON();
-            $values = new DeploymentPackageDeploymentSpecification();
-            $values->all = array_map(
-                fn($data) => DeploymentPackageDeploymentSpecification::Create($data),
-                $body->values
-            );
-            $item->updateDeploymentSpecifications($values);
+        if (!$item->exists()) {
+            $this->fail('unknown deployment package');
+            return;
         }
+
+        /** @var DeploymentPackageDeploymentSpecificationList $body */
+        $body = $this->request->getJSON();
+        $values = new DeploymentPackageDeploymentSpecification();
+        $values->all = array_map(
+            fn($data) => DeploymentPackageDeploymentSpecification::Create($data),
+            $body->values
+        );
+        $item->updateDeploymentSpecifications($values);
         $this->_setResource($item);
         $this->success();
     }
@@ -75,16 +78,19 @@ class DeploymentPackages extends ResourceController {
     public function updateEnvironmentVariables(int $id): void {
         $item = new DeploymentPackage();
         $item->find($id);
-        if ($item->exists()) {
-            /** @var EnvironmentVariableList $body */
-            $body = $this->request->getJSON();
-            $values = new DeploymentPackageEnvironmentVariable();
-            $values->all = array_map(
-                fn($data) => DeploymentPackageEnvironmentVariable::Create($data->name, $data->value),
-                $body->values
-            );
-            $item->updateEnvironmentVariables($values);
+        if (!$item->exists()) {
+            $this->fail('unknown deployment package');
+            return;
         }
+
+        /** @var EnvironmentVariableList $body */
+        $body = $this->request->getJSON();
+        $values = new DeploymentPackageEnvironmentVariable();
+        $values->all = array_map(
+            fn($data) => DeploymentPackageEnvironmentVariable::Create($data->name, $data->value),
+            $body->values
+        );
+        $item->updateEnvironmentVariables($values);
         $this->_setResource($item);
         $this->success();
     }
@@ -140,16 +146,14 @@ class DeploymentPackages extends ResourceController {
             return;
         }
 
-        if ($item->exists()) {
-            /** @var LabelList $body */
-            $body = $this->request->getJSON();
-            $values = new Label();
-            $values->all = array_map(
-                fn($data) => Label::Create($data->name, $data->value),
-                $body->values
-            );
-            $item->updateLabels($values);
-        }
+        /** @var LabelList $body */
+        $body = $this->request->getJSON();
+        $values = new Label();
+        $values->all = array_map(
+            fn($data) => Label::Create($data->name, $data->value),
+            $body->values
+        );
+        $item->updateLabels($values);
         $this->_setResource($item);
         $this->success();
     }

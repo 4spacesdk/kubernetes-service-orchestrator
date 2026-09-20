@@ -166,30 +166,33 @@ class Gateways extends ResourceController {
     public function updateGatewayAddresses(int $id): void {
         $item = new Gateway();
         $item->find($id);
-        if ($item->exists()) {
-            /** @var GatewayAddressList $body */
-            $body = $this->request->getJSON();
-
-            $addresses = [];
-            foreach ($body->values as $data) {
-                $address = new GatewayAddress();
-                $address->type = $data->type;
-                $address->value = $data->value;
-                if ($error = $address->validate()) {
-                    $this->fail($error);
-                    return;
-                }
-                $addresses[] = $address;
-            }
-
-            $values = new GatewayAddress();
-            foreach ($addresses as $address) {
-                $address->save();
-            }
-            $values->all = $addresses;
-
-            $item->updateGatewayAddresses($values);
+        if (!$item->exists()) {
+            $this->fail('unknown gateway');
+            return;
         }
+
+        /** @var GatewayAddressList $body */
+        $body = $this->request->getJSON();
+
+        $addresses = [];
+        foreach ($body->values as $data) {
+            $address = new GatewayAddress();
+            $address->type = $data->type;
+            $address->value = $data->value;
+            if ($error = $address->validate()) {
+                $this->fail($error);
+                return;
+            }
+            $addresses[] = $address;
+        }
+
+        $values = new GatewayAddress();
+        foreach ($addresses as $address) {
+            $address->save();
+        }
+        $values->all = $addresses;
+
+        $item->updateGatewayAddresses($values);
         $this->_setResource($item);
         $this->success();
     }

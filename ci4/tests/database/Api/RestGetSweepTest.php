@@ -214,27 +214,18 @@ class RestGetSweepTest extends ControllerTestCase {
 
     /**
      * What a by-id read does with an id that is not there, pinned across all twenty-two at
-     * once - does the API say OK when it did nothing? Twenty-one of them agree, one does
-     * not, and none of them refuses.
+     * once.
      *
-     * `ResourceControllerTrait::get()` never asks whether the row was found. It calls
-     * `_setResource($items->first())`, and `first()` on a collection that loaded nothing
-     * hands back the empty entity itself rather than null - so `toArray()` walks the
-     * entity's declared fields and produces **a complete object with every value null**.
-     * The caller gets `200 OK` and a resource that looks like a row, with an id of null.
+     * It used to answer `200 OK` with a complete resource whose every field was null:
+     * `ResourceControllerTrait::get()` never asked whether the row was found, and `first()`
+     * on a collection that loaded nothing hands back the empty entity itself. A caller could
+     * not tell a missing row from a real one, and the object was the entity's full field
+     * list - so asking for an id that does not exist enumerated every column name of every
+     * resource, to anyone signed in.
      *
-     * Two things follow, and both are reported rather than fixed:
-     *
-     * - a client cannot tell a missing row from a real one by the status line, and a
-     *   deserialiser that types `id` as an integer gets null;
-     * - the object is the entity's full field list, so a by-id read of an id that does not
-     *   exist **enumerates every column name of every resource**, to any signed-in caller.
-     *
-     * The assertion is on what comes back non-null, so it does not have to spell out
-     * thirty column names per resource to stay loud: the day a not-found read starts
-     * refusing, `resource` stops being an object and this fails.
+     * The extension refuses now: `404` with `error_code: ResourceNotFound` and no resource.
      */
-    public function testAnIdThatDoesNotExistIsAnsweredWithAHollowResourceAndNotARefusal(): void {
+    public function testAnIdThatDoesNotExistIsRefused(): void {
         $missing = 999666333;
         $answers = [];
 
@@ -243,27 +234,22 @@ class RestGetSweepTest extends ControllerTestCase {
             $response = $this->signedIn()->get("{$resource}/{$missing}");
             $body = $this->decode($response);
 
-            $this->assertSame(200, $response->response()->getStatusCode(), "{$resource} refused with a status code");
-            $this->assertSame('OK', $body['status'] ?? null, "{$resource} refused in the envelope");
-
-            $answers[$resource] = $this->describeWhatCameBack($body);
+            $answers[$resource] = implode(' ', [
+                $response->response()->getStatusCode(),
+                $body['status'] ?? 'no status',
+                $body['error_code'] ?? 'no error code',
+                array_key_exists('resource', $body) ? 'with a resource' : 'without a resource',
+            ]);
         }
 
-        $expected = array_fill_keys($this->byIdResources(), 'a resource with every field null');
-
-        // Two entities compute a field rather than reading one, so it has a value even on
-        // a row that was never loaded.
-        $expected['deployment_specifications'] = 'a resource whose only non-null field is deploymentSteps';
-        $expected['users'] = 'a resource whose only non-null field is has_mfa_secret_hash';
-        $expected['container_registries'] = 'a resource whose only non-null field is has_gcloud_credentials, has_azure_client_secret, has_harbor_password, has_pull_password, has_webhook_secret';
-        $expected['github_integrations'] = 'a resource whose only non-null field is has_client_secret, has_private_key, has_webhook_secret';
+        $expected = array_fill_keys($this->byIdResources(), '404 ERROR ResourceNotFound without a resource');
 
         // `Environments` is not a resource controller and its `get()` takes no id, but the
         // route table sends `environments/([0-9]+)` to it anyway. PHP accepts the extra
         // argument silently, so asking for one environment by id hands back all of them -
         // under `resources`, which is not the field a by-id caller reads. Reported, not
         // fixed: the id is not wrong here, it is not looked at.
-        $expected['environments'] = 'a collection, not a resource';
+        $expected['environments'] = '200 OK no error code without a resource';
 
         $this->assertSame($expected, $answers);
     }
@@ -538,28 +524,6 @@ class RestGetSweepTest extends ControllerTestCase {
     // </editor-fold>
 
     // <editor-fold desc="Reading responses">
-
-    /**
-     * What a by-id read answered, in one line, so the pin above can name twenty-two
-     * endpoints without spelling out every column of every entity.
-     *
-     * @param array<string, mixed> $body
-     */
-    private function describeWhatCameBack(array $body): string {
-        if (!is_array($body['resource'] ?? null)) {
-            return isset($body['resources']) ? 'a collection, not a resource' : 'no resource at all';
-        }
-
-        if ($body['resource'] === []) {
-            return 'an empty object';
-        }
-
-        $set = array_keys(array_filter($body['resource'], static fn ($value) => $value !== null));
-
-        return $set === []
-            ? 'a resource with every field null'
-            : 'a resource whose only non-null field is ' . implode(', ', $set);
-    }
 
     /**
      * @return array<string, mixed>

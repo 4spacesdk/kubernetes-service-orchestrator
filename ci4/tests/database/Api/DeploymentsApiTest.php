@@ -248,18 +248,18 @@ class DeploymentsApiTest extends ControllerTestCase {
      * answered with OK and an empty resource. Nothing was changed and the caller is not
      * told. The version endpoint no longer does this.
      */
-    public function testUpdatingAnUnknownDeploymentReportsSuccessAnyway(): void {
+    public function testUpdatingAnUnknownDeploymentIsRefused(): void {
         $body = $this->decode($this->signedIn()->put('deployments/999999/image-pull-policy?value=Always'));
 
-        $this->assertSame('OK', $body['status']);
-        $this->assertNull($body['resource']['id'], 'an empty entity is serialised with null columns');
+        $this->assertSame('unknown deployment', $body['error'] ?? null);
     }
 
     /**
-     * Also today's behaviour. `updateUpdateManagement` catches every exception and writes
-     * it to the debug log, so a rejected tag pattern is reported as a success.
+     * A pattern that cannot compile used to be caught, written to the debug log, and
+     * reported as a success - so the deployment kept the pattern it had and nobody was
+     * told. It is refused now, and the stored one is left alone.
      */
-    public function testAnInvalidTagPatternIsReportedAsSuccess(): void {
+    public function testAPatternThatCannotCompileIsRefusedAndNothingIsStored(): void {
         $deployment = Fixtures::deployment(['auto_update_tag_regex' => 'v[0-9]+']);
 
         $body = $this->decode($this->signedIn()->put(
@@ -270,7 +270,8 @@ class DeploymentsApiTest extends ControllerTestCase {
             ])
         ));
 
-        $this->assertSame('OK', $body['status']);
+        $this->assertStringContainsString('not a valid regular expression', $body['error'] ?? '');
+        $this->assertSame('v[0-9]+', $this->reload($deployment)->auto_update_tag_regex);
     }
 
     // </editor-fold>
@@ -458,13 +459,17 @@ class DeploymentsApiTest extends ControllerTestCase {
      * what makes the pair worth reading together: a pattern that cannot compile is reported
      * as success, and a pattern that is not there at all is a crash.
      */
-    public function testUpdateManagementWithoutATagPatternIsAFatalError(): void {
+    /**
+     * Turning auto update on without a pattern used to be a TypeError that escaped the
+     * controller - a TypeError is an Error, not an Exception. An empty pattern would match
+     * every tag, so it is refused rather than stored.
+     */
+    public function testTurningAutoUpdateOnWithoutATagPatternIsRefused(): void {
         $deployment = Fixtures::deployment();
 
-        $this->expectException(\TypeError::class);
-        $this->expectExceptionMessage('$tagRegex) must be of type string, null given');
+        $body = $this->decode($this->signedIn()->put("deployments/{$deployment->id}/updateManagement?enabled=1"));
 
-        $this->signedIn()->put("deployments/{$deployment->id}/updateManagement?enabled=1");
+        $this->assertSame('A tag pattern is needed to turn auto update on', $body['error'] ?? null);
     }
 
     /**

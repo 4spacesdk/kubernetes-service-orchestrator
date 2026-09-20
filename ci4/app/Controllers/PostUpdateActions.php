@@ -19,27 +19,30 @@ class PostUpdateActions extends ResourceController {
     public function updateConditions(int $id): void {
         $item = new PostUpdateAction();
         $item->find($id);
-        if ($item->exists()) {
-            /** @var PostUpdateActionConditionList $body */
-            $body = $this->request->getJSON();
-
-            $values = new PostUpdateActionCondition();
-            foreach ($body->values as $value) {
-                $condition = new PostUpdateActionCondition();
-                $condition->type = $value->type;
-                $condition->value = $value->value;
-                if ($value->podio_field_reference) {
-                    $condition->podio_field_reference_id = PodioFieldReference::Create(
-                        $value->podio_field_reference->podio_integration_id,
-                        $value->podio_field_reference->field_id
-                    )->id;
-                }
-                $condition->save();
-                $values->add($condition);
-            }
-
-            $item->updateConditions($values);
+        if (!$item->exists()) {
+            $this->fail('unknown post update action');
+            return;
         }
+
+        /** @var PostUpdateActionConditionList $body */
+        $body = $this->request->getJSON();
+
+        $values = new PostUpdateActionCondition();
+        foreach ($body->values as $value) {
+            $condition = new PostUpdateActionCondition();
+            $condition->type = $value->type;
+            $condition->value = $value->value;
+            if ($value->podio_field_reference) {
+                $condition->podio_field_reference_id = PodioFieldReference::Create(
+                    $value->podio_field_reference->podio_integration_id,
+                    $value->podio_field_reference->field_id
+                )->id;
+            }
+            $condition->save();
+            $values->add($condition);
+        }
+
+        $item->updateConditions($values);
         $this->_setResource($item);
         $this->success();
     }

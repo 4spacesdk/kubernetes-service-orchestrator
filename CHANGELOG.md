@@ -8,6 +8,9 @@
 * Custom resources without a namespace landed in `default`
 * Init containers from another registry could not be pulled
 * Setting a deployment's version reported success when the deploy failed
+* Updating something that does not exist answered OK and wrote nothing; it is refused now
+* Reading something that does not exist answered a resource with every field null; it answers 404 now
+* Auto update: a tag pattern that cannot compile is refused, and turning it on without one no longer crashes
 * A migration job did not migrate when it could not reach kso at the start ([#42](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/42))
 * Tag policy "Default" on a migration image failed the whole deploy
 * RBAC rules typed as "get, list" were refused by Kubernetes; spaces are trimmed now

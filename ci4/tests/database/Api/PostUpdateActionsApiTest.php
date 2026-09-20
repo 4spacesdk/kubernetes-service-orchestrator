@@ -200,7 +200,7 @@ class PostUpdateActionsApiTest extends ControllerTestCase {
      * and each new field reference before the action is asked to take them, so a guard one
      * line further down would leave both behind, attached to nothing.
      */
-    public function testAnUnknownActionReportsSuccessAndWritesNeitherConditionNorReference(): void {
+    public function testAnUnknownActionIsRefusedAndWritesNeitherConditionNorReference(): void {
         $integration = Fixtures::podioIntegration();
 
         $body = $this->putTo('post-update-actions/999999/conditions', [
@@ -209,7 +209,7 @@ class PostUpdateActionsApiTest extends ControllerTestCase {
             ]),
         ]);
 
-        $this->assertSame('OK', $body['status']);
+        $this->assertSame('unknown post update action', $body['error'] ?? null);
         $this->assertSame(
             0,
             (new PostUpdateActionConditionModel())->where('value', 'orphan')->find()->count()

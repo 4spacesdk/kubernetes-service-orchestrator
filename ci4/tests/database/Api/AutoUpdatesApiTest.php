@@ -76,10 +76,10 @@ class AutoUpdatesApiTest extends ControllerTestCase {
      * The same shape as the update endpoints elsewhere: an id that does not exist is
      * answered with OK rather than refused, and nothing is written.
      */
-    public function testAnUnknownAutoUpdateIsAnsweredWithOkAndWritesNothing(): void {
+    public function testAnUnknownAutoUpdateIsRefused(): void {
         $body = $this->approve(999999);
 
-        $this->assertSame('OK', $body['status']);
+        $this->assertSame('unknown auto update', $body['error'] ?? null);
         $this->assertSame(0, (new AutoUpdateModel())->where('is_approved', true)->find()->count());
     }
 

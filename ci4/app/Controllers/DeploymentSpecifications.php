@@ -66,23 +66,26 @@ class DeploymentSpecifications extends ResourceController {
     public function getTags(int $id): void {
         $item = new DeploymentSpecification();
         $item->find($id);
-        if ($item->exists()) {
-            $item->container_image->find();
-
-            // Empty on a registry that cannot be read, as before: the version dialogs wait for
-            // a list and have no way to show a failure. `/container-images/{id}/tags` is
-            // where the reason is shown.
-            try {
-                $details = $item->container_image->getTagDetails();
-            } catch (\Throwable $e) {
-                Data::debug($e->getMessage());
-                $details = [];
-            }
-            Data::set('resource', [
-                'tags' => array_column($details, 'name'),
-                'tag_details' => $details,
-            ]);
+        if (!$item->exists()) {
+            $this->fail('unknown deployment specification');
+            return;
         }
+
+        $item->container_image->find();
+
+        // Empty on a registry that cannot be read, as before: the version dialogs wait for
+        // a list and have no way to show a failure. `/container-images/{id}/tags` is
+        // where the reason is shown.
+        try {
+            $details = $item->container_image->getTagDetails();
+        } catch (\Throwable $e) {
+            Data::debug($e->getMessage());
+            $details = [];
+        }
+        Data::set('resource', [
+            'tags' => array_column($details, 'name'),
+            'tag_details' => $details,
+        ]);
         $this->success();
     }
 
@@ -97,21 +100,24 @@ class DeploymentSpecifications extends ResourceController {
     public function updatePostCommands(int $id): void {
         $item = new DeploymentSpecification();
         $item->find($id);
-        if ($item->exists()) {
-            /** @var PostCommandList $body */
-            $body = $this->request->getJSON();
-            $values = new DeploymentSpecificationPostCommand();
-            $values->all = array_map(
-                fn($data) => DeploymentSpecificationPostCommand::Create(
-                    $data->name,
-                    $data->command,
-                    $data->allPods,
-                    $data->container
-                ),
-                $body->values
-            );
-            $item->updatePostCommands($values);
+        if (!$item->exists()) {
+            $this->fail('unknown deployment specification');
+            return;
         }
+
+        /** @var PostCommandList $body */
+        $body = $this->request->getJSON();
+        $values = new DeploymentSpecificationPostCommand();
+        $values->all = array_map(
+            fn($data) => DeploymentSpecificationPostCommand::Create(
+                $data->name,
+                $data->command,
+                $data->allPods,
+                $data->container
+            ),
+            $body->values
+        );
+        $item->updatePostCommands($values);
         $this->_setResource($item);
         $this->success();
     }
@@ -127,19 +133,22 @@ class DeploymentSpecifications extends ResourceController {
     public function updateQuickCommands(int $id): void {
         $item = new DeploymentSpecification();
         $item->find($id);
-        if ($item->exists()) {
-            /** @var QuickCommandList $body */
-            $body = $this->request->getJSON();
-            $values = new DeploymentSpecificationQuickCommand();
-            $values->all = array_map(
-                fn($data) => DeploymentSpecificationQuickCommand::Create(
-                    $data->name,
-                    $data->command,
-                ),
-                $body->values
-            );
-            $item->updateQuickCommands($values);
+        if (!$item->exists()) {
+            $this->fail('unknown deployment specification');
+            return;
         }
+
+        /** @var QuickCommandList $body */
+        $body = $this->request->getJSON();
+        $values = new DeploymentSpecificationQuickCommand();
+        $values->all = array_map(
+            fn($data) => DeploymentSpecificationQuickCommand::Create(
+                $data->name,
+                $data->command,
+            ),
+            $body->values
+        );
+        $item->updateQuickCommands($values);
         $this->_setResource($item);
         $this->success();
     }
@@ -155,16 +164,19 @@ class DeploymentSpecifications extends ResourceController {
     public function updateEnvironmentVariables(int $id): void {
         $item = new DeploymentSpecification();
         $item->find($id);
-        if ($item->exists()) {
-            /** @var EnvironmentVariableList $body */
-            $body = $this->request->getJSON();
-            $values = new DeploymentSpecificationEnvironmentVariable();
-            $values->all = array_map(
-                fn($data) => DeploymentSpecificationEnvironmentVariable::Create($data->name, $data->value),
-                $body->values
-            );
-            $item->updateEnvironmentVariables($values);
+        if (!$item->exists()) {
+            $this->fail('unknown deployment specification');
+            return;
         }
+
+        /** @var EnvironmentVariableList $body */
+        $body = $this->request->getJSON();
+        $values = new DeploymentSpecificationEnvironmentVariable();
+        $values->all = array_map(
+            fn($data) => DeploymentSpecificationEnvironmentVariable::Create($data->name, $data->value),
+            $body->values
+        );
+        $item->updateEnvironmentVariables($values);
         $this->_setResource($item);
         $this->success();
     }
@@ -180,23 +192,26 @@ class DeploymentSpecifications extends ResourceController {
     public function updateServicePorts(int $id): void {
         $item = new DeploymentSpecification();
         $item->find($id);
-        if ($item->exists()) {
-            /** @var ServicePortList $body */
-            $body = $this->request->getJSON();
-            $values = new DeploymentSpecificationServicePort();
-            $values->all = array_map(
-                fn($data) => DeploymentSpecificationServicePort::Create(
-                    $data->protocol,
-                    $data->name,
-                    $data->port,
-                    $data->targetPort ?? $data->port,
-                    $data->healthCheckType ?? null,
-                    $data->healthCheckPath ?? null
-                ),
-                $body->values
-            );
-            $item->updateServicePorts($values);
+        if (!$item->exists()) {
+            $this->fail('unknown deployment specification');
+            return;
         }
+
+        /** @var ServicePortList $body */
+        $body = $this->request->getJSON();
+        $values = new DeploymentSpecificationServicePort();
+        $values->all = array_map(
+            fn($data) => DeploymentSpecificationServicePort::Create(
+                $data->protocol,
+                $data->name,
+                $data->port,
+                $data->targetPort ?? $data->port,
+                $data->healthCheckType ?? null,
+                $data->healthCheckPath ?? null
+            ),
+            $body->values
+        );
+        $item->updateServicePorts($values);
         $this->_setResource($item);
         $this->success();
     }
@@ -212,26 +227,29 @@ class DeploymentSpecifications extends ResourceController {
     public function updateIngresses(int $id): void {
         $item = new DeploymentSpecification();
         $item->find($id);
-        if ($item->exists()) {
-            /** @var IngressList $body */
-            $body = $this->request->getJSON();
-            $values = new DeploymentSpecificationIngress();
-            $values->all = array_map(
-                fn($data) => DeploymentSpecificationIngress::Create(
-                    $data->ingressClass,
-                    $data->proxyBodySize,
-                    $data->proxyConnectTimeout,
-                    $data->proxyReadTimeout,
-                    $data->proxySendTimeout,
-                    $data->sslRedirect,
-                    $data->enableTls,
-                    $data->paths ?? [],
-                    $data->annotations ?? []
-                ),
-                $body->values
-            );
-            $item->updateIngresses($values);
+        if (!$item->exists()) {
+            $this->fail('unknown deployment specification');
+            return;
         }
+
+        /** @var IngressList $body */
+        $body = $this->request->getJSON();
+        $values = new DeploymentSpecificationIngress();
+        $values->all = array_map(
+            fn($data) => DeploymentSpecificationIngress::Create(
+                $data->ingressClass,
+                $data->proxyBodySize,
+                $data->proxyConnectTimeout,
+                $data->proxyReadTimeout,
+                $data->proxySendTimeout,
+                $data->sslRedirect,
+                $data->enableTls,
+                $data->paths ?? [],
+                $data->annotations ?? []
+            ),
+            $body->values
+        );
+        $item->updateIngresses($values);
         $this->_setResource($item);
         $this->success();
     }
@@ -247,20 +265,23 @@ class DeploymentSpecifications extends ResourceController {
     public function updateClusterRoleRules(int $id): void {
         $item = new DeploymentSpecification();
         $item->find($id);
-        if ($item->exists()) {
-            /** @var ClusterRoleRuleList $body */
-            $body = $this->request->getJSON();
-            $values = new DeploymentSpecificationClusterRoleRule();
-            $values->all = array_map(
-                fn($data) => DeploymentSpecificationClusterRoleRule::Create(
-                    $data->apiGroup,
-                    $data->resource,
-                    $data->verbs
-                ),
-                $body->values
-            );
-            $item->updateClusterRoleRules($values);
+        if (!$item->exists()) {
+            $this->fail('unknown deployment specification');
+            return;
         }
+
+        /** @var ClusterRoleRuleList $body */
+        $body = $this->request->getJSON();
+        $values = new DeploymentSpecificationClusterRoleRule();
+        $values->all = array_map(
+            fn($data) => DeploymentSpecificationClusterRoleRule::Create(
+                $data->apiGroup,
+                $data->resource,
+                $data->verbs
+            ),
+            $body->values
+        );
+        $item->updateClusterRoleRules($values);
         $this->_setResource($item);
         $this->success();
     }
@@ -276,20 +297,23 @@ class DeploymentSpecifications extends ResourceController {
     public function updateRoleRules(int $id): void {
         $item = new DeploymentSpecification();
         $item->find($id);
-        if ($item->exists()) {
-            /** @var RoleRuleList $body */
-            $body = $this->request->getJSON();
-            $values = new DeploymentSpecificationRoleRule();
-            $values->all = array_map(
-                fn($data) => DeploymentSpecificationRoleRule::Create(
-                    $data->apiGroup,
-                    $data->resource,
-                    $data->verbs
-                ),
-                $body->values
-            );
-            $item->updateRoleRules($values);
+        if (!$item->exists()) {
+            $this->fail('unknown deployment specification');
+            return;
         }
+
+        /** @var RoleRuleList $body */
+        $body = $this->request->getJSON();
+        $values = new DeploymentSpecificationRoleRule();
+        $values->all = array_map(
+            fn($data) => DeploymentSpecificationRoleRule::Create(
+                $data->apiGroup,
+                $data->resource,
+                $data->verbs
+            ),
+            $body->values
+        );
+        $item->updateRoleRules($values);
         $this->_setResource($item);
         $this->success();
     }
@@ -305,16 +329,19 @@ class DeploymentSpecifications extends ResourceController {
     public function updateServiceAnnotations(int $id): void {
         $item = new DeploymentSpecification();
         $item->find($id);
-        if ($item->exists()) {
-            /** @var ServiceAnnotationList $body */
-            $body = $this->request->getJSON();
-            $values = new DeploymentSpecificationServiceAnnotation();
-            $values->all = array_map(
-                fn($data) => DeploymentSpecificationServiceAnnotation::Create($data->name, $data->value),
-                $body->values
-            );
-            $item->updateServiceAnnotations($values);
+        if (!$item->exists()) {
+            $this->fail('unknown deployment specification');
+            return;
         }
+
+        /** @var ServiceAnnotationList $body */
+        $body = $this->request->getJSON();
+        $values = new DeploymentSpecificationServiceAnnotation();
+        $values->all = array_map(
+            fn($data) => DeploymentSpecificationServiceAnnotation::Create($data->name, $data->value),
+            $body->values
+        );
+        $item->updateServiceAnnotations($values);
         $this->_setResource($item);
         $this->success();
     }
@@ -330,16 +357,19 @@ class DeploymentSpecifications extends ResourceController {
     public function updateDeploymentAnnotations(int $id): void {
         $item = new DeploymentSpecification();
         $item->find($id);
-        if ($item->exists()) {
-            /** @var DeploymentAnnotationList $body */
-            $body = $this->request->getJSON();
-            $values = new DeploymentSpecificationDeploymentAnnotation();
-            $values->all = array_map(
-                fn($data) => DeploymentSpecificationDeploymentAnnotation::Create($data->level, $data->name, $data->value),
-                $body->values
-            );
-            $item->updateDeploymentAnnotations($values);
+        if (!$item->exists()) {
+            $this->fail('unknown deployment specification');
+            return;
         }
+
+        /** @var DeploymentAnnotationList $body */
+        $body = $this->request->getJSON();
+        $values = new DeploymentSpecificationDeploymentAnnotation();
+        $values->all = array_map(
+            fn($data) => DeploymentSpecificationDeploymentAnnotation::Create($data->level, $data->name, $data->value),
+            $body->values
+        );
+        $item->updateDeploymentAnnotations($values);
         $this->_setResource($item);
         $this->success();
     }
@@ -355,23 +385,26 @@ class DeploymentSpecifications extends ResourceController {
     public function updateInitContainers(int $id): void {
         $item = new DeploymentSpecification();
         $item->find($id);
-        if ($item->exists()) {
-            /** @var DeploymentSpecificationInitContainersRequest $body */
-            $body = $this->request->getJSON();
-
-            $values = new DeploymentSpecificationInitContainer();
-            $values->all = array_map(
-                fn($item) => DeploymentSpecificationInitContainer::Create(
-                    $item->initContainerId,
-                    $item->position,
-                    $item->includeInMigrationJob
-                ),
-                $body->values,
-                array_keys($body->values)
-            );
-
-            $item->updateInitContainers($values);
+        if (!$item->exists()) {
+            $this->fail('unknown deployment specification');
+            return;
         }
+
+        /** @var DeploymentSpecificationInitContainersRequest $body */
+        $body = $this->request->getJSON();
+
+        $values = new DeploymentSpecificationInitContainer();
+        $values->all = array_map(
+            fn($item) => DeploymentSpecificationInitContainer::Create(
+                $item->initContainerId,
+                $item->position,
+                $item->includeInMigrationJob
+            ),
+            $body->values,
+            array_keys($body->values)
+        );
+
+        $item->updateInitContainers($values);
         $this->_setResource($item);
         $this->success();
     }
@@ -387,20 +420,23 @@ class DeploymentSpecifications extends ResourceController {
     public function updatePostUpdateActions(int $id): void {
         $item = new DeploymentSpecification();
         $item->find($id);
-        if ($item->exists()) {
-            /** @var IntArrayInterface $body */
-            $body = $this->request->getJSON();
-
-            $values = new DeploymentSpecificationPostUpdateAction();
-            $pos = 0;
-            $values->all = array_map(
-                fn($postUpdateActionId, $i) => DeploymentSpecificationPostUpdateAction::Create($postUpdateActionId, $pos + $i),
-                $body->values,
-                array_keys($body->values)
-            );
-
-            $item->updatePostUpdateActions($values);
+        if (!$item->exists()) {
+            $this->fail('unknown deployment specification');
+            return;
         }
+
+        /** @var IntArrayInterface $body */
+        $body = $this->request->getJSON();
+
+        $values = new DeploymentSpecificationPostUpdateAction();
+        $pos = 0;
+        $values->all = array_map(
+            fn($postUpdateActionId, $i) => DeploymentSpecificationPostUpdateAction::Create($postUpdateActionId, $pos + $i),
+            $body->values,
+            array_keys($body->values)
+        );
+
+        $item->updatePostUpdateActions($values);
         $this->_setResource($item);
         $this->success();
     }
@@ -416,16 +452,19 @@ class DeploymentSpecifications extends ResourceController {
     public function updateLabels(int $id): void {
         $item = new DeploymentSpecification();
         $item->find($id);
-        if ($item->exists()) {
-            /** @var LabelList $body */
-            $body = $this->request->getJSON();
-            $values = new Label();
-            $values->all = array_map(
-                fn($data) => Label::Create($data->name, $data->value),
-                $body->values
-            );
-            $item->updateLabels($values);
+        if (!$item->exists()) {
+            $this->fail('unknown deployment specification');
+            return;
         }
+
+        /** @var LabelList $body */
+        $body = $this->request->getJSON();
+        $values = new Label();
+        $values->all = array_map(
+            fn($data) => Label::Create($data->name, $data->value),
+            $body->values
+        );
+        $item->updateLabels($values);
         $this->_setResource($item);
         $this->success();
     }
@@ -441,20 +480,23 @@ class DeploymentSpecifications extends ResourceController {
     public function updateCronJobs(int $id): void {
         $item = new DeploymentSpecification();
         $item->find($id);
-        if ($item->exists()) {
-            /** @var IntArrayInterface $body */
-            $body = $this->request->getJSON();
-
-            $values = new DeploymentSpecificationCronJob();
-            $pos = 0;
-            $values->all = array_map(
-                fn($cronJobId, $i) => DeploymentSpecificationCronJob::Create($cronJobId, $pos + $i),
-                $body->values,
-                array_keys($body->values)
-            );
-
-            $item->updateCronJobs($values);
+        if (!$item->exists()) {
+            $this->fail('unknown deployment specification');
+            return;
         }
+
+        /** @var IntArrayInterface $body */
+        $body = $this->request->getJSON();
+
+        $values = new DeploymentSpecificationCronJob();
+        $pos = 0;
+        $values->all = array_map(
+            fn($cronJobId, $i) => DeploymentSpecificationCronJob::Create($cronJobId, $pos + $i),
+            $body->values,
+            array_keys($body->values)
+        );
+
+        $item->updateCronJobs($values);
         $this->_setResource($item);
         $this->success();
     }
@@ -470,23 +512,26 @@ class DeploymentSpecifications extends ResourceController {
     public function updateDeploymentHttpProxyRoutes(int $id): void {
         $item = new DeploymentSpecification();
         $item->find($id);
-        if ($item->exists()) {
-            /** @var HttpProxyRouteList $body */
-            $body = $this->request->getJSON();
-            $values = new DeploymentSpecificationHttpProxyRoute();
-            $values->all = array_map(
-                fn($data) => DeploymentSpecificationHttpProxyRoute::Create(
-                    $data->path,
-                    $data->port,
-                    $data->protocol ?? null,
-                    $data->timeoutPolicyIdle ?? null,
-                    $data->timeoutPolicyResponse ?? null,
-                    $data->timeoutPolicyIdleConnection ?? null,
-                ),
-                $body->values
-            );
-            $item->updateHttpProxyRoutes($values);
+        if (!$item->exists()) {
+            $this->fail('unknown deployment specification');
+            return;
         }
+
+        /** @var HttpProxyRouteList $body */
+        $body = $this->request->getJSON();
+        $values = new DeploymentSpecificationHttpProxyRoute();
+        $values->all = array_map(
+            fn($data) => DeploymentSpecificationHttpProxyRoute::Create(
+                $data->path,
+                $data->port,
+                $data->protocol ?? null,
+                $data->timeoutPolicyIdle ?? null,
+                $data->timeoutPolicyResponse ?? null,
+                $data->timeoutPolicyIdleConnection ?? null,
+            ),
+            $body->values
+        );
+        $item->updateHttpProxyRoutes($values);
         $this->_setResource($item);
         $this->success();
     }
@@ -502,33 +547,36 @@ class DeploymentSpecifications extends ResourceController {
     public function updateVolumes(int $id): void {
         $item = new DeploymentSpecification();
         $item->find($id);
-        if ($item->exists()) {
-            /** @var DeploymentSpecificationVolumeList $body */
-            $body = $this->request->getJSON();
-            // Before anything is written: `Create()` saves as it goes.
-            if ($problem = $item->volumeCountProblem(count($body->values ?? []))) {
-                $this->fail($problem);
-                return;
-            }
-            $values = new DeploymentSpecificationVolume();
-            $values->all = array_map(
-                fn($data) => DeploymentSpecificationVolume::Create(
-                    $data->type,
-                    $data->mount_path,
-                    $data->sub_path,
-                    $data->capacity,
-                    $data->volume_mode,
-                    $data->reclaim_policy,
-                    $data->nfs_server,
-                    $data->nfs_path,
-                    $data->storage_class,
-                    $data->csi_driver,
-                    $data->csi_volume_handle,
-                ),
-                $body->values
-            );
-            $item->updateVolumes($values);
+        if (!$item->exists()) {
+            $this->fail('unknown deployment specification');
+            return;
         }
+
+        /** @var DeploymentSpecificationVolumeList $body */
+        $body = $this->request->getJSON();
+        // Before anything is written: `Create()` saves as it goes.
+        if ($problem = $item->volumeCountProblem(count($body->values ?? []))) {
+            $this->fail($problem);
+            return;
+        }
+        $values = new DeploymentSpecificationVolume();
+        $values->all = array_map(
+            fn($data) => DeploymentSpecificationVolume::Create(
+                $data->type,
+                $data->mount_path,
+                $data->sub_path,
+                $data->capacity,
+                $data->volume_mode,
+                $data->reclaim_policy,
+                $data->nfs_server,
+                $data->nfs_path,
+                $data->storage_class,
+                $data->csi_driver,
+                $data->csi_volume_handle,
+            ),
+            $body->values
+        );
+        $item->updateVolumes($values);
         $this->_setResource($item);
         $this->success();
     }

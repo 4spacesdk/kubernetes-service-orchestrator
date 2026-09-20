@@ -187,12 +187,12 @@ class DeploymentPackagesApiTest extends ControllerTestCase {
      * client cannot tell from the status whether the package it named exists. Pinned rather
      * than fixed, like the other update endpoints that answer OK for an unknown id.
      */
-    public function testAnUnknownPackageIsAnsweredWithOkByTheVariablesEndpoint(): void {
+    public function testAnUnknownPackageIsRefusedByTheVariablesEndpoint(): void {
         $body = $this->putValues('deployment-packages/999999/environment-variables', [
             ['name' => 'LOG_LEVEL', 'value' => 'debug'],
         ]);
 
-        $this->assertSame('OK', $body['status']);
+        $this->assertSame('unknown deployment package', $body['error'] ?? null);
         $this->assertCount(0, $this->variablesOn(999999));
     }
 

@@ -171,20 +171,18 @@ class GatewaysWithoutAClusterTest extends ControllerTestCase {
     }
 
     /**
-     * An unknown gateway is the one place where this endpoint does not follow the other
-     * five: they refuse, this one skips the body of the method and answers success with an
-     * empty resource. Pinned because the two shapes sit in the same file, and because a
-     * caller that checks `status` alone cannot tell that nothing was stored.
+     * This endpoint used to be the one place that did not follow the other five: it skipped
+     * the body of the method and answered success with an empty resource, so a caller that
+     * checks `status` alone could not tell that nothing was stored.
      */
-    public function testAddressesForAnUnknownGatewayAreAnsweredWithSuccess(): void {
+    public function testAddressesForAnUnknownGatewayAreRefused(): void {
         $body = $this->decode(
             $this->withBodyFormat('json')->signedIn()->put('gateways/999999/gateway-addresses', [
                 'values' => [['type' => 'IPAddress', 'value' => '10.0.0.9']],
             ])
         );
 
-        $this->assertSame('OK', $body['status']);
-        $this->assertNull($body['resource']['id'], 'the resource is an empty gateway, not a stored one');
+        $this->assertSame('unknown gateway', $body['error'] ?? null);
     }
 
     // </editor-fold>

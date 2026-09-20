@@ -112,9 +112,12 @@ class Deployments extends ResourceController {
     public function updateImagePullPolicy(int $id): void {
         $item = new Deployment();
         $item->find($id);
-        if ($item->exists()) {
-            $item->updateImagePullPolicy($this->request->getGet('value'));
+        if (!$item->exists()) {
+            $this->fail('unknown deployment');
+            return;
         }
+
+        $item->updateImagePullPolicy($this->request->getGet('value'));
         $this->_setResource($item);
         $this->success();
     }
@@ -130,9 +133,12 @@ class Deployments extends ResourceController {
     public function updateEnvironment(int $id): void {
         $item = new Deployment();
         $item->find($id);
-        if ($item->exists()) {
-            $item->updateEnvironment($this->request->getGet('value'));
+        if (!$item->exists()) {
+            $this->fail('unknown deployment');
+            return;
         }
+
+        $item->updateEnvironment($this->request->getGet('value'));
         $this->_setResource($item);
         $this->success();
     }
@@ -148,9 +154,12 @@ class Deployments extends ResourceController {
     public function updateWorkspace(int $id): void {
         $item = new Deployment();
         $item->find($id);
-        if ($item->exists()) {
-            $item->updateWorkspaceId($this->request->getGet('value'));
+        if (!$item->exists()) {
+            $this->fail('unknown deployment');
+            return;
         }
+
+        $item->updateWorkspaceId($this->request->getGet('value'));
         $this->_setResource($item);
         $this->success();
     }
@@ -166,9 +175,12 @@ class Deployments extends ResourceController {
     public function updateDatabaseServiceId(int $id): void {
         $item = new Deployment();
         $item->find($id);
-        if ($item->exists()) {
-            $item->updateDatabaseServiceId($this->request->getGet('value'));
+        if (!$item->exists()) {
+            $this->fail('unknown deployment');
+            return;
         }
+
+        $item->updateDatabaseServiceId($this->request->getGet('value'));
         $this->_setResource($item);
         $this->success();
     }
@@ -186,17 +198,20 @@ class Deployments extends ResourceController {
     public function updateIngress(int $id): void {
         $item = new Deployment();
         $item->find($id);
-        if ($item->exists()) {
-            try {
-                $item->updateIngress(
-                    $this->request->getGet('domainId'),
-                    $this->request->getGet('subdomain'),
-                    $this->request->getGet('aliases') ?? ''
-                );
-            } catch (ValidationException $e) {
-                $this->fail($e->getMessage());
-                return;
-            }
+        if (!$item->exists()) {
+            $this->fail('unknown deployment');
+            return;
+        }
+
+        try {
+            $item->updateIngress(
+                $this->request->getGet('domainId'),
+                $this->request->getGet('subdomain'),
+                $this->request->getGet('aliases') ?? ''
+            );
+        } catch (ValidationException $e) {
+            $this->fail($e->getMessage());
+            return;
         }
         $this->_setResource($item);
         $this->success();
@@ -219,17 +234,20 @@ class Deployments extends ResourceController {
     public function updateResourceManagement(int $id): void {
         $item = new Deployment();
         $item->find($id);
-        if ($item->exists()) {
-            $item->updateResourceManagement(
-                $this->request->getGet('cpuLimit'),
-                $this->request->getGet('cpuRequest'),
-                $this->request->getGet('memoryLimit'),
-                $this->request->getGet('memoryRequest'),
-                $this->request->getGet('replicas'),
-                $this->request->getGet('knativeConcurrencyLimitSoft'),
-                $this->request->getGet('knativeConcurrencyLimitHard'),
-            );
+        if (!$item->exists()) {
+            $this->fail('unknown deployment');
+            return;
         }
+
+        $item->updateResourceManagement(
+            $this->request->getGet('cpuLimit'),
+            $this->request->getGet('cpuRequest'),
+            $this->request->getGet('memoryLimit'),
+            $this->request->getGet('memoryRequest'),
+            $this->request->getGet('replicas'),
+            $this->request->getGet('knativeConcurrencyLimitSoft'),
+            $this->request->getGet('knativeConcurrencyLimitHard'),
+        );
         $this->_setResource($item);
         $this->success();
     }
@@ -247,16 +265,35 @@ class Deployments extends ResourceController {
     public function updateUpdateManagement(int $id): void {
         $item = new Deployment();
         $item->find($id);
-        if ($item->exists()) {
-            try {
-                $item->updateUpdateManagement(
-                    in_array($this->request->getGet('enabled'), ['1', 'true']),
-                    $this->request->getGet('tagRegex'),
-                    in_array($this->request->getGet('requireApproval'), ['1', 'true'])
-                );
-            } catch (\Exception $e) {
-                Data::debug($e->getMessage());
-            }
+        if (!$item->exists()) {
+            $this->fail('unknown deployment');
+            return;
+        }
+
+        $enabled = in_array($this->request->getGet('enabled'), ['1', 'true']);
+        $tagRegex = (string) $this->request->getGet('tagRegex');
+
+        // Both used to be silent: a pattern that cannot compile went to the debug log while
+        // the caller was told it went well, and a missing one was a TypeError that escaped
+        // the controller. The pattern is used as `/<pattern>$/`, so it is checked that way.
+        if ($enabled && $tagRegex === '') {
+            $this->fail('A tag pattern is needed to turn auto update on');
+            return;
+        }
+        if ($tagRegex !== '' && @preg_match("/{$tagRegex}$/", '') === false) {
+            $this->fail("The tag pattern '{$tagRegex}' is not a valid regular expression");
+            return;
+        }
+
+        try {
+            $item->updateUpdateManagement(
+                $enabled,
+                $tagRegex,
+                in_array($this->request->getGet('requireApproval'), ['1', 'true'])
+            );
+        } catch (\Throwable $e) {
+            $this->fail($e->getMessage());
+            return;
         }
         $this->_setResource($item);
         $this->success();
@@ -273,16 +310,19 @@ class Deployments extends ResourceController {
     public function updateEnvironmentVariables(int $id): void {
         $item = new Deployment();
         $item->find($id);
-        if ($item->exists()) {
-            /** @var EnvironmentVariableList $body */
-            $body = $this->request->getJSON();
-            $values = new EnvironmentVariable();
-            $values->all = array_map(
-                fn($data) => EnvironmentVariable::Create($data->name, $data->value),
-                $body->values
-            );
-            $item->updateEnvironmentVariables($values);
+        if (!$item->exists()) {
+            $this->fail('unknown deployment');
+            return;
         }
+
+        /** @var EnvironmentVariableList $body */
+        $body = $this->request->getJSON();
+        $values = new EnvironmentVariable();
+        $values->all = array_map(
+            fn($data) => EnvironmentVariable::Create($data->name, $data->value),
+            $body->values
+        );
+        $item->updateEnvironmentVariables($values);
         $this->_setResource($item);
         $this->success();
     }
@@ -298,33 +338,36 @@ class Deployments extends ResourceController {
     public function updateDeploymentVolumes(int $id): void {
         $item = new Deployment();
         $item->find($id);
-        if ($item->exists()) {
-            /** @var DeploymentVolumeList $body */
-            $body = $this->request->getJSON();
-            // Before anything is written: `Create()` saves as it goes.
-            if ($problem = $item->volumeCountProblem(count($body->values ?? []))) {
-                $this->fail($problem);
-                return;
-            }
-            $values = new DeploymentVolume();
-            $values->all = array_map(
-                fn($data) => DeploymentVolume::Create(
-                    $data->type,
-                    $data->mount_path,
-                    $data->sub_path,
-                    $data->capacity,
-                    $data->volume_mode,
-                    $data->reclaim_policy,
-                    $data->nfs_server,
-                    $data->nfs_path,
-                    $data->storage_class,
-                    $data->csi_driver,
-                    $data->csi_volume_handle
-                ),
-                $body->values
-            );
-            $item->updateDeploymentVolumes($values);
+        if (!$item->exists()) {
+            $this->fail('unknown deployment');
+            return;
         }
+
+        /** @var DeploymentVolumeList $body */
+        $body = $this->request->getJSON();
+        // Before anything is written: `Create()` saves as it goes.
+        if ($problem = $item->volumeCountProblem(count($body->values ?? []))) {
+            $this->fail($problem);
+            return;
+        }
+        $values = new DeploymentVolume();
+        $values->all = array_map(
+            fn($data) => DeploymentVolume::Create(
+                $data->type,
+                $data->mount_path,
+                $data->sub_path,
+                $data->capacity,
+                $data->volume_mode,
+                $data->reclaim_policy,
+                $data->nfs_server,
+                $data->nfs_path,
+                $data->storage_class,
+                $data->csi_driver,
+                $data->csi_volume_handle
+            ),
+            $body->values
+        );
+        $item->updateDeploymentVolumes($values);
         $this->_setResource($item);
         $this->success();
     }
@@ -340,16 +383,19 @@ class Deployments extends ResourceController {
     public function updateLabels(int $id): void {
         $item = new Deployment();
         $item->find($id);
-        if ($item->exists()) {
-            /** @var LabelList $body */
-            $body = $this->request->getJSON();
-            $values = new Label();
-            $values->all = array_map(
-                fn($data) => Label::Create($data->name, $data->value),
-                $body->values
-            );
-            $item->updateLabels($values);
+        if (!$item->exists()) {
+            $this->fail('unknown deployment');
+            return;
         }
+
+        /** @var LabelList $body */
+        $body = $this->request->getJSON();
+        $values = new Label();
+        $values->all = array_map(
+            fn($data) => Label::Create($data->name, $data->value),
+            $body->values
+        );
+        $item->updateLabels($values);
         $this->_setResource($item);
         $this->success();
     }
@@ -365,20 +411,23 @@ class Deployments extends ResourceController {
     public function updateCronJobs(int $id): void {
         $item = new Deployment();
         $item->find($id);
-        if ($item->exists()) {
-            /** @var IntArrayInterface $body */
-            $body = $this->request->getJSON();
-
-            $values = new DeploymentCronJob();
-            $pos = 0;
-            $values->all = array_map(
-                fn($cronJobId, $i) => DeploymentCronJob::Create($cronJobId, $pos + $i),
-                $body->values,
-                array_keys($body->values)
-            );
-
-            $item->updateCronJobs($values);
+        if (!$item->exists()) {
+            $this->fail('unknown deployment');
+            return;
         }
+
+        /** @var IntArrayInterface $body */
+        $body = $this->request->getJSON();
+
+        $values = new DeploymentCronJob();
+        $pos = 0;
+        $values->all = array_map(
+            fn($cronJobId, $i) => DeploymentCronJob::Create($cronJobId, $pos + $i),
+            $body->values,
+            array_keys($body->values)
+        );
+
+        $item->updateCronJobs($values);
         $this->_setResource($item);
         $this->success();
     }
@@ -449,20 +498,23 @@ class Deployments extends ResourceController {
     public function updateKNativeMinScaleSchedules(int $id): void {
         $item = new Deployment();
         $item->find($id);
-        if ($item->exists()) {
-            /** @var IntArrayInterface $body */
-            $body = $this->request->getJSON();
-
-            if (isset($body->values) && is_array($body->values) && count($body->values) > 0) {
-                $values = (new KNativeMinScaleScheduleModel())
-                    ->whereIn('id', $body->values)
-                    ->find();
-            } else {
-                $values = new KNativeMinScaleSchedule();
-            }
-
-            $item->updateKNativeMinScaleSchedules($values);
+        if (!$item->exists()) {
+            $this->fail('unknown deployment');
+            return;
         }
+
+        /** @var IntArrayInterface $body */
+        $body = $this->request->getJSON();
+
+        if (isset($body->values) && is_array($body->values) && count($body->values) > 0) {
+            $values = (new KNativeMinScaleScheduleModel())
+                ->whereIn('id', $body->values)
+                ->find();
+        } else {
+            $values = new KNativeMinScaleSchedule();
+        }
+
+        $item->updateKNativeMinScaleSchedules($values);
         $this->_setResource($item);
         $this->success();
     }
@@ -477,9 +529,12 @@ class Deployments extends ResourceController {
     public function getStatus(int $id): void {
         $item = new Deployment();
         $item->find($id);
-        if ($item->exists()) {
-            $item->checkStatus(true);
+        if (!$item->exists()) {
+            $this->fail('unknown deployment');
+            return;
         }
+
+        $item->checkStatus(true);
         $this->_setResource($item);
         $this->success();
     }

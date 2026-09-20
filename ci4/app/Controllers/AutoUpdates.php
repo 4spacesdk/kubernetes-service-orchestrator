@@ -20,9 +20,12 @@ class AutoUpdates extends ResourceController {
     public function approve(int $id): void {
         $item = new AutoUpdate();
         $item->find($id);
-        if ($item->exists()) {
-            $item->approve();
+        if (!$item->exists()) {
+            $this->fail('unknown auto update');
+            return;
         }
+
+        $item->approve();
         $this->_setResource($item);
         $this->success();
     }

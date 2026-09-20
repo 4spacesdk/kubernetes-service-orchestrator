@@ -159,12 +159,12 @@ class DeploymentSpecificationsApiTest extends ControllerTestCase {
      * Same as on the deployments controller: an unknown id is answered with OK, and
      * nothing is written.
      */
-    public function testAnUnknownSpecificationReportsSuccessAndWritesNothing(): void {
+    public function testAnUnknownSpecificationIsRefusedAndWritesNothing(): void {
         $body = $this->putValues('deployment-specifications/999999/role-rules', [
             ['apiGroup' => '', 'resource' => 'pods', 'verbs' => 'get'],
         ]);
 
-        $this->assertSame('OK', $body['status']);
+        $this->assertSame('unknown deployment specification', $body['error'] ?? null);
         $this->assertSame(
             0,
             (new DeploymentSpecificationRoleRuleModel())->where('resource', 'pods')->find()->count()

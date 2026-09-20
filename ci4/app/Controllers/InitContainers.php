@@ -18,16 +18,19 @@ class InitContainers extends ResourceController {
     public function updateEnvironmentVariables(int $id): void {
         $item = new InitContainer();
         $item->find($id);
-        if ($item->exists()) {
-            /** @var EnvironmentVariableList $body */
-            $body = $this->request->getJSON();
-            $values = new InitContainerEnvironmentVariable();
-            $values->all = array_map(
-                fn($data) => InitContainerEnvironmentVariable::Create($data->name, $data->value),
-                $body->values
-            );
-            $item->updateEnvironmentVariables($values);
+        if (!$item->exists()) {
+            $this->fail('unknown init container');
+            return;
         }
+
+        /** @var EnvironmentVariableList $body */
+        $body = $this->request->getJSON();
+        $values = new InitContainerEnvironmentVariable();
+        $values->all = array_map(
+            fn($data) => InitContainerEnvironmentVariable::Create($data->name, $data->value),
+            $body->values
+        );
+        $item->updateEnvironmentVariables($values);
         $this->_setResource($item);
         $this->success();
     }

@@ -89,12 +89,12 @@ class InitContainersApiTest extends ControllerTestCase {
      * before it is attached to anything, so a guard moved one line down would leave a
      * variable behind in the table belonging to no container at all.
      */
-    public function testAnUnknownContainerReportsSuccessAndWritesNothing(): void {
+    public function testAnUnknownContainerIsRefusedAndWritesNothing(): void {
         $body = $this->putTo('init-containers/999999/environment-variables', [
             ['name' => 'ORPHAN', 'value' => 'should not exist'],
         ]);
 
-        $this->assertSame('OK', $body['status']);
+        $this->assertSame('unknown init container', $body['error'] ?? null);
         $this->assertSame(
             0,
             (new InitContainerEnvironmentVariableModel())->where('name', 'ORPHAN')->find()->count()

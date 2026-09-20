@@ -103,9 +103,12 @@ class Workspaces extends ResourceController {
 
         $item = new Workspace();
         $item->find($id);
-        if ($item->exists()) {
-            $item->updateName($value);
+        if (!$item->exists()) {
+            $this->fail('unknown workspace');
+            return;
         }
+
+        $item->updateName($value);
         $this->_setResource($item);
         $this->success();
     }
@@ -123,17 +126,20 @@ class Workspaces extends ResourceController {
     public function updateIngress(int $id): void {
         $item = new Workspace();
         $item->find($id);
-        if ($item->exists()) {
-            try {
-                $item->updateIngress(
-                    $this->request->getGet('domainId'),
-                    $this->request->getGet('subdomain'),
-                    $this->request->getGet('aliases') ?? ''
-                );
-            } catch (ValidationException $e) {
-                $this->fail($e->getMessage());
-                return;
-            }
+        if (!$item->exists()) {
+            $this->fail('unknown workspace');
+            return;
+        }
+
+        try {
+            $item->updateIngress(
+                $this->request->getGet('domainId'),
+                $this->request->getGet('subdomain'),
+                $this->request->getGet('aliases') ?? ''
+            );
+        } catch (ValidationException $e) {
+            $this->fail($e->getMessage());
+            return;
         }
         $this->_setResource($item);
         $this->success();
@@ -152,9 +158,12 @@ class Workspaces extends ResourceController {
 
         $item = new Workspace();
         $item->find($id);
-        if ($item->exists()) {
-            $item->updateEmailServiceId($value);
+        if (!$item->exists()) {
+            $this->fail('unknown workspace');
+            return;
         }
+
+        $item->updateEmailServiceId($value);
         $this->_setResource($item);
         $this->success();
     }
@@ -172,9 +181,12 @@ class Workspaces extends ResourceController {
 
         $item = new Workspace();
         $item->find($id);
-        if ($item->exists()) {
-            $item->updateDatabaseServiceId($value);
+        if (!$item->exists()) {
+            $this->fail('unknown workspace');
+            return;
         }
+
+        $item->updateDatabaseServiceId($value);
         $this->_setResource($item);
         $this->success();
     }
@@ -190,12 +202,15 @@ class Workspaces extends ResourceController {
     public function deploy(int $id = 0): void {
         $item = new Workspace();
         $item->find($id);
-        if ($item->exists()) {
-            $errors = $item->deploy();
-            if ($errors) {
-                $this->fail($errors);
-                return;
-            }
+        if (!$item->exists()) {
+            $this->fail('unknown workspace');
+            return;
+        }
+
+        $errors = $item->deploy();
+        if ($errors) {
+            $this->fail($errors);
+            return;
         }
         $this->_setResource($item);
         $this->success();
@@ -212,12 +227,15 @@ class Workspaces extends ResourceController {
     public function terminate(int $id = 0): void {
         $item = new Workspace();
         $item->find($id);
-        if ($item->exists()) {
-            $errors = $item->terminate();
-            if ($errors) {
-                $this->fail($errors);
-                return;
-            }
+        if (!$item->exists()) {
+            $this->fail('unknown workspace');
+            return;
+        }
+
+        $errors = $item->terminate();
+        if ($errors) {
+            $this->fail($errors);
+            return;
         }
         $this->_setResource($item);
         $this->success();
@@ -233,19 +251,22 @@ class Workspaces extends ResourceController {
     public function getStatus(int $id): void {
         $item = new Workspace();
         $item->find($id);
-        if ($item->exists()) {
-
-            /** @var Deployment $deployments */
-            $deployments = (new DeploymentModel())
-                ->where('workspace_id', $item->id)
-                ->find();
-            foreach ($deployments as $deployment) {
-                $deployment->checkStatus(false);
-            }
-            $item->deployments = $deployments;
-
-            $item->checkStatus();
+        if (!$item->exists()) {
+            $this->fail('unknown workspace');
+            return;
         }
+
+
+        /** @var Deployment $deployments */
+        $deployments = (new DeploymentModel())
+            ->where('workspace_id', $item->id)
+            ->find();
+        foreach ($deployments as $deployment) {
+            $deployment->checkStatus(false);
+        }
+        $item->deployments = $deployments;
+
+        $item->checkStatus();
         $this->_setResource($item);
         $this->success();
     }
@@ -276,16 +297,19 @@ class Workspaces extends ResourceController {
     public function updateLabels(int $id): void {
         $item = new Workspace();
         $item->find($id);
-        if ($item->exists()) {
-            /** @var LabelList $body */
-            $body = $this->request->getJSON();
-            $values = new Label();
-            $values->all = array_map(
-                fn($data) => Label::Create($data->name, $data->value),
-                $body->values
-            );
-            $item->updateLabels($values);
+        if (!$item->exists()) {
+            $this->fail('unknown workspace');
+            return;
         }
+
+        /** @var LabelList $body */
+        $body = $this->request->getJSON();
+        $values = new Label();
+        $values->all = array_map(
+            fn($data) => Label::Create($data->name, $data->value),
+            $body->values
+        );
+        $item->updateLabels($values);
         $this->_setResource($item);
         $this->success();
     }
