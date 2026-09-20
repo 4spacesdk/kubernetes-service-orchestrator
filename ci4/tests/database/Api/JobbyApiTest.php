@@ -5,6 +5,7 @@ use App\Entities\CronJob;
 use App\Tests\Fakes\HarmlessCommand;
 use App\Tests\Fakes\ReflectionFailingCommand;
 use CodeIgniter\CLI\Commands;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
  * The cron endpoint: one half lays out the plan, the other runs a single job.
@@ -90,8 +91,24 @@ class JobbyApiTest extends ControllerTestCase {
 
         foreach ($added as $entry) {
             $this->assertStringContainsString(self::NEVER, $entry, 'the schedule did not come along');
-            $this->assertStringContainsString("jobby run {$job->id} >>", $entry, 'the entry calls a different job back');
+            $this->assertStringContainsString("jobby run {$job->id} >", $entry, 'the entry calls a different job back');
         }
+    }
+
+    /**
+     * The raw output goes to one file per job, overwritten each run.
+     *
+     * It used to be `cronjob_<id>_<time>.txt`, appended to and never removed, so a container
+     * collected a file a minute per job for as long as it lived. What the run decided is on
+     * the row in `last_log`; this is the raw output, and only the last one is worth keeping.
+     */
+    public function testTheRawOutputGoesToOneFilePerJobRatherThanOnePerRun(): void {
+        $job = $this->onlyCronJob(['duplicates' => 1, 'schedule' => self::NEVER]);
+
+        $added = $this->addedEntries($this->decode($this->get('jobby')));
+
+        $this->assertStringContainsString("> /tmp/cronjob_{$job->id}.txt 2>&1", $added[0]);
+        $this->assertStringNotContainsString('>> /tmp/', $added[0], 'the file is appended to rather than replaced');
     }
 
     /**
@@ -117,9 +134,9 @@ class JobbyApiTest extends ControllerTestCase {
         $added = $this->addedEntries($this->decode($this->get('jobby')));
 
         $this->assertCount(3, $added);
-        $this->assertStringContainsString("jobby run {$first->id} >>", $added[0]);
-        $this->assertStringContainsString("jobby run {$second->id} >>", $added[1]);
-        $this->assertStringContainsString("jobby run {$second->id} >>", $added[2]);
+        $this->assertStringContainsString("jobby run {$first->id} >", $added[0]);
+        $this->assertStringContainsString("jobby run {$second->id} >", $added[1]);
+        $this->assertStringContainsString("jobby run {$second->id} >", $added[2]);
     }
 
     /**
@@ -135,40 +152,65 @@ class JobbyApiTest extends ControllerTestCase {
     }
 
     /**
-     * An entry is named `"{job name} x {number}"`, and that is the name jobby writes its
-     * lock files and its failure report under - two entries called the same thing would
-     * block each other.
+     * A row that cannot be scheduled is one job that does not run - not a cron run that does
+     * not happen.
      *
-     * The name is otherwise out of reach from the outside, but jobby refuses an entry
-     * without a schedule and names it while doing so. That refusal is at the same time one
-     * of the controller's two `\Jobby\Exception` branches: it answers ERROR and **stops** -
-     * without the `return` it would carry on and lay out half a plan.
+     * This was the sharp edge of the endpoint. A schedule that is not a cron expression went
+     * all the way into the plan, and `$jobby->run()` handed it to the cron parser, which
+     * answers with a plain `InvalidArgumentException` - past a `catch` that names only
+     * `\Jobby\Exception`. The request ended in a five-hundred with **no job at all
+     * started**, so one mistyped row stopped every other job in the table, every minute,
+     * until somebody noticed.
+     *
+     * The second job is here to prove the run carried on rather than merely survived.
      */
-    public function testAJobWithoutAScheduleIsRefusedByNameAndStopsThere(): void {
-        $this->onlyCronJob(['name' => 'nightly cleanup', 'duplicates' => 2, 'schedule' => '']);
+    #[DataProvider('theSchedulesThatCannotBeUsed')]
+    public function testARowThatCannotBeScheduledIsSkippedAndTheRestStillRun(string $schedule): void {
+        $this->db->table('cron_jobs')->emptyTable();
+        $broken = $this->aCronJob(['name' => 'broken', 'schedule' => $schedule]);
+        $healthy = $this->aCronJob(['name' => 'healthy', 'schedule' => self::NEVER]);
 
         $body = $this->decode($this->get('jobby'));
 
-        $this->assertSame('ERROR', $body['status']);
-        $this->assertSame("'schedule' is required for 'nightly cleanup x 0' job", $body['error']);
-        $this->assertSame([], $this->addedEntries($body), 'it carried on adding entries after the refusal');
+        $this->assertSame('OK', $body['status']);
+        $added = $this->addedEntries($body);
+        $this->assertCount(1, $added);
+        $this->assertStringContainsString("jobby run {$healthy->id} >", $added[0]);
+        $this->assertStringNotContainsString("jobby run {$broken->id} >", $added[0]);
     }
 
     /**
-     * **Today's behaviour, and it is the sharp edge of the endpoint.** A schedule that is
-     * not a cron expression is accepted all the way into the plan, and `$jobby->run()` then
-     * throws a plain `InvalidArgumentException` from the cron parser.
-     *
-     * The controller catches `\Jobby\Exception` and nothing else, so this one goes all the
-     * way out: the request ends in a five-hundred, and **no job at all is started** - one
-     * bad row stops every other job in the table, every minute, until somebody notices.
+     * @return array<string, array{0: string}>
      */
-    public function testOneUnparseableScheduleStopsTheWholeCronRun(): void {
-        $this->onlyCronJob(['schedule' => 'not a cron']);
+    public static function theSchedulesThatCannotBeUsed(): array {
+        return [
+            // Refused by jobby itself, with a `\Jobby\Exception`.
+            'no schedule at all' => [''],
 
-        $this->expectException(\InvalidArgumentException::class);
+            // Accepted by jobby and refused by the cron parser underneath it, with a plain
+            // `InvalidArgumentException`. This is the one that used to take the run down.
+            'not a cron expression' => ['not a cron'],
+            'too few fields' => ['* * *'],
+            'a field out of range' => ['0 0 32 * *'],
+        ];
+    }
+
+    /**
+     * And the row says why, on itself. The cron page is where an operator looks, and a job
+     * that is skipped every minute would otherwise look merely idle - indistinguishable from
+     * one that simply has nothing to do.
+     *
+     * `last_run` is left alone on purpose: it did not run.
+     */
+    public function testASkippedRowRecordsWhyItWasNotScheduled(): void {
+        $job = $this->onlyCronJob(['schedule' => 'not a cron', 'last_run' => null]);
 
         $this->get('jobby');
+
+        $row = $this->cronJobRow($job->id);
+        $this->assertStringContainsString('not a cron expression', $row['last_log']);
+        $this->assertStringContainsString("'not a cron'", $row['last_log'], 'the log does not say what was wrong with it');
+        $this->assertNull($row['last_run'], 'the row claims to have run');
     }
 
     // </editor-fold>
@@ -244,24 +286,36 @@ class JobbyApiTest extends ControllerTestCase {
     }
 
     /**
-     * An unknown command name throws nothing. `Commands::run()` looks the name up in its
-     * own registry, writes "Command not found" to stderr and returns an error code nobody
-     * looks at - so the row is saved as though all was well, and the log is empty.
+     * A command name that is not in the registry is written down as such.
      *
-     * That is today's behaviour, and it is worth knowing: a cron job with a typo in its
-     * command fails silently, every minute, for ever.
-     *
-     * The line this test writes to stderr during the run is the whole of the reporting that
-     * exists - it goes to `STDERR` and therefore neither into `last_log` nor into the
-     * response.
+     * It used to fail silently, every minute, for ever: an unknown name throws nothing -
+     * `Commands::run()` writes "Command not found" to stderr, which reaches neither
+     * `last_log` nor the response, and returns an exit code no caller looks at - so the row
+     * was saved with a fresh `last_run` and an empty log, exactly like a job that had run
+     * and found nothing to do.
      */
-    public function testAMisspelledCommandFailsSilentlyAndLooksLikeASuccess(): void {
+    public function testAMisspelledCommandIsRecordedRatherThanPassedOver(): void {
         $job = $this->onlyCronJob(['command' => 'kso:no-such-command']);
 
         $body = $this->decode($this->get("jobby/run/{$job->id}"));
 
         $this->assertSame('OK', $body['status']);
-        $this->assertNotNull($this->cronJobRow($job->id)['last_run']);
+        $this->assertStringContainsString('No such command', $this->cronJobRow($job->id)['last_log']);
+        $this->assertStringContainsString('kso:no-such-command', $this->cronJobRow($job->id)['last_log']);
+    }
+
+    /**
+     * A command that carries arguments is looked up by its name alone, or every cron job
+     * with a parameter on it would be reported as missing.
+     */
+    public function testACommandWithArgumentsIsStillFound(): void {
+        $job = $this->onlyCronJob(['command' => HarmlessCommand::NAME . ' --loud']);
+
+        $this->get("jobby/run/{$job->id}");
+
+        $log = $this->cronJobRow($job->id)['last_log'];
+        $this->assertStringNotContainsString('No such command', $log);
+        $this->assertStringContainsString(HarmlessCommand::OUTPUT, $log);
     }
 
     // </editor-fold>
