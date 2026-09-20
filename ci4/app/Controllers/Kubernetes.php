@@ -86,10 +86,17 @@ class Kubernetes extends \App\Core\BaseController {
         try {
             $cluster = $kubeAuth->authenticate();
             $pod = $cluster->getPodByName($name, $namespace);
-            $messages = $pod->exec(
-                ['/bin/sh', '-c', $command],
-                $container
+            [$messages, $rejection] = KubeHelper::RunWatchingForRejections(
+                fn () => $pod->exec(['/bin/sh', '-c', $command], $container)
             );
+            if ($rejection !== null) {
+                // The api server refuses over the websocket - a container that is not
+                // running is the everyday case - and that arrives as a rejected promise
+                // rather than as an exception. Without this the page showed an empty box.
+                $this->fail(KubeHelper::PrintException($rejection));
+                return;
+            }
+
             Data::set('resource', [
                 'lines' => KubeHelper::ExecOutputLines($messages),
             ]);

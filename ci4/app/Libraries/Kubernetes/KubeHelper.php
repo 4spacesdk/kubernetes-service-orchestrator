@@ -95,6 +95,35 @@ class KubeHelper {
     }
 
     /**
+     * Run something that talks over a websocket, and hand back what it returned together
+     * with the rejection nobody handled, if there was one.
+     *
+     * php-k8s does `exec` and log watching on a ReactPHP loop. When the api server refuses -
+     * the container is not running, say - the failure arrives as a rejected promise, and
+     * react/promise writes a line with `error_log()` and moves on. The caller is handed an
+     * empty result and no exception, so the page showed an empty box and the reason was in
+     * the server's log.
+     *
+     * @template T
+     * @param callable(): T $work
+     * @return array{0: T, 1: ?\Throwable}
+     */
+    public static function RunWatchingForRejections(callable $work): array {
+        $rejection = null;
+        $previous = \React\Promise\set_rejection_handler(static function (\Throwable $reason) use (&$rejection): void {
+            $rejection ??= $reason;
+        });
+
+        try {
+            $result = $work();
+        } finally {
+            \React\Promise\set_rejection_handler($previous);
+        }
+
+        return [$result, $rejection];
+    }
+
+    /**
      * The lines a command printed, from the frames php-k8s collected during an exec.
      *
      * The stdout frames are joined before anything is split. How the output is cut into

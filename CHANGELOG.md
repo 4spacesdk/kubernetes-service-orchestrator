@@ -4,6 +4,7 @@
 
 ### Fixed bugs
 * Several gateway, migration job, pod list and shell fixes
+* The shell on a pod that is not running answered an empty box; it says what the cluster said
 * Deploying while a rollout was still running could fail with `409 Conflict`
 * Custom resources without a namespace landed in `default`
 * The status panel died on a resource that has no status yet, or none at all, and on a gateway when the cluster could not be reached

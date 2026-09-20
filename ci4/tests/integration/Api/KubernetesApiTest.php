@@ -158,35 +158,27 @@ class KubernetesApiTest extends ClusterControllerTestCase {
     }
 
     /**
-     * **Today's behaviour, and worth knowing before someone reports it as a bug.**
+     * The shell on a pod that is not running. The api server answers `500 container not
+     * found` over the websocket, and php-k8s does that work on a ReactPHP loop - so the
+     * failure used to arrive as a rejected promise nobody handled: react/promise wrote a
+     * line with `error_log()`, the loop ended, and the endpoint answered OK with no lines.
+     * A user clicking the shell on a workspace that was still starting got an empty box,
+     * and the reason was in the server's log.
      *
-     * The api server answers `500 container not found`, and php-k8s is doing its websocket
-     * work on a ReactPHP loop - so the failure arrives as a **rejected promise that nobody
-     * handles**. react/promise writes a line with `error_log()` and the loop ends; `exec()`
-     * returns an empty result, the controller has nothing to catch, and the endpoint
-     * answers OK with no lines in it.
-     *
-     * A user who clicks the shell on a workspace that is still starting therefore gets an
-     * empty box, and the reason is in the server's error log rather than on the screen.
-     *
-     * The expectation below is what makes the rejection visible at all - see
-     * `TestCase::failOnAnUnhandledRejection()`.
-     *
-     * It matches the status line, not the body. pawl builds the message from what it has
-     * read when the headers end, so `container not found` is only in it when the body came
-     * in the same packet - which it does locally and did not in Cloud Build.
+     * The message is matched on the status line, not the body. pawl builds it from what it
+     * has read when the headers end, so `container not found` is only in it when the body
+     * came in the same packet - which it does locally and did not in Cloud Build.
      */
-    public function testExecAgainstAPodThatIsNotRunningAnswersSuccessWithNothingInIt(): void {
+    public function testExecAgainstAPodThatIsNotRunningIsReportedWithTheReason(): void {
         $this->namespaceExists();
         $this->pod('api', ['app' => 'api', 'role' => 'app']);
-        $this->expectUnhandledRejection('500 Internal Server Error');
 
         $body = $this->decode($this->signedIn()->put(
             "kubernetes/namespaces/{$this->testNamespace}/pods/api/containers/app/exec?command=" . urlencode('echo hello')
         ));
 
-        $this->assertSame('OK', $body['status']);
-        $this->assertSame([''], $body['resource']['lines']);
+        $this->assertSame('ERROR', $body['status']);
+        $this->assertStringContainsString('500 Internal Server Error', $body['error'] ?? '');
     }
 
     public function testLogsForAContainerThatHasNotStartedComeBackAsAMessage(): void {
