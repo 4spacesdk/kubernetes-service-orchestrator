@@ -128,8 +128,9 @@ class ClusterRoleBindingStep extends BaseDeploymentStep {
         }
 
         $namespaceStep = new NamespaceStep();
-        if ($namespaceStep->getStatus($deployment) != DeploymentStepHelper::Namespace_Found) {
-            return 'Missing Namespace';
+        $namespaceIsNotUsable = $namespaceStep->reasonItCannotBeUsed($deployment);
+        if ($namespaceIsNotUsable !== null) {
+            return $namespaceIsNotUsable;
         }
         $clusterRoleStep = new ClusterRoleStep();
         if ($clusterRoleStep->getStatus($deployment) != $clusterRoleStep->getSuccessStatus($deployment)) {

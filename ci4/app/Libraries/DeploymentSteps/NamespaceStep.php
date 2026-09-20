@@ -93,7 +93,7 @@ class NamespaceStep extends BaseDeploymentStep {
     public function getStatus(Deployment $deployment): string {
         try {
             $resource = $this->getResource($deployment, true);
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             return DeploymentStepHelper::Namespace_Error;
         }
         if ($resource->exists()) {
@@ -101,6 +101,32 @@ class NamespaceStep extends BaseDeploymentStep {
         } else {
             return DeploymentStepHelper::Namespace_NotFound;
         }
+    }
+
+    /**
+     * Why this deployment's namespace cannot be built on, or null when it can.
+     *
+     * Every step that needs a namespace used to ask `getStatus() != Namespace_Found` and
+     * report **"Missing Namespace"** for anything that was not a plain yes - thirteen
+     * copies of the same two lines. `Namespace_Error` means the question could not be put
+     * to the cluster at all, so an operator whose credentials had expired was sent looking
+     * for a namespace that was never the problem.
+     *
+     * The deployment's own configuration is asked about first, because `getResource()`
+     * throws for a deployment with no workspace exactly as it does for a cluster that will
+     * not answer, and `getStatus()` cannot tell those two apart afterwards.
+     */
+    public function reasonItCannotBeUsed(Deployment $deployment): ?string {
+        $invalid = $this->validateDeployCommand($deployment);
+        if ($invalid !== null) {
+            return $invalid;
+        }
+
+        return match ($this->getStatus($deployment)) {
+            DeploymentStepHelper::Namespace_Found => null,
+            DeploymentStepHelper::Namespace_Error => 'Could not reach the cluster to look for the namespace',
+            default => 'Missing Namespace',
+        };
     }
 
     public function validateDeployCommand(Deployment $deployment): ?string {

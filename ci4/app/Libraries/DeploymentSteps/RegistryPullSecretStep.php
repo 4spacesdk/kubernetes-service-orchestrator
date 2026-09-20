@@ -125,8 +125,9 @@ class RegistryPullSecretStep extends BaseDeploymentStep {
 
         $namespaceStep = new NamespaceStep();
         try {
-            if ($namespaceStep->getStatus($deployment) != DeploymentStepHelper::Namespace_Found) {
-                return 'Missing Namespace';
+            $namespaceIsNotUsable = $namespaceStep->reasonItCannotBeUsed($deployment);
+            if ($namespaceIsNotUsable !== null) {
+                return $namespaceIsNotUsable;
             }
         } catch (KubernetesAPIException $e) {
             return KubeHelper::PrintException($e);

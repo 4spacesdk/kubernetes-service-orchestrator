@@ -86,13 +86,19 @@ class DatabaseStep extends BaseDeploymentStep {
     }
 
     /**
-     * @throws \Exception
+     * The database a deployment gets, named after the namespace and the deployment it
+     * belongs to.
+     *
+     * Out here rather than inside the method that connects, so that what a deployment is
+     * about to be given can be asked for without a database server answering first.
+     *
+     * **Two deployments can be given the same name.** Everything outside `[A-Za-z0-9_]` is
+     * dropped rather than replaced, so `my-app` and `my.app` in one namespace both become
+     * `my_app`; and the whole thing is cut to 64 characters, so two long names that agree
+     * for the first 64 collapse as well. Held as tests rather than fixed here - what to do
+     * about it is its own decision.
      */
-    public function startDeployCommand(Deployment $deployment, ?string $reason = null): void {
-        if ($this->getStatus($deployment) == DeploymentStepHelper::DatabaseStatus_Success) {
-            throw new \Exception('Database already created');
-        }
-
+    public static function DatabaseNameFor(Deployment $deployment): string {
         $fixer = function($name): string {
             $name = strtolower($name); // To lowercase
             $name = str_replace([' ', '-'], '_', $name); // Replace space with _
@@ -100,21 +106,54 @@ class DatabaseStep extends BaseDeploymentStep {
             $name = preg_replace("/[^A-Za-z0-9_]/", '', $name); // Remove all non-alphabetic
             return $name;
         };
-        $dbName =  "{$fixer($deployment->namespace)}_{$fixer($deployment->name)}";
 
-        if (strlen($dbName) > 64) {
-            $dbName = substr($dbName, 0, 64);
-        }
+        $name = "{$fixer($deployment->namespace)}_{$fixer($deployment->name)}";
 
-        $dbUser = substr($dbName, 0, 32);
+        return strlen($name) > 64 ? substr($name, 0, 64) : $name;
+    }
 
+    /**
+     * The user that owns it: the same name, cut to the 32 characters MySQL allows.
+     *
+     * Cut half as short as the database name, so two deployments share a user more easily
+     * than they share a database - and a shared user is a login that can reach both.
+     */
+    public static function DatabaseUserFor(string $databaseName): string {
+        return substr($databaseName, 0, 32);
+    }
+
+    /**
+     * The password that user is created with.
+     *
+     * Thirteen characters: a leading `@`, which MSSQL's complexity rules want, and twelve
+     * from the alphabet below. **`rand()` is not a cryptographic source** - it is seeded
+     * from the process and its output is predictable to anyone who can watch enough of it.
+     * That is a finding of its own; this is here so that what it produces can be looked at.
+     */
+    public static function GeneratePassword(): string {
         $chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         $count = mb_strlen($chars);
-        $dbPass = "@"; // Must include @  for MSSQL
+
+        $password = "@"; // Must include @  for MSSQL
         for ($i = 0; $i < 12; $i++) {
             $index = rand(0, $count - 1);
-            $dbPass .= mb_substr($chars, $index, 1);
+            $password .= mb_substr($chars, $index, 1);
         }
+
+        return $password;
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public function startDeployCommand(Deployment $deployment, ?string $reason = null): void {
+        if ($this->getStatus($deployment) == DeploymentStepHelper::DatabaseStatus_Success) {
+            throw new \Exception('Database already created');
+        }
+
+        $dbName = self::DatabaseNameFor($deployment);
+        $dbUser = self::DatabaseUserFor($dbName);
+        $dbPass = self::GeneratePassword();
 
         $databaseService = new DatabaseService();
         $databaseService->find($deployment->database_service_id);

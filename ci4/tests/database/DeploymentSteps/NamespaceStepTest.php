@@ -121,4 +121,35 @@ class NamespaceStepTest extends ManifestTestCase {
         ]);
     }
 
+
+    /**
+     * What every step that needs a namespace asks, and the one place the answer is decided.
+     *
+     * The thirteen callers used to ask `getStatus() != Namespace_Found` themselves and
+     * report "Missing Namespace" for anything that was not a plain yes - including
+     * `Namespace_Error`, which means the question never reached the cluster. An operator
+     * whose credentials had expired was sent looking for a namespace that was never the
+     * problem.
+     */
+    public function testADeploymentWithNoWorkspaceIsToldThatRatherThanAboutTheNamespace(): void {
+        $deployment = Fixtures::deployment(['workspace_id' => null]);
+
+        $this->assertSame('Missing workspace', (new NamespaceStep())->reasonItCannotBeUsed($deployment));
+    }
+
+    /**
+     * And the half a cluster is needed for is decided by `getStatus()`, which is held in
+     * the integration suite. What can be said here is that a configuration problem is
+     * reported as one, before anything is asked of the cluster at all.
+     */
+    public function testAWorkspaceWithoutANamespaceIsToldThatRatherThanAboutTheCluster(): void {
+        $workspace = Fixtures::workspace(['namespace' => '']);
+        $deployment = Fixtures::deployment(['workspace_id' => $workspace->id]);
+
+        $this->assertSame(
+            'Missing workspace namespace',
+            (new NamespaceStep())->reasonItCannotBeUsed($deployment)
+        );
+    }
+
 }
