@@ -55,9 +55,11 @@ function getItems(doItems = true, doCount = false) {
     const api = Api.webhooks().get();
 
     if (searchValue.value?.length) {
+        // The columns this list shows. It searched `client_id` and `client_secret`, neither
+        // of which is a column on a webhook - copied from the OAuth clients list.
         api
-            .search('client_id', searchValue.value)
-            .search('client_secret', searchValue.value);
+            .search('name', searchValue.value)
+            .search('url', searchValue.value);
     }
 
     if (doItems) {

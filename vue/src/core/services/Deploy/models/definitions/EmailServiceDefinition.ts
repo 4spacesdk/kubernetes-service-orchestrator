@@ -13,6 +13,7 @@ export class EmailServiceDefinition extends BaseModel {
     port?: number;
     user?: string;
     pass?: string;
+    has_pass?: boolean;
     from?: string;
     workspaces?: Workspace[];
     deployments?: Deployment[];
@@ -38,6 +39,7 @@ export class EmailServiceDefinition extends BaseModel {
             delete this.port;
             delete this.user;
             delete this.pass;
+            delete this.has_pass;
             delete this.from;
             delete this.workspaces;
             delete this.deployments;
@@ -67,6 +69,9 @@ export class EmailServiceDefinition extends BaseModel {
         }
         if (data.pass != null) {
             this.pass = data.pass;
+        }
+        if (data.has_pass != null) {
+            this.has_pass = data.has_pass;
         }
         if (data.from != null) {
             this.from = data.from;

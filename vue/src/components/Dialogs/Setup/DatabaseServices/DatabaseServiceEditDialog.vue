@@ -5,6 +5,7 @@ import {DatabaseService} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
+import { secretHint } from "@/helpers/SecretHint";
 
 export interface DatabaseServiceEditDialog_Input {
     databaseService: DatabaseService;
@@ -147,7 +148,9 @@ function onCloseBtnClicked() {
                         <v-text-field
                             variant="outlined"
                             v-model="item.pass"
-                            label="Password"/>
+                            label="Password"
+                            persistent-hint
+                            :hint="secretHint(item, 'pass')"/>
                     </v-col>
 
                 </v-row>

@@ -86,15 +86,16 @@ class AuthenticatedResponsesTest extends ControllerTestCase {
     }
 
     /**
-     * The plain-text secret that matters most: this password opens the server every
-     * customer's database lives on.
+     * The plain-text secret that mattered most: this password opens the server every
+     * customer's database lives on, and it came back to anyone signed in.
      */
-    public function testDatabaseServicesStillReturnTheirPassword(): void {
+    public function testDatabaseServicesDoNotReturnTheirPassword(): void {
         Fixtures::databaseService(['name' => 'with-password', 'pass' => 'hunter2']);
 
         $service = $this->firstResourceNamed('database_services', 'name', 'with-password');
 
-        $this->assertSame('hunter2', $service['pass']);
+        $this->assertArrayNotHasKey('pass', $service);
+        $this->assertTrue($service['has_pass']);
     }
 
     /**

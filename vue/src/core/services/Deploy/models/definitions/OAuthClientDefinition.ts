@@ -8,6 +8,7 @@ import {BaseModel} from '../BaseModel';
 export class OAuthClientDefinition extends BaseModel {
     client_id?: string;
     client_secret?: string;
+    has_client_secret?: boolean;
     redirect_uri?: string;
     grant_types?: string;
     scope?: string;
@@ -32,6 +33,7 @@ export class OAuthClientDefinition extends BaseModel {
         if (!patch) {
             delete this.client_id;
             delete this.client_secret;
+            delete this.has_client_secret;
             delete this.redirect_uri;
             delete this.grant_types;
             delete this.scope;
@@ -54,6 +56,9 @@ export class OAuthClientDefinition extends BaseModel {
         }
         if (data.client_secret != null) {
             this.client_secret = data.client_secret;
+        }
+        if (data.has_client_secret != null) {
+            this.has_client_secret = data.has_client_secret;
         }
         if (data.redirect_uri != null) {
             this.redirect_uri = data.redirect_uri;

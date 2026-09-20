@@ -2,12 +2,14 @@
 
 use App\Models\OAuthClientModel;
 use App\Core\Entity;
+use App\Entities\Concerns\WriteOnlySecrets;
 
 /**
  * Class OAuthClient
  * @package App\Entities
  * @property string $client_id
- * @property string $client_secret
+ * @property string $client_secret write-only, see WriteOnlySecrets
+ * @property bool $has_client_secret
  * @property string $redirect_uri
  * @property string $grant_types
  * @property string $scope
@@ -15,6 +17,22 @@ use App\Core\Entity;
  * @property User $user
  */
 class OAuthClient extends Entity {
+
+    /**
+     * The secret is chosen by whoever creates the client - the dialog has a field for it -
+     * so withholding it costs nobody the value they set. It was listed in full in the
+     * clients table, and searchable, which is a way to confirm a guess one character at a
+     * time.
+     */
+    public const array SecretFields = ['client_secret'];
+
+    use WriteOnlySecrets;
+
+    public $hiddenFields = self::SecretFields;
+
+    public static function patch($id, $data) {
+        return parent::patch($id, self::keepStoredSecrets($data));
+    }
 
     public static function post($data) {
         if (isset($data['user_id'])) {

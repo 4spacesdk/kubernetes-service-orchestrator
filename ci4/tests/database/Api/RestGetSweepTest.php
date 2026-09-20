@@ -284,19 +284,72 @@ class RestGetSweepTest extends ControllerTestCase {
      *
      * This is the assertion the rest of the file exists to make possible. Being signed in
      * is not being entitled to a stored password, and nothing in the stack decides which
-     * fields may leave a resource - `allToArray()` sends the row.
+     * fields may leave a resource - `allToArray()` sends the row, and it used to send these:
+     * `pass` on database and email services, `client_secret` and `app_token` on Podio
+     * integrations, `auth_bearer_token` on webhooks, `client_secret` on OAuth clients, and
+     * the registry credentials on container images until those moved to a connection.
      *
-     * **The list below is today's behaviour, pinned so the fix is visible.** Every pair in
-     * it is a credential handed in cleartext to any authenticated caller. Withholding them
-     * breaks this test, and that failure is the fix landing: the entry comes out of the
-     * list, it does not get added to.
+     * Each of them is withheld now, by `WriteOnlySecrets`, and the list this test carried is
+     * empty. A resource added later with a credential on it is swept without anyone
+     * remembering to add it, because the list of resources comes from the route table.
      *
      * Only non-empty values count. A column that happens to be blank proves nothing about
      * whether the field is sent, which is why `rowsForEveryResource()` fills each one.
      */
-    public function testEveryCollectionReadIsSweptForSecretsAndTheseStillComeBack(): void {
+    public function testNoCollectionReadAnswersWithACredential(): void {
         $this->rowsForEveryResource();
 
+        $this->assertSame([], $this->secretsInCollectionReads());
+    }
+
+    /**
+     * The rows the sweep read really do hold the credentials, so the empty list above is
+     * the API withholding them rather than a fixture that left the columns blank.
+     *
+     * This is the half that would otherwise rot quietly: the sweep looks at field *names*,
+     * and a column nobody filled looks exactly like a column nobody sends.
+     */
+    public function testTheSweptRowsActuallyCarryTheCredentials(): void {
+        $ids = $this->rowsForEveryResource();
+
+        $stored = [];
+        foreach ([
+            ['database_services', 'database_services', 'pass'],
+            ['email_services', 'email_services', 'pass'],
+            ['podio_integrations', 'podio_integrations', 'client_secret'],
+            ['podio_integrations', 'podio_integrations', 'app_token'],
+            ['webhooks', 'webhooks', 'auth_bearer_token'],
+            ['container_registries', 'container_registries', 'harbor_password'],
+        ] as [$resource, $table, $column]) {
+            $row = $this->db->table($table)->where('id', $ids[$resource])->get()->getRowArray();
+            $stored["{$table}.{$column}"] = ($row[$column] ?? '') !== '';
+        }
+
+        $this->assertSame(array_fill_keys(array_keys($stored), true), $stored);
+    }
+
+    /**
+     * And the field the form needs in place of the value: whether one is stored.
+     *
+     * Without it a dialog cannot tell a service with a password from one without, and the
+     * only safe thing it could do is ask for the password again on every save.
+     */
+    public function testACredentialThatIsWithheldIsReportedAsSet(): void {
+        $this->rowsForEveryResource();
+
+        $rows = $this->decode($this->signedIn()->get('email_services'))['resources'];
+
+        $this->assertNotSame([], $rows);
+        foreach ($rows as $row) {
+            $this->assertArrayNotHasKey('pass', $row);
+            $this->assertTrue($row['has_pass']);
+        }
+    }
+
+    /**
+     * @return array<string, list<string>> resource => the credential field names it answered with
+     */
+    private function secretsInCollectionReads(): array {
         $leaks = [];
 
         foreach ($this->collectionResources() as $resource) {
@@ -319,15 +372,7 @@ class RestGetSweepTest extends ControllerTestCase {
         }
         unset($fields);
 
-        // The registry credentials were on this list, on container_images, until they moved
-        // to a connection that withholds them.
-        $this->assertSame([
-            'database_services' => ['pass'],
-            'email_services' => ['pass'],
-            'o_auth_clients' => ['client_secret'],
-            'podio_integrations' => ['app_token', 'client_secret'],
-            'webhooks' => ['auth_bearer_token'],
-        ], $leaks, 'a credential stopped coming back, or a new one started');
+        return $leaks;
     }
 
     /**

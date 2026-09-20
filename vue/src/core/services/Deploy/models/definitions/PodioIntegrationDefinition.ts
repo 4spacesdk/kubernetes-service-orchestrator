@@ -12,6 +12,8 @@ export class PodioIntegrationDefinition extends BaseModel {
     client_secret?: string;
     app_id?: string;
     app_token?: string;
+    has_client_secret?: boolean;
+    has_app_token?: boolean;
     podio_field_references?: PodioFieldReference[];
     id?: number;
     created?: string;
@@ -35,6 +37,8 @@ export class PodioIntegrationDefinition extends BaseModel {
             delete this.client_secret;
             delete this.app_id;
             delete this.app_token;
+            delete this.has_client_secret;
+            delete this.has_app_token;
             delete this.podio_field_references;
             delete this.id;
             delete this.created;
@@ -62,6 +66,12 @@ export class PodioIntegrationDefinition extends BaseModel {
         }
         if (data.app_token != null) {
             this.app_token = data.app_token;
+        }
+        if (data.has_client_secret != null) {
+            this.has_client_secret = data.has_client_secret;
+        }
+        if (data.has_app_token != null) {
+            this.has_app_token = data.has_app_token;
         }
         if (data.podio_field_references != null) {
             this.podio_field_references = data.podio_field_references.map((i: any) => new PodioFieldReference(i));

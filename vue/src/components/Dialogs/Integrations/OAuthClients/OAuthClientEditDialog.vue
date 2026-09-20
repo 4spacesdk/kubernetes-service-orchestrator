@@ -5,6 +5,7 @@ import {OAuthClient, User} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
+import { secretHint } from "@/helpers/SecretHint";
 
 export interface OAuthClientEditDialog_Input {
     oAuthClient: OAuthClient;
@@ -39,6 +40,17 @@ const grantTypeItems = ref([
     },
 ]);
 const grantType = ref<string[]>([]);
+
+/**
+ * The secret is not handed back once it is saved, so a new client's is the one thing this
+ * dialog cannot tell you later. Whoever creates the client picks it, which is why
+ * withholding it costs nothing - as long as they know to keep it.
+ */
+function clientSecretHint(): string {
+    return isEditing.value
+        ? secretHint(item.value, "client_secret")
+        : "Cannot be read back once saved. Keep a copy.";
+}
 
 // <editor-fold desc="Functions">
 
@@ -142,7 +154,9 @@ function onCloseBtnClicked() {
                         <v-text-field
                             variant="outlined"
                             v-model="item.client_secret"
-                            label="Client Secret"/>
+                            label="Client Secret"
+                            persistent-hint
+                            :hint="clientSecretHint()"/>
                     </v-col>
                     <v-col cols="12">
                         <v-select

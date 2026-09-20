@@ -5,6 +5,7 @@ import {PodioIntegration} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
+import { secretHint } from "@/helpers/SecretHint";
 
 export interface PodioIntegrationEditDialog_Input {
     podioIntegration: PodioIntegration;
@@ -116,6 +117,8 @@ function onCloseBtnClicked() {
                             variant="outlined"
                             v-model="item.client_secret"
                             label="Client Secret"
+                            persistent-hint
+                            :hint="secretHint(item, 'client_secret')"
                         />
                     </v-col>
                     <v-col cols="12">
@@ -130,6 +133,8 @@ function onCloseBtnClicked() {
                             variant="outlined"
                             v-model="item.app_token"
                             label="App Token"
+                            persistent-hint
+                            :hint="secretHint(item, 'app_token')"
                         />
                     </v-col>
                 </v-row>

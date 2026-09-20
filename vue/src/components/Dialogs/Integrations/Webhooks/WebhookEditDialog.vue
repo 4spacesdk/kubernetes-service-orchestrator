@@ -5,6 +5,7 @@ import {Webhook, User} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
+import { secretHint } from "@/helpers/SecretHint";
 
 export interface WebhookEditDialog_Input {
     webhook: Webhook;
@@ -160,6 +161,8 @@ function onCloseBtnClicked() {
                             variant="outlined"
                             v-model="item.auth_bearer_token"
                             label="Auth bearer token"
+                            persistent-hint
+                            :hint="secretHint(item, 'auth_bearer_token')"
                         />
                     </v-col>
                 </v-row>

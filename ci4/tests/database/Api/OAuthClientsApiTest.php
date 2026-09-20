@@ -73,21 +73,39 @@ class OAuthClientsApiTest extends ControllerTestCase {
     }
 
     /**
-     * **Today's behaviour, not an endorsement.** The client secret is returned in full to
-     * anyone who may list clients. It is not hidden the way `User::$hiddenFields` hides a
-     * password hash, and a listing is a GET - so it lands in whatever logs and caches sit
-     * between the API and the browser. Pinned so that hiding it is a visible change.
+     * The client secret is not handed back.
+     *
+     * It used to be returned in full to anyone who may list clients, on a GET - so it landed
+     * in whatever logs and caches sit between the API and the browser, and the clients table
+     * printed it in a column of its own. Whoever creates a client chooses the secret, so
+     * withholding it costs nobody the value they set.
      */
-    public function testTheClientSecretIsHandedBackInFull(): void {
+    public function testTheClientSecretIsNotHandedBack(): void {
         $client = $this->client();
 
         $body = $this->decode($this->signedIn()->get("o_auth_clients/{$client->client_id}"));
 
-        $this->assertSame(
-            $client->client_secret,
-            $body['resource']['client_secret'],
-            'the secret is hidden now - this test has done its job'
-        );
+        $this->assertArrayNotHasKey('client_secret', $body['resource']);
+        $this->assertTrue($body['resource']['has_client_secret']);
+        $this->assertStringNotContainsString($client->client_secret, json_encode($body));
+    }
+
+    /**
+     * And a save that could not show it does not erase it: the dialog sends the field back
+     * empty, which is a request to keep what is stored.
+     */
+    public function testPatchingWithAnEmptySecretKeepsTheStoredOne(): void {
+        $client = $this->client();
+
+        $this->withBodyFormat('json')->signedIn()->patch("o_auth_clients/{$client->client_id}", [
+            'client_secret' => '',
+            'redirect_uri' => 'https://example.org/somewhere-else',
+        ]);
+
+        $row = $this->db->table('oauth_clients')->where('client_id', $client->client_id)->get()->getRowArray();
+
+        $this->assertSame($client->client_secret, $row['client_secret']);
+        $this->assertSame('https://example.org/somewhere-else', $row['redirect_uri']);
     }
 
     public function testPatchingChangesTheRedirectUri(): void {

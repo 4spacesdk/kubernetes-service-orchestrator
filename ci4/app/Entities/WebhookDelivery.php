@@ -2,6 +2,7 @@
 
 use DebugTool\Data;
 use App\Core\Entity;
+use App\Entities\Concerns\WriteOnlySecrets;
 
 /**
  * Class WebhookDelivery
@@ -11,7 +12,8 @@ use App\Core\Entity;
  * @property string $url
  * @property string $method
  * @property string $content_type
- * @property string $auth_bearer_token
+ * @property string $auth_bearer_token write-only, see WriteOnlySecrets
+ * @property bool $has_auth_bearer_token
  * @property string $payload
  * @property int $response_code
  * @property string $response_headers
@@ -19,6 +21,20 @@ use App\Core\Entity;
  * @property int $response_time
  */
 class WebhookDelivery extends Entity {
+
+    /**
+     * A delivery keeps the webhook's bearer token so a retry sends the same request, which
+     * made the delivery log a second copy of every subscriber's credential - one per
+     * attempt, listed by `GET /webhooks/{id}/deliveries`.
+     *
+     * No write takes it, so there is nothing to keep: a delivery is written by kso and read
+     * by the log.
+     */
+    public const array SecretFields = ['auth_bearer_token'];
+
+    use WriteOnlySecrets;
+
+    public $hiddenFields = self::SecretFields;
 
     /**
      * Send this delivery again as a new one, leaving the delivery it retries where it is.

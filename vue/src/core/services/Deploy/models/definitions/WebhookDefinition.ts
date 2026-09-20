@@ -13,6 +13,7 @@ export class WebhookDefinition extends BaseModel {
     http_method?: string;
     content_type?: string;
     auth_bearer_token?: string;
+    has_auth_bearer_token?: boolean;
     webhook_deliveries?: WebhookDelivery[];
     id?: number;
     created?: string;
@@ -37,6 +38,7 @@ export class WebhookDefinition extends BaseModel {
             delete this.http_method;
             delete this.content_type;
             delete this.auth_bearer_token;
+            delete this.has_auth_bearer_token;
             delete this.webhook_deliveries;
             delete this.id;
             delete this.created;
@@ -67,6 +69,9 @@ export class WebhookDefinition extends BaseModel {
         }
         if (data.auth_bearer_token != null) {
             this.auth_bearer_token = data.auth_bearer_token;
+        }
+        if (data.has_auth_bearer_token != null) {
+            this.has_auth_bearer_token = data.has_auth_bearer_token;
         }
         if (data.webhook_deliveries != null) {
             this.webhook_deliveries = data.webhook_deliveries.map((i: any) => new WebhookDelivery(i));

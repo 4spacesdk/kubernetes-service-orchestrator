@@ -15,6 +15,7 @@ export class DatabaseServiceDefinition extends BaseModel {
     port?: string;
     user?: string;
     pass?: string;
+    has_pass?: boolean;
     workspaces?: Workspace[];
     deployments?: Deployment[];
     id?: number;
@@ -41,6 +42,7 @@ export class DatabaseServiceDefinition extends BaseModel {
             delete this.port;
             delete this.user;
             delete this.pass;
+            delete this.has_pass;
             delete this.workspaces;
             delete this.deployments;
             delete this.id;
@@ -75,6 +77,9 @@ export class DatabaseServiceDefinition extends BaseModel {
         }
         if (data.pass != null) {
             this.pass = data.pass;
+        }
+        if (data.has_pass != null) {
+            this.has_pass = data.has_pass;
         }
         if (data.workspaces != null) {
             this.workspaces = data.workspaces.map((i: any) => new Workspace(i));

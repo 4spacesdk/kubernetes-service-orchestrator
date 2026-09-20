@@ -6,6 +6,7 @@ use Config\Database;
 use DatabaseDrivers;
 use DebugTool\Data;
 use App\Core\Entity;
+use App\Entities\Concerns\WriteOnlySecrets;
 
 /**
  * Class DatabaseService
@@ -16,13 +17,24 @@ use App\Core\Entity;
  * @property string $azure_host
  * @property string $port
  * @property string $user
- * @property string $pass
+ * @property string $pass write-only, see WriteOnlySecrets
+ * @property bool $has_pass
  *
  * Many
  * @property Workspace $workspaces
  * @property Deployment $deployments
  */
 class DatabaseService extends Entity {
+
+    public const array SecretFields = ['pass'];
+
+    use WriteOnlySecrets;
+
+    public $hiddenFields = self::SecretFields;
+
+    public static function patch($id, $data) {
+        return parent::patch($id, self::keepStoredSecrets($data));
+    }
 
     public function getDatabaseUser($name): string {
         if (getenv('IS_AZURE')) {

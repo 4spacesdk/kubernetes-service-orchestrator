@@ -1,6 +1,7 @@
 <?php namespace App\Entities;
 
 use App\Core\Entity;
+use App\Entities\Concerns\WriteOnlySecrets;
 
 /**
  * Class EmailService
@@ -9,7 +10,8 @@ use App\Core\Entity;
  * @property string $host
  * @property int $port
  * @property string $user
- * @property string $pass
+ * @property string $pass write-only, see WriteOnlySecrets
+ * @property bool $has_pass
  * @property string $from
  *
  * Many
@@ -17,6 +19,16 @@ use App\Core\Entity;
  * @property Deployment $deployments
  */
 class EmailService extends Entity {
+
+    public const array SecretFields = ['pass'];
+
+    use WriteOnlySecrets;
+
+    public $hiddenFields = self::SecretFields;
+
+    public static function patch($id, $data) {
+        return parent::patch($id, self::keepStoredSecrets($data));
+    }
 
     /**
      * @return \ArrayIterator|\OrmExtension\Extensions\Entity[]|\Traversable|EmailService[]

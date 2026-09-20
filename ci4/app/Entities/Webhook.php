@@ -1,6 +1,7 @@
 <?php namespace App\Entities;
 
 use App\Core\Entity;
+use App\Entities\Concerns\WriteOnlySecrets;
 
 /**
  * Class Webhook
@@ -10,12 +11,23 @@ use App\Core\Entity;
  * @property string $url
  * @property string $http_method
  * @property string $content_type
- * @property string $auth_bearer_token
+ * @property string $auth_bearer_token write-only, see WriteOnlySecrets
+ * @property bool $has_auth_bearer_token
  *
  * Many
  * @property WebhookDelivery $webhook_deliveries
  */
 class Webhook extends Entity {
+
+    public const array SecretFields = ['auth_bearer_token'];
+
+    use WriteOnlySecrets;
+
+    public $hiddenFields = self::SecretFields;
+
+    public static function patch($id, $data) {
+        return parent::patch($id, self::keepStoredSecrets($data));
+    }
 
     public function deliver(string $payload): void {
         $delivery = new WebhookDelivery();

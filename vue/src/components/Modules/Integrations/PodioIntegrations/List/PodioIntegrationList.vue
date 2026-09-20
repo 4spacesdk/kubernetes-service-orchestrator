@@ -55,8 +55,8 @@ function getItems(doItems = true, doCount = false) {
 
     if (searchValue.value?.length) {
         api
-            .search('client_id', searchValue.value)
-            .search('client_secret', searchValue.value);
+            .search('name', searchValue.value)
+            .search('client_id', searchValue.value);
     }
 
     if (doItems) {

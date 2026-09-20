@@ -16,7 +16,6 @@ const rows = ref<OAuthClient[]>([]);
 const headers = ref([
     {title: 'Name', key: 'name', sortable: false},
     {title: 'Client ID', key: 'client_id', sortable: true},
-    {title: 'Client Secret', key: 'client_secret', sortable: false},
     {title: 'Grant Types', key: 'grant_types', sortable: false},
     {title: '', key: 'actions', sortable: false},
 ]);
@@ -56,9 +55,9 @@ function getItems(doItems = true, doCount = false) {
         .include('user');
 
     if (searchValue.value?.length) {
-        api
-            .search('client_id', searchValue.value)
-            .search('client_secret', searchValue.value);
+        // Not the secret. Searching one is a way to confirm a guess a character at a time,
+        // and the API does not hand it out any more either.
+        api.search('client_id', searchValue.value);
     }
 
     if (doItems) {

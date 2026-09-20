@@ -167,28 +167,29 @@ class WebhooksApiTest extends ControllerTestCase {
     }
 
     /**
-     * Pinned, not endorsed. A delivery is returned with the bearer token it was sent with,
-     * in clear text, to any signed-in caller - the same shape of exposure the GitHub App key
-     * once had, one level down. The token belongs to the subscriber's system, not to kso, so
-     * kso cannot rotate it and the subscriber has no way of knowing it was read.
+     * A delivery is not returned with the bearer token it was sent with.
      *
-     * The field list is asserted whole so that the day it is narrowed, that is a deliberate
-     * edit here rather than a silent change of what the settings page shows.
+     * It used to be, in clear text, to any signed-in caller - the same shape of exposure the
+     * GitHub App key once had, one level down, and a second copy of it per attempt. The
+     * token belongs to the subscriber's system, not to kso, so kso cannot rotate it and the
+     * subscriber has no way of knowing it was read.
+     *
+     * The field list is asserted whole so that a field added later is a deliberate edit here
+     * rather than a silent change of what the settings page shows.
      */
-    public function testADeliveryIsHandedBackWithTheSubscribersBearerToken(): void {
+    public function testADeliveryIsHandedBackWithoutTheSubscribersBearerToken(): void {
         $webhook = $this->webhook();
         $this->delivery($webhook, ['auth_bearer_token' => 'the-subscribers-token']);
 
         $body = $this->decode($this->signedIn()->get("webhooks/{$webhook->id}/deliveries"));
 
-        $this->assertSame('the-subscribers-token', $body['resources'][0]['auth_bearer_token']);
+        $this->assertStringNotContainsString('the-subscribers-token', json_encode($body));
         $this->assertSame([
             'id',
             'webhook_id',
             'url',
             'method',
             'content_type',
-            'auth_bearer_token',
             'payload',
             'response_code',
             'response_headers',
@@ -196,6 +197,7 @@ class WebhooksApiTest extends ControllerTestCase {
             'response_time',
             'created',
             'updated',
+            'has_auth_bearer_token',
         ], array_keys($body['resources'][0]));
     }
 

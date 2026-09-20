@@ -112,10 +112,11 @@ class RelationIncludeApiTest extends ControllerTestCase {
      * two - migration jobs and auto updates - so somebody has already met the cost of this
      * once.
      *
-     * It is worth pinning because it is the route a secret travels without anyone asking
-     * for it: `GET /deployments/{id}` pulls in the deployment's database service, and that
-     * entity still returns `pass` in cleartext. The include parameter is not the
-     * only way in.
+     * It is worth pinning because it is the route a secret used to travel without anyone
+     * asking for it: `GET /deployments/{id}` pulls in the deployment's database service,
+     * and that entity returned `pass` in cleartext. The include parameter was never the only
+     * way in, which is why the fix is on the entity rather than on the include list - see
+     * the test below.
      *
      * If the extension ever starts honouring the include list here, this test is the one
      * that will say so - and that would be an improvement, not a regression.
@@ -131,6 +132,29 @@ class RelationIncludeApiTest extends ControllerTestCase {
         // And the two the model explicitly holds back.
         $this->assertArrayNotHasKey('migration_jobs', $resource);
         $this->assertArrayNotHasKey('auto_updates', $resource);
+    }
+
+    /**
+     * A relation nobody asked for does not bring a credential with it.
+     *
+     * This is the test the one above exists to make possible. The database service is loaded
+     * because it is a relation, not because the caller named it, so a rule written on the
+     * include list would not have covered it - a relation is serialised by the related
+     * entity, and that is where the field is withheld.
+     */
+    public function testARelationLoadedWithoutBeingAskedForCarriesNoCredential(): void {
+        $service = Fixtures::databaseService(['pass' => 'the-database-server-password']);
+        $deployment = Fixtures::deployment(['database_service_id' => $service->id]);
+
+        $response = $this->signedIn()->get("deployments/{$deployment->id}");
+        $resource = $this->decode($response)['resource'] ?? [];
+
+        $this->assertArrayHasKey('database_service', $resource, 'the relation is still loaded');
+        $this->assertStringNotContainsString(
+            'the-database-server-password',
+            (string) $response->response()->getBody()
+        );
+        $this->assertTrue($resource['database_service']['has_pass']);
     }
 
     // <editor-fold desc="The same promise, across every child">
