@@ -60,22 +60,36 @@ class PodioIntegrationsApiTest extends ControllerTestCase {
     }
 
     /**
-     * **This list is not the list envelope the rest of the API uses.** Every other
-     * collection carries `count` beside `resources` - see `ResourceEnvelopeApiTest` - and
-     * this one sets `resources` by hand and never sets the count. A generated client that
-     * reads the total off the envelope reads nothing here.
-     *
-     * Pinned as today's behaviour. Adding the count should break this test, not surprise
-     * somebody halfway through a release.
+     * This list is the same list envelope as every other collection - see
+     * `ResourceEnvelopeApiTest`. It used to set `resources` by hand and never set the count,
+     * so a generated client reading the total off the envelope read nothing here.
      */
-    public function testTheFieldListIsSentWithoutTheCountTheRestOfTheApiCarries(): void {
-        FakeIntegrations::install();
+    public function testTheFieldListCarriesTheCountTheRestOfTheApiCarries(): void {
+        $fakes = FakeIntegrations::install();
+        $fakes->podio()->fields = [
+            ['id' => '42', 'name' => 'Status', 'type' => 'category'],
+            ['id' => '43', 'name' => 'Released', 'type' => 'date'],
+        ];
         $integration = Fixtures::podioIntegration();
 
         $body = $this->getJson("podio-integrations/{$integration->id}/fields");
 
-        $this->assertArrayHasKey('resources', $body);
-        $this->assertArrayNotHasKey('count', $body);
+        $this->assertSame(2, $body['count']);
+        $this->assertCount(2, $body['resources']);
+    }
+
+    /**
+     * An integration that is not there answers a count of nothing rather than no count at
+     * all: an empty list is still a list, and a client must not have to tell the difference
+     * between "no fields" and "this endpoint does not send counts".
+     */
+    public function testAnEmptyFieldListStillCarriesACount(): void {
+        FakeIntegrations::install();
+
+        $body = $this->getJson('podio-integrations/999999/fields');
+
+        $this->assertSame(0, $body['count']);
+        $this->assertSame([], $body['resources']);
     }
 
     /**

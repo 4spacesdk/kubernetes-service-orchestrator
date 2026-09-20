@@ -353,15 +353,15 @@ class OAuthAgentApiTest extends ControllerTestCase {
     }
 
     /**
-     * Today's behaviour, and worth a decision: this refusal is sent with HTTP 200 while
-     * every other refusal from these two endpoints is sent with 400. `fail()` defaults to
-     * 200 and this one call site does not pass a code.
+     * Both refusals from these endpoints are sent with 400.
      *
-     * The frontend survives it because it reads `error` out of the body, but anything that
-     * reads the status line - a proxy, a monitor, a new client - cannot tell this apart
-     * from a successful renewal.
+     * The missing-cookie one used to be 200 - `fail()` defaulted to it and this one call
+     * site passes no code - so anything reading the status line rather than the body could
+     * not tell it apart from a successful renewal. The frontend ignores the message either
+     * way and only looks at whether the renewal worked, so this is a change for proxies,
+     * monitors and any client that is not this one.
      */
-    public function testTheMissingCookieRefusalIsTheOneThatAnswersWithHttp200(): void {
+    public function testBothRefusalsAnswerWithHttp400(): void {
         $this->theAuthorisationServerAnswers(self::aGrant());
 
         // Read straight away, both of them: the response object is a shared service, so
@@ -374,8 +374,8 @@ class OAuthAgentApiTest extends ControllerTestCase {
         $withRejectedToken = $this->post('oauth-agent/refresh', ['grant_type' => 'refresh_token'])
             ->response()->getStatusCode();
 
-        $this->assertSame(200, $withoutCookie);
-        $this->assertSame(400, $withRejectedToken);
+        $this->assertSame(400, $withoutCookie, 'no refresh token at all');
+        $this->assertSame(400, $withRejectedToken, 'a refresh token the server rejected');
     }
 
     /**

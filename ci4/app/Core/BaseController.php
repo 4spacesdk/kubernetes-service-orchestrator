@@ -89,7 +89,13 @@ use RestExtension\RestRequest;
         $this->response->send();
     }
 
-    protected function fail($error, $code = 200) {
+    /**
+     * The default was 200, so an error sent without a status came out as a success to
+     * anything reading the status code - the envelope's `status: ERROR` is the only place
+     * it showed. 400 here and in `ResourceController::error()`, which used to disagree with
+     * it by defaulting to 503.
+     */
+    protected function fail($error, $code = 400) {
         Data::set('status', 'ERROR');
         if ($error) {
             Data::set('error', $error);

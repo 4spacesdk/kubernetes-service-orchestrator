@@ -19,7 +19,9 @@ class PodioIntegrations extends ResourceController {
         $item = new PodioIntegration();
         $item->find($id);
 
-        Data::set('resources', $item->exists() ? $item->getFields() : []);
+        // Through the envelope rather than by hand, so this list carries `count` like every
+        // other collection - a generated client reads the total off the envelope.
+        $this->_setRawResources($item->exists() ? $item->getFields() : []);
         $this->success();
     }
 
