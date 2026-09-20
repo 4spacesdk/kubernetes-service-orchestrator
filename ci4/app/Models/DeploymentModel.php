@@ -1,9 +1,10 @@
 <?php namespace App\Models;
 
 use App\Entities\Deployment;
+use RestExtension\Core\Model;
 use RestExtension\ResourceModelInterface;
 
-class DeploymentModel extends \RestExtension\Models\UserModel implements ResourceModelInterface {
+class DeploymentModel extends Model implements ResourceModelInterface {
 
     public $hasOne = [
         DeletionModel::class,

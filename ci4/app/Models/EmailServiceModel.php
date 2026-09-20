@@ -1,8 +1,9 @@
 <?php namespace App\Models;
 
+use RestExtension\Core\Model;
 use RestExtension\ResourceModelInterface;
 
-class EmailServiceModel extends \RestExtension\Models\UserModel implements ResourceModelInterface {
+class EmailServiceModel extends Model implements ResourceModelInterface {
 
     public $hasOne = [
         DeletionModel::class,

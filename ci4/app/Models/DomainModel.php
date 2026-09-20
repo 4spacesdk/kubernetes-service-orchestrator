@@ -1,8 +1,9 @@
 <?php namespace App\Models;
 
+use RestExtension\Core\Model;
 use RestExtension\ResourceModelInterface;
 
-class DomainModel extends \RestExtension\Models\UserModel implements ResourceModelInterface {
+class DomainModel extends Model implements ResourceModelInterface {
 
     public $hasOne = [
         DeletionModel::class,

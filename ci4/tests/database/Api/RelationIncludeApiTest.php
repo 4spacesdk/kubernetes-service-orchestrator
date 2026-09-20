@@ -2,6 +2,7 @@
 
 use App\ControllerTestCase;
 use App\Fixtures;
+use RestExtension\ResourceModelInterface;
 
 /**
  * What `?include=` is allowed to hand back, and why the model interface is load-bearing.
@@ -131,6 +132,74 @@ class RelationIncludeApiTest extends ControllerTestCase {
         $this->assertArrayNotHasKey('migration_jobs', $resource);
         $this->assertArrayNotHasKey('auto_updates', $resource);
     }
+
+    // <editor-fold desc="The same promise, across every child">
+
+    /**
+     * Every model that can be reached through `?include=` still implements
+     * `ResourceModelInterface`.
+     *
+     * This is the structural half of the test at the top of this file. That one proves what
+     * the interface *does* - it is what makes the parent filter apply - and it proves it for
+     * one relation. This one says the same about all of them, which is the half that matters
+     * when somebody tidies up: they will not pick `DeploymentVolumeModel`, they will pick
+     * whichever file looks deadest, and every one of these looks equally dead.
+     *
+     * The failure this guards against writes no error and changes no response shape. It
+     * hands one customer's rows to another customer's parent, with a 200.
+     */
+    public function testEveryModelReachableThroughAnIncludeKeepsTheInterfaceThatFiltersIt(): void {
+        $children = $this->modelsReachableThroughAnInclude();
+
+        $without = array_values(array_filter(
+            array_keys($children),
+            static fn (string $model) => !((new $model()) instanceof ResourceModelInterface)
+        ));
+
+        $this->assertSame([], $without, 'these answer an include without filtering it to the parent');
+    }
+
+    /**
+     * And the sweep is looking at something. A list built from the models themselves is one
+     * refactor away from being empty, and an empty sweep passes.
+     */
+    public function testTheSweepCoversTheChildItIsWrittenAbout(): void {
+        $children = $this->modelsReachableThroughAnInclude();
+
+        $this->assertArrayHasKey(\App\Models\DeploymentVolumeModel::class, $children);
+        $this->assertGreaterThan(40, count($children), 'the sweep found far fewer children than there are');
+    }
+
+    /**
+     * Every model named as a has-many by any other model, which is exactly the set
+     * `applyIncludeMany()` can call `restGet()` on.
+     *
+     * @return array<class-string, true>
+     */
+    private function modelsReachableThroughAnInclude(): array {
+        $children = [];
+
+        foreach (glob(APPPATH . 'Models/*.php') as $file) {
+            $model = 'App\\Models\\' . basename($file, '.php');
+            if (!class_exists($model)) {
+                continue;
+            }
+
+            foreach ((array) (new $model())->hasMany as $name => $relation) {
+                // A relation is either the child's class name, or an array that may name it
+                // under `class` - and when it does not, the key is the class.
+                $child = is_string($relation) ? $relation : ($relation['class'] ?? $name);
+
+                if (is_string($child) && class_exists($child)) {
+                    $children[$child] = true;
+                }
+            }
+        }
+
+        return $children;
+    }
+
+    // </editor-fold>
 
     // <editor-fold desc="Arrangement">
 

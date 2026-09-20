@@ -1,8 +1,9 @@
 <?php namespace App\Models;
 
+use RestExtension\Core\Model;
 use RestExtension\ResourceModelInterface;
 
-class DeploymentVolumeModel extends \RestExtension\Models\UserModel implements ResourceModelInterface {
+class DeploymentVolumeModel extends Model implements ResourceModelInterface {
 
     public $hasOne = [
         DeploymentModel::class,

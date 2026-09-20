@@ -1,9 +1,10 @@
 <?php namespace App\Models;
 
 use App\Entities\GatewayAddress;
+use RestExtension\Core\Model;
 use RestExtension\ResourceModelInterface;
 
-class GatewayAddressModel extends \RestExtension\Models\UserModel implements ResourceModelInterface {
+class GatewayAddressModel extends Model implements ResourceModelInterface {
 
     public $hasOne = [
         GatewayModel::class,

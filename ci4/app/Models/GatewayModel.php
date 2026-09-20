@@ -1,8 +1,9 @@
 <?php namespace App\Models;
 
+use RestExtension\Core\Model;
 use RestExtension\ResourceModelInterface;
 
-class GatewayModel extends \RestExtension\Models\UserModel implements ResourceModelInterface {
+class GatewayModel extends Model implements ResourceModelInterface {
 
     public $hasOne = [
         DeletionModel::class,

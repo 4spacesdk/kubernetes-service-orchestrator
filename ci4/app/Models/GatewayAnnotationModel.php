@@ -1,8 +1,9 @@
 <?php namespace App\Models;
 
+use RestExtension\Core\Model;
 use RestExtension\ResourceModelInterface;
 
-class GatewayAnnotationModel extends \RestExtension\Models\UserModel implements ResourceModelInterface {
+class GatewayAnnotationModel extends Model implements ResourceModelInterface {
 
     public $hasOne = [
         GatewayModel::class,
