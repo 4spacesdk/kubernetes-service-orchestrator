@@ -176,6 +176,13 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin/ 
 
 RUN rm -rf /tmp/* /var/cache/apk/*
 
+# `X-Powered-By: PHP/8.5.10` on every response, which is a version number and an invitation
+# to look up what is wrong with it. Written for both PHPs in the image: the Alpine one under
+# /etc/php85 is what Apache runs, and the one under /usr/local is the CLI.
+RUN { \
+      echo "expose_php=Off"; \
+    } | tee /etc/php85/conf.d/99_kso-hardening.ini > /usr/local/etc/php/conf.d/99-kso-hardening.ini
+
 # Configure apache
 COPY docker/apache/httpd.conf /etc/apache2/httpd.conf
 

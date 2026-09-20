@@ -30,6 +30,16 @@ deployment:
     user: ""
     pass: ""
 
+  # Required. What the credentials kso stores for other systems - registry passwords,
+  # database passwords, webhook tokens - are encrypted with, along with the refresh-token
+  # cookie. Any 32 characters will do, but it has to be this installation's own and it has
+  # to stay the same: change it and the stored credentials cannot be read back.
+  encryptionKey: ""
+
+  # Old keys, comma separated. Set this when rotating encryptionKey, so rows written with
+  # the previous one can still be read until they have been saved again.
+  previousEncryptionKeys: ""
+
   # The default url is "https://kubernetes.default.svc.cluster.local".
   # But it can be different depending on provider
   kubernetes:

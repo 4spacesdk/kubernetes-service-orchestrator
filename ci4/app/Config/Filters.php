@@ -85,7 +85,15 @@ class Filters extends BaseFilters
         ],
         'after' => [
             // 'honeypot',
-            // 'secureheaders',
+
+            // The same headers Apache sets for every response, set again for the API.
+            // Both, on purpose: Apache covers the built Vue app, which never runs PHP, and
+            // this covers an installation that puts something else in front of kso.
+            //
+            // It does not carry HSTS. That one has to know whether the request arrived over
+            // TLS, which behind a terminating proxy means reading X-Forwarded-Proto, and
+            // Apache is where that is decided - see `docker/apache/httpd.conf`.
+            'secureheaders',
         ],
     ];
 
