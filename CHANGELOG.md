@@ -30,6 +30,7 @@
 * Signing in from a deep link with two-factor authentication lands on the link instead of the front page
 * The password renewal form names the first rule the new password breaks, and says so when the sign-in has expired instead of silently changing nothing
 * The access log records the sign-in redirects and the events a container skips, which used to leave the process without being logged
+* Push events are no longer kept for ever: a nightly job removes those older than a month
 * Updating something that does not exist answered OK and wrote nothing; it is refused now
 * Removed `PUT /deployments/{id}/ingress`, which could never work - the workspace endpoint is the one that does this
 * Reading something that does not exist answered a resource with every field null; it answers 404 now

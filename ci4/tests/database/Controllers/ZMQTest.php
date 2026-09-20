@@ -17,10 +17,9 @@ use PHPUnit\Framework\Attributes\DataProvider;
  * It has two halves, and each one is reached a different way.
  *
  * `initController()` is the half that takes the event in: it reads the event off the
- * command line, stores it in `zmq_events`, and decides whether **this** container is the
- * one that handles it - every container is handed every event. Both directions of that
- * decision can be run from a test now; the losing one used to end in a `die` that took
- * phpunit with it.
+ * command line and stores it in `zmq_events`. It used to decide something as well - whether
+ * *this* container was the one to handle the event - and that decision could not fire; see
+ * the note on the controller.
  *
  * The nine handler methods are the other half. The private `$event` is set by reflection
  * and the method called directly, rather than going through `initController()` and argv,
@@ -57,11 +56,12 @@ class ZMQTest extends DatabaseTestCase {
     // <editor-fold desc="The event coming in">
 
     /**
-     * The first-mover path: no other container has stored this event, so it is ours.
+     * The event is read off the command line and written down as it arrived.
      *
-     * The row in `zmq_events` is not bookkeeping - it **is** the lock. The lowest numbered
-     * row for an identifier wins, and every other container deletes its own again and goes
-     * home. Without the row being stored, every container handles the same event.
+     * The row is a log rather than a lock now - nothing in kso reads it back, and
+     * `CleanupZmqEvents` is what keeps the table to a window. What it has to get right is
+     * that `$this->event` and the row are the same thing, because every handler works from
+     * the entity and anybody looking for what went wrong works from the row.
      */
     public function testTheEventOnTheCommandLineIsStoredAndKept(): void {
         $controller = $this->initControllerWith('id-4711', 'workspace-created', '{"next":{"id":9}}');
@@ -106,48 +106,21 @@ class ZMQTest extends DatabaseTestCase {
     }
 
     /**
-     * The losing path: another container stored this event first, so this one puts its own
-     * row back and does nothing.
+     * The same identifier twice is two events, and both are kept.
      *
-     * The row is the lock, so leaving it behind would make the next container to arrive
-     * think it had lost to *this* one rather than to the first - and with three containers
-     * the event would be handled by nobody.
+     * This is where the deduplication used to stand: the second arrival deleted its own row
+     * and stood the container down. It could not happen - an identifier is minted per
+     * router, by the one that took the publish - and the one case it *could* catch was two
+     * routers landing on the same `uniqid()`, which is two unrelated events, one of them
+     * then dropped.
      */
-    public function testAContainerThatLostTheRaceDeletesItsOwnRowAndStandsDown(): void {
-        $this->initControllerWith('id-contended', 'workspace-created', '{"next":{"id":9}}');
+    public function testAnEventIsKeptWhateverElseCarriesTheSameIdentifier(): void {
+        $this->initControllerWith('id-repeated', 'workspace-created', '{"next":{"id":9}}');
+        $this->initControllerWith('id-repeated', 'workspace-deployed', '{"next":{"id":9}}');
 
-        $loser = $this->initControllerWith('id-contended', 'workspace-created', '{"next":{"id":9}}');
+        $rows = $this->db->table('zmq_events')->where('identifier', 'id-repeated')->get()->getResultArray();
 
-        $this->assertCount(
-            1,
-            $this->db->table('zmq_events')->where('identifier', 'id-contended')->get()->getResultArray(),
-            'the loser left its row behind'
-        );
-        $this->assertTrue($this->standsDown($loser));
-    }
-
-    /**
-     * And the winner runs. Held beside the test above so that a guard which stood every
-     * container down would not pass both.
-     */
-    public function testTheContainerThatStoredTheEventFirstRunsTheHandler(): void {
-        $winner = $this->initControllerWith('id-uncontended', 'workspace-created', '{"next":{"id":9}}');
-
-        $this->assertFalse($this->standsDown($winner));
-    }
-
-    /**
-     * Standing down ends the run the way every other request ends, rather than leaving the
-     * process. It used to be a `die`, which skips CodeIgniter's shutdown and with it the
-     * hook that writes the access log entry - so with more than one container, most events
-     * were invisible in the log.
-     */
-    public function testAContainerThatStandsDownStillReturnsThroughTheFramework(): void {
-        $this->initControllerWith('id-returns', 'workspace-created', '{"next":{"id":9}}');
-        $loser = $this->initControllerWith('id-returns', 'workspace-created', '{"next":{"id":9}}');
-
-        $this->assertSame('', $loser->_remap('workspaceCreated'));
-        $this->assertCount(0, $this->deliveries(), 'the handler ran anyway');
+        $this->assertSame(['workspace-created', 'workspace-deployed'], array_column($rows, 'event'));
     }
 
     // </editor-fold>
@@ -359,13 +332,6 @@ class ZMQTest extends DatabaseTestCase {
      * the controller sees phpunit's own arguments instead - whereupon it `die`s on the
      * duplicate path and takes phpunit with it, without a line in the output.
      */
-    /**
-     * Whether this controller decided another container is handling the event.
-     */
-    private function standsDown(\App\Controllers\ZMQ $controller): bool {
-        return (new \ReflectionProperty(\App\Controllers\ZMQ::class, 'handledElsewhere'))->getValue($controller);
-    }
-
     private function initControllerWith(string $identifier, string $event, string $data): \App\Controllers\ZMQ {
         service('superglobals')->setServer('argv', [
             'index.php',

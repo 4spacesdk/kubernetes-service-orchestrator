@@ -5,7 +5,6 @@ use App\Entities\Deployment;
 use App\Entities\ZMQEvent;
 use App\Libraries\WebHooks\WebhookHelper;
 use App\Libraries\ZMQ\ChangeEvent;
-use App\Models\ZMQEventModel;
 use CodeIgniter\Config\Services;
 use CodeIgniter\Controller;
 use CodeIgniter\Exceptions\PageNotFoundException;
@@ -14,20 +13,30 @@ use CodeIgniter\HTTP\ResponseInterface;
 use DebugTool\Data;
 use Psr\Log\LoggerInterface;
 
+/**
+ * The controller the zmq client calls into when something happened elsewhere in kso.
+ *
+ * **One container raises an event and the same container runs it.** `ZMQProxy` publishes to
+ * `tcp://localhost:9101` and the subscriber reads `localhost:9100` - both this pod's own
+ * WAMP router, all three processes started by the same entrypoint - so an event never
+ * leaves the pod it was raised on.
+ *
+ * There used to be a deduplication here: store a row, then check whether it was the lowest
+ * numbered one for that `identifier`, and stand down if not. It could not fire. Nothing
+ * hands the same event to two containers, and even if something did the two would not
+ * agree on a key - the identifier is minted by whichever router received the publish
+ * (`PHPClient::onResource()` sets `uniqid()`), not by the publisher. What it could do was
+ * the freak case: two routers landing on the same `uniqid()` in the same microsecond, and
+ * one of two unrelated events silently dropped.
+ *
+ * The row in `zmq_events` is kept as a log of what arrived - `CleanupZmqEvents` is what
+ * stops it growing for ever, which nothing used to do. Making push reach browsers on other
+ * pods is a separate piece of work, and a real queue with one delivery per message is the
+ * shape that would need, rather than a broadcast and a lock.
+ */
 class ZMQ extends Controller {
 
     private ZMQEvent $event;
-
-    /**
-     * Whether another container stored this event first and is the one running it.
-     *
-     * Every container is handed every event, so all but one of them have nothing to do.
-     * That used to be a `die`, which ends the process without CodeIgniter's shutdown - so
-     * `post_system` never ran and RestExtension never wrote an access log entry for it.
-     * With more than one container that is the majority of events, invisible in the log.
-     * Same reason as in `BaseController::fail()`.
-     */
-    private bool $handledElsewhere = false;
 
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger) {
         parent::initController($request, $response, $logger);
@@ -49,38 +58,6 @@ class ZMQ extends Controller {
         $zmqEvent->data = json_encode(json_decode($data), JSON_PRETTY_PRINT);
         $zmqEvent->save();
         $this->event = $zmqEvent;
-
-        // Check if I'm the first container to store this event
-        /** @var ZMQEvent $firstEventStored */
-        $firstEventStored = (new ZMQEventModel())
-            ->where('identifier', $identifier)
-            ->orderBy('id', 'asc')
-            ->limit(1)
-            ->find();
-        if ($zmqEvent->id != $firstEventStored->id) {
-            $zmqEvent->delete();
-            Data::debug('This event is handled by another container. I am skipping it');
-            $this->handledElsewhere = true;
-        }
-    }
-
-    /**
-     * Every action goes through here, which is where a container that lost the race stops.
-     *
-     * One guard rather than the same three lines at the top of nine handlers, and a plain
-     * return rather than leaving the process, so the run ends the way every other request
-     * does.
-     *
-     * @param string ...$params
-     */
-    public function _remap(string $method, ...$params): string {
-        if ($this->handledElsewhere) {
-            return '';
-        }
-
-        $this->{$method}(...$params);
-
-        return '';
     }
 
     public function migrationJobChangedStatus(): void {

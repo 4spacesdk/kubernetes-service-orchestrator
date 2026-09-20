@@ -15,7 +15,8 @@ class CronJobIds {
         RunKeelHooks = 2, // Removed in v0.1.18
         PullContainerRegistries = 3,
         CheckCertificateExpiry = 4,
-        CheckKNativeMinScaleSchedules = 5
+        CheckKNativeMinScaleSchedules = 5,
+        CleanupZmqEvents = 6
     ;
 }
 
