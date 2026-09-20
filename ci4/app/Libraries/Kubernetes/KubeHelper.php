@@ -63,7 +63,11 @@ class KubeHelper {
         }
     }
 
-    public static function PrintException(\Exception $e): string {
+    /**
+     * Takes a `\Throwable`, not an `\Exception`: a caller that catches broadly - a status
+     * endpoint, say - would otherwise fail here on the `\Error` it just caught.
+     */
+    public static function PrintException(\Throwable $e): string {
         Data::debug('KubeHelper PrintException', get_class($e));
         switch (get_class($e)) {
             case ServerException::class:

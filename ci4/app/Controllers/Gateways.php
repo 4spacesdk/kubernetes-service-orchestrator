@@ -131,7 +131,15 @@ class Gateways extends ResourceController {
         }
 
         $step = new GatewayStep();
-        Data::set('resource', ['value' => $step->getKubernetesEvents($gateway)]);
+        try {
+            Data::set('resource', ['value' => $step->getKubernetesEvents($gateway)]);
+        } catch (\Throwable $e) {
+            // As the four endpoints above: a cluster that cannot be reached is a message on
+            // the gateway page, not an exception out of the controller.
+            $this->fail(KubeHelper::PrintException($e));
+            return;
+        }
+
         $this->success();
     }
 
@@ -151,7 +159,15 @@ class Gateways extends ResourceController {
         }
 
         $step = new GatewayStep();
-        Data::set('resource', ['value' => $step->getKubernetesStatus($gateway)]);
+        try {
+            Data::set('resource', ['value' => $step->getKubernetesStatus($gateway)]);
+        } catch (\Throwable $e) {
+            // As the four endpoints above: a cluster that cannot be reached is a message on
+            // the gateway page, not an exception out of the controller.
+            $this->fail(KubeHelper::PrintException($e));
+            return;
+        }
+
         $this->success();
     }
 

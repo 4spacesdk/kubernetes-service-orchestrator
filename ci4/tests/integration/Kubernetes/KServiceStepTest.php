@@ -272,21 +272,18 @@ class KServiceStepTest extends ClusterTestCase {
     }
 
     /**
-     * **A bug, pinned rather than fixed.** Between a KService being created and its
-     * controller writing a status there is no `status` at all, and the method is declared
-     * to return an array - so asking for the status of a revision that has only just been
-     * applied throws a TypeError rather than answering "nothing yet". The UI asks for the
-     * status of exactly the workload that was just deployed, which is when this window is
-     * open. See the report that goes with this test.
+     * Between a KService being created and its controller writing a status there is no
+     * `status` at all. The method is declared to return an array and used to hand that back
+     * untouched, so asking for the status of a revision that had only just been applied
+     * threw a TypeError instead of answering "nothing yet" - and that window is exactly when
+     * the UI asks, right after a deploy.
      */
-    public function testAskingForTheStatusBeforeThereIsOneThrows(): void {
+    public function testAskingForTheStatusBeforeThereIsOneAnswersWithAnEmptyOne(): void {
         $deployment = $this->kserviceDeployment();
         $step = new KServiceStep();
         $step->startDeployCommand($deployment);
 
-        $this->expectException(\TypeError::class);
-
-        $step->getKubernetesStatus($deployment);
+        $this->assertSame([], $step->getKubernetesStatus($deployment));
     }
 
     /**

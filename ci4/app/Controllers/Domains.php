@@ -57,7 +57,7 @@ class Domains extends ResourceController {
                     'type' => $event->getType(),
                     'reason' => $event->getAttribute('reason'),
                     'age' => date('Y-m-d H:i:s', strtotime_($event->getAttribute('lastTimestamp'))),
-                    'from' => $event->getAttribute('source')['component'],
+                    'from' => $event->getAttribute('source')['component'] ?? '',
                     'message' => $event->getMessage(),
                 ];
             }

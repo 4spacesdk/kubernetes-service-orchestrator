@@ -361,21 +361,17 @@ class RoutingStepsTest extends ClusterTestCase {
     }
 
     /**
-     * A bug, pinned rather than closed. `getKubernetesStatus()` is declared to return an
-     * array and hands back `status` untouched - and a VirtualService has no `status` until
-     * an Istio controller writes one, which is the whole life of a cluster where Istio is
-     * missing or has not caught up yet. The other three steps here collect their statuses
-     * into a list and so answer `[null]`; this one raises a TypeError, and the panel that
-     * asked for it gets a 500 rather than an empty status.
+     * A VirtualService has no `status` until an Istio controller writes one, which is the
+     * whole life of a cluster where Istio is missing or has not caught up yet. The method is
+     * declared to return an array and used to hand back `status` untouched, so the panel
+     * asking for it got a TypeError and a 500. Nothing there is an empty status.
      */
-    public function testTheVirtualServiceStatusRaisesATypeErrorUntilAControllerWritesOne(): void {
+    public function testTheVirtualServiceStatusIsEmptyUntilAControllerWritesOne(): void {
         $deployment = $this->routableDeployment(\NetworkTypes::Istio);
         $step = new IstioVirtualServiceStep();
         $step->startDeployCommand($deployment);
 
-        $this->expectException(\TypeError::class);
-
-        $step->getKubernetesStatus($deployment);
+        $this->assertSame([], $step->getKubernetesStatus($deployment));
     }
 
     /**

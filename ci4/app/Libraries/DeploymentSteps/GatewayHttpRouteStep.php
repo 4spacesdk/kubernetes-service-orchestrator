@@ -208,7 +208,7 @@ class GatewayHttpRouteStep extends BaseDeploymentStep {
                     'type' => $event->getAttribute('type'),
                     'reason' => $event->getAttribute('reason'),
                     'date' => date('Y-m-d H:i:s', strtotime_($event->getAttribute('lastTimestamp'))),
-                    'from' => $event->getAttribute('source')['component'],
+                    'from' => $event->getAttribute('source')['component'] ?? '',
                     'message' => $event->getAttribute('message'),
                 ];
             }

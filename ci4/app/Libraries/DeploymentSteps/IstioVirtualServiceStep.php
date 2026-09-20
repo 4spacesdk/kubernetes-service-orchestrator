@@ -160,7 +160,7 @@ class IstioVirtualServiceStep extends BaseDeploymentStep {
                 'type' => $event->getAttribute('type'),
                 'reason' => $event->getAttribute('reason'),
                 'date' => date('Y-m-d H:i:s', strtotime_($event->getAttribute('lastTimestamp'))),
-                'from' => $event->getAttribute('source')['component'],
+                'from' => $event->getAttribute('source')['component'] ?? '',
                 'message' => $event->getAttribute('message'),
             ];
         }
@@ -174,8 +174,10 @@ class IstioVirtualServiceStep extends BaseDeploymentStep {
     public function getKubernetesStatus(Deployment $deployment): array {
         /** @var K8sIstioVirtualService $resource */
         $resource = $this->getResource($deployment, true)->get();
-        $status = $resource->getAttribute('status');
-        return $status;
+        // An empty list, not null: a resource whose controller has not written a status yet
+        // - or a kind that has none at all, like a ConfigMap - would otherwise fail the
+        // `array` this returns, and the whole status panel died on it.
+        return $resource->getAttribute('status') ?? [];
     }
 
     /**

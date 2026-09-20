@@ -228,19 +228,26 @@ class CustomResourceStepTest extends ClusterTestCase {
     }
 
     /**
-     * Today's behaviour. The status panel is declared to return an array and hands back
-     * whatever is under `status` - which for a kind that has no status subresource, such as
-     * a ConfigMap, is nothing at all. The panel dies on the return type.
+     * Asking for the status of something that was never deployed is an empty status, not a
+     * throw from inside php-k8s. Every other step's status method asks first.
      */
-    public function testTheStatusPanelDiesOnAKindThatHasNoStatus(): void {
+    public function testTheStatusOfAResourceThatIsNotThereIsEmpty(): void {
+        $deployment = $this->deploymentWithCustomResource($this->aConfigMap());
+
+        $this->assertSame([], (new CustomResourceStep())->getKubernetesStatus($deployment));
+    }
+
+    /**
+     * A kind with no status subresource, such as a ConfigMap, has nothing under `status`.
+     * The panel is declared to return an array and used to hand that back untouched, so it
+     * died on its own return type.
+     */
+    public function testAKindThatHasNoStatusAnswersWithAnEmptyOne(): void {
         $deployment = $this->deploymentWithCustomResource($this->aConfigMap());
         $step = new CustomResourceStep();
         $step->startDeployCommand($deployment);
 
-        $this->expectException(\TypeError::class);
-        $this->expectExceptionMessage('must be of type array, null returned');
-
-        $step->getKubernetesStatus($deployment);
+        $this->assertSame([], $step->getKubernetesStatus($deployment));
     }
 
     // </editor-fold>

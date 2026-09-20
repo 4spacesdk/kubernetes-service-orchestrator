@@ -136,8 +136,10 @@ class NamespaceStep extends BaseDeploymentStep {
     public function getKubernetesStatus(Deployment $deployment): array {
         /** @var K8sNamespace $resource */
         $resource = $this->getResource($deployment, true)->get();
-        $status = $resource->getAttribute('status');
-        return $status;
+        // An empty list, not null: a resource whose controller has not written a status yet
+        // - or a kind that has none at all, like a ConfigMap - would otherwise fail the
+        // `array` this returns, and the whole status panel died on it.
+        return $resource->getAttribute('status') ?? [];
     }
 
     /**

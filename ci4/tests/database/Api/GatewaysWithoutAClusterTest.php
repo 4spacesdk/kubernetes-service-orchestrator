@@ -61,28 +61,24 @@ class GatewaysWithoutAClusterTest extends ControllerTestCase {
     }
 
     /**
-     * **Today's behaviour, and the odd ones out.** The two Kubernetes panels have no catch
-     * at all, so the exception leaves the controller and the caller gets whatever the
-     * framework makes of it rather than the `status: ERROR` its four siblings return.
-     *
-     * Pinned rather than endorsed: the difference is invisible in the code until you line
-     * the six methods up, and it is the sort of thing that is fixed by copying the catch
-     * from the method above it.
+     * The two Kubernetes panels used to be the odd ones out: no catch at all, so the
+     * exception left the controller and the caller got whatever the framework made of it
+     * instead of the `status: ERROR` its four siblings answer. All six agree now.
      */
-    #[DataProvider('theEndpointsThatThrow')]
-    public function testTheKubernetesPanelsLetTheFailureEscape(string $path): void {
+    #[DataProvider('theKubernetesPanels')]
+    public function testTheKubernetesPanelsAnswerWithAMessageToo(string $path): void {
         $gateway = $this->gateway();
 
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessage('missing KUBERNETES_AUTH');
+        $body = $this->decode($this->signedIn()->get("gateways/{$gateway->id}/{$path}"));
 
-        $this->signedIn()->get("gateways/{$gateway->id}/{$path}");
+        $this->assertSame('ERROR', $body['status']);
+        $this->assertStringContainsString('missing KUBERNETES_AUTH', $body['error'] ?? '');
     }
 
     /**
      * @return array<string, array{0: string}>
      */
-    public static function theEndpointsThatThrow(): array {
+    public static function theKubernetesPanels(): array {
         return [
             'kubernetes events' => ['kubernetes-events'],
             'kubernetes status' => ['kubernetes-status'],
