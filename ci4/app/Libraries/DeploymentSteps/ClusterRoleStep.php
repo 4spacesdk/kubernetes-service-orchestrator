@@ -163,9 +163,9 @@ class ClusterRoleStep extends BaseDeploymentStep {
         $spec->deployment_specification_cluster_role_rules->find();
         foreach ($spec->deployment_specification_cluster_role_rules as $clusterRoleRule) {
             $rule = new Rule();
-            $rule->addApiGroup($clusterRoleRule->api_group);
-            $rule->addResource($clusterRoleRule->resource);
-            $rule->addVerbs(explode(',', $clusterRoleRule->verbs));
+            $rule->addApiGroup(trim((string) $clusterRoleRule->api_group));
+            $rule->addResource(trim((string) $clusterRoleRule->resource));
+            $rule->addVerbs(self::commaSeparated((string) $clusterRoleRule->verbs));
             $rules[] = $rule;
         }
         $resource->setRules($rules);

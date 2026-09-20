@@ -111,8 +111,10 @@ class CustomResourceStep extends BaseDeploymentStep {
             return 'Missing namespace';
         }
 
-        if (strlen($deployment->findDeploymentSpecification()->custom_resource) == 0) {
-            return 'Missing custom resource';
+        try {
+            $this->parseManifest($deployment);
+        } catch (\Exception $e) {
+            return $e->getMessage();
         }
 
         return null;
@@ -154,12 +156,45 @@ class CustomResourceStep extends BaseDeploymentStep {
     }
 
     /**
+     * The specification's manifest, as the user wrote it, with the deployment's variables
+     * applied.
+     *
+     * Everything that can be wrong with it says so here. An empty field used to parse to
+     * null and die in the constructor on a `TypeError`, and a malformed one came out as the
+     * parser's own warning - neither pointed at the field the user has to fix.
+     *
+     * @return array<string, mixed>
+     * @throws \Exception
+     */
+    private function parseManifest(Deployment $deployment): array {
+        $text = EnvironmentVariable::ApplyVariablesToString(
+            (string) $deployment->findDeploymentSpecification()->custom_resource,
+            $deployment
+        );
+        if (trim($text) === '') {
+            throw new \Exception('Missing custom resource');
+        }
+
+        try {
+            // A parse error arrives as a warning, which CodeIgniter's handler turns into an
+            // ErrorException - an Error, not an Exception, in some versions.
+            $yaml = yaml_parse($text);
+        } catch (\Throwable $e) {
+            throw new \Exception('The custom resource is not valid YAML: ' . $e->getMessage(), 0, $e);
+        }
+
+        if (!is_array($yaml)) {
+            throw new \Exception('The custom resource is not valid YAML');
+        }
+
+        return $yaml;
+    }
+
+    /**
      * @throws \Exception
      */
     protected function getResource(Deployment $deployment, bool $auth = false): K8sResource {
-        $yaml = yaml_parse(EnvironmentVariable::ApplyVariablesToString($deployment->findDeploymentSpecification()->custom_resource, $deployment));
-
-//        Data::debug($yaml);
+        $yaml = $this->parseManifest($deployment);
 
         $resource = new K8sCustomResource(null, $yaml);
 

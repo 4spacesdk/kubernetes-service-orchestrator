@@ -163,9 +163,9 @@ class RoleStep extends BaseDeploymentStep {
         $spec->deployment_specification_role_rules->find();
         foreach ($spec->deployment_specification_role_rules as $roleRule) {
             $rule = new Rule();
-            $rule->addApiGroup($roleRule->api_group);
-            $rule->addResource($roleRule->resource);
-            $rule->addVerbs(explode(',', $roleRule->verbs));
+            $rule->addApiGroup(trim((string) $roleRule->api_group));
+            $rule->addResource(trim((string) $roleRule->resource));
+            $rule->addVerbs(self::commaSeparated((string) $roleRule->verbs));
             $rules[] = $rule;
         }
         $resource->setRules($rules);

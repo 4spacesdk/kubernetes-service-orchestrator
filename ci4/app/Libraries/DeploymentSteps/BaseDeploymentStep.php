@@ -52,6 +52,17 @@ abstract class BaseDeploymentStep {
      *
      * @throws \RenokiCo\PhpK8s\Exceptions\KubernetesAPIException
      */
+    /**
+     * A comma separated field as the user typed it, trimmed. `get, list` is how anyone
+     * writes it, and the space used to travel into the manifest, where Kubernetes refused
+     * the whole rule.
+     *
+     * @return string[]
+     */
+    protected static function commaSeparated(string $value): array {
+        return array_values(array_filter(array_map('trim', explode(',', $value)), fn ($part) => $part !== ''));
+    }
+
     protected function apply(\RenokiCo\PhpK8s\Kinds\K8sResource $resource): void {
         KubeHelper::Apply($resource);
     }

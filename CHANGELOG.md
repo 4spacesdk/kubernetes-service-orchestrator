@@ -10,6 +10,8 @@
 * Setting a deployment's version reported success when the deploy failed
 * A migration job did not migrate when it could not reach kso at the start ([#42](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/42))
 * Tag policy "Default" on a migration image failed the whole deploy
+* RBAC rules typed as "get, list" were refused by Kubernetes; spaces are trimmed now
+* An empty or malformed custom resource is refused with a message about the field
 * A second volume on a deployment is refused when saved, instead of failing every deploy
 * Deploying a volume again unbound it from its claim, so the next pod could not mount it
 * A volume with a storage class was left unused while its claim got a disk from elsewhere; a new volume is now reserved for its own claim
