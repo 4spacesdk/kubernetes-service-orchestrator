@@ -11,10 +11,10 @@ class PostUpdateActionHelper {
     private Deployment $deployment;
 
     public function __construct(Deployment $deployment) {
+        // The workspace is not fetched here. `PostUpdateAction::perform()` does the same
+        // guard-and-find itself, right where it reads the workspace's namespace - so doing
+        // it up front was a second query for a value that is looked up again anyway.
         $this->deployment = $deployment;
-        if ($deployment->workspace_id && !$deployment->workspace->exists()) {
-            $deployment->workspace->find();
-        }
     }
 
     public function performAll(): void {

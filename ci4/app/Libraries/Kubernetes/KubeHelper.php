@@ -1,7 +1,7 @@
 <?php namespace App\Libraries\Kubernetes;
 
 use DebugTool\Data;
-use GuzzleHttp\Exception\ServerException;
+use GuzzleHttp\Exception\BadResponseException;
 use PodioBadRequestError;
 use RenokiCo\PhpK8s\Exceptions\KubernetesAPIException;
 use RenokiCo\PhpK8s\Kinds\K8sResource;
@@ -69,19 +69,28 @@ class KubeHelper {
      */
     public static function PrintException(\Throwable $e): string {
         Data::debug('KubeHelper PrintException', get_class($e));
-        switch (get_class($e)) {
-            case ServerException::class:
-                return self::PrintServerException($e);
-            case KubernetesAPIException::class:
-                return self::PrintKubernetesAPIException($e);
-            case PodioBadRequestError::class:
-                return $e->__toString();
-            default:
-                return $e->getMessage();
+
+        // `instanceof`, not `get_class()`. Guzzle answers a 4xx with a `ClientException` and
+        // a 5xx with a `ServerException`, and both extend `BadResponseException` - so
+        // matching the class name exactly caught the 5xx and let every 4xx fall through to
+        // `getMessage()`. That is the wrong half to lose: the api server answers **422** for
+        // a manifest it refuses, and its body says which field is wrong, while Guzzle's
+        // message carries the same body cut to 120 characters. The most common mistake an
+        // operator can make had its explanation truncated.
+        if ($e instanceof BadResponseException) {
+            return self::PrintBadResponseException($e);
         }
+        if ($e instanceof KubernetesAPIException) {
+            return self::PrintKubernetesAPIException($e);
+        }
+        if ($e instanceof PodioBadRequestError) {
+            return $e->__toString();
+        }
+
+        return $e->getMessage();
     }
 
-    private static function PrintServerException(ServerException $e): string {
+    private static function PrintBadResponseException(BadResponseException $e): string {
         $content = $e->getResponse()->getBody()->getContents();
         Data::debug(json_decode($content));
         return $content;

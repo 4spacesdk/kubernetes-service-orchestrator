@@ -106,20 +106,43 @@ class KubeHelperReportingTest extends CIUnitTestCase {
     }
 
     /**
-     * The switch is on `get_class()`, not on `instanceof`, so a subclass falls through to
-     * the default and is printed as its message. Guzzle throws `ClientException` for every
-     * 4xx and `ServerException` only for 5xx - and the api server answers a rejected
-     * manifest with 422, a 4xx. The body with the reason in it is therefore dropped for
-     * exactly the failure an operator is most likely to cause.
+     * A refused manifest is reported with what the api server said was wrong with it.
+     *
+     * This is the failure an operator is most likely to cause, and it used to be the one
+     * with its explanation thrown away. The switch was on `get_class()` rather than
+     * `instanceof`: Guzzle answers a 5xx with `ServerException` and **every 4xx** with
+     * `ClientException`, so the 422 a rejected manifest gets fell through to the default and
+     * was printed as `getMessage()` - which carries the same body cut to 120 characters by
+     * Guzzle's body summariser.
      */
-    public function testAGuzzleClientErrorLosesItsBody(): void {
+    public function testAGuzzleClientErrorIsReportedWithItsBody(): void {
         $printed = KubeHelper::PrintException(new \GuzzleHttp\Exception\ClientException(
             'Client error: `PUT /apis/apps/v1/...` resulted in a `422 Unprocessable Entity` response',
             new Request('PUT', '/apis/apps/v1/namespaces/test/deployments/api'),
             new Response(422, [], json_encode(['message' => 'spec.replicas: Invalid value: -1']))
         ));
 
-        $this->assertStringNotContainsString('spec.replicas', $printed);
+        $this->assertStringContainsString('spec.replicas: Invalid value: -1', $printed);
+    }
+
+    /**
+     * And the reason it has to be the whole body rather than Guzzle's message: the summariser
+     * cuts at 120 characters, and a `Status` object from the api server says which field is
+     * wrong somewhere after that.
+     */
+    public function testALongExplanationIsNotCutShort(): void {
+        // No quotes in it: the body is json, and a quote comes back escaped, which would
+        // make this assertion about `json_encode` rather than about the truncation.
+        $explanation = 'Deployment.apps api is invalid: ' . str_repeat('spec.template.spec.containers[0].resources.limits: Invalid value; ', 3);
+
+        $printed = KubeHelper::PrintException(new \GuzzleHttp\Exception\ClientException(
+            'Client error',
+            new Request('PUT', '/apis/apps/v1/namespaces/test/deployments/api'),
+            new Response(422, [], json_encode(['message' => $explanation]))
+        ));
+
+        $this->assertStringContainsString($explanation, $printed);
+        $this->assertGreaterThan(120, strlen($printed), 'the body was summarised rather than read');
     }
 
     // </editor-fold>
