@@ -4,9 +4,6 @@ use App\ControllerTestCase;
 use App\Entities\User;
 use App\Fixtures;
 use App\Libraries\MFALib;
-use CodeIgniter\Config\Services;
-use CodeIgniter\HTTP\Response;
-use CodeIgniter\HTTP\ResponseInterface;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
@@ -26,8 +23,9 @@ use PHPUnit\Framework\Attributes\DataProvider;
  * **The session is a test double.** These tests can say what the controller put in the
  * session, and nothing at all about whether the real session handler would keep it.
  *
- * **The controller ends the process in three places.** See
- * `requestThatEndsTheProcess()` - without it those branches take PHPUnit down with them.
+ * **The redirects are ordinary responses.** Three branches here used to `send()` and
+ * `exit`, which took PHPUnit with them and needed a response object that threw instead of
+ * sending. They return the response now, so they are reached like everything else.
  */
 class LoginApiTest extends ControllerTestCase {
 
@@ -316,11 +314,11 @@ class LoginApiTest extends ControllerTestCase {
      * to the start and told why.
      */
     public function testTheCodeFormCannotBeReachedWithoutAPasswordCheck(): void {
-        $response = $this->requestThatEndsTheProcess('GET', 'login/twoFactor');
+        $response = $this->get('login/twoFactor');
 
         $this->assertSame(
             base_url('login') . '?error_message=Two factor authentication not initialized.',
-            $response->getHeaderLine('Location')
+            $this->location($response)
         );
         $this->assertNull($this->whoTheSessionSaysIsSignedIn());
     }
@@ -338,13 +336,11 @@ class LoginApiTest extends ControllerTestCase {
     public function testACodeCannotBeSubmittedWithoutAPasswordCheck(): void {
         $user = $this->userWithASecondFactor(['username' => 'mfa-operator']);
 
-        $response = $this->requestThatEndsTheProcess('POST', 'login/twoFactor', [
-            'code' => $this->currentCodeFor($user),
-        ]);
+        $response = $this->post('login/twoFactor', ['code' => $this->currentCodeFor($user)]);
 
         $this->assertSame(
             base_url('login') . '?error_message=Two factor authentication not initialized.',
-            $response->getHeaderLine('Location')
+            $this->location($response)
         );
         $this->assertNull($this->whoTheSessionSaysIsSignedIn());
     }
@@ -357,9 +353,9 @@ class LoginApiTest extends ControllerTestCase {
     public function testAMarkerNamingAUserWhoNoLongerExistsIsRefused(): void {
         $this->withSession(['2fa_in_progress' => 'deleted-since']);
 
-        $response = $this->requestThatEndsTheProcess('GET', 'login/twoFactor');
+        $response = $this->get('login/twoFactor');
 
-        $this->assertStringContainsString('Unknown username', $response->getHeaderLine('Location'));
+        $this->assertStringContainsString('Unknown username', $this->location($response));
         $this->assertNull($this->whoTheSessionSaysIsSignedIn());
     }
 
@@ -525,11 +521,11 @@ class LoginApiTest extends ControllerTestCase {
         ]);
 
         $this->withSession(['user_id' => $user->id]);
-        $renewal = $this->requestThatEndsTheProcess('POST', 'login/renewPassword', [
+        $renewal = $this->post('login/renewPassword', [
             'password' => 'A-brand-new-1',
             'password_confirm' => 'A-brand-new-1',
         ]);
-        $this->assertSame(getFrontendUrl(), $renewal->getHeaderLine('Location'));
+        $this->assertSame(getFrontendUrl(), $this->location($renewal));
 
         $withTheOldOne = $this->post('login', ['username' => 'renewing', 'password' => 'the-old-one']);
         $this->assertStringContainsString('Wrong password', $this->body($withTheOldOne));
@@ -632,12 +628,12 @@ class LoginApiTest extends ControllerTestCase {
         $user = Fixtures::user(['username' => 'renewing', 'password' => 'the-old-one']);
 
         $this->withSession(['user_id' => $user->id]);
-        $renewal = $this->requestThatEndsTheProcess('POST', 'login/renewPassword', [
+        $renewal = $this->post('login/renewPassword', [
             'password' => 'Abcdefg1',
             'password_confirm' => 'Abcdefg1',
         ]);
 
-        $this->assertSame(getFrontendUrl(), $renewal->getHeaderLine('Location'));
+        $this->assertSame(getFrontendUrl(), $this->location($renewal));
     }
 
     /**
@@ -651,12 +647,12 @@ class LoginApiTest extends ControllerTestCase {
             ['user_id' => $user->id],
             $this->rememberedDestination('request_url', 'https://deep.example/link')
         ));
-        $renewal = $this->requestThatEndsTheProcess('POST', 'login/renewPassword', [
+        $renewal = $this->post('login/renewPassword', [
             'password' => 'A-brand-new-1',
             'password_confirm' => 'A-brand-new-1',
         ]);
 
-        $this->assertSame('https://deep.example/link', $renewal->getHeaderLine('Location'));
+        $this->assertSame('https://deep.example/link', $this->location($renewal));
     }
 
     public function testTheRenewalFormAsksForThePasswordTwice(): void {
@@ -886,48 +882,6 @@ class LoginApiTest extends ControllerTestCase {
         foreach (self::EmailSettings as $name) {
             putenv("{$name}=");
         }
-    }
-
-    /**
-     * Send a request to one of the three branches that finish with `send()` and `exit`, and
-     * hand back the response the controller had prepared.
-     *
-     * `exit` in a controller ends the PHP process, and PHPUnit is that process: the run
-     * stops where it stands, prints nothing, and leaves an exit status of zero. A suite that
-     * simply covered these branches would look like it had passed while having run perhaps
-     * half of its tests - which is the failure mode this repository has already been bitten
-     * by once, in `BaseController::fail()`.
-     *
-     * So the response service is replaced for the duration of the request with one that
-     * throws instead of sending. The controller runs unchanged and sets the same headers on
-     * the same object; the exception unwinds the request one statement before the `exit`.
-     *
-     * That the `exit` is real is worth remembering rather than working around: in production
-     * it skips CodeIgniter's shutdown as well, and with it the `post_system` hook that
-     * writes the access log entry.
-     */
-    private function requestThatEndsTheProcess(string $method, string $path, array $params = []): ResponseInterface {
-        $response = new class(config('App')) extends Response {
-            public const Marker = 'the controller would have ended the process here';
-
-            public function send() {
-                throw new \RuntimeException(self::Marker);
-            }
-        };
-        Services::injectMock('response', $response);
-
-        try {
-            $this->call($method, $path, $params);
-            $this->fail("{$method} {$path} was expected to end the process, and came back instead.");
-        } catch (\RuntimeException $e) {
-            if ($e->getMessage() !== $response::Marker) {
-                throw $e;
-            }
-        } finally {
-            Services::resetSingle('response');
-        }
-
-        return $response;
     }
 
     // </editor-fold>

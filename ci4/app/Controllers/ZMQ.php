@@ -8,6 +8,7 @@ use App\Libraries\ZMQ\ChangeEvent;
 use App\Models\ZMQEventModel;
 use CodeIgniter\Config\Services;
 use CodeIgniter\Controller;
+use CodeIgniter\Exceptions\PageNotFoundException;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 use DebugTool\Data;
@@ -17,15 +18,25 @@ class ZMQ extends Controller {
 
     private ZMQEvent $event;
 
+    /**
+     * Whether another container stored this event first and is the one running it.
+     *
+     * Every container is handed every event, so all but one of them have nothing to do.
+     * That used to be a `die`, which ends the process without CodeIgniter's shutdown - so
+     * `post_system` never ran and RestExtension never wrote an access log entry for it.
+     * With more than one container that is the majority of events, invisible in the log.
+     * Same reason as in `BaseController::fail()`.
+     */
+    private bool $handledElsewhere = false;
+
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger) {
         parent::initController($request, $response, $logger);
 
         if (!is_cli()) {
-            // Not measured: a test run is a cli run, so the branch is never true from here,
-            // and `die` would take phpunit with it if it were.
-            // @codeCoverageIgnoreStart
-            die('Only CLI is allowed to enter this controller');
-            // @codeCoverageIgnoreEnd
+            // The routes for this controller are `$routes->cli()`, so this is belt and
+            // braces - but an exception rather than a `die`, so the framework still shuts
+            // down and says what happened.
+            throw PageNotFoundException::forPageNotFound('Only CLI is allowed to enter this controller');
         }
 
         $request = Services::clirequest();
@@ -47,16 +58,29 @@ class ZMQ extends Controller {
             ->limit(1)
             ->find();
         if ($zmqEvent->id != $firstEventStored->id) {
-            // Not measured: the duplicate path ends in `die`, which ends the process - and
-            // in a test run that process is phpunit. The condition above is measured; only
-            // the losing branch is out of reach.
-            // @codeCoverageIgnoreStart
             $zmqEvent->delete();
-            // This event is handled by another container.
             Data::debug('This event is handled by another container. I am skipping it');
-            die;
-            // @codeCoverageIgnoreEnd
+            $this->handledElsewhere = true;
         }
+    }
+
+    /**
+     * Every action goes through here, which is where a container that lost the race stops.
+     *
+     * One guard rather than the same three lines at the top of nine handlers, and a plain
+     * return rather than leaving the process, so the run ends the way every other request
+     * does.
+     *
+     * @param string ...$params
+     */
+    public function _remap(string $method, ...$params): string {
+        if ($this->handledElsewhere) {
+            return '';
+        }
+
+        $this->{$method}(...$params);
+
+        return '';
     }
 
     public function migrationJobChangedStatus(): void {

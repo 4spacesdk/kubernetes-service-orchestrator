@@ -18,15 +18,13 @@ use PHPUnit\Framework\Attributes\DataProvider;
  *
  * `initController()` is the half that takes the event in: it reads the event off the
  * command line, stores it in `zmq_events`, and decides whether **this** container is the
- * one that handles it - every container is handed every event. That decision is a `die` in
- * one direction, so only the first-mover path can be run from a test. The duplicate path
- * is marked out in the controller.
+ * one that handles it - every container is handed every event. Both directions of that
+ * decision can be run from a test now; the losing one used to end in a `die` that took
+ * phpunit with it.
  *
- * The nine handler methods are the other half, and they do not go through
- * `initController()` at all: reaching them that way would mean feeding an event in over
- * argv, and the `die` would take phpunit with it. The private `$event` is therefore set by
- * reflection and the method called directly - which is exactly what the zmq client ends up
- * doing.
+ * The nine handler methods are the other half. The private `$event` is set by reflection
+ * and the method called directly, rather than going through `initController()` and argv,
+ * which is a fair imitation of what the zmq client ends up doing.
  *
  * What is worth pinning down in a handler is **which decision it makes**: seven of them
  * pick a webhook type, one waits for a migration job, and the last rolls an update out. The
@@ -105,6 +103,51 @@ class ZMQTest extends DatabaseTestCase {
         $stored = $this->db->table('zmq_events')->where('identifier', 'id-b64')->get()->getRowArray();
 
         $this->assertStringContainsString('"id": 1', $stored['data']);
+    }
+
+    /**
+     * The losing path: another container stored this event first, so this one puts its own
+     * row back and does nothing.
+     *
+     * The row is the lock, so leaving it behind would make the next container to arrive
+     * think it had lost to *this* one rather than to the first - and with three containers
+     * the event would be handled by nobody.
+     */
+    public function testAContainerThatLostTheRaceDeletesItsOwnRowAndStandsDown(): void {
+        $this->initControllerWith('id-contended', 'workspace-created', '{"next":{"id":9}}');
+
+        $loser = $this->initControllerWith('id-contended', 'workspace-created', '{"next":{"id":9}}');
+
+        $this->assertCount(
+            1,
+            $this->db->table('zmq_events')->where('identifier', 'id-contended')->get()->getResultArray(),
+            'the loser left its row behind'
+        );
+        $this->assertTrue($this->standsDown($loser));
+    }
+
+    /**
+     * And the winner runs. Held beside the test above so that a guard which stood every
+     * container down would not pass both.
+     */
+    public function testTheContainerThatStoredTheEventFirstRunsTheHandler(): void {
+        $winner = $this->initControllerWith('id-uncontended', 'workspace-created', '{"next":{"id":9}}');
+
+        $this->assertFalse($this->standsDown($winner));
+    }
+
+    /**
+     * Standing down ends the run the way every other request ends, rather than leaving the
+     * process. It used to be a `die`, which skips CodeIgniter's shutdown and with it the
+     * hook that writes the access log entry - so with more than one container, most events
+     * were invisible in the log.
+     */
+    public function testAContainerThatStandsDownStillReturnsThroughTheFramework(): void {
+        $this->initControllerWith('id-returns', 'workspace-created', '{"next":{"id":9}}');
+        $loser = $this->initControllerWith('id-returns', 'workspace-created', '{"next":{"id":9}}');
+
+        $this->assertSame('', $loser->_remap('workspaceCreated'));
+        $this->assertCount(0, $this->deliveries(), 'the handler ran anyway');
     }
 
     // </editor-fold>
@@ -316,6 +359,13 @@ class ZMQTest extends DatabaseTestCase {
      * the controller sees phpunit's own arguments instead - whereupon it `die`s on the
      * duplicate path and takes phpunit with it, without a line in the output.
      */
+    /**
+     * Whether this controller decided another container is handling the event.
+     */
+    private function standsDown(\App\Controllers\ZMQ $controller): bool {
+        return (new \ReflectionProperty(\App\Controllers\ZMQ::class, 'handledElsewhere'))->getValue($controller);
+    }
+
     private function initControllerWith(string $identifier, string $event, string $data): \App\Controllers\ZMQ {
         service('superglobals')->setServer('argv', [
             'index.php',

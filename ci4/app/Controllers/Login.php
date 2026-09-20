@@ -5,6 +5,7 @@ use App\Helpers\Client;
 use App\Libraries\MFALib;
 use AuthExtension\AuthExtension;
 use AuthExtension\Config\LoginResponse;
+use CodeIgniter\HTTP\ResponseInterface;
 use AuthExtension\Models\UserModel;
 use DebugTool\Data;
 
@@ -104,7 +105,7 @@ class Login extends \App\Core\BaseController {
         return view('Login/Login', $data);
     }
 
-    public function twoFactor(): string {
+    public function twoFactor(): string|ResponseInterface {
         /** @var string $requestUrl */
         $requestUrl = session()->getFlashdata(self::RememberedDestination);
         if (!$requestUrl) {
@@ -113,9 +114,11 @@ class Login extends \App\Core\BaseController {
 
         $username = session()->get('2fa_in_progress');
         if (!$username) {
-            $this->response->redirect(base_url('login') . '?error_message=Two factor authentication not initialized.');
-            $this->response->send();
-            exit;
+            // Returned rather than sent and `exit`ed. Ending the process here skips
+            // CodeIgniter's shutdown, and with it `post_system` - which is what writes
+            // RestExtension's access log entry, so exactly these responses were missing
+            // from it. Same reason as in `BaseController::fail()`.
+            return $this->response->redirect(base_url('login') . '?error_message=Two factor authentication not initialized.');
         }
 
         /** @var User $user */
@@ -123,9 +126,7 @@ class Login extends \App\Core\BaseController {
             ->where('username', $username)
             ->find();
         if (!$user->exists()) {
-            $this->response->redirect(base_url('login') . "?error_message=Unknown username ({$username}).");
-            $this->response->send();
-            exit;
+            return $this->response->redirect(base_url('login') . "?error_message=Unknown username ({$username}).");
         }
 
 
@@ -167,7 +168,7 @@ class Login extends \App\Core\BaseController {
         }
     }
 
-    public function renewPassword(): string {
+    public function renewPassword(): string|ResponseInterface {
         /** @var string $requestUrl */
         $requestUrl = session()->getFlashdata(self::RememberedDestination);
         if (!$requestUrl) {
@@ -191,9 +192,9 @@ class Login extends \App\Core\BaseController {
                         $user->renew_password = false;
                         $user->save();
 
-                        $this->response->redirect($requestUrl);
-                        $this->response->send();
-                        exit;
+                        // See the note in `twoFactor()`: returned rather than sent and
+                        // `exit`ed, so the framework shuts down and the response is logged.
+                        return $this->response->redirect($requestUrl);
                     }
 
                     // Nobody to change the password of. The form used to come back with no
