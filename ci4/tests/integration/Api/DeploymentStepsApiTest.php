@@ -78,14 +78,40 @@ class DeploymentStepsApiTest extends ClusterControllerTestCase {
      * breaking the cluster: it builds its resource from the workspace's domain, and a
      * deployment with no workspace has none. That happens in production when a deployment
      * outlives the workspace it belonged to.
+     *
+     * `status` is the exception, and deliberately so - see the test below it.
      */
     public function testAStepThatCannotBuildItsResourceIsReportedOnEveryEndpoint(): void {
         $deployment = $this->deploymentWithoutAWorkspace();
 
         foreach ($this->everyEndpoint($deployment, DeploymentSteps::Ingress) as $endpoint => $body) {
+            if ($endpoint === 'status') {
+                continue;
+            }
+
             $this->assertNotSame('OK', $body['status'], $endpoint);
             $this->assertStringContainsString('workspace', $body['error'], $endpoint);
         }
+    }
+
+    /**
+     * Asking for a status answers, whatever went wrong working it out.
+     *
+     * The status panel asks every step at once, so a step that failed the whole request
+     * took the other eleven answers down with it - and the page showed nothing rather than
+     * one red mark. Two of the four routing steps already answered `error` for themselves;
+     * the other two threw, and which one you got depended on which router the installation
+     * used.
+     */
+    public function testAStepThatCannotBuildItsResourceStillAnswersAStatus(): void {
+        $deployment = $this->deploymentWithoutAWorkspace();
+
+        $body = $this->decode($this->signedIn()->get(
+            'deployment-steps/' . DeploymentSteps::Ingress . "/status?deploymentId={$deployment->id}"
+        ));
+
+        $this->assertSame('OK', $body['status']);
+        $this->assertSame(['error'], $body['resource']['values']);
     }
 
     // </editor-fold>

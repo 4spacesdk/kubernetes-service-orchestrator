@@ -39,6 +39,7 @@
 * Pod logs kept the start of each line, which was cut off - by up to eleven characters, depending on the timestamp - and the live tail now shows the same text as the log page
 * A mistake inside kso while it talks to the cluster is reported instead of answering with a server error: the status panels, the shell, the node list and the connection test all say what went wrong
 * A database service saved with a driver kso does not know says which driver, instead of failing the connection test with no reason
+* The status panel shows a red mark for the one routing step that could not be asked, instead of showing nothing at all
 * Updating something that does not exist answered OK and wrote nothing; it is refused now
 * Removed `PUT /deployments/{id}/ingress`, which could never work - the workspace endpoint is the one that does this
 * Reading something that does not exist answered a resource with every field null; it answers 404 now

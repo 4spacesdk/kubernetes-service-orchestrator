@@ -8,7 +8,6 @@ use App\Libraries\DeploymentSteps\Helpers\DeploymentStepLevels;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
 use App\Libraries\Kubernetes\KubeAuth;
 use App\Models\DeploymentSpecificationIngressModel;
-use DebugTool\Data;
 use RenokiCo\PhpK8s\Exceptions\KubernetesAPIException;
 use RenokiCo\PhpK8s\Kinds\K8sEvent;
 use RenokiCo\PhpK8s\Kinds\K8sIngress;
@@ -98,7 +97,15 @@ class IngressStep extends BaseDeploymentStep {
      * @throws \Exception
      */
     public function getStatus(Deployment $deployment): string {
-        $resources = $this->getResources($deployment, true);
+        try {
+            $resources = $this->getResources($deployment, true);
+        } catch (\Throwable $e) {
+            // Like the other three routing steps. Working out what to look for is itself
+            // something that can fail - a deployment with no workspace has no hostname to
+            // build - and one step that cannot be asked must not fail the whole status
+            // panel with it.
+            return DeploymentStepHelper::Ingress_Error;
+        }
 
         $found = true;
         foreach ($resources as $resource) {

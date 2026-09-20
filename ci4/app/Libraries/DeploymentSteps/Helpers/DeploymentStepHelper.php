@@ -101,10 +101,12 @@ class DeploymentStepHelper {
         GcpBackendPolicy_FoundNotExpected = 'found-not-expected';
 
     const string
+        Ingress_Error = 'error',
         Ingress_NotFound = 'not-found',
         Ingress_Found = 'found';
 
     const string
+        IstioVirtualService_Error = 'error',
         IstioVirtualService_NotFound = 'not-found',
         IstioVirtualService_Found = 'found';
 

@@ -9,7 +9,6 @@ use App\Libraries\Kubernetes\CustomResourceDefinitions\K8sContourHttpProxy;
 use App\Libraries\Kubernetes\KubeAuth;
 use App\Models\DeploymentModel;
 use DebugTool\Data;
-use Exception;
 use RenokiCo\PhpK8s\Exceptions\KubernetesAPIException;
 use RenokiCo\PhpK8s\Kinds\K8sEvent;
 
@@ -100,7 +99,7 @@ class ContourHttpProxyStep extends BaseDeploymentStep {
     public function getStatus(Deployment $deployment): string|array {
         try {
             $resources = $this->getResources($deployment, true);
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             return DeploymentStepHelper::ContourHttpProxy_Error;
         }
 
@@ -218,24 +217,27 @@ class ContourHttpProxyStep extends BaseDeploymentStep {
         }
         $domain = $deployment->workspace->domain;
 
-        /** @var Deployment $deployments */
-        $deployments = (new DeploymentModel())
+        // Named apart from the `$deployment` this was called about, which the loop used to
+        // overwrite. Nothing read it afterwards, so it cost nothing - right up until the
+        // next edit below the loop reached for the parameter and got the last sibling.
+        /** @var Deployment $siblings */
+        $siblings = (new DeploymentModel())
             ->where('workspace_id', $workspace->id)
             ->find();
         $fqdns = [];
-        foreach ($deployments as $deployment) {
-            $url = $deployment->findDeploymentSpecification()->getUrl($workspace->subdomain, $domain);
+        foreach ($siblings as $sibling) {
+            $url = $sibling->findDeploymentSpecification()->getUrl($workspace->subdomain, $domain);
             if (!isset($fqdns[$url])) {
                 $fqdns[$url] = new Deployment();
             }
-            $fqdns[$url]->add($deployment);
+            $fqdns[$url]->add($sibling);
         }
 
         /** @var K8sContourHttpProxy[] $resources */
         $resources = [];
 
-        foreach ($fqdns as $fqdn => $deployments) {
-            $routes = $this->getWorkspaceHttpProxyRoutes($deployments, $fqdn);
+        foreach ($fqdns as $fqdn => $deploymentsOnThisUrl) {
+            $routes = $this->getWorkspaceHttpProxyRoutes($deploymentsOnThisUrl, $fqdn);
 
             // Hostnames come from every deployment in the workspace, but only Contour ones
             // have routes - and a specification can have none at all. A proxy with an empty

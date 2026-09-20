@@ -87,7 +87,14 @@ class IstioVirtualServiceStep extends BaseDeploymentStep {
      * @throws \Exception
      */
     public function getStatus(Deployment $deployment): string {
-        $resource = $this->getResource($deployment, true);
+        try {
+            $resource = $this->getResource($deployment, true);
+        } catch (\Throwable $e) {
+            // See `IngressStep::getStatus()`: one step that cannot be asked answers for
+            // itself rather than failing the whole status panel.
+            return DeploymentStepHelper::IstioVirtualService_Error;
+        }
+
         return $resource->exists() ? DeploymentStepHelper::IstioVirtualService_Found : DeploymentStepHelper::IstioVirtualService_NotFound;
     }
 
