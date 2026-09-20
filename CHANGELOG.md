@@ -25,6 +25,7 @@
 * Retrying a webhook delivery adds an attempt to the log instead of rewriting the one it retries, and the new attempt is stamped with its own time and no leftover response
 * The refresh token cookie is marked Secure behind a TLS-terminating proxy, so a browser no longer sends it over plain http
 * A grant or renewal that carries no id token or no new refresh token is a token, not a server error
+* Database services could not be connected to at all: the test-connection button said no to every service, and a deploy could not create the tenant's database or user
 * Updating something that does not exist answered OK and wrote nothing; it is refused now
 * Removed `PUT /deployments/{id}/ingress`, which could never work - the workspace endpoint is the one that does this
 * Reading something that does not exist answered a resource with every field null; it answers 404 now

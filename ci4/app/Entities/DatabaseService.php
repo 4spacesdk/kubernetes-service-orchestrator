@@ -53,7 +53,17 @@ class DatabaseService extends Entity {
             'compress' => false,
             'strictOn' => false,
             'failover' => [],
-            'port' => $this->port,
+
+            // Cast, and it is the difference between this service connecting and not. A
+            // property read off a row is a string even where the column is an int, and
+            // CodeIgniter's MySQLi driver is `declare(strict_types=1)`, so
+            // `mysqli::real_connect()` refused `"3306"` where it wants `?int`. Every MySQL
+            // service answered the connection test with no, however correct its settings,
+            // and `DatabaseStep` could not create a tenant's database either.
+            //
+            // An empty port stays harmless: the driver reads `0` as "not set" and uses its
+            // own default, the same as it did for `""`.
+            'port' => (int) $this->port,
         ]);
     }
 

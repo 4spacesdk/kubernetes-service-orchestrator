@@ -47,42 +47,50 @@ class DatabaseServicesApiTest extends ControllerTestCase {
     }
 
     /**
-     * **This endpoint cannot answer yes.** Not for a wrong password - for any MySQL service
-     * at all, including one whose settings are perfect.
+     * The one case the endpoint exists for: a database that is there, reachable and
+     * correctly configured answers yes.
      *
-     * `DatabaseService::prepareConnection()` passes `'port' => $this->port`, and a property
-     * read off a row is a string even where the column is an int. CodeIgniter's MySQLi
-     * driver is `declare(strict_types=1)`, so `mysqli::real_connect()` rejects `"3306"`
-     * where it wants `?int`, and `testConnection()` reports the TypeError as a failed
-     * connection. Casting the port to int makes the very same service connect.
-     *
-     * The button therefore says no to everything, and `DatabaseStep` cannot create a
-     * tenant database either. Pinned here because it is what the product does today:
-     * **fixing the cast should break this test**, and the fix is to replace this with the
-     * assertion that a reachable database answers true.
+     * **It could not, for any MySQL service at all, however perfect its settings.**
+     * `prepareConnection()` passed `'port' => $this->port`, and a property read off a row is
+     * a string even where the column is an int. CodeIgniter's MySQLi driver is
+     * `declare(strict_types=1)`, so `mysqli::real_connect()` rejected `"3306"` where it
+     * wants `?int`, and `testConnection()` reported the TypeError as a failed connection -
+     * so the button said no to everything, and `DatabaseStep` could not create a tenant's
+     * database either.
      *
      * The settings come from the test run's own database configuration rather than being
      * written out here - they are the one database this test is certain to be able to
      * reach, and nothing in the assertion depends on what they are.
      */
-    public function testAReachableDatabaseIsStillAnsweredWithNoBecauseThePortIsSentAsAString(): void {
-        $database = config('Database')->tests;
-        $service = Fixtures::databaseService([
-            'driver' => \DatabaseDrivers::MySQL,
-            'host' => $database['hostname'],
-            'port' => $database['port'],
-            'user' => $database['username'],
-            'pass' => $database['password'],
-        ]);
+    public function testAReachableDatabaseIsAnsweredWithYes(): void {
+        $service = Fixtures::databaseService($this->theDatabaseThisTestRunUses());
 
-        $this->assertFalse(
-            $this->testConnection($service->id)['resource']['value'],
-            'the connection test now succeeds - see the note above and replace this test'
-        );
+        $this->assertTrue($this->testConnection($service->id)['resource']['value']);
+    }
 
-        // The diagnosis, so a future reader does not have to rediscover it: the only thing
-        // standing between this service and a connection is the type of the port.
-        $service->port = (int) $service->port;
+    /**
+     * A port is what a string becomes when it is read off a row, and an int is what it is
+     * when somebody just typed it into the form. Both are the same port.
+     */
+    public function testAPortIsTheSamePortWhicheverWayItArrives(): void {
+        $settings = $this->theDatabaseThisTestRunUses();
+
+        $asString = Fixtures::databaseService(array_merge($settings, ['port' => (string) $settings['port']]));
+        $asInt = Fixtures::databaseService(array_merge($settings, ['port' => (int) $settings['port']]));
+
+        $this->assertTrue($asString->testConnection(), 'the port as a string');
+        $this->assertTrue($asInt->testConnection(), 'the port as an int');
+    }
+
+    /**
+     * A service saved without a port is not a broken one - the column is nullable - and the
+     * driver reads an unset port as "use the default", which for MySQL is the 3306 the
+     * service was going to be on anyway. The cast must not turn "not set" into port zero,
+     * which nobody is listening on.
+     */
+    public function testAServiceWithNoPortFallsBackToTheDriversDefault(): void {
+        $service = Fixtures::databaseService(array_merge($this->theDatabaseThisTestRunUses(), ['port' => null]));
+
         $this->assertTrue($service->testConnection());
     }
 
@@ -122,6 +130,23 @@ class DatabaseServicesApiTest extends ControllerTestCase {
     }
 
     // <editor-fold desc="Helpers">
+
+    /**
+     * The one database a test run is certain to be able to reach: its own.
+     *
+     * @return array<string, mixed>
+     */
+    private function theDatabaseThisTestRunUses(): array {
+        $database = config('Database')->tests;
+
+        return [
+            'driver' => \DatabaseDrivers::MySQL,
+            'host' => $database['hostname'],
+            'port' => $database['port'],
+            'user' => $database['username'],
+            'pass' => $database['password'],
+        ];
+    }
 
     /**
      * @return array<string, mixed> the decoded response
