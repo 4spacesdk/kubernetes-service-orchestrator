@@ -39,6 +39,7 @@
 * Container Images: list tags with when each was pushed, and the registry's reason when it refuses. The deployment version picker shows when each tag was pushed too ([#64](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/64))
 * GitHub Integrations: one GitHub App per organisation
 * Lists: search, filters, page and sort kept in the url, sortable columns, clickable names ([#53](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/53)), keyboard shortcuts
+* Deployments: a status filter, so a terminated workspace's deployments are out of the way by default
 * Update the version of several deployments at once
 * Run a deployment's cron job now, from the Resources dialog ([#50](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/50))
 * Annotations on gateways ([#65](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/65))

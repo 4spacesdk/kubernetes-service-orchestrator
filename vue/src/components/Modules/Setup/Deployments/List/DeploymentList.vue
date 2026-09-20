@@ -3,8 +3,10 @@ import { ReferenceData } from "@/core/referenceData";
 import { useListState } from "@/composables/useListState";
 import NameLink from "@/components/Modules/Common/NameLink.vue";
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
+import type {Ref} from 'vue'
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
+import { DeploymentStatusTypes } from "@/constants";
 import {Deployment, DeploymentSpecification} from "@/core/services/Deploy/models";
 import DeploymentEditButton from "@/components/Modules/Setup/Deployments/EditButton/DeploymentEditButton.vue";
 import DeploymentStatus from "@/components/Modules/Setup/Deployments/DeploymentStatus/DeploymentStatus.vue";
@@ -49,9 +51,25 @@ const selected = ref<number[]>([]);
 const deploymentSpecs = ref<DeploymentSpecification[]>([]);
 const showDeploymentSpecsWarning = ref(true);
 
+/**
+ * The same default as the workspaces list: a terminated workspace's deployments are out of
+ * the way until someone asks for them. Only on the page - inside a workspace's own dialog the
+ * list is that workspace's, and hiding half of it there would be a surprise.
+ */
+const statusOptions = ref([
+    {value: DeploymentStatusTypes.Draft, title: 'Draft'},
+    {value: DeploymentStatusTypes.Deploying, title: 'Deploying'},
+    {value: DeploymentStatusTypes.Active, title: 'Active'},
+    {value: DeploymentStatusTypes.Inactive, title: 'Inactive'},
+    {value: DeploymentStatusTypes.Error, title: 'Error'},
+]);
+const selectedStatus = ref([DeploymentStatusTypes.Deploying, DeploymentStatusTypes.Active, DeploymentStatusTypes.Error]);
+const filtersOnTheList: Record<string, Ref<string[]>> = props.filterByWorkspaceId ? {} : {status: selectedStatus};
+
 const {search: searchValue, page, itemsPerPage, sortBy, applyOrdering, applyPaging} = useListState({
     sortable: {'name': 'name', 'namespace': 'namespace', 'status': 'status', 'version': 'version', 'last_updated': 'last_updated'},
     defaultSort: {key: 'name', order: 'asc'},
+    filters: filtersOnTheList,
     syncWithUrl: !props.filterByWorkspaceId,
 });
 
@@ -76,6 +94,10 @@ watch(searchValue, debounce(() => {
     getItems(true, true);
 }, 500));
 
+watch(selectedStatus, debounce(() => {
+    getItems(true, true);
+}, 500));
+
 function onItemSaved() {
     getItems(true, true);
 }
@@ -90,6 +112,8 @@ function getItems(doItems = true, doCount = false) {
 
     if (props.filterByWorkspaceId) {
         api.where('workspace_id', props.filterByWorkspaceId);
+    } else {
+        api.whereIn('status', selectedStatus.value);
     }
 
     if (searchValue.value?.length) {
@@ -181,69 +205,98 @@ function onBulkUpdateVersionBtnClicked() {
             flat
             color="blue-grey lighten-5"
             dark
+            :height="props.filterByWorkspaceId ? undefined : 120"
         >
-            <v-toolbar-title>Deployments</v-toolbar-title>
+            <!-- Two rows, as on the workspaces list: the status chips need a line of their
+                 own, and squeezing them in beside the title cuts it off. -->
+            <div class="d-flex flex-column w-100 py-2 px-4 ga-1">
+                <div class="d-flex">
+                    <v-toolbar-title class="my-auto">Deployments</v-toolbar-title>
 
-            <v-text-field data-shortcut="search"
-                v-model="searchValue"
-                density="compact"
-                variant="outlined"
-                hide-details
-                placeholder="Search"
-                clearable
-            />
+                    <v-spacer></v-spacer>
 
-            <v-spacer></v-spacer>
+                <v-menu
+                    v-if="props.showCreateBtn"
+                    v-model="showCreateMenu"
+                    :close-on-content-click="false"
+                    left
+                    min-width="250"
+                    offset-y>
+                    <template v-slot:activator="{ props }">
+                        <v-btn data-shortcut="create"
+                            v-bind="props"
+                            small
+                            prepend-icon="fa fa-plus">
+                            Create
+                        </v-btn>
+                    </template>
 
-            <v-menu
-                v-if="props.showCreateBtn"
-                v-model="showCreateMenu"
-                :close-on-content-click="false"
-                left
-                min-width="250"
-                offset-y>
-                <template v-slot:activator="{ props }">
-                    <v-btn data-shortcut="create"
-                        v-bind="props"
-                        small
-                        prepend-icon="fa fa-plus">
-                        Create
-                    </v-btn>
-                </template>
+                    <v-list
+                        v-if="showDeploymentSpecsWarning"
+                        class="list-items">
+                        <v-list-item
+                            dense>
+                            <v-list-item-title>
+                                <span class="font-italic">No Deployment Specification found.</span>
+                            </v-list-item-title>
+                        </v-list-item>
+                        <v-list-item
+                            dense
+                            @click="onDeploymentSpecsShortcutClicked">
+                            <v-list-item-title>
+                                <v-icon size="small" class="my-auto">fa fa-circle-right</v-icon>
+                                <span class="ml-2">Go to Deployment Specifications</span>
+                            </v-list-item-title>
+                        </v-list-item>
+                    </v-list>
 
-                <v-list
-                    v-if="showDeploymentSpecsWarning"
-                    class="list-items">
-                    <v-list-item
-                        dense>
-                        <v-list-item-title>
-                            <span class="font-italic">No Deployment Specification found.</span>
-                        </v-list-item-title>
-                    </v-list-item>
-                    <v-list-item
-                        dense
-                        @click="onDeploymentSpecsShortcutClicked">
-                        <v-list-item-title>
-                            <v-icon size="small" class="my-auto">fa fa-circle-right</v-icon>
-                            <span class="ml-2">Go to Deployment Specifications</span>
-                        </v-list-item-title>
-                    </v-list-item>
-                </v-list>
+                    <v-list
+                        v-else
+                        class="list-items">
+                        <v-list-item
+                            v-for="(spec, i) in deploymentSpecs" :key="i"
+                            dense
+                            @click="onCreateItemBtnClicked(spec)">
+                            <v-list-item-title>
+                                <v-icon size="small" class="my-auto ml-2">fa fa-window-maximize fa</v-icon>
+                                <span class="ml-2">{{ spec.name }}</span>
+                            </v-list-item-title>
+                        </v-list-item>
+                    </v-list>
+                </v-menu>
+                </div>
 
-                <v-list
-                    v-else
-                    class="list-items">
-                    <v-list-item
-                        v-for="(spec, i) in deploymentSpecs" :key="i"
-                        dense
-                        @click="onCreateItemBtnClicked(spec)">
-                        <v-list-item-title>
-                            <v-icon size="small" class="my-auto ml-2">fa fa-window-maximize fa</v-icon>
-                            <span class="ml-2">{{ spec.name }}</span>
-                        </v-list-item-title>
-                    </v-list-item>
-                </v-list>
-            </v-menu>
+                <div class="d-flex ga-2">
+                    <v-text-field data-shortcut="search"
+                        v-model="searchValue"
+                        density="compact"
+                        variant="outlined"
+                        hide-details
+                        placeholder="Search"
+                        clearable
+                        width="250"
+                        max-width="250"
+                    />
+
+                    <v-select
+                        v-if="!props.filterByWorkspaceId"
+                        v-model="selectedStatus"
+                        :items="statusOptions"
+                        label="Status"
+                        density="compact"
+                        variant="outlined"
+                        multiple
+                        item-value="value"
+                        item-title="title"
+                        hide-details
+                        chips
+                        closable-chips
+                        clearable
+                        width="420"
+                        max-width="420"
+                    />
+                </div>
+            </div>
         </v-toolbar>
 
         <div v-if="selected.length" class="d-flex align-center ga-2 px-4 py-1 bulk-bar">
