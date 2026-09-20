@@ -67,6 +67,7 @@
 * Harbor: tags beyond the first ten artifacts were missing
 * A failed save in a dialog was silent, and a double click saved twice
 * Creating a workspace refused names starting with Æ, Ø or Å, and namespaces longer than 15 characters
+* Sorting a list by a field or a direction that is not there is refused with a message, instead of a server error or a list sorted the other way
 * Security-related improvements
 
 ### Enhancements

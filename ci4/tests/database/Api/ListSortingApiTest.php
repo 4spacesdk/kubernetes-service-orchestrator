@@ -2,18 +2,22 @@
 
 use App\ControllerTestCase;
 use App\Entities\Webhook;
+use App\Fixtures;
 use PHPUnit\Framework\Attributes\DataProvider;
+use RestExtension\Exceptions\InvalidRequestException;
 
 /**
- * Every field the lists in the web app sort by, asked of the API.
+ * Every field the lists in the web app sort by, asked of the API, and what happens to an
+ * `ordering` that names something that is not there.
  *
- * `ordering` is not checked by the API: a field that is not a column is a database error,
- * and a direction that is not `asc` or `desc` answers an empty list. The lists only send
- * the fields they declare in `useListState({sortable})`, so those have to hold. **Keep this
- * in step with those declarations** - a column renamed in a migration fails here, not in
- * the browser.
+ * The lists only send the fields they declare in `useListState({sortable})`, and those are
+ * now checked against the model's columns on the way in - so **keep the provider below in
+ * step with those declarations**: a column renamed in a migration fails here, not in the
+ * browser.
  */
 class ListSortingApiTest extends ControllerTestCase {
+
+    // <editor-fold desc="What the lists ask for">
 
     #[DataProvider('whatTheListsSortBy')]
     public function testEverySortTheListsOfferIsAnswered(string $resource, string $field): void {
@@ -29,6 +33,73 @@ class ListSortingApiTest extends ControllerTestCase {
             $this->assertSame('OK', $body['status'] ?? null, "{$resource} by {$field}");
         }
     }
+
+    // </editor-fold>
+
+    // <editor-fold desc="An ordering that names something that is not there">
+
+    /**
+     * A field that is not a column is refused, rather than handed to the database.
+     *
+     * It used to go to `orderBy()` as written, and came back as a `DatabaseException`:
+     * a 500 whose message is `Unknown column 'workspaces.nope' in 'order clause'` - the
+     * statement kso failed on, reported to whoever typed the query string.
+     */
+    public function testAFieldThatIsNotAColumnIsRefused(): void {
+        $this->expectException(InvalidRequestException::class);
+        $this->expectExceptionMessage("Cannot order by 'nope'");
+
+        $this->signedIn()->get('workspaces?ordering=nope:asc');
+    }
+
+    /**
+     * And so is a relation that is not one. This is a separate 500: the ORM's own
+     * `Failed to find relation`, thrown out of `getRelation()` before any query is built.
+     */
+    public function testARelationThatDoesNotExistIsRefused(): void {
+        $this->expectException(InvalidRequestException::class);
+        $this->expectExceptionMessage('is not a relation');
+
+        $this->signedIn()->get('workspaces?ordering=nope.name:asc');
+    }
+
+    /**
+     * A direction that is not `asc` or `desc` is refused rather than dropped.
+     *
+     * This is the half that was quiet. CodeIgniter's `orderBy()` keeps a direction only
+     * when it is `ASC` or `DESC` and replaces anything else with the empty string, so
+     * `name_readable:sideways` answered `200 OK` sorted ascending - the wrong question
+     * answered as if it were the right one, which is the same complaint as the label
+     * filter that was half applied.
+     */
+    public function testADirectionThatIsNotAscOrDescIsRefused(): void {
+        $this->expectException(InvalidRequestException::class);
+        $this->expectExceptionMessage("'sideways' is not");
+
+        $this->signedIn()->get('workspaces?ordering=name_readable:sideways');
+    }
+
+    /**
+     * The check is on the direction, not on its spelling: what the query string carries is
+     * compared in lower case, and it is the normalised form that reaches the query builder.
+     *
+     * Green before the check existed too - CodeIgniter uppercases the direction itself -
+     * so this one is here to catch the check refusing a direction the API used to accept,
+     * not to prove the fix.
+     */
+    public function testTheDirectionIsReadWithoutRegardToCase(): void {
+        Fixtures::workspace(['name_readable' => 'b', 'name_system' => 'b', 'namespace' => 'b']);
+        Fixtures::workspace(['name_readable' => 'a', 'name_system' => 'a', 'namespace' => 'a']);
+        Fixtures::workspace(['name_readable' => 'c', 'name_system' => 'c', 'namespace' => 'c']);
+
+        $response = $this->signedIn()->get('workspaces?ordering=name_readable:DESC');
+        $body = json_decode((string) $response->response()->getBody(), true);
+
+        $this->assertSame(200, $response->response()->getStatusCode());
+        $this->assertSame(['c', 'b', 'a'], array_column($body['resources'] ?? [], 'name_readable'));
+    }
+
+    // </editor-fold>
 
     /**
      * @return array<string, array{0: string, 1: string}>
