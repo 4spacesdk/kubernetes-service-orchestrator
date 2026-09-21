@@ -191,6 +191,8 @@ RUN ln -sf /dev/stdout /var/log/apache2/access.log \
     && ln -sf /dev/stderr /var/log/apache2/error.log
 
 ENV APP_HOME /var/www/html
+# Read by the Content-Security-Policy in docker/apache/httpd.conf; the chart sets the real one.
+ENV ZMQ_EXTERNAL_URL=""
 RUN mkdir -p $APP_HOME && chown www-data:www-data /var/www $APP_HOME
 
 # Composer dependencies before the application files, so a change to the code reuses the

@@ -102,6 +102,30 @@ class SecurityHeadersTest extends ControllerTestCase {
         );
     }
 
+    /**
+     * The Content-Security-Policy on the app and the sign-in pages: only scripts kso serves.
+     * The access token lives in localStorage, so a script that ran there would hold the
+     * clusters.
+     *
+     * Checked against a production build in a browser when it was written; this holds the
+     * parts that matter - no inline script, no eval - and the scope.
+     */
+    public function testTheAppAndTheSignInPagesOnlyRunScriptsKsoServes(): void {
+        $conf = (string) file_get_contents(ROOTPATH . '../docker/apache/httpd.conf');
+
+        $this->assertSame(1, preg_match('#Header always set Content-Security-Policy "([^"]+)" "expr=([^"]+)"#', $conf, $m));
+        [, $policy, $scope] = $m;
+
+        $this->assertStringContainsString("script-src 'self';", $policy);
+        $this->assertStringNotContainsString("'unsafe-eval'", $policy);
+        $this->assertDoesNotMatchRegularExpression("#script-src[^;]*'unsafe-inline'#", $policy);
+        $this->assertStringContainsString("object-src 'none'", $policy);
+        $this->assertStringContainsString('${ZMQ_EXTERNAL_URL}', $policy, 'the push socket, by name');
+        $this->assertStringContainsString('(app|api/login)', $scope);
+
+        // The variable always expands: an unset one leaves the literal in the header.
+        $this->assertStringContainsString('ENV ZMQ_EXTERNAL_URL=""', (string) file_get_contents(ROOTPATH . '../docker/Dockerfile'));
+    }
     // </editor-fold>
 
 }
