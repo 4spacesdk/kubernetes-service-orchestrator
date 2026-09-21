@@ -6,8 +6,10 @@ use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepLevels;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepTriggers;
+use App\Libraries\Kubernetes\ContainerEnvironment;
 use App\Libraries\Kubernetes\CustomResourceDefinitions\K8sCustomResource;
 use App\Libraries\Kubernetes\KubeAuth;
+use App\Libraries\Kubernetes\SecretPreview;
 use DebugTool\Data;
 use RenokiCo\PhpK8s\Exceptions\KubernetesAPIException;
 use RenokiCo\PhpK8s\Kinds\K8sEvent;
@@ -66,7 +68,9 @@ class CustomResourceStep extends BaseDeploymentStep {
      */
     public function getPreview(Deployment $deployment): string {
         $resource = $this->getResource($deployment, true);
-        $local = $resource->toJson();
+        // Without the passwords: the preview is shown in the UI. The remote one leaves out
+        // `spec` below, so it has none to show.
+        $local = $this->build($this->parseManifest($deployment, hidePasswords: true), $deployment)->toJson();
 
         if ($resource->exists()) {
             $exiting = $resource->get();
@@ -172,14 +176,16 @@ class CustomResourceStep extends BaseDeploymentStep {
      * null and die in the constructor on a `TypeError`, and a malformed one came out as the
      * parser's own warning - neither pointed at the field the user has to fix.
      *
+     * @param bool $hidePasswords the passwords kso fills in shown as hidden, for the preview
      * @return array<string, mixed>
      * @throws \Exception
      */
-    private function parseManifest(Deployment $deployment): array {
-        $text = EnvironmentVariable::ApplyVariablesToString(
-            (string) $deployment->findDeploymentSpecification()->custom_resource,
-            $deployment
-        );
+    private function parseManifest(Deployment $deployment, bool $hidePasswords = false): array {
+        $template = (string) $deployment->findDeploymentSpecification()->custom_resource;
+        if ($hidePasswords) {
+            $template = str_replace(ContainerEnvironment::SecretPlaceholders, SecretPreview::Hidden, $template);
+        }
+        $text = EnvironmentVariable::ApplyVariablesToString($template, $deployment);
         if (trim($text) === '') {
             throw new \Exception('Missing custom resource');
         }
@@ -203,8 +209,20 @@ class CustomResourceStep extends BaseDeploymentStep {
      * @throws \Exception
      */
     protected function getResource(Deployment $deployment, bool $auth = false): K8sResource {
-        $yaml = $this->parseManifest($deployment);
+        $resource = $this->build($this->parseManifest($deployment), $deployment);
 
+        if ($auth) {
+            $auth = new KubeAuth();
+            $resource->onCluster($auth->authenticate());
+        }
+
+        return $resource;
+    }
+
+    /**
+     * @param array<string, mixed> $yaml
+     */
+    private function build(array $yaml, Deployment $deployment): K8sCustomResource {
         $resource = new K8sCustomResource(null, $yaml);
 
         // A manifest that does not say where it goes goes to the workspace it belongs to.
@@ -216,11 +234,6 @@ class CustomResourceStep extends BaseDeploymentStep {
         // the workspace: the manifest comes from an operator, not a customer.
         if (!isset($yaml['metadata']['namespace'])) {
             $resource->setNamespace($deployment->namespace);
-        }
-
-        if ($auth) {
-            $auth = new KubeAuth();
-            $resource->onCluster($auth->authenticate());
         }
 
         return $resource;

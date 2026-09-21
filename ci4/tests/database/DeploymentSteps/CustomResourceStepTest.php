@@ -57,6 +57,33 @@ class CustomResourceStepTest extends ManifestTestCase {
     }
 
     /**
+     * The resource gets the passwords - it is what the manifest asks for - but the preview,
+     * shown in the UI, does not.
+     */
+    public function testThePreviewHidesThePasswordsTheResourceGets(): void {
+        $deployment = $this->deploymentWithCustomResource(
+            "apiVersion: example.org/v1\n" .
+            "kind: Thing\n" .
+            "metadata:\n" .
+            "  name: thing\n" .
+            "spec:\n" .
+            '  dsn: mysql://${database.user}:${database.pass}@${database.host}/app' . "\n" .
+            '  mail: ${emailService.pass}' . "\n"
+        );
+        $deployment->database_pass = 'db-secret';
+        $deployment->save();
+
+        $parse = new \ReflectionMethod(CustomResourceStep::class, 'parseManifest');
+        $applied = $parse->invoke(new CustomResourceStep(), $deployment);
+        $previewed = $parse->invoke(new CustomResourceStep(), $deployment, true);
+
+        $this->assertStringContainsString('db-secret', $applied['spec']['dsn']);
+        $this->assertStringNotContainsString('db-secret', json_encode($previewed));
+        $this->assertStringContainsString(':(hidden)@', $previewed['spec']['dsn']);
+        $this->assertSame('(hidden)', $previewed['spec']['mail']);
+    }
+
+    /**
      * Nothing anchors name or namespace to the deployment, so a hand-written resource can
      * name itself anything and live anywhere - including in another workspace's namespace.
      * That is the cost of the escape hatch, and it is worth stating out loud.
