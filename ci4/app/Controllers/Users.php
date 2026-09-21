@@ -2,7 +2,9 @@
 
 use App\Core\ResourceController;
 use App\Exceptions\ValidationException;
+use App\Entities\User;
 use App\Helpers\Client;
+use App\Models\UserModel;
 use App\Libraries\MFALib;
 use DebugTool\Data;
 
@@ -48,7 +50,7 @@ class Users extends ResourceController {
      * @custom true
      */
     public function me(): void {
-        $me = Client::$user;
+        $me = $this->signedInUser();
         $me->rbac_roles->find();
         foreach ($me->rbac_roles as $role) {
             $role->rbac_permissions->find();
@@ -64,7 +66,7 @@ class Users extends ResourceController {
      * @responseSchema UsersMFASetupPrepareResponse
      */
     public function mfaSetupPrepare(): void {
-        $hasMFA = Client::$user->hasMFASecret();
+        $hasMFA = $this->signedInUser()->hasMFASecret();
 
         if ($hasMFA) {
             Data::set('resource', [
@@ -92,14 +94,26 @@ class Users extends ResourceController {
      * @responseSchema BoolInterface
      */
     public function mfaSetupVerify(): void {
-        $code = $this->request->getGet('code');
+        $code = (string) $this->request->getGet('code');
         $mfaSecret = session()->get('mfa_secret');
-        Data::debug($code, $mfaSecret);
-        $mfaLib = new MFALib();
-        $result = $mfaLib->verifyCode($mfaSecret, $code);
+        $user = $this->signedInUser();
+
+        // Replacing a second factor goes through turning it off. Verifying a new one on top
+        // used to overwrite the one the user was signing in with.
+        if ($user->hasMFASecret()) {
+            $this->fail('Two-factor authentication is already on. Turn it off first to set up another.');
+            return;
+        }
+        if (!is_string($mfaSecret) || $mfaSecret === '') {
+            $this->fail('No two-factor setup is in progress');
+            return;
+        }
+
+        $result = (new MFALib())->verifyCode($mfaSecret, $code);
 
         if ($result) {
-            Client::$user->updateMFASecret($mfaSecret);
+            $user->updateMFASecret($mfaSecret);
+            session()->remove('mfa_secret');
         }
 
         Data::set('resource', [
@@ -114,8 +128,23 @@ class Users extends ResourceController {
      * @custom true
      */
     public function mfaSetupRemove(): void {
-        Client::$user->removeMFASecret();
+        $this->signedInUser()->removeMFASecret();
         $this->success();
+    }
+
+    /**
+     * The signed-in user as stored, not as the token describes them.
+     *
+     * `Client::$user` is built from the token's `user_data`, which is the user's `toArray()` -
+     * with the hidden fields stripped. It has no second factor whatever is stored, so
+     * `has_mfa_secret_hash` was false for everybody, and setting up two-factor authentication
+     * again handed a user who had it a fresh secret to scan.
+     */
+    private function signedInUser(): User {
+        /** @var User $user */
+        $user = (new UserModel())->find(Client::$user->id);
+
+        return $user;
     }
 
 }

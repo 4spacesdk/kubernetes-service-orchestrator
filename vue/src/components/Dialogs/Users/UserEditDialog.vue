@@ -130,9 +130,14 @@ function onEnableMFAToggleChanged() {
         const api = Api.users().mfaSetupPrepareGet();
         api.setWithCredentials(true);
         api.find(result => {
+            isMFASetupLoading.value = false;
+            // Already on: there is nothing to scan, and a new secret would replace the one in use.
+            if (result[0].hasMFA) {
+                isMFASetup.value = false;
+                return;
+            }
             mfaQRImageDataUri.value = result[0].qrCodeDataUri;
             mfaSetupCode.value = result[0].setupCode;
-            isMFASetupLoading.value = false;
             isMFASetup.value = true;
         });
     } else {

@@ -23,7 +23,7 @@
 * Lists: sorting by a field or direction that is not there is refused, `filter=status:active` narrows to that status instead of answering with every workspace, an unreadable label filter says what to write instead, and the environments and Podio field lists carry a count like every other list
 * Pod logs kept the start of each line, which was cut off by up to eleven characters, and the live tail shows the same text as the log page. The shell on a pod that is not running says what the cluster said instead of an empty box
 * Workspaces: terminating one with no deployments leaves it terminated instead of back in the list as a draft, and names starting with Æ, Ø or Å are allowed again, as are namespaces longer than 15 characters
-* Two-factor authentication can be turned off again; removing it used to fail with a database error and leave the second factor in place
+* Two-factor authentication can be turned off again; removing it used to fail with a database error and leave the second factor in place. The user's own page now knows when it is on, and setting it up again no longer replaces the one in use
 * Changing a user role's permissions replaces them: one taken away is taken away, and the same set twice stays the same set
 * A record whose related record has been deleted no longer picks up an unrelated one when read a second time
 * Post-update actions are skipped rather than crashing on an image without commit identification or version control, and on a commit message with no Podio task link
@@ -34,6 +34,7 @@
 ### Security
 * The sign-in pages show messages from a link as text, so a crafted link can no longer run script on the sign-in page
 * A sign-in link can only send the operator on within kso, not to another site
+* The two-factor QR code is drawn by kso itself. It used to be fetched from api.qrserver.com with the secret in the url
 * Two deployments are never given the same database or database user: a name taken on the same database service gets a hash on the end, long names are no longer merely cut, and a database or user already on the server is refused instead of handed over
 * A password set through the API is hashed before it is written and held to the same rules as a renewal; a short one used to be stored in plain text. Any left from before are hashed and must be renewed at the next sign-in
 * The sign-in form no longer says whether a username exists, by its message or by how long it takes, and after ten failed attempts in a row a username - or its two-factor code - is refused for 15 minutes. Every attempt is kept for 90 days in `sign_in_attempts`: who, whether it worked, address and browser

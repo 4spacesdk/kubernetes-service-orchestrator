@@ -1,7 +1,7 @@
 <?php namespace App\Libraries;
 
 use App\Libraries\Kubernetes\KubeHelper;
-use RobThree\Auth\Providers\Qr\QRServerProvider;
+use RobThree\Auth\Providers\Qr\BaconQrCodeProvider;
 use RobThree\Auth\TwoFactorAuth;
 
 class MFALib {
@@ -15,7 +15,10 @@ class MFALib {
         } else if (KubeHelper::GetMyNamespace() != 'default') {
             $name .= ' | ' . KubeHelper::GetMyNamespace();
         }
-        $this->twoFactorAuth = new TwoFactorAuth(new QRServerProvider(), $name);
+        // Drawn here, as SVG, which needs no image extension. The QR code holds the secret
+        // itself - it is the second factor - and it used to be fetched from api.qrserver.com
+        // with the secret in the url, into a free public service's access logs.
+        $this->twoFactorAuth = new TwoFactorAuth(new BaconQrCodeProvider(format: 'svg'), $name);
     }
 
     public function createSecret(): string {

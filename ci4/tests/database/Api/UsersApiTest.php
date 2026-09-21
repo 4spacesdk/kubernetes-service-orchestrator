@@ -14,11 +14,10 @@ use App\Models\UserModel;
  * codes for ever. These endpoints create it, store it and remove it, and until now none of
  * that was under test.
  *
- * **`mfa/setup/prepare` is not covered here on purpose** - it renders the QR code through
- * `api.qrserver.com`, so exercising it would send a real secret to a third party from the
- * test suite. Its `hasMFA` branch could not be reached even if the network call
- * were gone, for the reason `testMeAlwaysSaysTheUserHasNoSecondFactor` pins: the flag it
- * branches on is always false.
+ * `mfa/setup/prepare` draws its QR code in the process now; it used to fetch it from
+ * `api.qrserver.com` with the secret in the url, and was kept out of the suite for that.
+ * The endpoints read the signed-in user from the table, not from the token, which carries
+ * no second factor - see `testMeSaysWhetherTheUserHasASecondFactor`.
  *
  * What these hold is the decision: does this code verify, and what is written when it does
  * not. Whether the stored secret is visible to a *later* request is not asserted - the
@@ -56,34 +55,60 @@ class UsersApiTest extends ControllerTestCase {
     }
 
     /**
-     * **Today's behaviour, and it is a bug.** `has_mfa_secret_hash` is computed from
-     * `mfa_secret_hash`, and `mfa_secret_hash` is in `User::$hiddenFields` - so it is
-     * stripped by the `toArray()` that RestExtension builds `user_data` from, and the
-     * `User` the controller then constructs from that array has no secret in it whatever is
-     * stored. The flag is therefore false for every user on every request.
+     * `has_mfa_secret_hash` says whether two-factor authentication is on.
      *
-     * Two things follow: the frontend can never tell that two-factor authentication is on,
-     * and `Users::mfaSetupPrepare()` always takes its `else` branch - so a user who already
-     * has a second factor is handed a fresh secret to scan instead of being told they are
-     * done, and verifying it overwrites the one they were using.
-     *
-     * The write is asserted first, so that this test says *the read path is wrong* rather
-     * than merely *nothing was stored*.
+     * It was false for everybody: `users/me` answered with the user built from the token's
+     * `user_data`, which is `toArray()` with the hidden fields - the secret among them -
+     * stripped. The frontend could not tell 2FA was on, and setting it up again handed a user
+     * who had it a new secret to scan.
      */
-    public function testMeAlwaysSaysTheUserHasNoSecondFactor(): void {
+    public function testMeSaysWhetherTheUserHasASecondFactor(): void {
+        $this->assertFalse($this->decode($this->signedIn()->get('users/me'))['resource']['has_mfa_secret_hash']);
+
+        $this->giveTheSignedInUserASecondFactor();
+        $this->forgetTheLastRequest();
+
+        $this->assertTrue($this->decode($this->signedIn()->get('users/me'))['resource']['has_mfa_secret_hash']);
+    }
+
+    /**
+     * A user who has a second factor is told so, and is not handed a new secret.
+     */
+    public function testPreparingWhenTwoFactorIsOnHandsOutNoNewSecret(): void {
+        $this->giveTheSignedInUserASecondFactor();
+
+        $resource = $this->decode($this->signedIn()->get('users/mfa/setup/prepare'))['resource'];
+
+        $this->assertTrue($resource['hasMFA']);
+        $this->assertArrayNotHasKey('qrCodeDataUri', $resource);
+        $this->assertArrayNotHasKey('mfa_secret', $_SESSION ?? []);
+    }
+
+    /**
+     * Verifying a new secret does not replace the one in use; that goes through turning it
+     * off first.
+     */
+    public function testVerifyingWhenTwoFactorIsOnReplacesNothing(): void {
+        $inUse = $this->giveTheSignedInUserASecondFactor();
+        $another = (new MFALib())->createSecret();
+
+        $response = $this->withSession(['mfa_secret' => $another])->signedIn()
+            ->put('users/mfa/setup/verify?code=' . (new MFALib())->getSetupCode($another));
+
+        $this->assertSame(400, $response->response()->getStatusCode());
         /** @var User $user */
         $user = (new UserModel())->find($this->signedInUserId());
-        $user->updateMFASecret((new MFALib())->createSecret());
+        $this->assertSame($inUse, $user->getMFASSecret());
+    }
 
-        $stored = $this->db->table('users')->where('id', $this->signedInUserId())->get()->getRowArray();
-        $this->assertNotSame('', $stored['mfa_secret_hash'], 'nothing was stored, so this test proves nothing');
+    /**
+     * Verifying with no setup in progress is a refusal, not a server error.
+     */
+    public function testVerifyingWithNoSetupInProgressIsRefused(): void {
+        $response = $this->signedIn()->put('users/mfa/setup/verify?code=123456');
 
-        $resource = $this->decode($this->signedIn()->get('users/me'))['resource'];
-
-        $this->assertFalse(
-            $resource['has_mfa_secret_hash'],
-            'the flag survives the hidden-field list now - the bug above is fixed'
-        );
+        $this->assertSame(400, $response->response()->getStatusCode());
+        $this->assertSame('', (string) $this->storedSecondFactor());
     }
 
     public function testTheRightCodeStoresTheSecretOnTheUser(): void {
@@ -120,10 +145,6 @@ class UsersApiTest extends ControllerTestCase {
      * is nullable now - it was widened and made nullable along with every other credential
      * column when they were encrypted at rest, and "no second factor" is a state it has to
      * be able to hold.
-     *
-     * The other half of that fault is still there: `has_mfa_secret_hash` is always false, so
-     * the page offering this does not know the user has one. See
-     * `testMeAlwaysSaysTheUserHasNoSecondFactor`.
      */
     public function testRemovingTheSecondFactorClearsIt(): void {
         $secret = (new MFALib())->createSecret();
@@ -137,6 +158,15 @@ class UsersApiTest extends ControllerTestCase {
         $this->signedIn()->put('users/mfa/setup/remove');
 
         $this->assertSame('', (string) $this->storedSecondFactor());
+    }
+
+    private function giveTheSignedInUserASecondFactor(): string {
+        $secret = (new MFALib())->createSecret();
+        /** @var User $user */
+        $user = (new UserModel())->find($this->signedInUserId());
+        $user->updateMFASecret($secret);
+
+        return $secret;
     }
 
     private function storedSecondFactor(): ?string {
@@ -173,6 +203,19 @@ class UsersApiTest extends ControllerTestCase {
             'user_id' => $this->signedInUserId(),
             'rbac_role_id' => $role->id,
         ]);
+    }
+
+    /**
+     * Setting up a second factor hands back a QR code drawn here, and keeps the secret in
+     * the session for the verification that follows.
+     */
+    public function testPreparingASecondFactorDrawsTheQrCodeHere(): void {
+        $response = $this->signedIn()->get('users/mfa/setup/prepare');
+
+        $resource = $this->decode($response)['resource'] ?? [];
+        $this->assertFalse($resource['hasMFA'] ?? null);
+        $this->assertStringStartsWith('data:image/svg+xml;base64,', $resource['qrCodeDataUri'] ?? '');
+        $this->assertSame(32, strlen((string) ($_SESSION['mfa_secret'] ?? '')));
     }
 
     // <editor-fold desc="Passwords">

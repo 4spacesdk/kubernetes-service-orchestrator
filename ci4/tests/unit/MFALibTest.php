@@ -7,20 +7,43 @@ use RobThree\Auth\TwoFactorAuth;
 /**
  * Time based one time passwords, and the name an authenticator app files them under.
  *
- * **`getQRCodeImageAsDataUri()` is not called from here, and must not be.** It hands the
- * label and the freshly generated secret to `QRServerProvider`, which fetches the image
- * from `api.qrserver.com` - so the secret of an account that is being set up leaves the
- * machine, in the query string of a GET, to a third party. That is a known leak, and it is why
- * `users/mfa/setup/prepare` is off limits to the whole suite. One probing request during
- * the coverage work on 2026-09-17 sent one unused secret out there.
+ * The QR code holds the secret itself, so it is drawn here and never fetched. It used to be
+ * fetched from `api.qrserver.com`, with the secret in the query string - and this suite kept
+ * away from it, because calling it sent one out.
  *
- * The line stays uncovered on purpose. It is the finding, not a gap: marking it out would
- * hide it, and the coverage report is one of the few places it is visible at all.
- *
- * Everything else in the class is local arithmetic - base32, an HMAC and a time slice - and
- * is tested here.
+ * The rest of the class is local arithmetic - base32, an HMAC and a time slice.
  */
 class MFALibTest extends CIUnitTestCase {
+
+    // <editor-fold desc="The QR code">
+
+    /**
+     * An SVG drawn in the process, as a data uri the setup page can show as it is.
+     */
+    public function testTheQrCodeIsAnSvgDrawnHere(): void {
+        $lib = new MFALib();
+
+        $uri = $lib->getQRCodeImageAsDataUri($lib->createSecret());
+
+        $this->assertStringStartsWith('data:image/svg+xml;base64,', $uri);
+        $this->assertStringContainsString('<svg', base64_decode(substr($uri, strlen('data:image/svg+xml;base64,'))));
+    }
+
+    /**
+     * And not by any of the library's providers that fetch the image from a web service -
+     * every one of them puts the secret in a url.
+     */
+    public function testNoProviderThatFetchesTheImageIsUsed(): void {
+        $inner = new \ReflectionProperty(MFALib::class, 'twoFactorAuth');
+        $provider = new \ReflectionProperty(TwoFactorAuth::class, 'qrcodeprovider');
+
+        $this->assertNotInstanceOf(
+            \RobThree\Auth\Providers\Qr\BaseHTTPQRCodeProvider::class,
+            $provider->getValue($inner->getValue(new MFALib()))
+        );
+    }
+
+    // </editor-fold>
 
     // <editor-fold desc="Secrets and codes">
 
