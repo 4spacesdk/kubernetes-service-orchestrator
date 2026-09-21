@@ -55,17 +55,6 @@ class LoginApiTest extends ControllerTestCase {
         }
     }
 
-    /**
-     * A fresh response for every request, not just for every test. The harness shares one,
-     * so a page answered without a redirect kept the `Location` of the redirect before it,
-     * and a refused sign-in after a successful one looked like a successful one.
-     */
-    public function call(string $method, string $path, ?array $params = null) {
-        \CodeIgniter\Config\Services::resetSingle('response');
-
-        return parent::call($method, $path, $params);
-    }
-
     public function tearDown(): void {
         foreach ($this->emailSettingsAsFound as $name => $value) {
             $value === false ? putenv($name) : putenv("{$name}={$value}");

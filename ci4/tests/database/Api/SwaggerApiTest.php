@@ -26,18 +26,6 @@ use App\ControllerTestCase;
  */
 class SwaggerApiTest extends ControllerTestCase {
 
-    /**
-     * A fresh router and response for every request. The `swagger` row names no method, so
-     * the router falls back on the one it holds - and the harness keeps one router for the
-     * whole run, so after `swagger/openapi` the page was answered by `openapi()`.
-     */
-    public function call(string $method, string $path, ?array $params = null) {
-        \CodeIgniter\Config\Services::resetSingle('router');
-        \CodeIgniter\Config\Services::resetSingle('response');
-
-        return parent::call($method, $path, $params);
-    }
-
     public function tearDown(): void {
         putenv('SWAGGER_ENABLED');
 

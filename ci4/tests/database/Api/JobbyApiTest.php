@@ -33,14 +33,25 @@ class JobbyApiTest extends ControllerTestCase {
      */
     private const NEVER = '0 0 30 2 *';
 
+    private string|false $cronTokenAsFound;
+
+    /**
+     * A token of the test's own, so the suite does not depend on the environment it runs in:
+     * the chart sets CRON_TOKEN, a build machine does not.
+     */
     public function setUp(): void {
         parent::setUp();
+
+        $this->cronTokenAsFound = getenv('CRON_TOKEN');
+        putenv('CRON_TOKEN=token-of-the-test');
 
         $this->registerTheFakeCommands();
     }
 
     public function tearDown(): void {
         $this->forgetTheFakeCommands();
+
+        $this->cronTokenAsFound === false ? putenv('CRON_TOKEN') : putenv('CRON_TOKEN=' . $this->cronTokenAsFound);
 
         parent::tearDown();
     }

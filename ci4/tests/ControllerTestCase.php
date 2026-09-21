@@ -40,7 +40,9 @@ use CodeIgniter\Test\FeatureTestTrait;
  */
 abstract class ControllerTestCase extends DatabaseTestCase {
 
-    use FeatureTestTrait;
+    use FeatureTestTrait {
+        call as private sendRequest;
+    }
 
     /**
      * Per process, not per suite.
@@ -129,15 +131,18 @@ abstract class ControllerTestCase extends DatabaseTestCase {
      *   request did *not* redirect otherwise has that question answered by whichever test
      *   happened to run before it.
      *
+     * - The `router` service keeps the method it resolved last. A route whose row names no
+     *   method - `swagger` - was answered by whichever method the request before it used.
+     *
      * Any one of them makes the suite order-dependent, which is worse than a failing test.
      *
-     * `protected` rather than `private` because a test that sends more than one request
-     * needs this between them too - and the failure when it does not is a passing test,
-     * not a failing one. `RestGetSweepTest` sends twenty-two requests in a row, and without
-     * a reset the one endpoint that never sets `count` was handed the previous endpoint's
-     * and looked correct.
+     * Run before **every request**, from `call()`, not just before every test: a test that
+     * sends more than one request needs it between them, and the failure when it is missing
+     * is a passing test rather than a failing one - a refused sign-in after a successful one
+     * kept the successful one's `Location`, and `RestGetSweepTest`'s one endpoint that never
+     * sets `count` was handed the previous endpoint's.
      */
-    protected function forgetTheLastRequest(): void {
+    private function forgetTheLastRequest(): void {
         $restRequest = (new \ReflectionClass(\RestExtension\RestRequest::class))->getProperty('instance');
         $restRequest->setValue(null, null);
 
@@ -145,12 +150,27 @@ abstract class ControllerTestCase extends DatabaseTestCase {
         $store->setValue(null, ['status' => null]);
 
         Services::resetSingle('response');
+        Services::resetSingle('router');
+
+        // Nothing leaves a test process: a controller that sends its own response - the OAuth
+        // agent does - would otherwise emit real headers and cookies and then empty the cookie
+        // store, so the test would find no cookie on the response it was handed.
+        Services::response()->pretend(true);
 
         // `Login::index()` branches on the $_POST superglobal rather than on the request,
         // and the test harness does not clear it between calls. Without this, a GET after
         // a POST takes the sign-in branch with no credentials in it.
         $_POST = [];
         $_GET = [];
+    }
+
+    /**
+     * Every request starts from what a fresh process would have. See forgetTheLastRequest().
+     */
+    public function call(string $method, string $path, ?array $params = null) {
+        $this->forgetTheLastRequest();
+
+        return $this->sendRequest($method, $path, $params);
     }
 
     public function tearDown(): void {

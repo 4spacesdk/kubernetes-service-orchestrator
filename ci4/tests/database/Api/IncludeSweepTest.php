@@ -127,7 +127,6 @@ class IncludeSweepTest extends ControllerTestCase {
 
             $relations = $this->relationsOf($modelName);
 
-            $this->forgetTheLastRequest();
             $body = $this->decode($this->signedIn()->get($resource . '?include=' . implode(',', array_keys($relations))));
             $resources = $body['resources'] ?? [];
 
@@ -188,7 +187,6 @@ class IncludeSweepTest extends ControllerTestCase {
      */
     private function whichIncludeBrokeIt(string $resource, array $relations): string {
         foreach (array_keys($relations) as $property) {
-            $this->forgetTheLastRequest();
             $body = $this->decode($this->signedIn()->get("{$resource}?include={$property}"));
 
             if (($body['status'] ?? null) !== 'OK') {
@@ -219,7 +217,6 @@ class IncludeSweepTest extends ControllerTestCase {
         $this->assertSame('sweep-cron', $cronJob['k8s_cron_job']['name'] ?? null);
         $this->assertSame('sweep-image', $cronJob['k8s_cron_job']['container_image']['name'] ?? null);
 
-        $this->forgetTheLastRequest();
         $specificationCronJob = $this->firstIncluded(
             'deployment_specifications?include=deployment_specification_cron_job',
             'deployment_specification_cron_jobs'
@@ -227,7 +224,6 @@ class IncludeSweepTest extends ControllerTestCase {
         $this->assertSame('sweep-cron', $specificationCronJob['k8s_cron_job']['name'] ?? null);
         $this->assertSame('sweep-image', $specificationCronJob['k8s_cron_job']['container_image']['name'] ?? null);
 
-        $this->forgetTheLastRequest();
         $initContainer = $this->firstIncluded(
             'deployment_specifications?include=deployment_specification_init_container',
             'deployment_specification_init_containers'
@@ -235,7 +231,6 @@ class IncludeSweepTest extends ControllerTestCase {
         $this->assertSame('sweep-init', $initContainer['init_container']['name'] ?? null);
         $this->assertSame('sweep-image', $initContainer['init_container']['container_image']['name'] ?? null);
 
-        $this->forgetTheLastRequest();
         $action = $this->firstIncluded(
             'deployment_specifications?include=deployment_specification_post_update_action',
             'deployment_specification_post_update_actions'
@@ -244,7 +239,6 @@ class IncludeSweepTest extends ControllerTestCase {
 
         // `MigrationJobModel` reaches two levels up rather than down: a migration job is
         // listed with the workspace of the deployment it belongs to.
-        $this->forgetTheLastRequest();
         $body = $this->decode($this->signedIn()->get('migration_jobs'));
         $this->assertSame(
             'sweep-workspace',
@@ -292,7 +286,6 @@ class IncludeSweepTest extends ControllerTestCase {
         $this->assertArrayNotHasKey('migration_jobs', $resource);
         $this->assertArrayNotHasKey('auto_updates', $resource);
 
-        $this->forgetTheLastRequest();
         $asked = $this->decode(
             $this->signedIn()->get("deployments/{$this->deploymentId}?include=auto_update")
         )['resource'] ?? [];
@@ -322,7 +315,6 @@ class IncludeSweepTest extends ControllerTestCase {
         // One nested relation per request: `parseInclude()` splits the whole `include` value
         // on commas before `QueryInclude::parse()` ever sees the `?`, so a second nested
         // name is read as a relation of the *top-level* model and throws.
-        $this->forgetTheLastRequest();
         $annotations = $this->theOnlyIngress('deployment_specification_ingress_annotation');
         $this->assertSame(
             ['sweep.example.org/annotation'],

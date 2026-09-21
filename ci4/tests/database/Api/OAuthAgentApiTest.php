@@ -48,13 +48,6 @@ class OAuthAgentApiTest extends ControllerTestCase {
     public function setUp(): void {
         parent::setUp();
 
-        // These two methods send the response themselves rather than returning it, and
-        // `send()` ends in a real `setcookie()`. PHPUnit has already written to stdout by
-        // then, so the call is a "headers already sent" warning and the request dies on
-        // the one line this test file is about. Pretending leaves the cookie on the
-        // response object, which is where the assertions read it from anyway.
-        service('response')->pretend(true);
-
         // Per process: three test runs can be in flight at once on the same machine.
         $this->upstreamDirectory = sys_get_temp_dir() . '/kso-oauth-agent-' . getmypid();
         if (!is_dir($this->upstreamDirectory)) {

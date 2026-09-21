@@ -66,7 +66,6 @@ class UsersApiTest extends ControllerTestCase {
         $this->assertFalse($this->decode($this->signedIn()->get('users/me'))['resource']['has_mfa_secret_hash']);
 
         $this->giveTheSignedInUserASecondFactor();
-        $this->forgetTheLastRequest();
 
         $this->assertTrue($this->decode($this->signedIn()->get('users/me'))['resource']['has_mfa_secret_hash']);
     }
@@ -154,7 +153,6 @@ class UsersApiTest extends ControllerTestCase {
 
         $this->assertNotSame('', (string) $this->storedSecondFactor());
 
-        $this->forgetTheLastRequest();
         $this->signedIn()->put('users/mfa/setup/remove');
 
         $this->assertSame('', (string) $this->storedSecondFactor());

@@ -12,8 +12,19 @@ use DebugTool\Data;
  */
 class DebugLogInResponsesTest extends ControllerTestCase {
 
+    /**
+     * Something in the log of the request itself. The harness starts every request with an
+     * empty log, as a fresh process would, so a line written before the request is gone by
+     * the time it runs.
+     */
+    private function aRequestThatWritesToTheLog(): void {
+        \CodeIgniter\Events\Events::on('post_controller_constructor', static function (): void {
+            Data::debug('not for the caller');
+        });
+    }
+
     public function testASuccessfulResponseCarriesNoDebugLog(): void {
-        Data::debug('not for the caller');
+        $this->aRequestThatWritesToTheLog();
         $response = $this->signedIn()->get('users/me');
 
         $body = json_decode((string) $response->response()->getBody(), true);
@@ -22,7 +33,7 @@ class DebugLogInResponsesTest extends ControllerTestCase {
     }
 
     public function testAFailedResponseCarriesNoDebugLog(): void {
-        Data::debug('not for the caller');
+        $this->aRequestThatWritesToTheLog();
         $response = $this->signedIn()->put('users/mfa/setup/verify?code=123456');
 
         $body = json_decode((string) $response->response()->getBody(), true);
@@ -35,12 +46,12 @@ class DebugLogInResponsesTest extends ControllerTestCase {
      * job's `last_log`.
      */
     public function testTheLogIsStillKept(): void {
-        Data::debug('kept for the job log');
+        $this->aRequestThatWritesToTheLog();
 
         $this->signedIn()->get('users/me');
 
         $this->assertContains(true, array_map(
-            fn ($line) => is_string($line) && str_contains($line, 'kept for the job log'),
+            fn ($line) => is_string($line) && str_contains($line, 'not for the caller'),
             Data::getDebugger()
         ));
     }

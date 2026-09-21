@@ -120,7 +120,6 @@ class RestGetSweepTest extends ControllerTestCase {
         $deviations = [];
 
         foreach ($this->collectionResources() as $resource) {
-            $this->forgetTheLastRequest();
             $body = $this->decode($this->signedIn()->get($resource));
 
             if (($body['status'] ?? null) !== 'OK') {
@@ -162,7 +161,6 @@ class RestGetSweepTest extends ControllerTestCase {
                 $this->addToAssertionCount(1);
             }
 
-            $this->forgetTheLastRequest();
         }
 
         $this->assertSame([], $answered, 'these answered an unauthenticated caller');
@@ -183,7 +181,6 @@ class RestGetSweepTest extends ControllerTestCase {
             }
 
             $id = $ids[$resource];
-            $this->forgetTheLastRequest();
             $body = $this->decode($this->signedIn()->get("{$resource}/{$id}"));
 
             if (($body['status'] ?? null) !== 'OK') {
@@ -224,7 +221,6 @@ class RestGetSweepTest extends ControllerTestCase {
         $answers = [];
 
         foreach ($this->byIdResources() as $resource) {
-            $this->forgetTheLastRequest();
             $response = $this->signedIn()->get("{$resource}/{$missing}");
             $body = $this->decode($response);
 
@@ -355,7 +351,6 @@ class RestGetSweepTest extends ControllerTestCase {
         $leaks = [];
 
         foreach ($this->collectionResources() as $resource) {
-            $this->forgetTheLastRequest();
             $body = $this->decode($this->signedIn()->get($resource));
 
             foreach ($body['resources'] ?? [] as $row) {

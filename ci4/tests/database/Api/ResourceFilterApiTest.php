@@ -51,7 +51,6 @@ class ResourceFilterApiTest extends ControllerTestCase {
 
         // All four are readable without the filter, so the absences above are the filter's
         // doing and not an arrangement that never wrote the rows.
-        $this->forgetTheLastRequest();
         $unfiltered = $this->namesOf($this->signedIn()->get('workspaces'));
         foreach ([$mine, $sameName, $sameValue, $bare] as $workspace) {
             $this->assertContains($workspace->name_readable, $unfiltered);
