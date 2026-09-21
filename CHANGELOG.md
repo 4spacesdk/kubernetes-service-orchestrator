@@ -35,6 +35,7 @@
 ### Security
 * The sign-in pages show messages from a link as text, so a crafted link can no longer run script on the sign-in page
 * A sign-in link can only send the operator on within kso, not to another site
+* Links and redirects kso writes use the installation's own address (`BASE_URL`), not whatever host a request names. Other names it is reached on are listed in `ALLOWED_HOSTNAMES`, which the chart fills in
 * The app and the sign-in pages send a Content-Security-Policy: the browser runs only scripts served by kso, so an injected script cannot run there
 * The sign-in pages load nothing from other hosts: Bootstrap's stylesheet is served by kso, jQuery, Popper and Font Awesome are gone, and the password field's show button works
 * Dialogs show text, never HTML. A migration or auto update log could run script in the operator's browser - and the log is written by the customer's own container
@@ -77,6 +78,7 @@
 4. Harbor and Azure: open each container registry and click "Set up auto update", then remove the old webhooks from the registry
 5. Artifact Registry: the service account only needs Artifact Registry Reader now
 6. Swagger is off. To keep it, set `deployment.config.swaggerEnabled: true` in the chart
+7. If kso is also reached on a hostname the chart's routing does not list, add it to `deployment.config.extraHostnames`
 
 ### Notes
 * An image built for arm64 has no MSSQL driver

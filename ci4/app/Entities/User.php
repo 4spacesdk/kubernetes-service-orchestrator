@@ -153,7 +153,9 @@ class User extends \RestExtension\Entities\User {
         $this->password_reset_expires = date('Y-m-d H:i:s', time() + self::PasswordResetMinutes * 60);
         $this->save();
 
-        $link = self::PasswordResetLinkBase() . '?token=' . $token;
+        // From BASE_URL, not from the request: someone asking on an operator's behalf with a
+        // `Host` of their own would otherwise have the link point at their site. See Config\App.
+        $link = base_url('login/resetPassword') . '?token=' . $token;
         $minutes = self::PasswordResetMinutes;
         (new EmailLib())->send(
             '4 Spaces KSO | Choose a new password',
@@ -162,21 +164,6 @@ class User extends \RestExtension\Entities\User {
             $this->first_name,
             $this->username
         );
-    }
-
-    /**
-     * The address the link points at, from the installation's configured `BASE_URL`.
-     *
-     * Not from `base_url()`: `Config\App` builds that from the request's `Host` header, so
-     * someone asking for a link on an operator's behalf with a `Host` of their own would get
-     * the operator's token mailed to the operator inside a link to the asker's site. The
-     * chart always sets `BASE_URL`; the request is the fallback only for an installation
-     * that does not.
-     */
-    private static function PasswordResetLinkBase(): string {
-        $configured = rtrim((string) getenv('BASE_URL'), '/');
-
-        return $configured !== '' ? "{$configured}/api/login/resetPassword" : base_url('login/resetPassword');
     }
 
     /**

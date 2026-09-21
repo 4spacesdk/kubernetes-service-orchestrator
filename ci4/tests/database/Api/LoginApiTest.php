@@ -951,10 +951,14 @@ class LoginApiTest extends ControllerTestCase {
         $asFound = getenv('BASE_URL');
         putenv('BASE_URL=https://kso.example.org');
 
+        // A fresh App config, read with this BASE_URL - and a caller that names another host.
+        \CodeIgniter\Config\Factories::reset('config');
+        $_SERVER['HTTP_HOST'] = 'attacker.example';
         try {
             $this->post('login/forgotPassword', ['username' => 'forgetful@example.org']);
         } finally {
             $asFound === false ? putenv('BASE_URL') : putenv("BASE_URL={$asFound}");
+            \CodeIgniter\Config\Factories::reset('config');
         }
 
         $this->assertStringContainsString('https://kso.example.org/api/login/resetPassword?token=', $this->bodyOf($email));

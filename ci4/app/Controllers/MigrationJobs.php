@@ -42,7 +42,7 @@ class MigrationJobs extends \App\Core\ResourceController {
             ->where('id', $id)
             ->find();
 
-        $job->started = date('Y-m-d H:i-s');
+        $job->started = date('Y-m-d H:i:s');
         $job->save();
 
         $job->updateStatus(\MigrationJobStatusTypes::Started);
@@ -62,7 +62,7 @@ class MigrationJobs extends \App\Core\ResourceController {
     public function setEnded(int $id): void {
         $job = new MigrationJob();
         $job->find($id);
-        $job->ended = date('Y-m-d H:i-s');
+        $job->ended = date('Y-m-d H:i:s');
         $job->log = trim(file_get_contents('php://input'));
         $job->save();
 

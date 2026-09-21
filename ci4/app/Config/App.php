@@ -201,17 +201,37 @@ class App extends BaseConfig
      */
     public bool $CSPEnabled = false;
 
+    /**
+     * The address kso answers on, from the installation's BASE_URL.
+     *
+     * It used to be built from the request's `Host` header whenever there was one - so every
+     * absolute url kso wrote, redirects and links in mails included, pointed wherever the
+     * caller said it was. A password reset asked for with a `Host` of the asker's own would
+     * have mailed the operator a link to the asker's site.
+     *
+     * Other names the installation is reached on go in ALLOWED_HOSTNAMES, comma separated;
+     * CodeIgniter then answers on the one a request came in on, and on nothing else.
+     *
+     * Without BASE_URL - an installation not set up by the chart - the request's host is
+     * still used, as before.
+     */
     public function __construct() {
         parent::__construct();
 
-        if (isset($_SERVER['HTTP_HOST'])) {
+        $configured = rtrim((string) getenv('BASE_URL'), '/');
+        if ($configured !== '') {
+            $this->baseURL = $configured . '/api/';
+            $this->allowedHostnames = array_values(array_filter(array_map(
+                'trim',
+                explode(',', (string) getenv('ALLOWED_HOSTNAMES'))
+            )));
+        } else if (isset($_SERVER['HTTP_HOST'])) {
             $hasHttpsHeader = isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) == 'on';
             $hasHttpForwardHeader = isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) == 'https';
             $isHttps = $hasHttpsHeader || $hasHttpForwardHeader;
-            $this->baseURL	= ($isHttps ? "https" : "http") . "://" . $_SERVER['HTTP_HOST'] . '/api';
+            $this->baseURL = ($isHttps ? "https" : "http") . "://" . $_SERVER['HTTP_HOST'] . '/api';
         } else {
-            $baseUrl = strlen(getenv('BASE_URL')) > 0 ? getenv('BASE_URL') : 'http://localhost';
-            $this->baseURL = $baseUrl . '/api';
+            $this->baseURL = 'http://localhost/api';
         }
     }
 }
