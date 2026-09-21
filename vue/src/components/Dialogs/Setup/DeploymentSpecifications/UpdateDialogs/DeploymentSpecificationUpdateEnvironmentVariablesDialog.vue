@@ -4,15 +4,14 @@ import {DeploymentSpecification} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
+import EnvironmentVariableValue from "@/components/Modules/Common/EnvironmentVariables/EnvironmentVariableValue.vue";
+import {fromBulk, toBulk, toRow, type EnvironmentVariableRow} from "@/components/Modules/Common/EnvironmentVariables/environmentVariables";
 
 export interface DeploymentSpecificationUpdateEnvironmentVariablesDialog_Input {
     deploymentSpecification: DeploymentSpecification;
 }
 
-interface Row {
-    name: string;
-    value: string;
-}
+type Row = EnvironmentVariableRow;
 
 const props = defineProps<{
     input: DeploymentSpecificationUpdateEnvironmentVariablesDialog_Input,
@@ -60,12 +59,7 @@ function render() {
         .include('deployment_specification_environment_variable')
         .find(value => {
             rows.value = value[0].deployment_specification_environment_variables
-                ?.map(environmentVariable => {
-                    return {
-                        name: environmentVariable.name ?? '',
-                        value: environmentVariable.value ?? '',
-                    }
-                }) ?? [];
+                ?.map(toRow) ?? [];
             itemCount.value = rows.value.length;
             isLoading.value = false;
         });
@@ -76,29 +70,12 @@ function close() {
     props.events.onClose();
 }
 
-function convertRowsToBulkEditContent(rows: Row[]): string {
-    return rows.map(({name, value}) => `${name}:${value}`).join('\n');
-}
-
-function convertBulkEditToRows(bulkEditString: string): Row[] {
-    return bulkEditString.split('\n').map(line => {
-        const firstColonIndex = line.indexOf(':');
-        if (firstColonIndex === -1) {
-            return {name: line, value: ''};
-        }
-        return {
-            name: line.substring(0, firstColonIndex),
-            value: line.substring(firstColonIndex + 1)
-        };
-    });
-}
-
 function updateRowsFromBulkEdit() {
-    rows.value = convertBulkEditToRows(bulkEditContent.value);
+    rows.value = fromBulk(bulkEditContent.value, rows.value);
 }
 
 function updateBulkEditContentFromRows() {
-    bulkEditContent.value = convertRowsToBulkEditContent(rows.value);
+    bulkEditContent.value = toBulk(rows.value);
 }
 
 function updateBulkEditContentRowCount() {
@@ -111,16 +88,18 @@ function updateBulkEditContentRowCount() {
 // <editor-fold desc="View Binding Functions">
 
 function onCreateBtnClicked() {
-    const newItem = {
+    const newItem: Row = {
         name: '',
         value: '',
+        is_secret: false,
+        has_value: false,
     };
     bus.emit('deploymentSpecificationUpdateEnvironmentVariable', {
         environmentVariable: newItem,
         onSaveCallback: () => {
             rows.value.push(newItem);
             itemCount.value++;
-            if (showBulkEdit.value) {
+            if (showBulkEdit.value && !newItem.is_secret) {
                 bulkEditContent.value = bulkEditContent.value.concat('\n', `${newItem.name}:${newItem.value}`);
                 updateBulkEditContentRowCount();
             }
@@ -220,6 +199,11 @@ function onBulkEditBtnClicked() {
             </v-card-title>
 
             <v-card-text class="px-4">
+                <div
+                    v-if="showBulkEdit && rows.some(row => row.is_secret)"
+                    class="text-caption text-medium-emphasis mb-2">
+                    Secret variables are left out here, and kept as they are.
+                </div>
                 <v-textarea
                     v-if="showBulkEdit"
                     v-model="bulkEditContent"
@@ -240,9 +224,7 @@ function onBulkEditBtnClicked() {
                     class="table"
                     density="compact">
                     <template v-slot:item.value="{ item }">
-                        <span
-                            class="text-truncate d-inline-block mt-1"
-                            style="max-width: 300px;">{{ item.value }}</span>
+                        <environment-variable-value :variable="item"/>
                     </template>
                     <template v-slot:item.actions="{ item }">
                         <div class="d-flex justify-end gap-1">

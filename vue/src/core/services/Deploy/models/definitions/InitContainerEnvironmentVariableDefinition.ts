@@ -11,6 +11,8 @@ export class InitContainerEnvironmentVariableDefinition extends BaseModel {
     init_container?: InitContainer;
     name?: string;
     value?: string;
+    is_secret?: boolean;
+    has_value?: boolean;
     id?: number;
     created?: string;
     updated?: string;
@@ -32,6 +34,8 @@ export class InitContainerEnvironmentVariableDefinition extends BaseModel {
             delete this.init_container;
             delete this.name;
             delete this.value;
+            delete this.is_secret;
+            delete this.has_value;
             delete this.id;
             delete this.created;
             delete this.updated;
@@ -55,6 +59,12 @@ export class InitContainerEnvironmentVariableDefinition extends BaseModel {
         }
         if (data.value != null) {
             this.value = data.value;
+        }
+        if (data.is_secret != null) {
+            this.is_secret = data.is_secret;
+        }
+        if (data.has_value != null) {
+            this.has_value = data.has_value;
         }
         if (data.id != null) {
             this.id = data.id;

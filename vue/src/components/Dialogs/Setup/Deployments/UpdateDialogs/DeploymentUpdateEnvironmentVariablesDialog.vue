@@ -4,6 +4,7 @@ import {Deployment, EnvironmentVariable} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
+import EnvironmentVariableValue from "@/components/Modules/Common/EnvironmentVariables/EnvironmentVariableValue.vue";
 import {en} from "vuetify/locale";
 
 export interface DeploymentUpdateEnvirontmentVariablesDialog_Input {
@@ -148,9 +149,7 @@ function onCloseBtnClicked() {
                     class="table"
                     density="compact">
                     <template v-slot:item.value="{ item }">
-                        <span
-                            class="text-truncate d-inline-block mt-1"
-                            style="max-width: 300px;">{{ item.value }}</span>
+                        <environment-variable-value :variable="item"/>
                     </template>
                     <template v-slot:item.actions="{ item }">
                         <div class="d-flex justify-end gap-1">

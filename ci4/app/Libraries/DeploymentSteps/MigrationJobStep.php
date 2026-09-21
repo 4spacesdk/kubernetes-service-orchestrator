@@ -6,12 +6,14 @@ use App\Entities\Deployment;
 use App\Entities\DeploymentSpecificationInitContainer;
 use App\Entities\DeploymentSpecificationVolume;
 use App\Entities\DeploymentVolume;
-use App\Entities\EnvironmentVariable;
 use App\Entities\MigrationJob;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepLevels;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepTriggers;
+use App\Libraries\Kubernetes\ContainerEnvironment;
+use App\Libraries\Kubernetes\SecretPreview;
+use App\Libraries\Kubernetes\WorkloadSecret;
 use App\Libraries\Kubernetes\ImagePullSecrets;
 use App\Libraries\Kubernetes\KubeAuth;
 use App\Libraries\Kubernetes\KubeHelper;
@@ -19,7 +21,6 @@ use App\Models\ContainerImageModel;
 use App\Models\DeploymentSpecificationInitContainerModel;
 use App\Models\DeploymentSpecificationVolumeModel;
 use App\Models\DeploymentVolumeModel;
-use App\Models\EnvironmentVariableModel;
 use App\Models\InitContainerModel;
 use DebugTool\Data;
 use RenokiCo\PhpK8s\Exceptions\KubernetesAPIException;
@@ -139,13 +140,15 @@ class MigrationJobStep extends BaseDeploymentStep {
             }
 
             unset($remote['status']);
-            $remote = json_encode($remote);
         }
 
-        return json_encode([
-            'local' => $local,
-            'remote' => $remote ?? null,
-        ]);
+        return json_encode(SecretPreview::of(
+            $local,
+            $remote ?? null,
+            $this->workloadSecret,
+            $deployment,
+            $this->workloadSecret->remoteData($deployment, (new KubeAuth())->authenticate())
+        ));
     }
 
     /**
@@ -248,7 +251,8 @@ class MigrationJobStep extends BaseDeploymentStep {
         $migrationJob->command = $deployment->findDeploymentSpecification()->database_migration_command;
         $migrationJob->save();
 
-        $resource->create();
+        // Created rather than applied: the job of the last run was deleted above.
+        $this->workloadSecret->applyWith($resource, $deployment, static fn (K8sJob $job) => $job->create(), removeUnused: false);
     }
 
     public function startTerminateCommand(Deployment $deployment): void {
@@ -286,8 +290,14 @@ class MigrationJobStep extends BaseDeploymentStep {
     /**
      * @throws \Exception
      */
+    /**
+     * The Secret the last getResource() put the secret variables in - see DeploymentStep.
+     */
+    protected ?WorkloadSecret $workloadSecret = null;
+
     protected function getResource(Deployment $deployment, bool $auth = false): K8sJob {
         $spec = $deployment->findDeploymentSpecification();
+        $this->workloadSecret = $secret = WorkloadSecret::For($deployment->name, 'job');
 
         $containerImage = new ContainerImage();
 
@@ -349,25 +359,11 @@ class MigrationJobStep extends BaseDeploymentStep {
             ->find();
         $podImages = [$containerImage];
         foreach ($deploymentSpecificationInitContainers as $deploymentSpecificationInitContainer) {
-            $initContainers[] = $deploymentSpecificationInitContainer->init_container->toKubernetesResource($deployment);
+            $initContainers[] = $deploymentSpecificationInitContainer->init_container->toKubernetesResource($deployment, $secret);
             $podImages[] = $deploymentSpecificationInitContainer->init_container->container_image;
         }
 
-        $extraEnvVars = [];
-        $specEnvVars = $spec->getEnvironmentVariables($deployment);
-        foreach ($specEnvVars as $key => $value) {
-            $extraEnvVars[$key] = $value;
-        }
-
-        /** @var EnvironmentVariable $envVars */
-        $envVars = (new EnvironmentVariableModel())
-            ->where('deployment_id', $deployment->id)
-            ->find();
-        foreach ($envVars as $envVar) {
-            $extraEnvVars[$envVar->name] = $envVar->value;
-        }
-
-        $container->addEnvs($extraEnvVars);
+        ContainerEnvironment::ofDeployment($deployment)->applyTo($container, $secret);
 
         $volumes = [];
         /** @var DeploymentVolume $deploymentVolumes */

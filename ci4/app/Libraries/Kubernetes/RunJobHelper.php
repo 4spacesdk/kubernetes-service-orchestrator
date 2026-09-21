@@ -3,10 +3,8 @@
 use App\Entities\ContainerImage;
 use App\Entities\Deployment;
 use App\Entities\DeploymentVolume;
-use App\Entities\EnvironmentVariable;
 use App\Libraries\DeploymentSteps\ServiceAccountStep;
 use App\Models\DeploymentVolumeModel;
-use App\Models\EnvironmentVariableModel;
 use DebugTool\Data;
 use RenokiCo\PhpK8s\Exceptions\KubernetesAPIException;
 use RenokiCo\PhpK8s\Exceptions\KubernetesLogsException;
@@ -87,19 +85,8 @@ class RunJobHelper {
             ->addEnv('ENVIRONMENT', $deployment->environment)
             ->addEnv('BASE_URL', $deployment->getUrl(true, true));
 
-        $extraEnvVars = [];
-        $specEnvVars = $spec->getEnvironmentVariables($deployment);
-        foreach ($specEnvVars as $key => $value) {
-            $extraEnvVars[$key] = $value;
-        }
-        /** @var EnvironmentVariable $envVars */
-        $envVars = (new EnvironmentVariableModel())
-            ->where('deployment_id', $deployment->id)
-            ->find();
-        foreach ($envVars as $envVar) {
-            $extraEnvVars[$envVar->name] = $envVar->value;
-        }
-        $container->addEnvs($extraEnvVars);
+        $secret = WorkloadSecret::For($this->getJobName($deployment, $jobId), 'job');
+        ContainerEnvironment::ofDeployment($deployment)->applyTo($container, $secret);
 
         $volumes = [];
         /** @var DeploymentVolume $deploymentVolumes */
@@ -177,7 +164,7 @@ class RunJobHelper {
             }
         }
 
-        $resource->create();
+        $secret->applyWith($resource, $deployment, static fn (K8sJob $job) => $job->create(), removeUnused: false);
     }
 
     /**

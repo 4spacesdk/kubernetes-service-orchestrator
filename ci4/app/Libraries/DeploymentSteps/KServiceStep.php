@@ -7,12 +7,14 @@ use App\Entities\DeploymentSpecificationInitContainer;
 use App\Entities\DeploymentSpecificationVolume;
 use App\Entities\DeploymentVolume;
 use App\Entities\Domain;
-use App\Entities\EnvironmentVariable;
 use App\Entities\KNativeMinScaleSchedule;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepLevels;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepTriggers;
+use App\Libraries\Kubernetes\ContainerEnvironment;
+use App\Libraries\Kubernetes\SecretPreview;
+use App\Libraries\Kubernetes\WorkloadSecret;
 use App\Libraries\Kubernetes\CustomResourceDefinitions\K8sKNativeService;
 use App\Libraries\Kubernetes\ImagePullSecrets;
 use App\Libraries\Kubernetes\KubeAuth;
@@ -21,7 +23,6 @@ use App\Models\DeploymentSpecificationDeploymentAnnotationModel;
 use App\Models\DeploymentSpecificationInitContainerModel;
 use App\Models\DeploymentSpecificationVolumeModel;
 use App\Models\DeploymentVolumeModel;
-use App\Models\EnvironmentVariableModel;
 use App\Models\InitContainerModel;
 use RenokiCo\PhpK8s\Exceptions\KubernetesAPIException;
 use RenokiCo\PhpK8s\Instances\Instance;
@@ -101,13 +102,15 @@ class KServiceStep extends BaseDeploymentStep {
             unset($remote['spec']['template']['metadata']['creationTimestamp']);
             unset($remote['spec']['template']['metadata']['traffic']);
             unset($remote['status']);
-            $remote = json_encode($remote);
         }
 
-        return json_encode([
-            'local' => $local,
-            'remote' => $remote ?? null,
-        ]);
+        return json_encode(SecretPreview::of(
+            $local,
+            $remote ?? null,
+            $this->workloadSecret,
+            $deployment,
+            $this->workloadSecret->remoteData($deployment, (new KubeAuth())->authenticate())
+        ));
     }
 
     /**
@@ -210,7 +213,7 @@ class KServiceStep extends BaseDeploymentStep {
         $annotations['4spaces.kso/update-time'] = date('Y-m-d H:i:s');
         $resource->setAttribute('spec.template.metadata.annotations', $annotations);
 
-        $this->apply($resource);
+        $this->workloadSecret->applyWith($resource, $deployment);
     }
 
     public function startTerminateCommand(Deployment $deployment): void {
@@ -248,8 +251,14 @@ class KServiceStep extends BaseDeploymentStep {
     /**
      * @throws \Exception
      */
+    /**
+     * The Secret the last getResource() put the secret variables in - see DeploymentStep.
+     */
+    protected ?WorkloadSecret $workloadSecret = null;
+
     protected function getResource(Deployment $deployment, bool $auth = false): K8sKNativeService {
         $spec = $deployment->findDeploymentSpecification();
+        $this->workloadSecret = $secret = WorkloadSecret::For($deployment->name, 'deployment');
 
         if (!$spec->container_image->exists()) {
             $spec->container_image->find();
@@ -271,24 +280,11 @@ class KServiceStep extends BaseDeploymentStep {
         $container->setAttribute('ports', $ports);
 
         // Env vars
-        $envVars = [
-            'ENVIRONMENT' => $deployment->environment,
-            'BASE_URL' => $deployment->getUrl(true, true),
-        ];
-        $specEnvVars = $spec->getEnvironmentVariables($deployment);
-        foreach ($specEnvVars as $key => $value) {
-            $envVars[$key] = $value;
-        }
-        /** @var EnvironmentVariable $deploymentEnvVars */
-        $deploymentEnvVars = (new EnvironmentVariableModel())
-            ->where('deployment_id', $deployment->id)
-            ->find();
-        foreach ($deploymentEnvVars as $deploymentEnvVar) {
-            $envVars[$deploymentEnvVar->name] = $deploymentEnvVar->value;
-        }
-        foreach ($envVars as $key => $value) {
-            $container->addToAttribute('env', ['name' => $key, 'value' => $value]);
-        }
+        (new ContainerEnvironment())
+            ->set('ENVIRONMENT', (string) $deployment->environment)
+            ->set('BASE_URL', $deployment->getUrl(true, true))
+            ->merge(ContainerEnvironment::ofDeployment($deployment))
+            ->applyTo($container, $secret);
 
         // Resource limits
         if ($deployment->cpu_request) {
@@ -427,11 +423,18 @@ class KServiceStep extends BaseDeploymentStep {
             ->find();
         $podImages = [$spec->container_image];
         foreach ($deploymentSpecificationInitContainers as $deploymentSpecificationInitContainer) {
-            $initContainers[] = $deploymentSpecificationInitContainer->init_container->toKubernetesResource($deployment)->toArray();
+            $initContainers[] = $deploymentSpecificationInitContainer->init_container->toKubernetesResource($deployment, $secret)->toArray();
             $podImages[] = $deploymentSpecificationInitContainer->init_container->container_image;
         }
         if (count($initContainers) > 0) {
             $template->setAttribute('spec.initContainers', $initContainers);
+        }
+
+        // After the init containers: their secret variables are in the Secret too.
+        if (!$secret->isEmpty()) {
+            $attrs = $template->getAttribute('metadata.annotations');
+            $attrs[WorkloadSecret::ChecksumAnnotation] = $secret->checksum();
+            $template->setAttribute('metadata.annotations', $attrs);
         }
 
         // Image Pull Secrets

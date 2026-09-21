@@ -1,6 +1,9 @@
 <?php namespace App\Libraries\DeploymentSteps;
 
 use App\Entities\Deployment;
+use App\Libraries\Kubernetes\ContainerEnvironment;
+use App\Libraries\Kubernetes\SecretPreview;
+use App\Libraries\Kubernetes\WorkloadSecret;
 use App\Libraries\Kubernetes\KubeHelper;
 use App\Entities\Domain;
 use App\Entities\EnvironmentVariable;
@@ -12,7 +15,6 @@ use App\Libraries\Kubernetes\KubeAuth;
 use App\Models\ContainerImageModel;
 use App\Models\DeploymentCronJobModel;
 use App\Models\DeploymentSpecificationCronJobModel;
-use App\Models\EnvironmentVariableModel;
 use App\Models\K8sCronJobModel;
 use Cron\CronExpression;
 use DebugTool\Data;
@@ -77,12 +79,14 @@ class CronjobStep extends BaseDeploymentStep {
      */
     public function getPreview(Deployment $deployment): string {
         $resources = $this->getResources($deployment, true);
+        $cluster = (new KubeAuth())->authenticate();
 
         $locals = [];
         $remotes = [];
 
         foreach ($resources as $resource) {
-            $locals[] = $resource->toJson();
+            $local = $resource->toJson();
+            $remote = null;
 
             if ($resource->exists()) {
                 $exiting = $resource->get();
@@ -103,8 +107,12 @@ class CronjobStep extends BaseDeploymentStep {
                 unset($remote['spec']['jobTemplate']['spec']['template']['spec']['dnsPolicy']);
                 unset($remote['spec']['jobTemplate']['spec']['template']['spec']['schedulerName']);
                 unset($remote['status']);
-                $remotes[] = json_encode($remote);
             }
+
+            $secret = $this->workloadSecrets[$resource->getName()];
+            $preview = SecretPreview::of($local, $remote, $secret, $deployment, $secret->remoteData($deployment, $cluster));
+            $locals = [...$locals, ...(array) $preview['local']];
+            $remotes = [...$remotes, ...(array) ($preview['remote'] ?? [])];
         }
 
         return json_encode([
@@ -148,9 +156,18 @@ class CronjobStep extends BaseDeploymentStep {
     public function startDeployCommand(Deployment $deployment, ?string $reason = null): void {
         $resources = $this->getResources($deployment, true);
         foreach ($resources as $resource) {
-            $this->apply($resource);
+            $this->workloadSecrets[$resource->getName()]->applyWith($resource, $deployment);
         }
     }
+
+    /**
+     * The Secret of each cron job the last getResources() built, by the cron job's name -
+     * see DeploymentStep. No checksum on the template: a job reads its Secret when its pod
+     * starts, so the next run has the new values without anything being rolled.
+     *
+     * @var array<string, WorkloadSecret>
+     */
+    protected array $workloadSecrets = [];
 
     public function startTerminateCommand(Deployment $deployment): void {
         $resources = $this->getResources($deployment, true);
@@ -262,6 +279,7 @@ class CronjobStep extends BaseDeploymentStep {
      * @throws \Exception
      */
     protected function getResources(Deployment $deployment, bool $auth = false): array {
+        $this->workloadSecrets = [];
         $spec = $deployment->findDeploymentSpecification();
 
         /** @var CronJob $cronJobs */
@@ -284,6 +302,8 @@ class CronjobStep extends BaseDeploymentStep {
         $resources = [];
 
         foreach ($cronJobs as $index => $cronJob) {
+            $name = $cronJob->generateName($deployment);
+            $this->workloadSecrets[$name] = $secret = WorkloadSecret::For($name, 'cronjob');
 
             $container = new Container();
             $container
@@ -320,23 +340,9 @@ class CronjobStep extends BaseDeploymentStep {
             $container->setAttribute('securityContext.allowPrivilegeEscalation', (bool)$cronJob->container_image->security_context_allow_privilege_escalation);
             $container->setAttribute('securityContext.readOnlyRootFilesystem', (bool)$cronJob->container_image->security_context_read_only_root_filesystem);
 
-            $envVars = [];
-
             if ($cronJob->include_deployment_environment_variables) {
-                $specEnvVars = $spec->getEnvironmentVariables($deployment);
-                foreach ($specEnvVars as $key => $value) {
-                    $envVars[$key] = $value;
-                }
-                /** @var EnvironmentVariable $deploymentEnvironmentVariables */
-                $deploymentEnvironmentVariables = (new EnvironmentVariableModel())
-                    ->where('deployment_id', $deployment->id)
-                    ->find();
-                foreach ($deploymentEnvironmentVariables as $deploymentEnvironmentVariable) {
-                    $envVars[$deploymentEnvironmentVariable->name] = $deploymentEnvironmentVariable->value;
-                }
+                ContainerEnvironment::ofDeployment($deployment)->applyTo($container, $secret);
             }
-
-            $container->addEnvs($envVars);
 
             if ($cronJob->cpu_request) {
                 $container->minCpu($cronJob->cpu_request.'m');
@@ -365,7 +371,7 @@ class CronjobStep extends BaseDeploymentStep {
 
             $resource = new K8sCronJob();
             $resource
-                ->setName($cronJob->generateName($deployment))
+                ->setName($name)
                 ->setNamespace($deployment->namespace)
                 ->setSchedule(new CronExpression($cronJob->schedule))
                 ->setSpec('concurrencyPolicy', $cronJob->concurrency_policy)

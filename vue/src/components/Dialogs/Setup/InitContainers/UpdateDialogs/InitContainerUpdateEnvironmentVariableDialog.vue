@@ -1,13 +1,12 @@
 <script setup lang="ts">
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
+import EnvironmentVariableValueField from "@/components/Modules/Common/EnvironmentVariables/EnvironmentVariableValueField.vue";
+import type {EnvironmentVariableRow} from "@/components/Modules/Common/EnvironmentVariables/environmentVariables";
 import {VTextField} from "vuetify/components/VTextField";
 
 export interface InitContainerUpdateEnvironmentVariableDialog_Input {
-    environmentVariable: {
-        name: string;
-        value: string;
-    };
+    environmentVariable: EnvironmentVariableRow;
 
     onSaveCallback: () => void;
 }
@@ -26,6 +25,8 @@ const used = ref(false);
 const showDialog = ref(false);
 const name = ref('');
 const value = ref('');
+const isSecret = ref(false);
+const hasStoredSecret = ref(false);
 
 const showVariablesMenu = ref(false);
 const variables = ref<Variable[]>([
@@ -99,6 +100,8 @@ onUnmounted(() => {
 function render() {
     name.value = props.input.environmentVariable.name ?? '';
     value.value = props.input.environmentVariable.value ?? '';
+    isSecret.value = !!props.input.environmentVariable.is_secret;
+    hasStoredSecret.value = isSecret.value && !!props.input.environmentVariable.has_value;
     showDialog.value = true;
 }
 
@@ -114,6 +117,7 @@ function close() {
 function onSaveBtnClicked() {
     props.input.environmentVariable.name = name.value;
     props.input.environmentVariable.value = value.value;
+    props.input.environmentVariable.is_secret = isSecret.value;
     props.input.onSaveCallback();
     close();
 }
@@ -153,50 +157,47 @@ function onVariableClicked(variable: Variable) {
                         />
                     </v-col>
                     <v-col cols="12">
-                        <div
-                            class="d-flex"
+                        <environment-variable-value-field
+                            v-model="value"
+                            v-model:secret="isSecret"
+                            :name="name"
+                            :has-stored-secret="hasStoredSecret"
+                            density="compact"
                         >
-                            <v-text-field
-                                v-model="value"
-                                variant="outlined"
-                                label="Value"
-                                spellcheck="false"
-                                density="compact"
-                                hide-details
-                            />
+                            <template v-slot:append>
+                                <v-menu
+                                    v-model="showVariablesMenu"
+                                    :close-on-content-click="false"
+                                    left
+                                    min-width="250"
+                                    offset-y>
+                                    <template v-slot:activator="{ props }">
+                                        <v-btn
+                                            v-bind="props"
+                                            icon
+                                            variant="plain"
+                                            color="primary"
+                                            size="small">
+                                            <v-icon>fa fa-plus</v-icon>
+                                            <v-tooltip activator="parent" location="bottom">Insert variable</v-tooltip>
+                                        </v-btn>
+                                    </template>
 
-                            <v-menu
-                                v-model="showVariablesMenu"
-                                :close-on-content-click="false"
-                                left
-                                min-width="250"
-                                offset-y>
-                                <template v-slot:activator="{ props }">
-                                    <v-btn
-                                        v-bind="props"
-                                        icon
-                                        variant="plain"
-                                        color="primary"
-                                        size="small">
-                                        <v-icon>fa fa-plus</v-icon>
-                                        <v-tooltip activator="parent" location="bottom">Insert variable</v-tooltip>
-                                    </v-btn>
-                                </template>
-
-                                <v-list
-                                    class="list-items">
-                                    <v-list-item
-                                        v-for="(variable, i) in variables" :key="i"
-                                        dense
-                                        @click="onVariableClicked(variable)">
-                                        <v-list-item-title>
-                                            <v-icon size="small" class="my-auto">fa fa-window-maximize fa</v-icon>
-                                            <span class="ml-2">{{ variable.name }}</span>
-                                        </v-list-item-title>
-                                    </v-list-item>
-                                </v-list>
-                            </v-menu>
-                        </div>
+                                    <v-list
+                                        class="list-items">
+                                        <v-list-item
+                                            v-for="(variable, i) in variables" :key="i"
+                                            dense
+                                            @click="onVariableClicked(variable)">
+                                            <v-list-item-title>
+                                                <v-icon size="small" class="my-auto">fa fa-window-maximize fa</v-icon>
+                                                <span class="ml-2">{{ variable.name }}</span>
+                                            </v-list-item-title>
+                                        </v-list-item>
+                                    </v-list>
+                                </v-menu>
+                            </template>
+                        </environment-variable-value-field>
                     </v-col>
                 </v-row>
             </v-card-text>

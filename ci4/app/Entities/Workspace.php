@@ -219,7 +219,8 @@ class Workspace extends Entity {
         $values->all = array_map(
             fn(DeploymentPackageEnvironmentVariable $deploymentPackageEnvironmentVariable) => EnvironmentVariable::Create(
                 $deploymentPackageEnvironmentVariable->name,
-                $deploymentPackageEnvironmentVariable->value
+                $deploymentPackageEnvironmentVariable->value,
+                (bool) $deploymentPackageEnvironmentVariable->is_secret
             ),
             $deploymentPackageEnvironmentVariables->all ?? []
         );

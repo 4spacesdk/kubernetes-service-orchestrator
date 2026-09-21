@@ -51,6 +51,8 @@
 * A customer's database password is drawn from the system's own randomness; it used to come from a generator whose output can be worked out from enough of it
 * Responses carry the usual browser protections - `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `X-Permitted-Cross-Domain-Policies`, and HSTS when the request came over TLS - and no longer announce the Apache and PHP versions
 * Stored credentials are encrypted in the database: registry, database and email passwords, Podio and GitHub secrets, webhook tokens, a tenant's database password and the two-factor secret. The key comes from the installation's own `ENCRYPTION_KEY` - **it has to be set, and kept**
+* Environment variables can be marked secret: the value is never sent back to the UI, and saving the list without it keeps it. Every variable's value is encrypted in the database. "Copy to deployments" on a workspace template takes the template's value instead of one in the url
+* Secret environment variables reach the pods through a Secret per workload - the Deployment or KService, each CronJob, each Job - owned by it, instead of in the pod spec. So do variables that take `${database.pass}` or `${emailService.pass}`, marked or not. A changed value rolls the pods. The preview shows the Secret with its values hidden and marks the ones that change, and hides them in a workload deployed before
 * Stored credentials are no longer handed to anyone signed in: a database or email service's password, a Podio client secret and app token, a webhook's bearer token - in the delivery log too - and an OAuth client secret are write-only now. A form says whether one is stored and keeps it when left empty, and the OAuth clients list no longer prints the secret in a column
 * Security-related improvements
 
@@ -82,6 +84,7 @@
 6. Swagger is off. To keep it, set `deployment.config.swaggerEnabled: true` in the chart
 7. If kso is also reached on a hostname the chart's routing does not list, add it to `deployment.config.extraHostnames`
 8. Image scanning keeps Trivy's databases on a 4Gi volume (`deployment.imageScanning.cacheSizeLimit`), fetched again when the pod starts - 1.3 GB, and 1.4 GB more once an image with Java in it is scanned. The chart now sets `resources` by default: 256Mi requested and a 1Gi memory limit, measured at about 90Mi idle and 110-180Mi more during a scan. Helm merges them with your own `resources`; set `resources: null` to go without
+9. kso needs `create`, `get`, `update`, `patch`, `delete` and `list` on `secrets`, and `update` on the `finalizers` of deployments, jobs, cronjobs and Knative services. The chart's ClusterRole has them now; if you grant kso's rights yourself, add them
 
 ### Notes
 * An image built for arm64 has no MSSQL driver

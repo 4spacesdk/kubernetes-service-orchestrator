@@ -3,12 +3,11 @@ import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch}
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
 import {VTextField} from "vuetify/components/VTextField";
 import VariableBtn from "@/components/Modules/Common/VariableBtn.vue";
+import EnvironmentVariableValueField from "@/components/Modules/Common/EnvironmentVariables/EnvironmentVariableValueField.vue";
+import type {EnvironmentVariableRow} from "@/components/Modules/Common/EnvironmentVariables/environmentVariables";
 
 export interface DeploymentSpecificationUpdateEnvironmentVariableDialog_Input {
-    environmentVariable: {
-        name: string;
-        value: string;
-    };
+    environmentVariable: EnvironmentVariableRow;
 
     onSaveCallback: () => void;
 }
@@ -27,6 +26,8 @@ const used = ref(false);
 const showDialog = ref(false);
 const name = ref('');
 const value = ref('');
+const isSecret = ref(false);
+const hasStoredSecret = ref(false);
 
 // <editor-fold desc="Functions">
 
@@ -44,6 +45,8 @@ onUnmounted(() => {
 function render() {
     name.value = props.input.environmentVariable.name ?? '';
     value.value = props.input.environmentVariable.value ?? '';
+    isSecret.value = !!props.input.environmentVariable.is_secret;
+    hasStoredSecret.value = isSecret.value && !!props.input.environmentVariable.has_value;
     showDialog.value = true;
 }
 
@@ -59,6 +62,7 @@ function close() {
 function onSaveBtnClicked() {
     props.input.environmentVariable.name = name.value;
     props.input.environmentVariable.value = value.value;
+    props.input.environmentVariable.is_secret = isSecret.value;
     props.input.onSaveCallback();
     close();
 }
@@ -91,20 +95,18 @@ function onCloseBtnClicked() {
                         />
                     </v-col>
                     <v-col cols="12">
-                        <div
-                            class="d-flex"
+                        <environment-variable-value-field
+                            v-model="value"
+                            v-model:secret="isSecret"
+                            :name="name"
+                            :has-stored-secret="hasStoredSecret"
                         >
-                            <v-text-field
-                                v-model="value"
-                                variant="outlined"
-                                label="Value"
-                                spellcheck="false"
-                            />
-
-                            <variable-btn
-                                @add-variable="item => value += item"
-                            />
-                        </div>
+                            <template v-slot:append>
+                                <variable-btn
+                                    @add-variable="item => value += item"
+                                />
+                            </template>
+                        </environment-variable-value-field>
                     </v-col>
                 </v-row>
             </v-card-text>

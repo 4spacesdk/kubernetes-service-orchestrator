@@ -258,6 +258,7 @@ class Deployment extends Entity {
         $environmentVariable->deployment_id = $this->id;
         $environmentVariable->name = $value->name;
         $environmentVariable->value = $value->value;
+        $environmentVariable->is_secret = (bool) $value->is_secret;
         $environmentVariable->save();
 
         DeploymentStepHelper::EmitTrigger(DeploymentStepTriggers::Deployment_EnvironmentVariable_Updated, $this);

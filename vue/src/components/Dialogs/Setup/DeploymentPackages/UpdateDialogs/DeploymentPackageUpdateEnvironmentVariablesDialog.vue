@@ -4,15 +4,14 @@ import {DeploymentPackage} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
+import EnvironmentVariableValue from "@/components/Modules/Common/EnvironmentVariables/EnvironmentVariableValue.vue";
+import {toRow, type EnvironmentVariableRow} from "@/components/Modules/Common/EnvironmentVariables/environmentVariables";
 
 export interface DeploymentPackageUpdateEnvironmentVariablesDialog_Input {
     deploymentPackage: DeploymentPackage;
 }
 
-interface Row {
-    name: string;
-    value: string;
-
+interface Row extends EnvironmentVariableRow {
     isLoadingCopyToDeploymentsBtn?: boolean;
 }
 
@@ -55,12 +54,7 @@ function render() {
         .include('deployment_package_environment_variable')
         .find(value => {
             rows.value = value[0].deployment_package_environment_variables
-                ?.map(environmentVariable => {
-                    return {
-                        name: environmentVariable.name ?? '',
-                        value: environmentVariable.value ?? '',
-                    }
-                }) ?? [];
+                ?.map(toRow) ?? [];
             itemCount.value = rows.value.length;
             isLoading.value = false;
         });
@@ -76,9 +70,11 @@ function close() {
 // <editor-fold desc="View Binding Functions">
 
 function onCreateBtnClicked() {
-    const newItem = {
+    const newItem: Row = {
         name: '',
         value: '',
+        is_secret: false,
+        has_value: false,
     };
     bus.emit('deploymentPackageUpdateEnvironmentVariable', {
         environmentVariable: newItem,
@@ -105,7 +101,6 @@ function onCopyToDeploymentsConfirmed(row: Row, overwrite: boolean) {
     row.isLoadingCopyToDeploymentsBtn = true;
     Api.deploymentPackages().copyEnvironmentVariableToDeploymentsPutByDeploymentPackageId(props.input.deploymentPackage.id!)
         .name(row.name)
-        .value(row.value)
         .override(overwrite)
         .save(null, _ => {
             bus.emit('toast', {
@@ -185,9 +180,7 @@ function onCloseBtnClicked() {
                     class="table"
                     density="compact">
                     <template v-slot:item.value="{ item }">
-                        <span
-                            class="text-truncate d-inline-block mt-1"
-                            style="max-width: 300px;">{{ item.value }}</span>
+                        <environment-variable-value :variable="item"/>
                     </template>
                     <template v-slot:item.actions="{ item }">
                         <div class="d-flex justify-end">

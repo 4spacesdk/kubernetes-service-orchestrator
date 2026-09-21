@@ -2,6 +2,7 @@
 
 use App\Entities\Deployment;
 use App\Fixtures;
+use App\Libraries\Kubernetes\WorkloadSecret;
 use App\Libraries\DeploymentSteps\DeploymentStep;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepLevels;
@@ -80,6 +81,37 @@ class DeploymentStepTest extends ManifestTestCase {
      * A variable set on the deployment itself wins over the one inherited from the
      * specification. That is the whole point of being able to set one per deployment.
      */
+    /**
+     * A secret variable is not in the manifest: the container reads it from the deployment's
+     * Secret, and the pod template carries the Secret's checksum, so a changed value rolls
+     * the pods.
+     */
+    public function testASecretVariableIsReadFromTheDeploymentsSecret(): void {
+        $deployment = Fixtures::deployableDeployment();
+        Fixtures::specificationEnvironmentVariable([
+            'deployment_specification_id' => $deployment->deployment_specification_id,
+            'name' => 'API_TOKEN',
+            'value' => 'token-value',
+            'is_secret' => true,
+        ]);
+
+        $manifest = $this->build($deployment);
+
+        $env = array_column($manifest['spec']['template']['spec']['containers'][0]['env'], null, 'name');
+        $this->assertSame(
+            ['name' => 'API_TOKEN', 'valueFrom' => ['secretKeyRef' => ['name' => "{$deployment->name}-deployment-env", 'key' => "{$deployment->name}.API_TOKEN"]]],
+            $env['API_TOKEN']
+        );
+        $this->assertStringNotContainsString('token-value', json_encode($manifest));
+        $this->assertArrayHasKey(WorkloadSecret::ChecksumAnnotation, $manifest['spec']['template']['metadata']['annotations']);
+    }
+
+    public function testWithoutSecretVariablesThePodHasNoChecksum(): void {
+        $deployment = Fixtures::deployableDeployment();
+
+        $this->assertArrayNotHasKey(WorkloadSecret::ChecksumAnnotation, $this->build($deployment)['spec']['template']['metadata']['annotations']);
+    }
+
     public function testDeploymentEnvironmentVariableOverridesTheSpecification(): void {
         $deployment = Fixtures::deployableDeployment();
 

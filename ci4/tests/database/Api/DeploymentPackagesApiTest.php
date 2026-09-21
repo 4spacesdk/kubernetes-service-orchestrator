@@ -153,9 +153,7 @@ class DeploymentPackagesApiTest extends ControllerTestCase {
             ['name' => 'LOG_LEVEL', 'value' => 'debug'],
         ]);
 
-        $row = db_connect()->table('deployment_package_environment_variables')
-            ->where('deployment_package_id', $package->id)
-            ->get()->getRowArray();
+        $row = $this->variablesOn($package->id)[0];
         $this->assertSame('LOG_LEVEL', $row['name']);
         $this->assertSame('debug', $row['value']);
     }
@@ -363,6 +361,34 @@ class DeploymentPackagesApiTest extends ControllerTestCase {
     }
 
     /**
+     * The value comes from the package, never from the request: a secret one is not shown to
+     * the UI, and a value in a url ends up in logs.
+     */
+    public function testAVariableThePackageDoesNotHaveIsRefused(): void {
+        $package = Fixtures::deploymentPackage();
+        $deployment = $this->deploymentOnPackage($package->id, 'api');
+
+        $response = $this->signedIn()->put(
+            "deployment-packages/{$package->id}/environment-variables/copy-to-deployments?name=MISSING&value=from-the-url"
+        );
+        $body = json_decode((string) $response->response()->getBody(), true);
+
+        $this->assertSame('unknown environment variable', $body['error']);
+        $this->assertNull($this->variableOf($deployment->id, 'MISSING'));
+    }
+
+    public function testASecretVariableIsCopiedAsASecret(): void {
+        $package = Fixtures::deploymentPackage();
+        $deployment = $this->deploymentOnPackage($package->id, 'api');
+
+        $this->copyVariable($package->id, 'API_TOKEN', 'token-value', null, true);
+
+        $variable = (new EnvironmentVariableModel())->where('deployment_id', $deployment->id)->where('name', 'API_TOKEN')->find();
+        $this->assertSame('token-value', $variable->value);
+        $this->assertTrue((bool) $variable->is_secret);
+    }
+
+    /**
      * Unlike the update endpoints, this one refuses an unknown package rather than
      * answering OK - it is one of the few that does.
      */
@@ -388,12 +414,24 @@ class DeploymentPackagesApiTest extends ControllerTestCase {
     }
 
     /**
+     * Gives the package the variable, then copies it out. The value is the package's own:
+     * the endpoint is not sent one.
+     *
      * @return array<string, mixed>
      */
-    private function copyVariable(int $packageId, string $name, string $value, ?string $override = null): array {
+    private function copyVariable(int $packageId, string $name, string $value, ?string $override = null, bool $isSecret = false): array {
+        if ((new \App\Entities\DeploymentPackage())->find($packageId)->exists()) {
+            $this->db->table('deployment_package_environment_variables')
+                ->where('deployment_package_id', $packageId)
+                ->where('name', $name)
+                ->delete();
+            $variable = \App\Entities\DeploymentPackageEnvironmentVariable::Create($name, $value, $isSecret);
+            $variable->deployment_package_id = $packageId;
+            $variable->save();
+        }
+
         $query = http_build_query(array_filter([
             'name' => $name,
-            'value' => $value,
             'override' => $override,
         ], static fn ($v) => $v !== null));
 
@@ -426,13 +464,19 @@ class DeploymentPackagesApiTest extends ControllerTestCase {
     }
 
     /**
+     * The rows as stored, with the value decrypted - every value is encrypted where it is
+     * stored.
+     *
      * @return array<array<string, mixed>>
      */
     private function variablesOn(int $packageId): array {
-        return db_connect()->table('deployment_package_environment_variables')
-            ->where('deployment_package_id', $packageId)
-            ->orderBy('id', 'asc')
-            ->get()->getResultArray();
+        return array_map(
+            static fn (array $row) => ['value' => \App\Libraries\Crypt::Decrypt($row['value'])] + $row,
+            db_connect()->table('deployment_package_environment_variables')
+                ->where('deployment_package_id', $packageId)
+                ->orderBy('id', 'asc')
+                ->get()->getResultArray()
+        );
     }
 
     /**

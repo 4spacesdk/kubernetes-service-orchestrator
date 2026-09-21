@@ -113,10 +113,34 @@ class CreateDeploymentFromPackageTest extends DatabaseTestCase {
     /**
      * @param array<string, mixed> $packageSpecification
      */
+    /**
+     * The template's variables are copied onto the deployment, and a secret one stays secret.
+     */
+    public function testTheTemplatesVariablesComeAlongAndASecretStaysSecret(): void {
+        FakeIntegrations::install();
+        $this->packageVariables = [['API_TOKEN', 'token-value', true], ['LOG_LEVEL', 'debug', false]];
+
+        $deployment = $this->deploymentFromPackage([]);
+
+        $variables = [];
+        foreach ((new \App\Models\EnvironmentVariableModel())->where('deployment_id', $deployment->id)->find() as $variable) {
+            $variables[$variable->name] = [$variable->value, (bool) $variable->is_secret];
+        }
+        $this->assertSame(['API_TOKEN' => ['token-value', true], 'LOG_LEVEL' => ['debug', false]], $variables);
+    }
+
+    /** @var list<array{0: string, 1: string, 2: bool}> the template's variables, as name, value, secret */
+    private array $packageVariables = [];
+
     private function deploymentFromPackage(array $packageSpecification, ?string $version = null): \App\Entities\Deployment {
         $image = Fixtures::containerImage(['container_registry_id' => Fixtures::containerRegistry()->id]);
         $specification = Fixtures::deploymentSpecification(['name' => 'api', 'container_image_id' => $image->id]);
         $package = Fixtures::deploymentPackage();
+        foreach ($this->packageVariables as [$name, $value, $isSecret]) {
+            $variable = \App\Entities\DeploymentPackageEnvironmentVariable::Create($name, $value, $isSecret);
+            $variable->deployment_package_id = $package->id;
+            $variable->save();
+        }
         Fixtures::packageSpecification(array_merge([
             'deployment_package_id' => $package->id,
             'deployment_specification_id' => $specification->id,

@@ -1,6 +1,7 @@
 <?php namespace App\Entities;
 
 use App\Core\Entity;
+use App\Entities\Concerns\SecretEnvironmentVariable;
 
 /**
  * Class DeploymentPackageEnvironmentVariable
@@ -9,13 +10,18 @@ use App\Core\Entity;
  * @property DeploymentPackage $deployment_package
  * @property string $name
  * @property string $value
+ * @property bool $is_secret the value is write-only when set, see SecretEnvironmentVariable
+ * @property bool $has_value
  */
 class DeploymentPackageEnvironmentVariable extends Entity {
 
-    public static function Create(string $name, string $value): DeploymentPackageEnvironmentVariable {
+    use SecretEnvironmentVariable;
+
+    public static function Create(string $name, string $value, bool $isSecret = false): DeploymentPackageEnvironmentVariable {
         $item = new DeploymentPackageEnvironmentVariable();
         $item->name = $name;
         $item->value = $value;
+        $item->is_secret = $isSecret;
         $item->save();
         return $item;
     }

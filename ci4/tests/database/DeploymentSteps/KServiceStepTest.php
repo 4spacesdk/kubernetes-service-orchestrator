@@ -2,6 +2,7 @@
 
 use App\Entities\Deployment;
 use App\Fixtures;
+use App\Libraries\Kubernetes\WorkloadSecret;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepLevels;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
@@ -144,6 +145,29 @@ class KServiceStepTest extends ManifestTestCase {
 
         $this->assertSame('staging', $environment['ENVIRONMENT']);
         $this->assertStringContainsString('tenant.test.example.org', $environment['BASE_URL']);
+    }
+
+    /**
+     * As on a Deployment: the value in the Secret, and its checksum on the revision template.
+     */
+    public function testASecretVariableIsReadFromTheServicesSecret(): void {
+        $deployment = $this->knativeDeployment();
+        Fixtures::specificationEnvironmentVariable([
+            'deployment_specification_id' => $deployment->deployment_specification_id,
+            'name' => 'API_TOKEN',
+            'value' => 'token-value',
+            'is_secret' => true,
+        ]);
+
+        $manifest = $this->build($deployment);
+
+        $env = array_column($this->container($deployment)['env'], null, 'name');
+        $this->assertSame(
+            ['secretKeyRef' => ['name' => "{$deployment->name}-deployment-env", 'key' => "{$deployment->name}.API_TOKEN"]],
+            $env['API_TOKEN']['valueFrom']
+        );
+        $this->assertStringNotContainsString('token-value', json_encode($manifest));
+        $this->assertArrayHasKey(WorkloadSecret::ChecksumAnnotation, $manifest['spec']['template']['metadata']['annotations']);
     }
 
     public function testDeploymentEnvironmentVariableOverridesTheSpecification(): void {

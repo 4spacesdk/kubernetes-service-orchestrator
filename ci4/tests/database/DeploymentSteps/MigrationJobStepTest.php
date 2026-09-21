@@ -231,6 +231,22 @@ class MigrationJobStepTest extends ManifestTestCase {
         $this->assertStringContainsString('tenant.test.example.org', $this->environment($deployment)['BASE_URL']);
     }
 
+    public function testASecretVariableIsReadFromTheJobsSecret(): void {
+        $deployment = $this->migratableDeployment();
+        Fixtures::specificationEnvironmentVariable([
+            'deployment_specification_id' => $deployment->deployment_specification_id,
+            'name' => 'API_TOKEN',
+            'value' => 'token-value',
+            'is_secret' => true,
+        ]);
+
+        $manifest = $this->build($deployment);
+
+        $env = array_column($this->container($deployment)['env'], null, 'name');
+        $this->assertSame("{$deployment->name}-job-env", $env['API_TOKEN']['valueFrom']['secretKeyRef']['name']);
+        $this->assertStringNotContainsString('token-value', json_encode($manifest));
+    }
+
     public function testEnvironmentIsInheritedWithTheDeploymentsValuesWinning(): void {
         $deployment = $this->migratableDeployment();
 
@@ -636,6 +652,9 @@ class MigrationJobStepTest extends ManifestTestCase {
             }
 
             protected function getResource(Deployment $deployment, bool $auth = false): K8sJob {
+                // As the real one leaves it for a deployment without secret variables.
+                $this->workloadSecret = \App\Libraries\Kubernetes\WorkloadSecret::For($deployment->name, 'job');
+
                 return $this->resource;
             }
         };

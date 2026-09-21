@@ -633,6 +633,18 @@ class Fixtures {
         ], $overrides);
     }
 
+    /**
+     * An environment variable of an init container, which wins over the deployment's.
+     *
+     * @param array<string, mixed> $overrides
+     */
+    public static function initContainerEnvironmentVariable(array $overrides = []): \App\Entities\InitContainerEnvironmentVariable {
+        return self::make(\App\Entities\InitContainerEnvironmentVariable::class, [
+            'name' => 'TEST',
+            'value' => 'value',
+        ], $overrides);
+    }
+
     // <editor-fold desc="Scenarios">
 
     /**

@@ -308,7 +308,7 @@ class DeploymentSpecificationsApiTest extends ControllerTestCase {
             ->where('deployment_specification_id', $specification->id)
             ->get()->getRowArray();
         $this->assertSame('LOG_LEVEL', $row['name']);
-        $this->assertSame('debug', $row['value']);
+        $this->assertSame('debug', \App\Libraries\Crypt::Decrypt($row['value']));
     }
 
     /**

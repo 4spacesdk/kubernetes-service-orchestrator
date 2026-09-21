@@ -194,6 +194,26 @@ class CronjobStepTest extends ManifestTestCase {
      * Same precedence as on the Deployment: what is set on this one deployment wins over
      * what the specification hands down.
      */
+    /**
+     * Each cron job has a Secret of its own. No checksum: a job reads it when its pod starts.
+     */
+    public function testASecretVariableIsReadFromTheCronJobsSecret(): void {
+        $deployment = $this->deploymentWithCronJob(['include_deployment_environment_variables' => true]);
+        Fixtures::specificationEnvironmentVariable([
+            'deployment_specification_id' => $deployment->deployment_specification_id,
+            'name' => 'API_TOKEN',
+            'value' => 'token-value',
+            'is_secret' => true,
+        ]);
+
+        $manifest = $this->build($deployment)[0];
+
+        $env = array_column($this->container($deployment)['env'], null, 'name');
+        $this->assertSame("{$manifest['metadata']['name']}-cronjob-env", $env['API_TOKEN']['valueFrom']['secretKeyRef']['name']);
+        $this->assertStringEndsWith('.API_TOKEN', $env['API_TOKEN']['valueFrom']['secretKeyRef']['key']);
+        $this->assertStringNotContainsString('token-value', json_encode($manifest));
+    }
+
     public function testDeploymentEnvironmentVariableOverridesTheSpecification(): void {
         $deployment = $this->deploymentWithCronJob(['include_deployment_environment_variables' => true]);
 

@@ -378,9 +378,21 @@ class DuplicateApiTest extends ControllerTestCase {
         }
 
         return array_map(
-            fn (array $row) => array_diff_key($row, array_flip($ignore)),
+            fn (array $row) => self::decrypted($table, array_diff_key($row, array_flip($ignore))),
             $this->db->table($table)->where($parentColumn, $parentId)->orderBy('id')->get()->getResultArray()
         );
+    }
+
+    /**
+     * An environment variable's value is encrypted where it is stored, with a new IV each
+     * time it is written - so a copy that is the same value is different ciphertext.
+     */
+    private static function decrypted(string $table, array $row): array {
+        if (str_ends_with($table, 'environment_variables') && isset($row['value'])) {
+            $row['value'] = \App\Libraries\Crypt::Decrypt($row['value']);
+        }
+
+        return $row;
     }
 
     private function labels(string $joinTable, string $ownerColumn, int $ownerId): array {

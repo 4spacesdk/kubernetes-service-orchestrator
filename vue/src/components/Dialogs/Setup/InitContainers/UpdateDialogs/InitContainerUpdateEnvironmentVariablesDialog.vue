@@ -4,6 +4,8 @@ import {InitContainer} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
+import EnvironmentVariableValue from "@/components/Modules/Common/EnvironmentVariables/EnvironmentVariableValue.vue";
+import {toRow, type EnvironmentVariableRow} from "@/components/Modules/Common/EnvironmentVariables/environmentVariables";
 import DeploymentSpecificationEditButton
     from "@/components/Modules/Setup/DeploymentSpecifications/EditButton/DeploymentSpecificationEditButton.vue";
 import InitContainerEditButton from "@/components/Modules/Setup/InitContainers/EditButton/InitContainerEditButton.vue";
@@ -12,10 +14,7 @@ export interface InitContainerUpdateEnvironmentVariablesDialog_Input {
     initContainer: InitContainer;
 }
 
-interface Row {
-    name: string;
-    value: string;
-}
+type Row = EnvironmentVariableRow;
 
 const props = defineProps<{ input: InitContainerUpdateEnvironmentVariablesDialog_Input, events: DialogEventsInterface }>();
 
@@ -54,12 +53,7 @@ function render() {
         .include('init_container_environment_variable')
         .find(value => {
             rows.value = value[0].init_container_environment_variables
-                ?.map(environmentVariable => {
-                    return {
-                        name: environmentVariable.name ?? '',
-                        value: environmentVariable.value ?? '',
-                    }
-                }) ?? [];
+                ?.map(toRow) ?? [];
             itemCount.value = rows.value.length;
             isLoading.value = false;
         });
@@ -75,9 +69,11 @@ function close() {
 // <editor-fold desc="View Binding Functions">
 
 function onCreateBtnClicked() {
-    const newItem = {
+    const newItem: Row = {
         name: '',
         value: '',
+        is_secret: false,
+        has_value: false,
     };
     bus.emit('initContainerUpdateEnvironmentVariable', {
         environmentVariable: newItem,
@@ -164,9 +160,7 @@ function onCloseBtnClicked() {
                     class="table"
                     density="compact">
                     <template v-slot:item.value="{ item }">
-                        <span
-                            class="text-truncate d-inline-block mt-1"
-                            style="max-width: 300px;">{{ item.value }}</span>
+                        <environment-variable-value :variable="item"/>
                     </template>
                     <template v-slot:item.actions="{ item }">
                         <div class="d-flex justify-end gap-1">

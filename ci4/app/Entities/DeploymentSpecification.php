@@ -28,7 +28,6 @@ use App\Models\ContainerImageModel;
 use App\Models\ContainerRegistryModel;
 use App\Models\DeploymentCronJobModel;
 use App\Models\DeploymentSpecificationCronJobModel;
-use App\Models\DeploymentSpecificationEnvironmentVariableModel;
 use App\Models\DeploymentSpecificationHttpProxyRouteModel;
 use App\Models\DeploymentSpecificationInitContainerModel;
 use App\Models\DeploymentSpecificationServiceAnnotationModel;
@@ -341,31 +340,6 @@ class DeploymentSpecification extends Entity {
             ];
         }
         return $ports;
-    }
-
-    public function getEnvironmentVariables(Deployment $deployment): array {
-        if (!$deployment->database_service->exists()) {
-            $deployment->database_service->find();
-        }
-
-        if (!$deployment->workspace->exists() && $deployment->workspace_id) {
-            $deployment->workspace->find();
-        }
-
-        /** @var DeploymentSpecificationEnvironmentVariable $environmentVariables */
-        $environmentVariables = (new DeploymentSpecificationEnvironmentVariableModel())
-            ->where('deployment_specification_id', $this->id)
-            ->find();
-
-        $variables = [];
-        foreach ($environmentVariables as $environmentVariable) {
-            $variables[$environmentVariable->name] = EnvironmentVariable::ApplyVariablesToString(
-                $environmentVariable->value,
-                $deployment
-            );
-        }
-
-        return $variables;
     }
 
     public function getServiceAnnotations(): array {

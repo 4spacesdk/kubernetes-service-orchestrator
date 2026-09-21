@@ -174,8 +174,8 @@ class DeploymentSpecifications extends ResourceController {
         $body = $this->request->getJSON();
         $values = new DeploymentSpecificationEnvironmentVariable();
         $values->all = array_map(
-            fn($data) => DeploymentSpecificationEnvironmentVariable::Create($data->name, $data->value),
-            $body->values
+            fn(array $variable) => DeploymentSpecificationEnvironmentVariable::Create(...$variable),
+            DeploymentSpecificationEnvironmentVariable::Replacements($body->values, $item->deployment_specification_environment_variables->find())
         );
         $item->updateEnvironmentVariables($values);
         $this->_setResource($item);

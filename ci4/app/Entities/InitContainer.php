@@ -1,9 +1,9 @@
 <?php namespace App\Entities;
 
+use App\Libraries\Kubernetes\ContainerEnvironment;
+use App\Libraries\Kubernetes\WorkloadSecret;
 use App\Models\DeploymentSpecificationVolumeModel;
 use App\Models\DeploymentVolumeModel;
-use App\Models\EnvironmentVariableModel;
-use App\Models\InitContainerEnvironmentVariableModel;
 use RenokiCo\PhpK8s\Instances\Container;
 use App\Core\Entity;
 use RenokiCo\PhpK8s\Instances\Volume;
@@ -40,7 +40,11 @@ class InitContainer extends Entity {
         $this->init_container_environment_variables = $values;
     }
 
-    public function toKubernetesResource(Deployment $deployment): Container {
+    /**
+     * @param WorkloadSecret $secret the Secret of the workload whose pod this runs in: its
+     *                                secret variables go there
+     */
+    public function toKubernetesResource(Deployment $deployment, WorkloadSecret $secret): Container {
         $spec = $deployment->findDeploymentSpecification();
 
         $container = new Container();
@@ -78,26 +82,10 @@ class InitContainer extends Entity {
         $container->setAttribute('securityContext.allowPrivilegeEscalation', (bool)$this->container_image->security_context_allow_privilege_escalation);
         $container->setAttribute('securityContext.readOnlyRootFilesystem', (bool)$this->container_image->security_context_read_only_root_filesystem);
 
-        $envVars = [];
-
-        if ($this->include_deployment_environment_variables) {
-            $specEnvVars = $spec->getEnvironmentVariables($deployment);
-            foreach ($specEnvVars as $key => $value) {
-                $envVars[$key] = $value;
-            }
-            /** @var EnvironmentVariable $deploymentEnvironmentVariables */
-            $deploymentEnvironmentVariables = (new EnvironmentVariableModel())
-                ->where('deployment_id', $deployment->id)
-                ->find();
-            foreach ($deploymentEnvironmentVariables as $deploymentEnvironmentVariable) {
-                $envVars[$deploymentEnvironmentVariable->name] = $deploymentEnvironmentVariable->value;
-            }
-        }
-
-        $initContainerEnvVars = $this->getEnvironmentVariables($deployment);
-        foreach ($initContainerEnvVars as $key => $value) {
-            $envVars[$key] = $value;
-        }
+        $environment = $this->include_deployment_environment_variables
+            ? ContainerEnvironment::ofDeployment($deployment)
+            : new ContainerEnvironment();
+        $environment->merge(ContainerEnvironment::ofInitContainer((int) $this->id, $deployment));
 
         if ($this->include_volumes) {
             /** @var DeploymentVolume $deploymentVolumes */
@@ -133,33 +121,9 @@ class InitContainer extends Entity {
             }
         }
 
-        $container->addEnvs($envVars);
+        $environment->applyTo($container, $secret);
 
         return $container;
-    }
-
-    public function getEnvironmentVariables(Deployment $deployment): array {
-        if (!$deployment->database_service->exists()) {
-            $deployment->database_service->find();
-        }
-        if (!$deployment->workspace->exists() && $deployment->workspace_id) {
-            $deployment->workspace->find();
-        }
-
-        /** @var InitContainerEnvironmentVariable $environmentVariables */
-        $environmentVariables = (new InitContainerEnvironmentVariableModel())
-            ->where('init_container_id', $this->id)
-            ->find();
-
-        $variables = [];
-        foreach ($environmentVariables as $environmentVariable) {
-            $variables[$environmentVariable->name] = EnvironmentVariable::ApplyVariablesToString(
-                $environmentVariable->value,
-                $deployment
-            );
-        }
-
-        return $variables;
     }
 
     /**

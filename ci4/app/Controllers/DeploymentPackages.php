@@ -87,8 +87,8 @@ class DeploymentPackages extends ResourceController {
         $body = $this->request->getJSON();
         $values = new DeploymentPackageEnvironmentVariable();
         $values->all = array_map(
-            fn($data) => DeploymentPackageEnvironmentVariable::Create($data->name, $data->value),
-            $body->values
+            fn(array $variable) => DeploymentPackageEnvironmentVariable::Create(...$variable),
+            DeploymentPackageEnvironmentVariable::Replacements($body->values, $item->deployment_package_environment_variables->find())
         );
         $item->updateEnvironmentVariables($values);
         $this->_setResource($item);
@@ -100,8 +100,10 @@ class DeploymentPackages extends ResourceController {
      * @method put
      * @custom true
      * @param int $deploymentPackageId
+     * The template's own variable of that name, value and all: a secret one cannot be sent
+     * here, because the UI is never shown it, and a value in a url ends up in logs.
+     *
      * @parameter string $name parameterType=query
-     * @parameter string $value parameterType=query
      * @parameter bool $override parameterType=query
      * @return void
      */
@@ -113,10 +115,23 @@ class DeploymentPackages extends ResourceController {
             return;
         }
 
-        $name = $this->request->getGet('name');
-        $value = $this->request->getGet('value');
+        $name = (string) $this->request->getGet('name');
         $override = in_array($this->request->getGet('override'), ['1', 'true']);
-        $environmentVariable = EnvironmentVariable::Prepare($name, $value);
+
+        /** @var DeploymentPackageEnvironmentVariable $packageVariable */
+        $packageVariable = (new DeploymentPackageEnvironmentVariableModel())
+            ->where('deployment_package_id', $item->id)
+            ->where('name', $name)
+            ->find();
+        if (!$packageVariable->exists()) {
+            $this->fail('unknown environment variable');
+            return;
+        }
+        $environmentVariable = EnvironmentVariable::Prepare(
+            $packageVariable->name,
+            (string) $packageVariable->value,
+            (bool) $packageVariable->is_secret
+        );
 
         /** @var Deployment $deployments */
         $deployments = (new DeploymentModel())

@@ -288,8 +288,8 @@ class Deployments extends ResourceController {
         $body = $this->request->getJSON();
         $values = new EnvironmentVariable();
         $values->all = array_map(
-            fn($data) => EnvironmentVariable::Create($data->name, $data->value),
-            $body->values
+            fn(array $variable) => EnvironmentVariable::Create(...$variable),
+            EnvironmentVariable::Replacements($body->values, $item->environment_variables->find())
         );
         $item->updateEnvironmentVariables($values);
         $this->_setResource($item);

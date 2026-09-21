@@ -27,8 +27,8 @@ class InitContainers extends ResourceController {
         $body = $this->request->getJSON();
         $values = new InitContainerEnvironmentVariable();
         $values->all = array_map(
-            fn($data) => InitContainerEnvironmentVariable::Create($data->name, $data->value),
-            $body->values
+            fn(array $variable) => InitContainerEnvironmentVariable::Create(...$variable),
+            InitContainerEnvironmentVariable::Replacements($body->values, $item->init_container_environment_variables->find())
         );
         $item->updateEnvironmentVariables($values);
         $this->_setResource($item);
