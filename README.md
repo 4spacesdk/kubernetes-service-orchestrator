@@ -42,8 +42,8 @@ deployment:
   # Generate one on Linux or macOS with:  openssl rand -base64 24
   encryptionKey: ""
 
-  # Old keys, comma separated. Set this when rotating encryptionKey, so rows written with
-  # the previous one can still be read until they have been saved again.
+  # Old keys, comma separated. Set this when rotating encryptionKey, so what the old one
+  # encrypted can still be read until `php spark app:reencrypt` has written it again.
   previousEncryptionKeys: ""
 
   # kso scans the images your deployments run for known vulnerabilities, every night, with
@@ -138,3 +138,11 @@ A init container is added to wait for the migration to finish.
 1. Run database migration from inside a pod: `cd /var/www/html/ci4 && php spark migrate`
 2. If you have multiple pods running this application, you need to clear ORM cache in every pod
     1. `cd /var/www/html/ci4 && php spark orm:clear:cache` 
+
+## If a secret leaks
+* **`encryptionKey`** - what the credentials kso stores are encrypted with:
+  1. Put a new key in `deployment.encryptionKey` and the old one in `deployment.previousEncryptionKeys`, and upgrade.
+  2. Run `php spark app:reencrypt` in a kso pod. It writes every stored credential again with the new key.
+  3. Remove the old key from `previousEncryptionKeys`, and upgrade. Anyone signed in has to sign in again.
+* **A registry, database or mail password** - change it where it lives, enter the new one in kso, and deploy what uses it, so the pull secrets and the deployments' Secrets are written again.
+* **A secret environment variable** - enter the new value, and deploy.

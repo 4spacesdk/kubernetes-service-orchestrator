@@ -68,6 +68,25 @@ class EncryptionKeyTest extends CIUnitTestCase {
     }
 
     /**
+     * `ENCRYPTION_PREVIOUS_KEYS` is how a key is rotated. Handed to CodeIgniter as the string it
+     * is in the environment, every encrypt and decrypt failed with a TypeError - setting it took
+     * kso down.
+     */
+    public function testThePreviousKeysAreAList(): void {
+        $original = getenv('ENCRYPTION_PREVIOUS_KEYS');
+        putenv('ENCRYPTION_PREVIOUS_KEYS=first-old-key , second-old-key,');
+
+        try {
+            $config = new \Config\Encryption();
+
+            $this->assertSame(['first-old-key', 'second-old-key'], $config->previousKeys);
+            $this->assertNotNull(\Config\Services::encrypter($config, false));
+        } finally {
+            putenv($original === false ? 'ENCRYPTION_PREVIOUS_KEYS' : "ENCRYPTION_PREVIOUS_KEYS={$original}");
+        }
+    }
+
+    /**
      * "No credential" is not something to encrypt: a row that never had one must not start
      * looking as though it does, or `has_<field>` says yes to every empty column.
      */

@@ -137,8 +137,11 @@ class Encryption extends BaseConfig
 
         $this->key = $key;
 
-        $previous = (string) getenv('ENCRYPTION_PREVIOUS_KEYS');
-        if ($previous !== '') {
+        // A list: CodeIgniter only splits the comma separated string when it reads it from
+        // .env itself, and handed the string it failed on every encrypt and decrypt - so
+        // setting this, which is what rotating a key means, took kso down.
+        $previous = array_values(array_filter(array_map('trim', explode(',', (string) getenv('ENCRYPTION_PREVIOUS_KEYS')))));
+        if ($previous !== []) {
             $this->previousKeys = $previous;
         }
     }

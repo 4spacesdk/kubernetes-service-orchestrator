@@ -22,7 +22,7 @@ use CodeIgniter\Encryption\Exceptions\EncryptionException;
  *
  * The key comes from `ENCRYPTION_KEY`. Rotating it means putting the old one in
  * `ENCRYPTION_PREVIOUS_KEYS` - CodeIgniter tries the current key first and falls back - and
- * re-saving the rows.
+ * running `app:reencrypt`, see Reencryption.
  */
 class Crypt {
 
