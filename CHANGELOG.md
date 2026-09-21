@@ -35,6 +35,7 @@
 ### Security
 * The sign-in pages show messages from a link as text, so a crafted link can no longer run script on the sign-in page
 * A sign-in link can only send the operator on within kso, not to another site
+* The sign-in pages load nothing from other hosts: Bootstrap's stylesheet is served by kso, jQuery, Popper and Font Awesome are gone, and the password field's show button works
 * Dialogs show text, never HTML. A migration or auto update log could run script in the operator's browser - and the log is written by the customer's own container
 * Chart: kso's database password, encryption keys and mail password are read from a Secret instead of written into the pod spec, where anyone who could read the deployment could read them. `deployment.existingSecret` takes one of your own. A password such as `12345` or `true` no longer breaks the install
 * Responses no longer carry the debug log outside development - queries, remote servers' answers and error messages went to every caller, signed in or not. The database connection test says why it failed instead

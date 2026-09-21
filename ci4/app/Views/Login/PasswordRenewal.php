@@ -5,25 +5,10 @@
 <head>
     <title>KSO | Login</title>
 
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
-          integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <link rel="stylesheet" href="<?= base_url('assets/login/bootstrap-4.1.3.min.css') ?>">
+    <script src="<?= base_url('assets/login/login.js') ?>" defer></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
     <link rel="icon" href="/api/logo-blue.svg">
-
-    <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.5.0/css/all.css"
-          media="print" onload="this.media='all'"
-          lazyload
-          integrity="sha384-j8y0ITrvFafF4EkV1mPW0BKm6dp3c+J9Fky22Man50Ofxo2wNe5pT1oZejDH9/Dt" crossorigin="anonymous">
-
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
-            integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
-            crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"
-            integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
-            crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"
-            integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy"
-            crossorigin="anonymous"></script>
 
     <style>
         /* Added */
@@ -293,6 +278,9 @@
             display: none !important;
         }
 
+        .icon {
+            vertical-align: -0.125em;
+        }
     </style>
 </head>
 
@@ -303,7 +291,7 @@
         <div class="col-sm-9 col-md-7 col-lg-5 mx-auto">
             <div class="card card-signin my-5">
                 <div class="card-body">
-                    <h5 class="card-title text-center"><i class="far fa-badge-check -fa-2x -align-middle text-primary"></i> Password renewal</h5>
+                    <h5 class="card-title text-center"><svg class="icon text-primary" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9.5"/></svg> Password renewal</h5>
                     <div class="alert alert-warning clearfix <?= isset(DebugTool\Data::getStore()['description']) ? '' : '' ?>" role="alert" id="validation">
                         <p><?= esc(DebugTool\Data::getStore()['description'] ?? '') ?></p>
 
@@ -346,103 +334,12 @@
                 </div>
             </div>
             <!--
-            <a href="https://www.4spaces.dk" target="_blank" class="logo"><img _ngcontent-c3="" alt="4 Spaces" src="https://www.4spaces.dk/assets/four-spaces-white.svg" width="16"></a>
+            <a href="https://www.4spaces.dk" target="_blank" class="logo"><img alt="4 Spaces" src="<?= base_url('assets/login/four-spaces-white.svg') ?>" width="16"></a>
             -->
         </div>
     </div>
 </div>
 
-<script>
-
-    function validateLocalPassword(target) {
-        var pswd = target.val();
-
-        var valid = true;
-        //validate the length
-
-        if($('input[name="password"]').val() != $('input[name="password_confirm"]').val()) {
-            $('#same').removeClass('valid').addClass('invalid');
-            valid = false;
-        } else {
-            $('#same').addClass('valid').removeClass('invalid');
-        }
-
-        if( pswd.length < 8 ) {
-            $('#length').removeClass('valid').addClass('invalid');
-            valid = false;
-        } else {
-            $('#length').removeClass('invalid').addClass('valid');
-        }
-        //validate letter
-        if ( pswd.match(/[A-z]/) ) {
-            $('#letter').removeClass('invalid').addClass('valid');
-
-        } else {
-            $('#letter').removeClass('valid').addClass('invalid');
-            valid = false;
-        }
-
-        // validate capital letter
-        if ( pswd.match(/[A-Z]/) ) {
-            $('#capital').removeClass('invalid').addClass('valid');
-        } else {
-            $('#capital').removeClass('valid').addClass('invalid');
-            valid = false;
-        }
-
-        // validate number
-        if ( pswd.match(/\d/) ) {
-            $('#number').removeClass('invalid').addClass('valid');
-        } else {
-            $('#number').removeClass('valid').addClass('invalid');
-            valid = false;
-        }
-
-        /*
-        if(valid)
-            $('#validation').addClass('hidden')
-        else
-            $('#validation').removeClass('hidden')
-            */
-
-        return valid;
-    }
-
-    $(function() {
-
-        // Password validation
-
-        $('input[name=password]').keyup(function(){
-            $('#password-error').remove();
-            validateLocalPassword($(this));
-
-        }).focus(function() {
-        }).blur(function() {
-        });
-
-        $('input[name=password_confirm]').keyup(function(){
-            validateLocalPassword($(this));
-        }).focus(function() {
-        }).blur(function() {
-        });
-
-        $('form').on('submit', function(e) {
-            var valid = validateLocalPassword($('input[name=password]'));
-            console.warn('valid:',valid)
-            if(!valid){
-                if((!$('input[name=password]').val() && !$('input[name=password_confirm]').val())){
-                    console.log('no passwords');
-                }else {
-                    $('#pswd_info_a').show();
-                    e.preventDefault();
-                }
-            }
-        })
-
-    });
-
-
-</script>
 
 </body>
 </html>

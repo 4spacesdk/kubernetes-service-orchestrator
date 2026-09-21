@@ -11,25 +11,10 @@ use App\Libraries\EmailLib;
 <head>
     <title>KSO | Login</title>
 
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
-          integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <link rel="stylesheet" href="<?= base_url('assets/login/bootstrap-4.1.3.min.css') ?>">
+    <script src="<?= base_url('assets/login/login.js') ?>" defer></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
     <link rel="icon" href="/api/logo-blue.svg">
-
-    <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.5.0/css/all.css"
-          media="print" onload="this.media='all'"
-          lazyload
-          integrity="sha384-j8y0ITrvFafF4EkV1mPW0BKm6dp3c+J9Fky22Man50Ofxo2wNe5pT1oZejDH9/Dt" crossorigin="anonymous">
-
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
-            integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
-            crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"
-            integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
-            crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"
-            integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy"
-            crossorigin="anonymous"></script>
 
     <style>
         /* Added */
@@ -299,21 +284,29 @@ use App\Libraries\EmailLib;
             display: none !important;
         }
 
+        .icon {
+            vertical-align: -0.125em;
+        }
+
+        /* Shows or hides the password; see assets/login/login.js. */
+        .toggle-password {
+            position: absolute;
+            right: 0.5rem;
+            bottom: 0.45rem;
+            padding: 0.1rem 0.25rem;
+            border: 0;
+            background: none;
+            color: #6c757d;
+            line-height: 1;
+            cursor: pointer;
+        }
+
+        .toggle-password.active {
+            color: #007bff;
+        }
+
     </style>
 
-    <script>
-        $(function () {
-            $('.toggle-password').on('click', (e) => {
-                $(e.target).toggleClass('active');
-                var field = document.getElementById("inputPassword");
-                if ($(e.target).hasClass('active')) {
-                    field.type = "text";
-                } else {
-                    field.type = "password";
-                }
-            });
-        });
-    </script>
 </head>
 
 <body>
@@ -337,7 +330,7 @@ use App\Libraries\EmailLib;
                             <label for="inputPassword" class="small">Password</label>
                             <input type="password" id="inputPassword" name="password" class="form-control"
                                    placeholder="Password" required>
-                            <a class="toggle-password"></a>
+                            <button type="button" class="toggle-password" data-toggle-password="inputPassword" aria-label="Show password" aria-pressed="false"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
                         </div>
 
                         <?php if (isset($loginResponse) && $loginResponse) { ?>
@@ -353,7 +346,7 @@ use App\Libraries\EmailLib;
                         <?php if (EmailLib::IsConfigured()) { ?>
                         <a href="<?= base_url('/login/forgotPassword') ?>"
                            class="mt-2 w-100 text-center d-block text-secondary d-flex align-items-center justify-content-center">
-                            <i class="far fa-envelope mr-1"></i>
+                            <svg class="icon mr-1" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
                             Forgot password
                         </a>
                         <?php } ?>

@@ -9,25 +9,10 @@ use DebugTool\Data; ?>
 <head>
     <title>KSO | Login</title>
 
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
-          integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <link rel="stylesheet" href="<?= base_url('assets/login/bootstrap-4.1.3.min.css') ?>">
+    <script src="<?= base_url('assets/login/login.js') ?>" defer></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
     <link rel="icon" href="/api/logo-blue.svg">
-
-    <link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.5.0/css/all.css"
-          media="print" onload="this.media='all'"
-          lazyload
-          integrity="sha384-j8y0ITrvFafF4EkV1mPW0BKm6dp3c+J9Fky22Man50Ofxo2wNe5pT1oZejDH9/Dt" crossorigin="anonymous">
-
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
-            integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo"
-            crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"
-            integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
-            crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js"
-            integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy"
-            crossorigin="anonymous"></script>
 
     <style>
         /* Added */
@@ -300,16 +285,6 @@ use DebugTool\Data; ?>
 
     </style>
 
-    <script>
-        $(function() {
-            $('input[name=code]').on('input', function() {
-                var input = $(this).val();
-                if (input && input.length === 6) {
-                    $('button[type=submit]').click();
-                }
-            });
-        });
-    </script>
 </head>
 
 <body>
