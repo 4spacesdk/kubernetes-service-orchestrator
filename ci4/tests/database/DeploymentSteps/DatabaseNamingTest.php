@@ -13,9 +13,8 @@ use PHPUnit\Framework\Attributes\DataProvider;
  * data ends up under and the password that guards it, which makes them worth looking at
  * directly.
  *
- * One of the tests below holds behaviour that is **not** right and is not fixed here: the
- * name collisions are a decision of their own, and the test is here so the day somebody
- * changes them, it is on purpose. The source of randomness used to be the other one.
+ * Two deployments must never be handed the same database or user. The plain name can
+ * collide; what a deploy actually uses, `AvailableNamesFor()`, steps aside from one taken.
  */
 class DatabaseNamingTest extends DatabaseTestCase {
 
@@ -51,49 +50,80 @@ class DatabaseNamingTest extends DatabaseTestCase {
     }
 
     /**
-     * **Pinned, not endorsed.** `my-app` and `my.app` in the same namespace are two
-     * deployments and one database: the dash is replaced and the dot is dropped, and both
-     * land on `acme_my_app`... or rather, they do not - the dot case loses a character. The
-     * pair below does collide, and the point is that such a pair exists at all.
+     * `my-app` and `my app` in the same namespace have the same plain name: the dash and the
+     * space both become an underscore.
      */
-    public function testTwoDeploymentsCanBeGivenTheSameDatabase(): void {
+    public function testTwoDeploymentsCanHaveTheSamePlainName(): void {
         $first = Fixtures::deployment(['namespace' => 'acme', 'name' => 'my-app']);
         $second = Fixtures::deployment(['namespace' => 'acme', 'name' => 'my app']);
 
-        $this->assertSame(
-            DatabaseStep::DatabaseNameFor($first),
-            DatabaseStep::DatabaseNameFor($second),
-            'the collision is gone - see the note above and replace this test'
-        );
+        $this->assertSame(DatabaseStep::DatabaseNameFor($first), DatabaseStep::DatabaseNameFor($second));
     }
 
     /**
-     * And the longer way to the same place: the name is cut to 64 characters, so two that
-     * agree for the first 64 are one database.
+     * So the deploy does not use the plain name when another deployment on the same
+     * database service has it. It gets the same with a hash on the end.
      */
-    public function testTwoLongNamesThatAgreeForSixtyFourCharactersCollide(): void {
-        // Long enough that the cut lands inside the shared part: `ns_` plus this is already
-        // past 64, so what the two have in common is all that survives.
+    public function testANameTakenOnTheSameServiceIsSteppedAsideFrom(): void {
+        $service = Fixtures::databaseService();
+        Fixtures::deployment(['database_service_id' => $service->id, 'namespace' => 'acme', 'name' => 'my-app',
+            'database_name' => 'acme_my_app', 'database_user' => 'acme_my_app']);
+        $second = Fixtures::deployment(['database_service_id' => $service->id, 'namespace' => 'acme', 'name' => 'my app']);
+
+        [$name, $user] = DatabaseStep::AvailableNamesFor($second);
+
+        $this->assertMatchesRegularExpression('/^acme_my_app_[0-9a-f]{8}$/', $name);
+        $this->assertSame($name, $user);
+    }
+
+    /**
+     * Another service is another server, and the same name there is no collision.
+     */
+    public function testTheSameNameOnAnotherServiceIsFree(): void {
+        Fixtures::deployment(['database_service_id' => Fixtures::databaseService()->id, 'namespace' => 'acme', 'name' => 'api',
+            'database_name' => 'acme_api', 'database_user' => 'acme_api']);
+        $other = Fixtures::deployment(['database_service_id' => Fixtures::databaseService()->id, 'namespace' => 'acme', 'name' => 'api']);
+
+        $this->assertSame(['acme_api', 'acme_api'], DatabaseStep::AvailableNamesFor($other));
+    }
+
+    /**
+     * A user taken is as much a collision as a database taken: two deployments sharing a
+     * user is a login that reaches both.
+     */
+    public function testAUserTakenIsSteppedAsideFromToo(): void {
+        $service = Fixtures::databaseService();
+        Fixtures::deployment(['database_service_id' => $service->id, 'database_name' => 'something_else', 'database_user' => 'acme_api']);
+        $second = Fixtures::deployment(['database_service_id' => $service->id, 'namespace' => 'acme', 'name' => 'api']);
+
+        [, $user] = DatabaseStep::AvailableNamesFor($second);
+
+        $this->assertNotSame('acme_api', $user);
+    }
+
+    /**
+     * Two long names that agree for the first 64 characters used to be one database. Cut,
+     * they now end in a hash of the whole name, and stay two.
+     */
+    public function testTwoLongNamesThatAgreeForSixtyFourCharactersStayTwo(): void {
         $prefix = str_repeat('a', 64);
         $first = Fixtures::deployment(['namespace' => 'ns', 'name' => $prefix . 'one']);
         $second = Fixtures::deployment(['namespace' => 'ns', 'name' => $prefix . 'two']);
 
         $this->assertSame(64, strlen(DatabaseStep::DatabaseNameFor($first)));
-        $this->assertSame(
-            DatabaseStep::DatabaseNameFor($first),
-            DatabaseStep::DatabaseNameFor($second)
-        );
+        $this->assertNotSame(DatabaseStep::DatabaseNameFor($first), DatabaseStep::DatabaseNameFor($second));
     }
 
     /**
-     * The user is the database name cut to the 32 characters MySQL allows - half as long,
-     * so two deployments share a user more easily than they share a database. A shared user
-     * is a login that can reach both.
+     * The user is fitted to MySQL's 32 characters the same way. Cut only, two names that
+     * agreed for 32 characters - far easier than 64 - shared a login.
      */
-    public function testTheUserIsTheNameCutToThirtyTwoCharacters(): void {
-        $name = str_repeat('a', 64);
+    public function testTwoLongNamesThatAgreeForThirtyTwoCharactersHaveTwoUsers(): void {
+        $first = DatabaseStep::DatabaseUserFor(str_repeat('a', 40) . '_one');
+        $second = DatabaseStep::DatabaseUserFor(str_repeat('a', 40) . '_two');
 
-        $this->assertSame(str_repeat('a', 32), DatabaseStep::DatabaseUserFor($name));
+        $this->assertSame(32, strlen($first));
+        $this->assertNotSame($first, $second);
     }
 
     public function testAShortNameIsItsOwnUser(): void {
