@@ -7,6 +7,9 @@ class Home extends \App\Core\BaseController {
     }
 
     public function index() {
+        if (!Swagger::IsEnabled()) {
+            return '';
+        }
         $url = base_url('swagger');
         return "<a href='$url'>Swagger</a>";
     }

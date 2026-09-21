@@ -34,6 +34,7 @@
 ### Security
 * The sign-in pages show messages from a link as text, so a crafted link can no longer run script on the sign-in page
 * A sign-in link can only send the operator on within kso, not to another site
+* Swagger - the page and the API description it reads, both served without a sign-in - is off outside development. Set `SWAGGER_ENABLED=true` to keep it
 * The two-factor QR code is drawn by kso itself. It used to be fetched from api.qrserver.com with the secret in the url
 * Two deployments are never given the same database or database user: a name taken on the same database service gets a hash on the end, long names are no longer merely cut, and a database or user already on the server is refused instead of handed over
 * A password set through the API is hashed before it is written and held to the same rules as a renewal; a short one used to be stored in plain text. Any left from before are hashed and must be renewed at the next sign-in
@@ -69,6 +70,7 @@
 3. Run migrations [(Guide)](https://github.com/4spacesdk/kubernetes-service-orchestrator?tab=readme-ov-file#migrate-database-helm). Registry credentials and the GitHub App move to Integrations automatically
 4. Harbor and Azure: open each container registry and click "Set up auto update", then remove the old webhooks from the registry
 5. Artifact Registry: the service account only needs Artifact Registry Reader now
+6. Swagger is off. To keep it, add `SWAGGER_ENABLED=true` to `deployment.env` in the chart
 
 ### Notes
 * An image built for arm64 has no MSSQL driver

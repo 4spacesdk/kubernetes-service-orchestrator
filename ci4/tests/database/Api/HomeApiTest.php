@@ -3,7 +3,7 @@
 use App\ControllerTestCase;
 
 /**
- * The root of the API, which is a link to Swagger and nothing else.
+ * The root of the API, which is a link to Swagger when Swagger is on, and nothing otherwise.
  *
  * Small, but not nothing: it is public, like the OpenAPI document it points to, and the
  * link it prints is built from `base_url()`, so it is the one place where a misconfigured base url
@@ -14,14 +14,28 @@ use App\ControllerTestCase;
  */
 class HomeApiTest extends ControllerTestCase {
 
-    public function testTheFrontPageIsALinkToSwagger(): void {
-        $response = $this->get('home');
+    public function testTheFrontPageIsALinkToSwaggerWhenSwaggerIsOn(): void {
+        putenv('SWAGGER_ENABLED=true');
+        try {
+            $response = $this->get('home');
+        } finally {
+            putenv('SWAGGER_ENABLED');
+        }
 
         $this->assertSame(200, $response->response()->getStatusCode());
         $this->assertSame(
             "<a href='" . base_url('swagger') . "'>Swagger</a>",
             (string) $response->response()->getBody()
         );
+    }
+
+    /**
+     * With Swagger off there is nothing to link to, and the page says nothing about it.
+     */
+    public function testTheFrontPageIsEmptyWhenSwaggerIsOff(): void {
+        $response = $this->get('home');
+
+        $this->assertSame('', (string) $response->response()->getBody());
     }
 
     /**

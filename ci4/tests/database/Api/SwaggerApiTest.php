@@ -6,9 +6,10 @@ use App\ControllerTestCase;
  * The two endpoints that describe this installation to anyone who asks.
  *
  * `GET /swagger` is the Swagger UI page and `GET /swagger/openapi` is the document it
- * reads. **Both answer without a token**, and that is a known open issue: the document is
- * every endpoint, every model and every field of the API - a map of the attack surface,
- * served to anyone who can reach the host.
+ * reads. Both answer without a token - the page fetches the document before anyone can sign
+ * in through it - so they are only there in development, or where an installation turns them
+ * on with `SWAGGER_ENABLED=true`. Elsewhere they answer 404: the document is every endpoint,
+ * every model and every field of the API.
  *
  * Here the controller's own `requireAuth()` and the `api_routes.is_public` column agree,
  * which is worth holding on to precisely because they do not have to: the column is what
@@ -24,6 +25,51 @@ use App\ControllerTestCase;
  * of `api_routes`, the method becomes unreachable and the question goes away.
  */
 class SwaggerApiTest extends ControllerTestCase {
+
+    /**
+     * A fresh router and response for every request. The `swagger` row names no method, so
+     * the router falls back on the one it holds - and the harness keeps one router for the
+     * whole run, so after `swagger/openapi` the page was answered by `openapi()`.
+     */
+    public function call(string $method, string $path, ?array $params = null) {
+        \CodeIgniter\Config\Services::resetSingle('router');
+        \CodeIgniter\Config\Services::resetSingle('response');
+
+        return parent::call($method, $path, $params);
+    }
+
+    public function tearDown(): void {
+        putenv('SWAGGER_ENABLED');
+
+        parent::tearDown();
+    }
+
+    /**
+     * Neither the page nor the document is served unless it is turned on. The suite runs as
+     * `testing`, which stands in for every environment that is not development.
+     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('theTwoRoutes')]
+    public function testSwaggerIsNotServedUnlessItIsTurnedOn(string $path): void {
+        $response = $this->get($path);
+
+        $this->assertSame(404, $response->response()->getStatusCode());
+        $this->assertStringNotContainsString('swagger-ui', (string) $response->response()->getBody());
+    }
+
+    public static function theTwoRoutes(): array {
+        return ['the page' => ['swagger'], 'the document' => ['swagger/openapi']];
+    }
+
+    /**
+     * Anything other than `true` leaves it off.
+     */
+    public function testOnlyTrueTurnsItOn(): void {
+        putenv('SWAGGER_ENABLED=1');
+        $this->assertFalse(\App\Controllers\Swagger::IsEnabled());
+
+        putenv('SWAGGER_ENABLED=TRUE');
+        $this->assertTrue(\App\Controllers\Swagger::IsEnabled());
+    }
 
     /**
      * What the controller says about itself, held against what is enforced.
@@ -63,7 +109,9 @@ class SwaggerApiTest extends ControllerTestCase {
      * the framework rather than by what the row says. Asserted through a real request for
      * that reason - reading the row would not tell you whether it resolves.
      */
-    public function testTheSwaggerPageIsServedToACallerWithNoToken(): void {
+    public function testTheSwaggerPageIsServedToACallerWithNoTokenWhenTurnedOn(): void {
+        putenv('SWAGGER_ENABLED=true');
+
         $response = $this->get('swagger');
 
         $this->assertSame(200, $response->response()->getStatusCode());
