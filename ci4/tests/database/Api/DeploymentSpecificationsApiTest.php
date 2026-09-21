@@ -542,6 +542,54 @@ class DeploymentSpecificationsApiTest extends ControllerTestCase {
 
     // </editor-fold>
 
+    // <editor-fold desc="The image a specification runs">
+
+    /**
+     * What the edit dialog sends: the row as it was loaded by id, relations included, with
+     * the image picker changed. The id is what was edited, so the id wins, and the image the
+     * dialog was holding is not written back.
+     */
+    public function testChangingTheImageIsNotUndoneByTheImageTheDialogWasHolding(): void {
+        $old = Fixtures::containerImage(['name' => 'old-image']);
+        $new = Fixtures::containerImage(['name' => 'new-image']);
+        $spec = Fixtures::deploymentSpecification(['container_image_id' => $old->id]);
+
+        $this->withBodyFormat('json')->signedIn()->patch("deployment_specifications/{$spec->id}", [
+            'name' => $spec->name,
+            'container_image_id' => $new->id,
+            'container_image' => ['id' => $old->id, 'name' => 'renamed-by-a-stale-copy', 'url' => $old->url],
+        ]);
+
+        $this->assertSame((int) $new->id, (int) $this->row('deployment_specifications', $spec->id)['container_image_id']);
+        $this->assertSame('old-image', $this->row('container_images', $old->id)['name']);
+    }
+
+    /**
+     * The same for the migration image, the second relation to the same table.
+     */
+    public function testChangingTheMigrationImageIsNotUndoneEither(): void {
+        $old = Fixtures::containerImage(['name' => 'old-image']);
+        $new = Fixtures::containerImage(['name' => 'new-image']);
+        $spec = Fixtures::deploymentSpecification(['database_migration_container_image_id' => $old->id]);
+
+        $this->withBodyFormat('json')->signedIn()->patch("deployment_specifications/{$spec->id}", [
+            'database_migration_container_image_id' => $new->id,
+            'database_migration_container_image' => ['id' => $old->id, 'name' => 'renamed-by-a-stale-copy'],
+        ]);
+
+        $this->assertSame((int) $new->id, (int) $this->row('deployment_specifications', $spec->id)['database_migration_container_image_id']);
+        $this->assertSame('old-image', $this->row('container_images', $old->id)['name']);
+    }
+
+    // </editor-fold>
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function row(string $table, int|string $id): array {
+        return $this->db->table($table)->where('id', $id)->get()->getRowArray();
+    }
+
     // <editor-fold desc="Helpers">
 
     /**

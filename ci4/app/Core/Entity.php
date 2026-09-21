@@ -42,6 +42,47 @@ class Entity extends \RestExtension\Core\Entity implements ResourceEntityInterfa
         return $item;
     }
 
+    public static function post($data) {
+        return parent::post(static::withoutRelationsTheirIdsDecide($data));
+    }
+
+    public static function patch($id, $data) {
+        return parent::patch($id, static::withoutRelationsTheirIdsDecide($data));
+    }
+
+    /**
+     * Drops a has-one relation sent as an object when its id column is sent as well.
+     *
+     * RestExtension writes such an object back: on a patch it patches the related row with
+     * it and links it again, on a post it creates a new one. The frontend sends them without
+     * meaning to - a dialog loads a row by id, which includes its relations, and saves the
+     * whole thing - so changing `container_image_id` on a specification was undone by the
+     * `container_image` it had been loaded with, and that image was overwritten with the
+     * copy the dialog had held since it opened.
+     *
+     * The id column is what the form edits, so it decides. An object sent without its id
+     * column is left alone.
+     */
+    protected static function withoutRelationsTheirIdsDecide(mixed $data): mixed {
+        if (!is_array($data)) {
+            return $data;
+        }
+
+        $model = (new static())->_getModel();
+        $tableFields = $model->getTableFields();
+        foreach ($model->getRelations() as $relation) {
+            if ($relation->getType() !== \OrmExtension\DataMapper\RelationDef::HasOne) {
+                continue;
+            }
+            $idField = $relation->getJoinOtherAs();
+            if (in_array($idField, $tableFields, true) && array_key_exists($idField, $data)) {
+                unset($data[$relation->getSimpleName()]);
+            }
+        }
+
+        return $data;
+    }
+
     /**
      * Columns that say which row this is rather than what it holds. A copy gets its own.
      */

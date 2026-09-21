@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### Fixed bugs
+* Changing the image of a deployment specification was undone on save, and the old image was overwritten with the copy the dialog had loaded. The same for every other form that picks a related row by id
 * Deploys: a rollout still running could fail the next with `409 Conflict`, a custom resource without a namespace landed in `default`, an empty or malformed one was accepted, init containers from another registry could not be pulled, and setting a version reported success when the deploy had failed
 * Deploys: a field kso spells wrong is refused by the cluster instead of dropped without a word, and two fields every Deployment, Job and CronJob carried are gone
 * RBAC: a workspace with no role rules deploys instead of refusing with "Missing Role", terminating one that never had a role binding no longer fails partway through, and rules typed as "get, list" are trimmed rather than refused by Kubernetes
