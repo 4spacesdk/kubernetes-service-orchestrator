@@ -35,6 +35,11 @@ class RestPermissionsTest extends CIUnitTestCase {
         'DeploymentModel' => ['create', 'update'],
         'WorkspaceModel' => ['create', 'update'],
 
+        // Written by the image scanner; read through the API. A scan is asked for through
+        // `PUT container-images/{id}/scan`, not by posting a row.
+        'ContainerImageScanModel' => ['create', 'update', 'delete'],
+        'ContainerImageScanRecordModel' => ['create', 'update', 'delete'],
+
         // A record of something that happened. Rewriting history is not a feature.
         'MigrationJobModel' => ['create', 'update', 'delete'],
 

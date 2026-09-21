@@ -17,8 +17,20 @@ class CronJobIds {
         CheckCertificateExpiry = 4,
         CheckKNativeMinScaleSchedules = 5,
         CleanupZmqEvents = 6,
-        CleanupSignInAttempts = 7
+        CleanupSignInAttempts = 7,
+        ScanContainerImages = 8,
+        ScanQueuedContainerImages = 9
     ;
+}
+
+class ContainerImageScanStatuses {
+
+    const string
+        Queued = 'queued',
+        Scanning = 'scanning',
+        Scanned = 'scanned',
+        Failed = 'failed';
+
 }
 
 class Environments {

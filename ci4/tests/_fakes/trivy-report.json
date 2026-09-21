@@ -1,0 +1,31 @@
+{
+  "SchemaVersion": 2,
+  "ArtifactName": "registry.example.org/tenant/api:1.2.3",
+  "Metadata": {
+    "OS": {"Family": "alpine", "Name": "3.20.3"},
+    "RepoDigests": ["registry.example.org/tenant/api@sha256:1111111111111111111111111111111111111111111111111111111111111111"]
+  },
+  "Results": [
+    {
+      "Target": "registry.example.org/tenant/api:1.2.3 (alpine 3.20.3)",
+      "Class": "os-pkgs",
+      "Type": "alpine",
+      "Vulnerabilities": [
+        {"VulnerabilityID": "CVE-2026-0001", "PkgName": "openssl", "InstalledVersion": "3.3.1-r0", "FixedVersion": "3.3.2-r0", "Severity": "HIGH", "Title": "openssl: something bad", "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-0001"},
+        {"VulnerabilityID": "CVE-2026-0002", "PkgName": "busybox", "InstalledVersion": "1.36.1-r29", "FixedVersion": "", "Severity": "LOW", "Title": "busybox: minor", "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-0002"}
+      ]
+    },
+    {
+      "Target": "var/www/html/vendor/composer/installed.json",
+      "Class": "lang-pkgs",
+      "Type": "composer-vendor",
+      "Vulnerabilities": [
+        {"VulnerabilityID": "CVE-2026-0003", "PkgName": "codeigniter4/framework", "InstalledVersion": "v4.4.5", "FixedVersion": "4.7.4", "Severity": "CRITICAL", "Title": "CodeIgniter: SQL injection", "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-0003"},
+        {"VulnerabilityID": "CVE-2026-0003", "PkgName": "codeigniter4/framework", "InstalledVersion": "v4.4.5", "FixedVersion": "4.7.4", "Severity": "CRITICAL", "Title": "CodeIgniter: SQL injection", "PrimaryURL": "https://avd.aquasec.com/nvd/cve-2026-0003"},
+        {"VulnerabilityID": "GHSA-xxxx-yyyy-zzzz", "PkgName": "guzzlehttp/psr7", "InstalledVersion": "2.6.0", "FixedVersion": "2.12.3", "Severity": "MEDIUM", "Title": "Host confusion", "PrimaryURL": ""},
+        {"VulnerabilityID": "CVE-2026-0004", "PkgName": "left-pad", "InstalledVersion": "1.0.0", "FixedVersion": "", "Severity": "WHATEVER", "Title": "odd severity"}
+      ]
+    },
+    {"Target": "Node.js", "Class": "lang-pkgs", "Type": "node-pkg"}
+  ]
+}

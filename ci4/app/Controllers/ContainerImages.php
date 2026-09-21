@@ -2,9 +2,34 @@
 
 use App\Core\ResourceController;
 use App\Entities\ContainerImage;
+use App\Libraries\ImageScanning\ImageScanner;
 use DebugTool\Data;
 
 class ContainerImages extends ResourceController {
+
+    /**
+     * Scan the tags of this image that deployments run, within the minute: they are queued,
+     * and the cron job that runs every minute scans them. Answers with how many were queued -
+     * none when no deployment runs the image.
+     *
+     * @route /container-images/{id}/scan
+     * @method put
+     * @custom true
+     * @param int $id
+     * @responseSchema ContainerImageScanRequestResponse
+     * @return void
+     */
+    public function scan(int $id): void {
+        $item = new ContainerImage();
+        $item->find($id);
+        if (!$item->exists()) {
+            $this->fail('unknown container image');
+            return;
+        }
+
+        Data::set('resource', ['queued' => (new ImageScanner())->queue($item)]);
+        $this->success();
+    }
 
     /**
      * The image's tags, straight from its registry, each with when it was pushed - a quick

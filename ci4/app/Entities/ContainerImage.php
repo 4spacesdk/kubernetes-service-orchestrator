@@ -38,6 +38,9 @@ use App\Core\Entity;
  * @property bool $commit_identification_enabled
  * @property string $commit_identification_method
  * @property string $commit_identification_environment_variable_name
+ *
+ * # Computed on REST reads
+ * @property int[] $running_deployment_ids
  */
 class ContainerImage extends Entity {
 
@@ -50,6 +53,17 @@ class ContainerImage extends Entity {
      */
     public function getRegistryClient(): ?BaseContainerRegistry {
         return $this->registry()?->getClient();
+    }
+
+    /**
+     * The credentials this image is pulled with, as a Docker `config.json`: its registry's
+     * pull account, the one kso also turns into a pull secret. Null for an image on a public
+     * registry, or a registry without a pull account.
+     */
+    public function getPullCredentialsDockerConfig(): ?string {
+        $registry = $this->registry();
+
+        return $registry !== null && $registry->hasPullCredentials() ? $registry->getDockerConfigJson() : null;
     }
 
     private ?ContainerRegistry $loadedRegistry = null;
@@ -131,6 +145,16 @@ class ContainerImage extends Entity {
 
     public function getCommitIdentification(): ?BaseCommitIdentificationMethod {
         return service('integrations')->commitIdentification($this);
+    }
+
+    public function toArray(bool $onlyChanged = false, bool $cast = true, bool $recursive = false, ?array $fieldsFilter = null): array {
+        $item = parent::toArray($onlyChanged, $cast, $recursive, $fieldsFilter);
+
+        if (isset($this->running_deployment_ids)) {
+            $item['running_deployment_ids'] = $this->running_deployment_ids;
+        }
+
+        return $item;
     }
 
     /**

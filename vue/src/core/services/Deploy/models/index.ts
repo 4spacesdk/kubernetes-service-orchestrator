@@ -1,5 +1,7 @@
 export {AutoUpdate as AutoUpdate} from "./AutoUpdate";
 export {ContainerImage as ContainerImage} from "./ContainerImage";
+export {ContainerImageScan as ContainerImageScan} from "./ContainerImageScan";
+export {ContainerImageScanRecord as ContainerImageScanRecord} from "./ContainerImageScanRecord";
 export {ContainerRegistry as ContainerRegistry} from "./ContainerRegistry";
 export {CronJob as CronJob} from "./CronJob";
 export {DatabaseService as DatabaseService} from "./DatabaseService";

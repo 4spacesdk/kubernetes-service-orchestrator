@@ -168,6 +168,32 @@ class Fixtures {
     /**
      * @param array<string, mixed> $overrides
      */
+    /**
+     * What a scan of a running tag left behind.
+     *
+     * @param array<string, mixed> $overrides
+     */
+    public static function containerImageScan(array $overrides = []): \App\Entities\ContainerImageScan {
+        return self::make(\App\Entities\ContainerImageScan::class, [
+            'container_image_id' => $overrides['container_image_id'] ?? self::containerImage()->id,
+            'tag' => '1.0.0',
+            'image_reference' => 'registry.example.org/test/app:1.0.0',
+            'status' => \ContainerImageScanStatuses::Scanned,
+            'high' => 1,
+            'findings' => '[{"id":"CVE-0000-0001","severity":"high"}]',
+            'scanned_at' => date('Y-m-d H:i:s'),
+        ], $overrides);
+    }
+
+    public static function containerImageScanRecord(array $overrides = []): \App\Entities\ContainerImageScanRecord {
+        return self::make(\App\Entities\ContainerImageScanRecord::class, [
+            'container_image_id' => $overrides['container_image_id'] ?? self::containerImage()->id,
+            'tag' => '1.0.0',
+            'critical' => 1,
+            'scanned_at' => date('Y-m-d H:i:s'),
+        ], $overrides);
+    }
+
     public static function containerImage(array $overrides = []): ContainerImage {
         return self::make(ContainerImage::class, [
             'name' => 'test-image',

@@ -174,6 +174,11 @@ RUN if [[ "$GKE_AUTH_ENABLED" == "TRUE" ]] ; then GOBIN=/usr/local/bin go instal
 # Install composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin/ --filename=composer
 
+# Trivy, which scans the customers' images for known vulnerabilities (app:scan-container-images).
+# Copied from the official image: it is built for both architectures, so this picks the one
+# being built. Pinned - bump it on purpose. About 42 MB to pull, 156 MB on disk.
+COPY --from=aquasec/trivy:0.74.0 /usr/local/bin/trivy /usr/local/bin/trivy
+
 RUN rm -rf /tmp/* /var/cache/apk/*
 
 # `X-Powered-By: PHP/8.5.10` on every response, which is a version number and an invitation

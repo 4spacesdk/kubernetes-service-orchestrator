@@ -55,6 +55,8 @@
 * Security-related improvements
 
 ### Enhancements
+* Container Images: the tags your deployments run are scanned for known vulnerabilities with Trivy every night, and on "Scan now". The list shows the counts per tag, and a dialog lists every finding with the version that fixes it, and a graph of critical and high over the last year
+* Container Images: the list shows how many deployments run each image, with a click to list them, drops the Registry column, and moves the pull secret and version control to icons
 * Container Registries: credentials shared by all images, import of images, auto update set up by kso, optional pull secrets
 * Container Images: list tags with when each was pushed, and the registry's reason when it refuses. The deployment version picker shows when each tag was pushed too ([#64](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/64))
 * GitHub Integrations: one GitHub App per organisation
@@ -79,6 +81,7 @@
 5. Artifact Registry: the service account only needs Artifact Registry Reader now
 6. Swagger is off. To keep it, set `deployment.config.swaggerEnabled: true` in the chart
 7. If kso is also reached on a hostname the chart's routing does not list, add it to `deployment.config.extraHostnames`
+8. Image scanning keeps Trivy's databases on a 4Gi volume (`deployment.imageScanning.cacheSizeLimit`), fetched again when the pod starts - 1.3 GB, and 1.4 GB more once an image with Java in it is scanned. The chart now sets `resources` by default: 256Mi requested and a 1Gi memory limit, measured at about 90Mi idle and 110-180Mi more during a scan. Helm merges them with your own `resources`; set `resources: null` to go without
 
 ### Notes
 * An image built for arm64 has no MSSQL driver

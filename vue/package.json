@@ -18,6 +18,8 @@
     "@fortawesome/vue-fontawesome": "^3.0.3",
     "autobahn-browser": "^22.11.1",
     "axios": "^0.19.2",
+    "chart.js": "^4.5.1",
+    "highlight.js": "11.8.0",
     "lodash.debounce": "^4.0.8",
     "mitt": "^3.0.0",
     "moment": "^2.29.4",
@@ -25,11 +27,11 @@
     "simple-code-editor": "^2.0.9",
     "sortablejs": "^1.15.0",
     "vue": "^3.2.45",
+    "vue-chartjs": "^5.3.4",
     "vue-diff": "^1.2.4",
     "vue-json-viewer": "^3.0.4",
     "vue-router": "^4.1.6",
-    "vuetify": "^3.1.0",
-    "highlight.js": "11.8.0"
+    "vuetify": "^3.1.0"
   },
   "devDependencies": {
     "@rushstack/eslint-patch": "^1.1.4",

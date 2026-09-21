@@ -28,6 +28,7 @@ export class ContainerImageDefinition extends BaseModel {
     commit_identification_enabled?: boolean;
     commit_identification_method?: string;
     commit_identification_environment_variable_name?: string;
+    running_deployment_ids?: number[];
     id?: number;
     created?: string;
     updated?: string;
@@ -65,6 +66,7 @@ export class ContainerImageDefinition extends BaseModel {
             delete this.commit_identification_enabled;
             delete this.commit_identification_method;
             delete this.commit_identification_environment_variable_name;
+            delete this.running_deployment_ids;
             delete this.id;
             delete this.created;
             delete this.updated;
@@ -136,6 +138,9 @@ export class ContainerImageDefinition extends BaseModel {
         }
         if (data.commit_identification_environment_variable_name != null) {
             this.commit_identification_environment_variable_name = data.commit_identification_environment_variable_name;
+        }
+        if (data.running_deployment_ids != null) {
+            this.running_deployment_ids = data.running_deployment_ids;
         }
         if (data.id != null) {
             this.id = data.id;

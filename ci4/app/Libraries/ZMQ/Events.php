@@ -17,6 +17,13 @@ class Events {
         return Events::Generate("workspace.$workspace.changed.status");
     }
 
+    /**
+     * A scan of one of the image's tags was queued, started, or finished.
+     */
+    public static function ContainerImage_Scans_Changed(int $containerImageId): string {
+        return Events::Generate("container-image.$containerImageId.scans.changed");
+    }
+
     public static function MigrationJob_Created(): string {
         return Events::Generate("migration-job.created");
     }

@@ -408,13 +408,13 @@ class RestGetSweepTest extends ControllerTestCase {
             $this->assertContains($resource, $collections, "{$resource} is no longer routed");
         }
 
-        $this->assertCount(24, $collections, 'the number of plain collection reads changed');
+        $this->assertCount(26, $collections, 'the number of plain collection reads changed');
 
         // Two fewer by-id reads than collections, and both on purpose: `environments` has
         // nothing to address, and `o_auth_clients` is read through a `(.*)` route because
         // its key is a string. The numeric routes the generator made for the two were
         // removed by migration.
-        $this->assertCount(22, $this->byIdResources(), 'the number of plain by-id reads changed');
+        $this->assertCount(24, $this->byIdResources(), 'the number of plain by-id reads changed');
     }
 
     /**
@@ -469,6 +469,8 @@ class RestGetSweepTest extends ControllerTestCase {
                 'approved_date' => '',
             ]),
             'container_images' => Fixtures::containerImage()->id,
+            'container_image_scans' => Fixtures::containerImageScan()->id,
+            'container_image_scan_records' => Fixtures::containerImageScanRecord()->id,
             'container_registries' => Fixtures::containerRegistry([
                 'gcloud_credentials' => '{"private_key":"SWEEP-GCLOUD-KEY"}',
                 'azure_client_secret' => 'sweep-azure-secret',

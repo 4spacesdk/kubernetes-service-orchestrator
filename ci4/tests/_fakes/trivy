@@ -1,0 +1,29 @@
+#!/bin/sh
+# Stands in for Trivy in the tests (TRIVY_BINARY). Writes the report in FAKE_TRIVY_REPORT to
+# the --output file, and records each call in FAKE_TRIVY_LOG: the image, and the registry
+# credentials it was handed, if any. An image containing FAKE_TRIVY_FAIL is refused the way
+# Trivy refuses one it cannot pull.
+output=''
+reference=''
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --output) output="$2"; shift 2 ;;
+    --scanners|--format|--timeout|--cache-dir) shift 2 ;;
+    image|--quiet) shift ;;
+    *) reference="$1"; shift ;;
+  esac
+done
+
+credentials='none'
+if [ -n "$DOCKER_CONFIG" ] && [ -f "$DOCKER_CONFIG/config.json" ]; then
+  credentials=$(cat "$DOCKER_CONFIG/config.json")
+fi
+printf '%s\t%s\n' "$reference" "$credentials" >> "$FAKE_TRIVY_LOG"
+
+if [ -n "$FAKE_TRIVY_FAIL" ] && echo "$reference" | grep -q "$FAKE_TRIVY_FAIL"; then
+  echo "2026-09-21T02:30:00Z	INFO	Downloading vulnerability DB..." >&2
+  echo "2026-09-21T02:30:05Z	FATAL	unable to find the specified image \"$reference\": UNAUTHORIZED: authentication required" >&2
+  exit 1
+fi
+
+cp "$FAKE_TRIVY_REPORT" "$output"

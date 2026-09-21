@@ -7,6 +7,7 @@ This service enables interaction with the Kubernetes API and facilitates the eff
 * User-friendly Vue-based interface for easy configuration and monitoring.
 * Handling of Kubernetes API calls and resource management.
 * Option for custom configurations and adaptations.
+* Nightly scan of the images your deployments run for known vulnerabilities, with Trivy.
 
 ## Security status
 Known vulnerabilities in the main branch - its dependencies and the `:dev` image built from it -
@@ -44,6 +45,12 @@ deployment:
   # Old keys, comma separated. Set this when rotating encryptionKey, so rows written with
   # the previous one can still be read until they have been saved again.
   previousEncryptionKeys: ""
+
+  # kso scans the images your deployments run for known vulnerabilities, every night, with
+  # Trivy. Its databases are kept on a volume of this size between scans: 1.3 GB, plus 1.4 GB
+  # once an image with Java in it has been scanned. They are fetched again when the pod starts.
+  imageScanning:
+    cacheSizeLimit: 4Gi
 
   # The default url is "https://kubernetes.default.svc.cluster.local".
   # But it can be different depending on provider
@@ -96,13 +103,14 @@ gatewayapi:
   healthCheckPolicy:
     enabled: true
 
+# About 90Mi idle and 110-180Mi more while Trivy scans an image; the limit leaves room for
+# larger images and the first scan after a start. No CPU limit: it only makes a scan slower.
 resources:
-  limits:
-    cpu: 500m
-    memory: 896Mi
   requests:
-   cpu: 100m
-   memory: 128Mi
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    memory: 1Gi
 
 ```
 ### Install

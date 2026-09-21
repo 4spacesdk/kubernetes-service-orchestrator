@@ -16,6 +16,10 @@ export class Events {
         return Events.Generate(`workspace.${workspace}.changed.status`);
     }
 
+    public static ContainerImage_Scans_Changed(containerImageId: number): string {
+        return Events.Generate(`container-image.${containerImageId}.scans.changed`);
+    }
+
     public static MigrationJob_Created(): string {
         return Events.Generate(`migration-job.created`);
     }

@@ -19,6 +19,8 @@ import {useRouter} from 'vue-router';
 
 const props = defineProps<{
     filterByWorkspaceId?: number;
+    /** Only these deployments, e.g. the ones running a container image. */
+    filterByIds?: number[];
 
     showHeader: boolean;
     showCreateBtn?: boolean;
@@ -64,13 +66,15 @@ const statusOptions = ref([
     {value: DeploymentStatusTypes.Error, title: 'Error'},
 ]);
 const selectedStatus = ref([DeploymentStatusTypes.Deploying, DeploymentStatusTypes.Active, DeploymentStatusTypes.Error]);
-const filtersOnTheList: Record<string, Ref<string[]>> = props.filterByWorkspaceId ? {} : {status: selectedStatus};
+/** Inside a dialog the list is scoped by its caller: no status filter, and not in the url. */
+const isScoped = !!props.filterByWorkspaceId || !!props.filterByIds;
+const filtersOnTheList: Record<string, Ref<string[]>> = isScoped ? {} : {status: selectedStatus};
 
 const {search: searchValue, page, itemsPerPage, sortBy, applyOrdering, applyPaging} = useListState({
     sortable: {'name': 'name', 'namespace': 'namespace', 'status': 'status', 'version': 'version', 'last_updated': 'last_updated'},
     defaultSort: {key: 'name', order: 'asc'},
     filters: filtersOnTheList,
-    syncWithUrl: !props.filterByWorkspaceId,
+    syncWithUrl: !isScoped,
 });
 
 onMounted(() => {
@@ -110,7 +114,10 @@ function getItems(doItems = true, doCount = false) {
     // Prepare api call
     const api = Api.deployments().get();
 
-    if (props.filterByWorkspaceId) {
+    if (props.filterByIds) {
+        // An empty whereIn would read as no filter at all.
+        api.whereIn('id', props.filterByIds.length ? props.filterByIds : [0]);
+    } else if (props.filterByWorkspaceId) {
         api.where('workspace_id', props.filterByWorkspaceId);
     } else {
         api.whereIn('status', selectedStatus.value);

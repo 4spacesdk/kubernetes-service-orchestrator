@@ -1,5 +1,6 @@
 <?php namespace App\Models;
 
+use App\Libraries\ImageScanning\ImageScanner;
 use RestExtension\Core\Model;
 use RestExtension\ResourceModelInterface;
 
@@ -20,6 +21,8 @@ class ContainerImageModel extends Model implements ResourceModelInterface {
         ],
         InitContainerModel::class,
         K8sCronJobModel::class,
+        ContainerImageScanModel::class,
+        ContainerImageScanRecordModel::class,
     ];
 
     public function preRestGet($queryParser, $id) {
@@ -27,7 +30,13 @@ class ContainerImageModel extends Model implements ResourceModelInterface {
     }
 
     public function postRestGet($queryParser, $items) {
-
+        $running = [];
+        foreach (ImageScanner::runningDeployments() as $row) {
+            $running[$row['container_image_id']][] = $row['deployment_id'];
+        }
+        foreach ($items as $image) {
+            $image->running_deployment_ids = $running[(int) $image->id] ?? [];
+        }
     }
 
     public function isRestCreationAllowed($item): bool {
@@ -49,6 +58,10 @@ class ContainerImageModel extends Model implements ResourceModelInterface {
     public function ignoredRestGetOnRelations(): array {
         return [
             DeploymentSpecificationModel::class,
+            // Each carries every finding; asked for with `include` when wanted.
+            ContainerImageScanModel::class,
+            // A row per scan for a year.
+            ContainerImageScanRecordModel::class,
         ];
     }
 

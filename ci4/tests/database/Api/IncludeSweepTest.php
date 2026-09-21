@@ -404,7 +404,7 @@ class IncludeSweepTest extends ControllerTestCase {
     public function testTheSweepStillCoversEveryRoutedResourceAndItsRelations(): void {
         $models = $this->resourceModels();
 
-        $this->assertCount(24, $models, 'the number of plain collection reads changed');
+        $this->assertCount(26, $models, 'the number of plain collection reads changed');
         $this->assertSame(
             ['environments'],
             array_keys(array_filter($models, static fn ($model) => $model === null)),
@@ -416,7 +416,7 @@ class IncludeSweepTest extends ControllerTestCase {
             $relations += count($this->relationsOf($modelName));
         }
 
-        $this->assertSame(90, $relations, 'the number of includable relations changed');
+        $this->assertSame(94, $relations, 'the number of includable relations changed');
     }
 
     // </editor-fold>
@@ -605,6 +605,9 @@ class IncludeSweepTest extends ControllerTestCase {
      * The resources that hang off nothing built above: podio, rbac, oauth and webhooks.
      */
     private function arrangeTheRestOfTheResources(int $imageId, int $workspaceId, int $packageId): void {
+        Fixtures::containerImageScan(['container_image_id' => $imageId]);
+        Fixtures::containerImageScanRecord(['container_image_id' => $imageId]);
+
         $podioIntegration = Fixtures::podioIntegration();
         $fieldReference = Fixtures::podioFieldReference(['podio_integration_id' => $podioIntegration->id]);
         $postUpdateAction = Fixtures::postUpdateAction([

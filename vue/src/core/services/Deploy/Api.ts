@@ -1,5 +1,7 @@
 import {BaseApi} from "./BaseApi";
 import {AutoUpdate} from "./models";
+import {ContainerImageScanRecord} from "./models";
+import {ContainerImageScan} from "./models";
 import {ContainerImage} from "./models";
 import {ContainerRegistry} from "./models";
 import {DatabaseService} from "./models";
@@ -44,6 +46,10 @@ export interface ClusterRoleRuleList {
 export interface ConnectionTestResult {
     value?: boolean;
     reason?: string;
+}
+
+export interface ContainerImageScanRequestResponse {
+    queued?: number;
 }
 
 export interface ContainerImageTag {
@@ -723,6 +729,604 @@ class AutoUpdates {
 }
 
 
+export class ContainerImageScanRecordsGet extends BaseApi<ContainerImageScanRecord> {
+
+    public topic = 'Resources.ContainerImageScanRecords';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/container_image_scan_records`;
+    }
+
+    protected convertToResource(data: any): ContainerImageScanRecord {
+        return new ContainerImageScanRecord(data);
+    }
+
+    public where(name: string, value: any): ContainerImageScanRecordsGet {
+        this.filter().where(name, value);
+        return this;
+    }
+
+    public whereEquals(name: string, value: any): ContainerImageScanRecordsGet {
+        this.filter().whereEquals(name, value);
+        return this;
+    }
+
+    public whereIn(name: string, value: any[]): ContainerImageScanRecordsGet {
+        this.filter().whereIn(name, value);
+        return this;
+    }
+
+    public whereInArray(name: string, value: any[]): ContainerImageScanRecordsGet {
+        this.filter().whereInArray(name, value);
+        return this;
+    }
+
+    public whereNot(name: string, value: any): ContainerImageScanRecordsGet {
+        this.filter().whereNot(name, value);
+        return this;
+    }
+
+    public whereNotIn(name: string, value: any[]): ContainerImageScanRecordsGet {
+        this.filter().whereNotIn(name, value);
+        return this;
+    }
+
+    public whereGreaterThan(name: string, value: any): ContainerImageScanRecordsGet {
+        this.filter().whereGreaterThan(name, value);
+        return this;
+    }
+
+    public whereGreaterThanOrEqual(name: string, value: any): ContainerImageScanRecordsGet {
+        this.filter().whereGreaterThanOrEqual(name, value);
+        return this;
+    }
+
+    public whereLessThan(name: string, value: any): ContainerImageScanRecordsGet {
+        this.filter().whereLessThan(name, value);
+        return this;
+    }
+
+    public whereLessThanOrEqual(name: string, value: any): ContainerImageScanRecordsGet {
+        this.filter().whereLessThanOrEqual(name, value);
+        return this;
+    }
+
+    public search(name: string, value: any): ContainerImageScanRecordsGet {
+        this.filter().search(name, value);
+        return this;
+    }
+
+    public include(name: string): ContainerImageScanRecordsGet {
+        this.getInclude().include(name);
+        return this;
+    }
+
+    public orderBy(name: string, direction: string): ContainerImageScanRecordsGet {
+        this.ordering().orderBy(name, direction);
+        return this;
+    }
+
+    public orderAsc(name: string): ContainerImageScanRecordsGet {
+        this.ordering().orderAsc(name);
+        return this;
+    }
+
+    public orderDesc(name: string): ContainerImageScanRecordsGet {
+        this.ordering().orderDesc(name);
+        return this;
+    }
+
+    public limit(value: number): ContainerImageScanRecordsGet {
+        this.limitValue = value;
+        return this;
+    }
+
+    public offset(value: number): ContainerImageScanRecordsGet {
+        this.offsetValue = value;
+        return this;
+    }
+
+    public count(next?: (value: number) => void) {
+        return this.executeCount(next);
+    }
+
+    public find(next?: (value: ContainerImageScanRecord[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class ContainerImageScanRecordsGetById extends BaseApi<ContainerImageScanRecord> {
+
+    public topic = 'Resources.ContainerImageScanRecords';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/container_image_scan_records/${id}`;
+    }
+
+    protected convertToResource(data: any): ContainerImageScanRecord {
+        return new ContainerImageScanRecord(data);
+    }
+
+    public include(name: string): ContainerImageScanRecordsGetById {
+        this.getInclude().include(name);
+        return this;
+    }
+
+    public find(next?: (value: ContainerImageScanRecord[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class ContainerImageScanRecordsPost extends BaseApi<ContainerImageScanRecord> {
+
+    public topic = 'Resources.ContainerImageScanRecords';
+    protected method = 'post';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/container_image_scan_records`;
+    }
+
+    protected convertToResource(data: any): ContainerImageScanRecord {
+        return new ContainerImageScanRecord(data);
+    }
+
+    public save(data: ContainerImageScanRecord, next?: (value: ContainerImageScanRecord) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class ContainerImageScanRecordsPutById extends BaseApi<ContainerImageScanRecord> {
+
+    public topic = 'Resources.ContainerImageScanRecords';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/container_image_scan_records/${id}`;
+    }
+
+    protected convertToResource(data: any): ContainerImageScanRecord {
+        return new ContainerImageScanRecord(data);
+    }
+
+    public save(data: ContainerImageScanRecord, next?: (value: ContainerImageScanRecord) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class ContainerImageScanRecordsPut extends BaseApi<ContainerImageScanRecord> {
+
+    public topic = 'Resources.ContainerImageScanRecords';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/container_image_scan_records`;
+    }
+
+    protected convertToResource(data: any): ContainerImageScanRecord {
+        return new ContainerImageScanRecord(data);
+    }
+
+    public save(data: ContainerImageScanRecord, next?: (value: ContainerImageScanRecord) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class ContainerImageScanRecordsPatchById extends BaseApi<ContainerImageScanRecord> {
+
+    public topic = 'Resources.ContainerImageScanRecords';
+    protected method = 'patch';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/container_image_scan_records/${id}`;
+    }
+
+    protected convertToResource(data: any): ContainerImageScanRecord {
+        return new ContainerImageScanRecord(data);
+    }
+
+    public save(data: ContainerImageScanRecord, next?: (value: ContainerImageScanRecord) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class ContainerImageScanRecordsPatch extends BaseApi<ContainerImageScanRecord> {
+
+    public topic = 'Resources.ContainerImageScanRecords';
+    protected method = 'patch';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/container_image_scan_records`;
+    }
+
+    protected convertToResource(data: any): ContainerImageScanRecord {
+        return new ContainerImageScanRecord(data);
+    }
+
+    public save(data: ContainerImageScanRecord, next?: (value: ContainerImageScanRecord) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class ContainerImageScanRecordsDeleteById extends BaseApi<ContainerImageScanRecord> {
+
+    public topic = 'Resources.ContainerImageScanRecords';
+    protected method = 'delete';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/container_image_scan_records/${id}`;
+    }
+
+    protected convertToResource(data: any): ContainerImageScanRecord {
+        return new ContainerImageScanRecord(data);
+    }
+
+    public delete(next?: (value: ContainerImageScanRecord) => void) {
+        return super.executeDelete(next);
+    }
+}
+
+class ContainerImageScanRecords {
+
+    public get(): ContainerImageScanRecordsGet {
+        return new ContainerImageScanRecordsGet();
+    }
+
+    public getById(id: number): ContainerImageScanRecordsGetById {
+        return new ContainerImageScanRecordsGetById(id);
+    }
+
+    public post(): ContainerImageScanRecordsPost {
+        return new ContainerImageScanRecordsPost();
+    }
+
+    public putById(id: number): ContainerImageScanRecordsPutById {
+        return new ContainerImageScanRecordsPutById(id);
+    }
+
+    public put(): ContainerImageScanRecordsPut {
+        return new ContainerImageScanRecordsPut();
+    }
+
+    public patchById(id: number): ContainerImageScanRecordsPatchById {
+        return new ContainerImageScanRecordsPatchById(id);
+    }
+
+    public patch(): ContainerImageScanRecordsPatch {
+        return new ContainerImageScanRecordsPatch();
+    }
+
+    public deleteById(id: number): ContainerImageScanRecordsDeleteById {
+        return new ContainerImageScanRecordsDeleteById(id);
+    }
+
+}
+
+
+export class ContainerImageScansGet extends BaseApi<ContainerImageScan> {
+
+    public topic = 'Resources.ContainerImageScans';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/container_image_scans`;
+    }
+
+    protected convertToResource(data: any): ContainerImageScan {
+        return new ContainerImageScan(data);
+    }
+
+    public where(name: string, value: any): ContainerImageScansGet {
+        this.filter().where(name, value);
+        return this;
+    }
+
+    public whereEquals(name: string, value: any): ContainerImageScansGet {
+        this.filter().whereEquals(name, value);
+        return this;
+    }
+
+    public whereIn(name: string, value: any[]): ContainerImageScansGet {
+        this.filter().whereIn(name, value);
+        return this;
+    }
+
+    public whereInArray(name: string, value: any[]): ContainerImageScansGet {
+        this.filter().whereInArray(name, value);
+        return this;
+    }
+
+    public whereNot(name: string, value: any): ContainerImageScansGet {
+        this.filter().whereNot(name, value);
+        return this;
+    }
+
+    public whereNotIn(name: string, value: any[]): ContainerImageScansGet {
+        this.filter().whereNotIn(name, value);
+        return this;
+    }
+
+    public whereGreaterThan(name: string, value: any): ContainerImageScansGet {
+        this.filter().whereGreaterThan(name, value);
+        return this;
+    }
+
+    public whereGreaterThanOrEqual(name: string, value: any): ContainerImageScansGet {
+        this.filter().whereGreaterThanOrEqual(name, value);
+        return this;
+    }
+
+    public whereLessThan(name: string, value: any): ContainerImageScansGet {
+        this.filter().whereLessThan(name, value);
+        return this;
+    }
+
+    public whereLessThanOrEqual(name: string, value: any): ContainerImageScansGet {
+        this.filter().whereLessThanOrEqual(name, value);
+        return this;
+    }
+
+    public search(name: string, value: any): ContainerImageScansGet {
+        this.filter().search(name, value);
+        return this;
+    }
+
+    public include(name: string): ContainerImageScansGet {
+        this.getInclude().include(name);
+        return this;
+    }
+
+    public orderBy(name: string, direction: string): ContainerImageScansGet {
+        this.ordering().orderBy(name, direction);
+        return this;
+    }
+
+    public orderAsc(name: string): ContainerImageScansGet {
+        this.ordering().orderAsc(name);
+        return this;
+    }
+
+    public orderDesc(name: string): ContainerImageScansGet {
+        this.ordering().orderDesc(name);
+        return this;
+    }
+
+    public limit(value: number): ContainerImageScansGet {
+        this.limitValue = value;
+        return this;
+    }
+
+    public offset(value: number): ContainerImageScansGet {
+        this.offsetValue = value;
+        return this;
+    }
+
+    public count(next?: (value: number) => void) {
+        return this.executeCount(next);
+    }
+
+    public find(next?: (value: ContainerImageScan[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class ContainerImageScansGetById extends BaseApi<ContainerImageScan> {
+
+    public topic = 'Resources.ContainerImageScans';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/container_image_scans/${id}`;
+    }
+
+    protected convertToResource(data: any): ContainerImageScan {
+        return new ContainerImageScan(data);
+    }
+
+    public include(name: string): ContainerImageScansGetById {
+        this.getInclude().include(name);
+        return this;
+    }
+
+    public find(next?: (value: ContainerImageScan[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class ContainerImageScansPost extends BaseApi<ContainerImageScan> {
+
+    public topic = 'Resources.ContainerImageScans';
+    protected method = 'post';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/container_image_scans`;
+    }
+
+    protected convertToResource(data: any): ContainerImageScan {
+        return new ContainerImageScan(data);
+    }
+
+    public save(data: ContainerImageScan, next?: (value: ContainerImageScan) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class ContainerImageScansPutById extends BaseApi<ContainerImageScan> {
+
+    public topic = 'Resources.ContainerImageScans';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/container_image_scans/${id}`;
+    }
+
+    protected convertToResource(data: any): ContainerImageScan {
+        return new ContainerImageScan(data);
+    }
+
+    public save(data: ContainerImageScan, next?: (value: ContainerImageScan) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class ContainerImageScansPut extends BaseApi<ContainerImageScan> {
+
+    public topic = 'Resources.ContainerImageScans';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/container_image_scans`;
+    }
+
+    protected convertToResource(data: any): ContainerImageScan {
+        return new ContainerImageScan(data);
+    }
+
+    public save(data: ContainerImageScan, next?: (value: ContainerImageScan) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class ContainerImageScansPatchById extends BaseApi<ContainerImageScan> {
+
+    public topic = 'Resources.ContainerImageScans';
+    protected method = 'patch';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/container_image_scans/${id}`;
+    }
+
+    protected convertToResource(data: any): ContainerImageScan {
+        return new ContainerImageScan(data);
+    }
+
+    public save(data: ContainerImageScan, next?: (value: ContainerImageScan) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class ContainerImageScansPatch extends BaseApi<ContainerImageScan> {
+
+    public topic = 'Resources.ContainerImageScans';
+    protected method = 'patch';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/container_image_scans`;
+    }
+
+    protected convertToResource(data: any): ContainerImageScan {
+        return new ContainerImageScan(data);
+    }
+
+    public save(data: ContainerImageScan, next?: (value: ContainerImageScan) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class ContainerImageScansDeleteById extends BaseApi<ContainerImageScan> {
+
+    public topic = 'Resources.ContainerImageScans';
+    protected method = 'delete';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/container_image_scans/${id}`;
+    }
+
+    protected convertToResource(data: any): ContainerImageScan {
+        return new ContainerImageScan(data);
+    }
+
+    public delete(next?: (value: ContainerImageScan) => void) {
+        return super.executeDelete(next);
+    }
+}
+
+class ContainerImageScans {
+
+    public get(): ContainerImageScansGet {
+        return new ContainerImageScansGet();
+    }
+
+    public getById(id: number): ContainerImageScansGetById {
+        return new ContainerImageScansGetById(id);
+    }
+
+    public post(): ContainerImageScansPost {
+        return new ContainerImageScansPost();
+    }
+
+    public putById(id: number): ContainerImageScansPutById {
+        return new ContainerImageScansPutById(id);
+    }
+
+    public put(): ContainerImageScansPut {
+        return new ContainerImageScansPut();
+    }
+
+    public patchById(id: number): ContainerImageScansPatchById {
+        return new ContainerImageScansPatchById(id);
+    }
+
+    public patch(): ContainerImageScansPatch {
+        return new ContainerImageScansPatch();
+    }
+
+    public deleteById(id: number): ContainerImageScansDeleteById {
+        return new ContainerImageScansDeleteById(id);
+    }
+
+}
+
+
 export class ContainerImagesGet extends BaseApi<ContainerImage> {
 
     public topic = 'Resources.ContainerImages';
@@ -943,6 +1547,27 @@ export class ContainerImagesDeleteById extends BaseApi<ContainerImage> {
     }
 }
 
+export class ContainerImagesScanPutById extends BaseApi<ContainerImageScanRequestResponse> {
+
+    public topic = 'Resources.ContainerImageScanRequestResponses';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/container-images/${id}/scan`;
+    }
+
+    protected convertToResource(data: any): ContainerImageScanRequestResponse {
+        return data;
+    }
+
+    public save(data: any, next?: (value: ContainerImageScanRequestResponse) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
 export class ContainerImagesGetTagsGetById extends BaseApi<ContainerImageTagsGetResponse> {
 
     public topic = 'Resources.ContainerImageTagsGetResponses';
@@ -988,6 +1613,10 @@ class ContainerImages {
 
     public deleteById(id: number): ContainerImagesDeleteById {
         return new ContainerImagesDeleteById(id);
+    }
+
+    public scanPutById(id: number): ContainerImagesScanPutById {
+        return new ContainerImagesScanPutById(id);
     }
 
     public getTagsGetById(id: number): ContainerImagesGetTagsGetById {
@@ -8859,6 +9488,14 @@ export class Api {
 
     public static autoUpdates(): AutoUpdates {
         return new AutoUpdates();
+    }
+
+    public static containerImageScanRecords(): ContainerImageScanRecords {
+        return new ContainerImageScanRecords();
+    }
+
+    public static containerImageScans(): ContainerImageScans {
+        return new ContainerImageScans();
     }
 
     public static containerImages(): ContainerImages {

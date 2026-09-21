@@ -4,7 +4,8 @@ import NameLink from "@/components/Modules/Common/NameLink.vue";
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
-import {ContainerImage} from "@/core/services/Deploy/models";
+import {ContainerImage, ContainerImageScan} from "@/core/services/Deploy/models";
+import ScanCounts from "@/components/Modules/Setup/ContainerImages/ScanCounts/ScanCounts.vue";
 import debounce from "lodash.debounce";
 import { VersionControlProviders } from "@/constants";
 import { CopyNameStrategy, duplicateEntity } from "@/helpers/DuplicateEntity";
@@ -16,18 +17,19 @@ const emit = defineEmits<{
 const itemCount = ref(0);
 const rows = ref<ContainerImage[]>([]);
 const headers = ref([
-    {title: 'Name', key: 'name', sortable: true},
-    {title: 'Url', key: 'url', sortable: true},
-    {title: 'Pull secret', key: 'pull_secret', sortable: true},
-    {title: 'Registry', key: 'container_registry', sortable: true},
-    {title: 'VCS', key: 'version_control_provider', sortable: true},
-    {title: '', key: 'actions', sortable: false},
+    {title: 'Image', key: 'name', sortable: true},
+    {title: 'Deployments', key: 'running_deployment_ids', sortable: false, align: 'center' as const},
+    {title: 'Vulnerabilities', key: 'vulnerabilities', sortable: false},
+    {title: '', key: 'actions', sortable: false, align: 'end' as const},
 ]);
 const isLoading = ref(true);
 const options = ref({});
 
+/** The scans of the running tags of the images on the page, by image - counts only. */
+const scansByImage = ref<Record<number, ContainerImageScan[]>>({});
+
 const {search: searchValue, page, itemsPerPage, sortBy, applyOrdering, applyPaging} = useListState({
-    sortable: {"name": "name", "url": "url", "pull_secret": "pull_secret", "container_registry": "container_registry.name", "version_control_provider": "version_control_provider"},
+    sortable: {"name": "name"},
     defaultSort: {key: "name", order: "asc"},
 });
 
@@ -55,8 +57,7 @@ function getItems(doItems = true, doCount = false) {
     isLoading.value = true;
 
     // Prepare API call
-    const api = Api.containerImages().get()
-        .include('container_registry');
+    const api = Api.containerImages().get();
 
     if (searchValue.value?.length) {
         api
@@ -71,6 +72,7 @@ function getItems(doItems = true, doCount = false) {
             .find(items => {
                 rows.value = items;
                 isLoading.value = false;
+                loadScans(items);
             });
     }
 
@@ -80,6 +82,20 @@ function getItems(doItems = true, doCount = false) {
             itemCount.value = count;
         });
     }
+}
+
+function loadScans(images: ContainerImage[]) {
+    if (!images.length) {
+        scansByImage.value = {};
+        return;
+    }
+    Api.containerImageScans().get()
+        .whereIn('container_image_id', images.map(image => image.id!))
+        .find(scans => {
+            const byImage: Record<number, ContainerImageScan[]> = {};
+            scans.forEach(scan => (byImage[scan.container_image_id!] ??= []).push(scan));
+            scansByImage.value = byImage;
+        });
 }
 
 // <editor-fold desc="View functions">
@@ -102,6 +118,26 @@ function onEditItemBtnClicked(item: ContainerImage) {
 
 function onTagsItemBtnClicked(item: ContainerImage) {
     bus.emit('containerImageTags', {
+        containerImage: item,
+    });
+}
+
+function onCopyUrlClicked(item: ContainerImage) {
+    navigator.clipboard.writeText(item.url ?? '').then(() => {
+        bus.emit('toast', {
+            text: 'Url copied to clipboard',
+        });
+    });
+}
+
+function onScansItemBtnClicked(item: ContainerImage) {
+    bus.emit('containerImageScans', {
+        containerImage: item,
+    });
+}
+
+function onRunningDeploymentsClicked(item: ContainerImage) {
+    bus.emit('containerImageDeployments', {
         containerImage: item,
     });
 }
@@ -176,31 +212,49 @@ function deleteItem(item: ContainerImage) {
             v-model:items-per-page="itemsPerPage"
             v-model:sort-by="sortBy"
             class="table"
-            density="compact"
+            density="comfortable"
             @update:options="options = $event; getItems()">
-            <template v-slot:item.container_registry="{ item }">
-                <span>{{ item.container_registry?.name }}</span>
-            </template>
-            <template v-slot:item.version_control_provider="{ item }">
-                <span v-if="item.version_control_enabled">
-                    {{ item.version_control_provider }}
-                    <v-tooltip
-                        v-if="item.version_control_provider === VersionControlProviders.GitHub && item.version_control_repository_name"
-                        activator="parent"
-                        location="bottom"
-                    >
-                        {{ item.version_control_repository_name }}
-                    </v-tooltip>
-                </span>
-            </template>
             <template v-slot:item.name="{ item }">
-                <name-link @click="onEditItemBtnClicked(item)">{{ item.name }}</name-link>
+                <div class="py-2">
+                    <div class="d-flex align-center ga-2">
+                        <name-link @click="onEditItemBtnClicked(item)">{{ item.name }}</name-link>
+                        <span v-if="item.pull_secret" class="d-inline-flex">
+                            <v-icon size="x-small" color="blue-grey" icon="fa fa-key" />
+                            <v-tooltip activator="parent" location="bottom">Pull secret: {{ item.pull_secret }}</v-tooltip>
+                        </span>
+                        <span v-if="item.version_control_enabled" class="d-inline-flex">
+                            <v-icon size="x-small" color="blue-grey"
+                                    :icon="item.version_control_provider === VersionControlProviders.GitHub ? 'fa-brands fa-github' : 'fa fa-code-branch'" />
+                            <v-tooltip activator="parent" location="bottom">
+                                {{ item.version_control_provider }}<template v-if="item.version_control_repository_name">: {{ item.version_control_repository_name }}</template>
+                            </v-tooltip>
+                        </span>
+                    </div>
+                    <div class="text-medium-emphasis image-url" @click="onCopyUrlClicked(item)">
+                        <template v-for="(part, index) in (item.url ?? '').split('/')" :key="index"><template v-if="index">/<wbr></template>{{ part }}</template>
+                        <v-tooltip activator="parent" location="bottom">Copy to clipboard</v-tooltip>
+                    </div>
+                </div>
+            </template>
+            <template v-slot:item.running_deployment_ids="{ item }">
+                <span v-if="!item.running_deployment_ids?.length" class="text-disabled">0</span>
+                <name-link v-else @click="onRunningDeploymentsClicked(item)">
+                    {{ item.running_deployment_ids.length }}
+                    <v-tooltip activator="parent" location="bottom">Show running deployments</v-tooltip>
+                </name-link>
+            </template>
+            <template v-slot:item.vulnerabilities="{ item }">
+                <div class="d-flex flex-column ga-1 py-2 cursor-pointer" @click="onScansItemBtnClicked(item)">
+                    <div v-for="scan in scansByImage[item.id!] ?? []" :key="scan.id" class="d-flex align-center ga-2 text-no-wrap">
+                        <span class="text-caption text-medium-emphasis">{{ scan.tag }}</span>
+                        <ScanCounts :scan="scan" />
+                    </div>
+                </div>
             </template>
             <template v-slot:item.actions="{ item }">
-                <div class="d-flex justify-end ga-1">
-
+                <div class="d-flex justify-end align-center ga-1 text-no-wrap">
                     <v-btn
-                        variant="plain" color="primary" 
+                        variant="plain" color="primary"
                         @click="onEditItemBtnClicked(item)"
                         size="small"
                         density="comfortable"
@@ -211,38 +265,29 @@ function deleteItem(item: ContainerImage) {
                     </v-btn>
 
                     <v-btn
-                        v-if="item.container_registry_id"
                         variant="plain" color="primary"
-                        @click="onTagsItemBtnClicked(item)"
+                        @click="onScansItemBtnClicked(item)"
                         size="small"
                         density="comfortable"
                         icon
                     >
-                        <v-icon>fa fa-tags</v-icon>
-                        <v-tooltip activator="parent" location="bottom">List tags</v-tooltip>
+                        <v-icon>fa fa-shield-halved</v-icon>
+                        <v-tooltip activator="parent" location="bottom">Vulnerabilities</v-tooltip>
                     </v-btn>
 
-                    <v-btn
-                        variant="plain" color="primary" 
-                        @click="onDuplicateItemBtnClicked(item)"
-                        size="small"
-                        density="comfortable"
-                        icon
-                    >
-                        <v-icon>fa fa-clone</v-icon>
-                        <v-tooltip activator="parent" location="bottom">Duplicate</v-tooltip>
-                    </v-btn>
-
-                    <v-btn
-                        variant="plain" color="red" 
-                        @click="deleteItem(item)"
-                        size="small"
-                        density="comfortable"
-                        icon
-                    >
-                        <v-icon>fa fa-trash</v-icon>
-                        <v-tooltip activator="parent" location="bottom">Delete</v-tooltip>
-                    </v-btn>
+                    <!-- The rarer ones, and Delete out of reach of a slip from Edit. -->
+                    <v-menu location="bottom end">
+                        <template v-slot:activator="{ props }">
+                            <v-btn v-bind="props" variant="plain" color="primary" aria-label="More" size="small" density="comfortable" icon>
+                                <v-icon>fa fa-ellipsis-vertical</v-icon>
+                            </v-btn>
+                        </template>
+                        <v-list density="compact">
+                            <v-list-item v-if="item.container_registry_id" prepend-icon="fa fa-tags" title="List tags" @click="onTagsItemBtnClicked(item)" />
+                            <v-list-item prepend-icon="fa fa-clone" title="Duplicate" @click="onDuplicateItemBtnClicked(item)" />
+                            <v-list-item prepend-icon="fa fa-trash" title="Delete" base-color="red" @click="deleteItem(item)" />
+                        </v-list>
+                    </v-menu>
                 </div>
             </template>
         </v-data-table-server>
@@ -253,5 +298,19 @@ function deleteItem(item: ContainerImage) {
 .table > *,
 .table {
     background: transparent;
+}
+
+/* Long registry paths break after a slash, and only mid-word when a part will not fit at all. */
+.image-url {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.6875rem;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+    max-width: 640px;
+    cursor: copy;
+}
+
+.image-url:hover {
+    text-decoration: underline dotted;
 }
 </style>

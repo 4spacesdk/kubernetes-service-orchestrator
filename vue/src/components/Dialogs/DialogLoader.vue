@@ -61,6 +61,14 @@ bus.on('databaseServiceEdit', async input => {
     addComponent((await import('@/components/Dialogs/Setup/DatabaseServices/DatabaseServiceEditDialog.vue')).default, input);
 });
 
+bus.on('containerImageScans', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/ContainerImages/ContainerImageScansDialog.vue')).default, input);
+});
+
+bus.on('containerImageDeployments', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/ContainerImages/ContainerImageDeploymentsDialog.vue')).default, input);
+});
+
 bus.on('containerImageTags', async input => {
     addComponent((await import('@/components/Dialogs/Setup/ContainerImages/ContainerImageTagsDialog.vue')).default, input);
 });

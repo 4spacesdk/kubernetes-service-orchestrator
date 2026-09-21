@@ -49,6 +49,7 @@ class EventNamesTest extends CIUnitTestCase {
         $this->assertSame('events.deployment.42.changed.status', Events::Deployment_Changed_Status(42));
         $this->assertSame('events.workspace.7.changed.status', Events::Workspace_Changed_Status(7));
         $this->assertSame('events.migration_job.3.changed.status', Events::MigrationJob_Changed_Status(3));
+        $this->assertSame('events.container_image.5.scans.changed', Events::ContainerImage_Scans_Changed(5));
     }
 
     /**
