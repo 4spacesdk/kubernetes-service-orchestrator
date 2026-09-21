@@ -109,7 +109,8 @@ class MigrationJobsApiTest extends ControllerTestCase {
         $this->assertSame((int) $job['id'], (int) $body['resource']['id']);
         $this->assertSame(\MigrationJobStatusTypes::Deploying, $this->row($job['id'])['status']);
 
-        $debug = implode("\n", $body['debug']);
+        // Read from the log itself: the response carries it only in development.
+        $debug = implode("\n", array_map(fn ($line) => is_string($line) ? $line : json_encode($line), \DebugTool\Data::getDebugger()));
         $this->assertStringContainsString('tryExecuteDeployCommand', $debug, 'the step was never asked');
         $this->assertStringContainsString('ignored cause of invalid deployment step for this spec', $debug);
     }

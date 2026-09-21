@@ -16,8 +16,8 @@ use App\Models\UserModel;
  * @property string $type
  * @property bool $renew_password
  * @property string $mfa_secret_hash
- * @property string|null $password_reset_token_hash
- * @property string|null $password_reset_expires
+ * @property string $password_reset_token_hash
+ * @property string $password_reset_expires
  *
  *  Many
  * @property RbacRole $rbac_roles

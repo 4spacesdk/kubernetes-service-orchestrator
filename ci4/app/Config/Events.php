@@ -65,6 +65,10 @@ Events::on('pre_system', static function (): void {
 Events::on('pre_system', [\RestExtension\Hooks::class, 'preSystem']);
 Events::on('pre_system', [\OrmExtension\Hooks\PreController::class, 'execute']);
 Events::on('pre_system', [\AuthExtension\Hooks\PreController::class, 'execute']);
+// After RestExtension has installed its exception handler: see DebugLog::Guard().
+Events::on('pre_system', static function (): void {
+    set_exception_handler(\App\Helpers\DebugLog::Guard(set_exception_handler(null)));
+});
 Events::on('pre_command', [\RestExtension\Hooks::class, 'preSystem']);
 Events::on('pre_command', [\OrmExtension\Hooks\PreController::class, 'execute']);
 Events::on('pre_command', [\AuthExtension\Hooks\PreController::class, 'execute']);

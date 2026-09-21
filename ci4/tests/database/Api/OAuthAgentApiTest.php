@@ -271,21 +271,19 @@ class OAuthAgentApiTest extends ControllerTestCase {
     }
 
     /**
-     * Today's behaviour, and a finding rather than a design: the authorisation server's
-     * own answer is handed back to whoever posted, verbatim, under `debug`.
-     *
-     * `Data::debug()` is not conditional on the environment and `fail()` sends the whole
-     * debug store, so the sentence above is the only part of the refusal that is discreet.
-     * An anonymous caller learns `invalid_client` from `invalid_grant` after all - and when
-     * the authorisation server answers with a PHP error page instead of json, it learns
-     * paths on the server as well.
+     * The authorisation server's own answer is not handed back to whoever posted. It used to
+     * be, verbatim, under `debug` - so an anonymous caller could tell `invalid_client` from
+     * `invalid_grant`, and read server paths off a PHP error page. The debug log is sent only
+     * in development now; the suite runs as `testing`.
      */
-    public function testTheAuthorisationServersOwnAnswerIsEchoedBackToAnAnonymousCaller(): void {
+    public function testTheAuthorisationServersOwnAnswerIsNotEchoedBackToAnAnonymousCaller(): void {
         $this->theAuthorisationServerAnswers('{"error":"invalid_client","error_description":"client credentials are invalid"}');
 
-        $body = $this->bodyOf($this->post('oauth-agent/token', ['grant_type' => 'authorization_code']));
+        $response = $this->post('oauth-agent/token', ['grant_type' => 'authorization_code']);
+        $body = $this->bodyOf($response);
 
-        $this->assertStringContainsString('invalid_client', implode("\n", $body['debug']));
+        $this->assertArrayNotHasKey('debug', $body);
+        $this->assertStringNotContainsString('invalid_client', (string) $response->response()->getBody());
     }
 
     /**

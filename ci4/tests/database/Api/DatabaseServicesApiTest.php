@@ -133,7 +133,7 @@ class DatabaseServicesApiTest extends ControllerTestCase {
         $this->assertFalse($body['resource']['value']);
         $this->assertStringContainsString(
             "Unknown database driver 'postgres'",
-            json_encode($body['debug'] ?? []),
+            (string) ($body['resource']['reason'] ?? ''),
             'the answer does not say what was wrong with it'
         );
     }

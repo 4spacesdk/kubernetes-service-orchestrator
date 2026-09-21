@@ -15,6 +15,8 @@ export class UserDefinition extends BaseModel {
     type?: string;
     renew_password?: boolean;
     mfa_secret_hash?: string;
+    password_reset_token_hash?: string;
+    password_reset_expires?: string;
     rbac_roles?: RbacRole[];
     has_mfa_secret_hash?: boolean;
     id?: number;
@@ -42,6 +44,8 @@ export class UserDefinition extends BaseModel {
             delete this.type;
             delete this.renew_password;
             delete this.mfa_secret_hash;
+            delete this.password_reset_token_hash;
+            delete this.password_reset_expires;
             delete this.rbac_roles;
             delete this.has_mfa_secret_hash;
             delete this.id;
@@ -79,6 +83,12 @@ export class UserDefinition extends BaseModel {
         }
         if (data.mfa_secret_hash != null) {
             this.mfa_secret_hash = data.mfa_secret_hash;
+        }
+        if (data.password_reset_token_hash != null) {
+            this.password_reset_token_hash = data.password_reset_token_hash;
+        }
+        if (data.password_reset_expires != null) {
+            this.password_reset_expires = data.password_reset_expires;
         }
         if (data.rbac_roles != null) {
             this.rbac_roles = data.rbac_roles.map((i: any) => new RbacRole(i));

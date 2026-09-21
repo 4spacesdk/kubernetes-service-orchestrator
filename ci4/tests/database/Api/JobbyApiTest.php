@@ -441,7 +441,8 @@ class JobbyApiTest extends ControllerTestCase {
      */
     private function addedEntries(array $body): array {
         return array_values(array_filter(
-            array_map(fn ($line) => is_string($line) ? $line : json_encode($line), $body['debug'] ?? []),
+            // Read from the log itself: the response carries it only in development.
+            array_map(fn ($line) => is_string($line) ? $line : json_encode($line), \DebugTool\Data::getDebugger()),
             fn (string $line) => str_contains($line, 'Jobby Added')
         ));
     }

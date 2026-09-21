@@ -24,6 +24,7 @@ use CodeIgniter\HTTP\CLIRequest;
 use CodeIgniter\HTTP\IncomingRequest;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
+use App\Helpers\DebugLog;
 use DebugTool\Data;
 use Psr\Log\LoggerInterface;
 use RestExtension\QueryParser;
@@ -85,7 +86,7 @@ use RestExtension\RestRequest;
         Data::set('status', 'OK');
         Data::set('bench', round(timer()->getElapsedTime('code-start'), 3));
 //        Data::set('version', getVersion());
-        $this->response->setJSON(Data::getStore());
+        $this->response->setJSON(DebugLog::ResponseBody());
         $this->response->send();
     }
 
@@ -119,7 +120,7 @@ use RestExtension\RestRequest;
      */
     private function printResponse($code) {
         $this->response->setStatusCode($code);
-        $this->response->setJSON(Data::getStore());
+        $this->response->setJSON(DebugLog::ResponseBody());
         $this->response->send();
     }
 

@@ -137,7 +137,7 @@ function onTestConnectionBtnClicked(row: Row) {
         .find(value => {
             bus.emit('info', {
                 title: value[0].value ? 'Success' : 'Failed',
-                body: value[0].value ? 'Connection confirmed' : 'Failed to connect',
+                body: value[0].value ? 'Connection confirmed' : (value[0].reason || 'Failed to connect'),
             });
             row.testConnectionResult = value[0].value;
             row.isLoadingTestConnection = false;

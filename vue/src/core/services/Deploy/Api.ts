@@ -41,6 +41,11 @@ export interface ClusterRoleRuleList {
     values?: ClusterRoleRule[];
 }
 
+export interface ConnectionTestResult {
+    value?: boolean;
+    reason?: string;
+}
+
 export interface ContainerImageTag {
     name?: string;
     pushed_at?: string;
@@ -1561,9 +1566,9 @@ export class DatabaseServicesDeleteById extends BaseApi<DatabaseService> {
     }
 }
 
-export class DatabaseServicesTestConnectionGetById extends BaseApi<BoolInterface> {
+export class DatabaseServicesTestConnectionGetById extends BaseApi<ConnectionTestResult> {
 
-    public topic = 'Resources.BoolInterfaces';
+    public topic = 'Resources.ConnectionTestResults';
     protected method = 'get';
     protected scope = '';
     protected summary = '';
@@ -1573,11 +1578,11 @@ export class DatabaseServicesTestConnectionGetById extends BaseApi<BoolInterface
         this.uri = `/database-services/${id}/test-connection`;
     }
 
-    protected convertToResource(data: any): BoolInterface {
+    protected convertToResource(data: any): ConnectionTestResult {
         return data;
     }
 
-    public find(next?: (value: BoolInterface[]) => void) {
+    public find(next?: (value: ConnectionTestResult[]) => void) {
         return super.executeFind(next);
     }
 }

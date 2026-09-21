@@ -94,6 +94,15 @@ class DatabaseService extends Entity {
     }
 
     public function testConnection(): bool {
+        return $this->connectionProblem() === null;
+    }
+
+    /**
+     * Why this service cannot be connected to, in the server's or the driver's words, or
+     * null when it can. Part of the answer to the test button rather than of the debug log,
+     * which is not sent outside development.
+     */
+    public function connectionProblem(): ?string {
         try {
             $db = $this->prepareConnection();
             switch ($this->driver) {
@@ -106,7 +115,7 @@ class DatabaseService extends Entity {
                     Data::debug($test);
                     break;
             }
-            return true;
+            return null;
         } catch (\Throwable $e) {
             // Throwable, not `\Exception|DatabaseException`. The whole point of this method
             // is that a service which cannot be connected to answers no rather than failing
@@ -114,9 +123,8 @@ class DatabaseService extends Entity {
             // at all: a `driver` the `match` in `prepareConnection()` does not know is an
             // `UnhandledMatchError`, which is an `\Error`. Nothing validates that column, so
             // a service stored with one was a 500 on the button for any signed-in caller.
-            Data::debug($e->getMessage());
+            return $e->getMessage();
         }
-        return false;
     }
 
     /**

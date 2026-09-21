@@ -27,21 +27,24 @@ class DatabaseServices extends ResourceController {
      * @param int $id
      * @return void
      * @custom true
-     * @responseSchema BoolInterface
+     * @responseSchema ConnectionTestResult
      */
     public function testConnection($id = 0): void {
         $item = new DatabaseService();
         $item->find($id);
 
+        // A service that is not there cannot be connected to, and that is a "no" rather
+        // than an error - the row can be deleted between the list loading and somebody
+        // pressing the button. Without the guard the lookup's empty entity reached
+        // `prepareConnection()`, where `match ($this->driver)` has no arm for null;
+        // `UnhandledMatchError` is an `\Error`, so `testConnection()`'s
+        // `catch (\Exception|DatabaseException)` - which turns every other failure into
+        // a `false` - let it past as a 500.
+        $problem = $item->exists() ? $item->connectionProblem() : 'Database service no longer exists';
+
         Data::set('resource', [
-            // A service that is not there cannot be connected to, and that is a "no" rather
-            // than an error - the row can be deleted between the list loading and somebody
-            // pressing the button. Without the guard the lookup's empty entity reached
-            // `prepareConnection()`, where `match ($this->driver)` has no arm for null;
-            // `UnhandledMatchError` is an `\Error`, so `testConnection()`'s
-            // `catch (\Exception|DatabaseException)` - which turns every other failure into
-            // a `false` - let it past as a 500.
-            'value' => $item->exists() && $item->testConnection(),
+            'value' => $problem === null,
+            'reason' => $problem,
         ]);
 
         $this->success();
