@@ -3,6 +3,7 @@
 use App\Entities\User;
 use App\Helpers\Client;
 use App\Libraries\MFALib;
+use App\Libraries\LoginThrottle;
 use AuthExtension\AuthExtension;
 use AuthExtension\Config\LoginResponse;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -23,6 +24,17 @@ class Login extends \App\Core\BaseController {
      * sends a visitor here, so that an OAuth sign-in returns to `/authorize` to finish.
      */
     private const string RememberedDestination = 'requestUrl';
+
+    private const string WrongCredentials = 'Wrong username or password';
+
+    private const string TooManyAttempts = 'Too many failed attempts. Try again in 15 minutes.';
+
+    /**
+     * A bcrypt hash of nothing in particular, checked against when the username is unknown
+     * so that the answer takes as long as for a known one. Cost 12, PHP's default and so what
+     * `encryptPassword()` writes today; it has to be a real hash, or the check returns at once.
+     */
+    private const string TimingHash = '$2y$12$YkTz.ciIkiXhpJBmrl28yup.D0e2KsDFRxE/DZay3UwAzDOOFBuGa';
 
     public function requireAuth(string $method): bool {
         return false;
@@ -49,17 +61,30 @@ class Login extends \App\Core\BaseController {
         if ($_POST) {
 
             // Check credentials
-            $username = $this->request->getPost('username');
-            $password = $this->request->getPost('password');
+            $username = (string) $this->request->getPost('username');
+            $password = (string) $this->request->getPost('password');
+
+            /** @var User $user */
+            $user = (new UserModel())
+                ->where('username', $username)
+                ->find();
+            $userId = $user->exists() ? (int) $user->id : null;
+
+            // Refused before the password is looked at, so a refused attempt cannot be used
+            // to test one either.
+            if (LoginThrottle::IsRefused(LoginThrottle::Password, $username)) {
+                LoginThrottle::RecordRefusal(LoginThrottle::Password, $username, $userId);
+                $data['loginResponse'] = self::TooManyAttempts;
+                return view('Login/Login', $data);
+            }
 
             $loginResponse = AuthExtension::checkLoginWithUsernamePassword($username, $password);
             $data['loginResponse'] = $loginResponse;
+            if ($loginResponse === LoginResponse::Success || $loginResponse === LoginResponse::RenewPassword) {
+                LoginThrottle::RecordSuccess(LoginThrottle::Password, $username, $userId);
+            }
             switch ($loginResponse) {
                 case LoginResponse::Success:
-                    /** @var User $user */
-                    $user = (new UserModel())
-                        ->where('username', $username)
-                        ->find();
                     if ($user->hasMFASecret()) {
                         session()->set('2fa_in_progress', $username);
                         $this->response->redirect(base_url('login/twoFactor'));
@@ -70,10 +95,6 @@ class Login extends \App\Core\BaseController {
                     break;
 
                 case LoginResponse::RenewPassword:
-                    /** @var User $user */
-                    $user = (new UserModel())
-                        ->where('username', $username)
-                        ->find();
                     if ($user->hasMFASecret()) {
                         session()->set('2fa_in_progress', $username);
                         $this->response->redirect(base_url('login/twoFactor'));
@@ -83,12 +104,15 @@ class Login extends \App\Core\BaseController {
                     }
                     break;
 
-                case LoginResponse::WrongPassword:
-                    $data['loginResponse'] = 'Wrong password';
-                    break;
-
+                // One answer for both, so the form does not say which usernames exist.
                 case LoginResponse::UnknownUser:
-                    $data['loginResponse'] = 'Unknown username';
+                    // A known username costs a bcrypt check and an unknown one cost nothing,
+                    // so the time taken said it instead. Now both pay.
+                    password_verify($password, self::TimingHash);
+                    // Falls through.
+                case LoginResponse::WrongPassword:
+                    LoginThrottle::RecordFailure(LoginThrottle::Password, $username, $userId);
+                    $data['loginResponse'] = self::WrongCredentials;
                     break;
 
                 // kso asks for no scope at all - the argument above used to be an empty
@@ -168,12 +192,16 @@ class Login extends \App\Core\BaseController {
 
         ];
 
-        if ($_POST) {
+        if ($_POST && LoginThrottle::IsRefused(LoginThrottle::Code, $username)) {
+            LoginThrottle::RecordRefusal(LoginThrottle::Code, $username, (int) $user->id);
+            $data['error'] = self::TooManyAttempts;
+        } else if ($_POST) {
 
             $code = $this->request->getPost('code');
             $mfaLib = new MFALib();
             $verify = $mfaLib->verifyCode($user->getMFASSecret(), $code);
             if ($verify) {
+                LoginThrottle::RecordSuccess(LoginThrottle::Code, $username, (int) $user->id);
                 // Through the session library rather than `unset($_SESSION[...])`, which
                 // reaches around whatever handler is configured and leaves the session's
                 // own bookkeeping thinking the key is still there.
@@ -185,6 +213,7 @@ class Login extends \App\Core\BaseController {
                     $this->response->redirect($requestUrl);
                 }
             } else {
+                LoginThrottle::RecordFailure(LoginThrottle::Code, $username, (int) $user->id);
                 $data['error'] = 'Failed to verify code. Try again.';
             }
         }

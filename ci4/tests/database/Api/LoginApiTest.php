@@ -3,6 +3,7 @@
 use App\ControllerTestCase;
 use App\Entities\User;
 use App\Fixtures;
+use App\Libraries\LoginThrottle;
 use App\Libraries\MFALib;
 use PHPUnit\Framework\Attributes\DataProvider;
 
@@ -52,6 +53,17 @@ class LoginApiTest extends ControllerTestCase {
         foreach (self::EmailSettings as $name) {
             $this->emailSettingsAsFound[$name] = getenv($name);
         }
+    }
+
+    /**
+     * A fresh response for every request, not just for every test. The harness shares one,
+     * so a page answered without a redirect kept the `Location` of the redirect before it,
+     * and a refused sign-in after a successful one looked like a successful one.
+     */
+    public function call(string $method, string $path, ?array $params = null) {
+        \CodeIgniter\Config\Services::resetSingle('response');
+
+        return parent::call($method, $path, $params);
     }
 
     public function tearDown(): void {
@@ -164,12 +176,10 @@ class LoginApiTest extends ControllerTestCase {
     }
 
     /**
-     * Today's behaviour, and worth a decision. A wrong password and an unknown username
-     * produce different messages, so the form tells an anonymous visitor whether an
-     * account exists. That turns the login page into a way of testing whether a given
-     * person has one. The fix is one message for both.
+     * A wrong password and an unknown username get the same answer, so the form cannot be
+     * used to find out whether a given person has an account.
      */
-    public function testWrongPasswordAndUnknownUserAreToldApart(): void {
+    public function testWrongPasswordAndUnknownUserAreToldTheSame(): void {
         Fixtures::user(['username' => 'exists', 'password' => 'the-right-one']);
 
         $wrongPassword = $this->body($this->post('login', [
@@ -181,8 +191,32 @@ class LoginApiTest extends ControllerTestCase {
             'password' => 'anything',
         ]));
 
-        $this->assertStringContainsString('Wrong password', $wrongPassword);
-        $this->assertStringContainsString('Unknown username', $unknownUser);
+        $this->assertStringContainsString('Wrong username or password', $wrongPassword);
+        $this->assertStringContainsString('Wrong username or password', $unknownUser);
+    }
+
+    /**
+     * Nor can the time it takes. A known username costs a bcrypt check; an unknown one used
+     * to return at once, which gave the answer away as surely as the message did.
+     */
+    public function testAnUnknownUsernameTakesAsLongAsAWrongPassword(): void {
+        // At the real cost: fixtures hash at cost 4 to keep the suite fast, and at that cost
+        // there is no difference to measure.
+        $user = Fixtures::user(['username' => 'exists']);
+        \Config\Database::connect()->table('users')->where('id', $user->id)
+            ->update(['password' => User::encryptPassword('the-right-one')]);
+
+        $timed = function(string $username): float {
+            $started = hrtime(true);
+            $this->post('login', ['username' => $username, 'password' => 'not-the-right-one']);
+            return (hrtime(true) - $started) / 1e6;
+        };
+        $timed('exists');
+
+        $known = $timed('exists');
+        $unknown = $timed('does-not-exist');
+
+        $this->assertGreaterThan($known / 2, $unknown, "known {$known} ms, unknown {$unknown} ms");
     }
 
     /**
@@ -197,29 +231,115 @@ class LoginApiTest extends ControllerTestCase {
             'password' => $user->password,
         ]));
 
-        $this->assertStringContainsString('Wrong password', $page);
+        $this->assertStringContainsString('Wrong username or password', $page);
     }
 
     /**
-     * Today's behaviour, deliberately pinned. Nothing counts wrong passwords and nothing
-     * refuses the next attempt, so a password can be guessed at whatever rate the network
-     * allows, and the only trace of the attempt is the web server's access log.
-     *
-     * This is what makes the username enumeration above expensive rather than merely
-     * untidy. Adding a lockout or a delay turns this test red, and that is the point of
-     * writing it down.
+     * After ten wrong passwords in a row the username is refused - including with the right
+     * password, or the refusal would be a way of testing guesses.
      */
-    public function testNoNumberOfWrongPasswordsStopsTheNextAttempt(): void {
+    public function testTenWrongPasswordsRefuseTheNextAttemptEvenWithTheRightOne(): void {
         Fixtures::user(['username' => 'guessable', 'password' => 'the-right-one']);
 
-        for ($attempt = 0; $attempt < 20; $attempt++) {
-            $refused = $this->post('login', ['username' => 'guessable', 'password' => "guess-{$attempt}"]);
-            $this->assertStringContainsString('Wrong password', $this->body($refused));
-        }
-
+        $this->failToSignIn('guessable', LoginThrottle::MaxFailures);
         $response = $this->post('login', ['username' => 'guessable', 'password' => 'the-right-one']);
 
-        $this->assertSame(getFrontendUrl(), $this->location($response));
+        $this->assertStringContainsString('Too many failed attempts', $this->body($response));
+        $this->assertNull($this->whoTheSessionSaysIsSignedIn());
+    }
+
+    /**
+     * One short of the limit is still an attempt, and a success wipes the count, so an
+     * operator who mistypes now and then is never refused.
+     */
+    public function testASuccessfulSignInStartsTheCountAgain(): void {
+        Fixtures::user(['username' => 'clumsy', 'password' => 'the-right-one']);
+
+        $this->failToSignIn('clumsy', LoginThrottle::MaxFailures - 1);
+        $this->assertSame(getFrontendUrl(), $this->location($this->post('login', ['username' => 'clumsy', 'password' => 'the-right-one'])));
+
+        $this->failToSignIn('clumsy', LoginThrottle::MaxFailures - 1);
+        $this->assertSame(getFrontendUrl(), $this->location($this->post('login', ['username' => 'clumsy', 'password' => 'the-right-one'])));
+    }
+
+    /**
+     * A name nobody has is refused the same way, or the refusal would tell accounts apart.
+     */
+    public function testAnUnknownUsernameIsRefusedTheSameWay(): void {
+        $this->failToSignIn('nobody', LoginThrottle::MaxFailures);
+
+        $response = $this->post('login', ['username' => 'nobody', 'password' => 'anything']);
+
+        $this->assertStringContainsString('Too many failed attempts', $this->body($response));
+    }
+
+    /**
+     * Every attempt is on record: who was tried, whether it worked, from where. A name with
+     * an account carries its id; one without carries none.
+     */
+    public function testEveryAttemptIsWrittenToTheAuditLog(): void {
+        $user = Fixtures::user(['username' => 'operator', 'password' => 'the-right-one']);
+
+        $this->post('login', ['username' => 'operator', 'password' => 'wrong']);
+        $this->post('login', ['username' => 'nobody', 'password' => 'wrong']);
+        $this->post('login', ['username' => 'operator', 'password' => 'the-right-one']);
+
+        $rows = $this->signInAttempts();
+        $this->assertSame(
+            [
+                ['operator', (string) $user->id, 'password', '0', '0'],
+                ['nobody', null, 'password', '0', '0'],
+                ['operator', (string) $user->id, 'password', '1', '0'],
+            ],
+            array_map(fn($row) => [$row['username'], $row['user_id'], $row['step'], $row['succeeded'], $row['refused']], $rows)
+        );
+        $this->assertNotSame('', $rows[0]['ip_address']);
+        $this->assertNotNull($rows[0]['created']);
+    }
+
+    /**
+     * A refused attempt is on record too, and is not a failure: counting it would keep a
+     * refusal alive for as long as someone kept trying.
+     */
+    public function testARefusalIsLoggedButNotCounted(): void {
+        Fixtures::user(['username' => 'guessable', 'password' => 'the-right-one']);
+        $this->failToSignIn('guessable', LoginThrottle::MaxFailures);
+
+        $this->failToSignIn('guessable', LoginThrottle::MaxFailures);
+
+        $refused = array_filter($this->signInAttempts(), fn($row) => $row['refused'] === '1');
+        $this->assertCount(LoginThrottle::MaxFailures, $refused);
+
+        // The failures age out, and the refusals behind them do not keep it going.
+        $this->db->table('sign_in_attempts')->where('refused', 0)
+            ->update(['created' => date('Y-m-d H:i:s', time() - LoginThrottle::WindowSeconds - 1)]);
+        $this->assertSame(getFrontendUrl(), $this->location($this->post('login', ['username' => 'guessable', 'password' => 'the-right-one'])));
+    }
+
+    /**
+     * Failures further back than the window do not count.
+     */
+    public function testFailuresOutsideTheWindowDoNotCount(): void {
+        Fixtures::user(['username' => 'guessable', 'password' => 'the-right-one']);
+        $this->failToSignIn('guessable', LoginThrottle::MaxFailures);
+
+        $this->db->table('sign_in_attempts')
+            ->update(['created' => date('Y-m-d H:i:s', time() - LoginThrottle::WindowSeconds - 1)]);
+
+        $this->assertSame(getFrontendUrl(), $this->location($this->post('login', ['username' => 'guessable', 'password' => 'the-right-one'])));
+    }
+
+    /**
+     * The count is per username, and the same username in other capitals is the same one.
+     */
+    public function testTheCountIsPerUsernameWhateverTheCase(): void {
+        Fixtures::user(['username' => 'guessable', 'password' => 'the-right-one']);
+        Fixtures::user(['username' => 'bystander', 'password' => 'the-right-one']);
+
+        $this->failToSignIn('GUESSABLE', LoginThrottle::MaxFailures);
+
+        $this->assertStringContainsString('Too many failed attempts', $this->body($this->post('login', ['username' => 'guessable', 'password' => 'the-right-one'])));
+        $this->assertSame(getFrontendUrl(), $this->location($this->post('login', ['username' => 'bystander', 'password' => 'the-right-one'])));
     }
 
     // </editor-fold>
@@ -459,6 +579,23 @@ class LoginApiTest extends ControllerTestCase {
     }
 
     /**
+     * The code is counted on its own. A six-digit code has a million values, and without a
+     * limit anyone who had the password could run through them.
+     */
+    public function testTenWrongCodesRefuseTheNextEvenIfItIsRight(): void {
+        $user = $this->userWithASecondFactor(['username' => 'mfa-operator']);
+        $this->withSession(['2fa_in_progress' => 'mfa-operator']);
+
+        for ($attempt = 0; $attempt < LoginThrottle::MaxFailures; $attempt++) {
+            $this->post('login/twoFactor', ['code' => $this->aCodeThatIsNotTheRightOne($user)]);
+        }
+        $response = $this->post('login/twoFactor', ['code' => $this->currentCodeFor($user)]);
+
+        $this->assertStringContainsString('Too many failed attempts', $this->body($response));
+        $this->assertNull($this->whoTheSessionSaysIsSignedIn());
+    }
+
+    /**
      * The right code is what turns a checked password into a session. The marker is removed
      * at the same moment, so a code cannot be replayed against a sign-in that is already
      * finished.
@@ -603,7 +740,7 @@ class LoginApiTest extends ControllerTestCase {
         $this->assertSame(getFrontendUrl(), $this->location($renewal));
 
         $withTheOldOne = $this->post('login', ['username' => 'renewing', 'password' => 'the-old-one']);
-        $this->assertStringContainsString('Wrong password', $this->body($withTheOldOne));
+        $this->assertStringContainsString('Wrong username or password', $this->body($withTheOldOne));
 
         $withTheNewOne = $this->post('login', ['username' => 'renewing', 'password' => 'A-brand-new-1']);
         $this->assertSame(getFrontendUrl(), $this->location($withTheNewOne), 'and no longer asked to renew');
@@ -1116,6 +1253,19 @@ class LoginApiTest extends ControllerTestCase {
         putenv('EMAIL_SERVICE_USER=kso');
         putenv('EMAIL_SERVICE_PASS=irrelevant');
         putenv('EMAIL_SERVICE_SENDER=kso@example.org');
+    }
+
+    /**
+     * @return array<int, array<string, ?string>>
+     */
+    private function signInAttempts(): array {
+        return $this->db->table('sign_in_attempts')->orderBy('id', 'asc')->get()->getResultArray();
+    }
+
+    private function failToSignIn(string $username, int $times): void {
+        for ($attempt = 0; $attempt < $times; $attempt++) {
+            $this->post('login', ['username' => $username, 'password' => "guess-{$attempt}"]);
+        }
     }
 
     private function pretendEmailIsNotConfigured(): void {

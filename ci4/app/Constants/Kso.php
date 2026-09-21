@@ -16,7 +16,8 @@ class CronJobIds {
         PullContainerRegistries = 3,
         CheckCertificateExpiry = 4,
         CheckKNativeMinScaleSchedules = 5,
-        CleanupZmqEvents = 6
+        CleanupZmqEvents = 6,
+        CleanupSignInAttempts = 7
     ;
 }
 
