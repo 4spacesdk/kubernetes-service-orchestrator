@@ -82,6 +82,7 @@
 
 ### Notes
 * An image built for arm64 has no MSSQL driver
+* `SSL_REDIRECT` is gone. It compared the request's host with the whole of `BASE_URL`, scheme included, so it never redirected; redirecting to HTTPS is the ingress's job
 
 
 

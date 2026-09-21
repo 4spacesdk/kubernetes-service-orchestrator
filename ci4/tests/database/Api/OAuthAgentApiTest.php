@@ -205,7 +205,7 @@ class OAuthAgentApiTest extends ControllerTestCase {
      * and there is none to list - the ingress pod's address is not known to the
      * installation - so `isSecure()` was false on every request kso serves and the cookie
      * went out **without `Secure`**. The browser would then attach a year of access to an
-     * http request to the same host, which kso answers unless `SSL_REDIRECT` is on.
+     * http request to the same host, which kso answers.
      */
     public function testTheCookieIsMarkedSecureBehindAProxyThatTerminatedTls(): void {
         $this->theAuthorisationServerAnswers(self::aGrant());

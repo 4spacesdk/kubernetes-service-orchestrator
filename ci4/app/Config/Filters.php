@@ -3,7 +3,6 @@
 namespace Config;
 
 use CodeIgniter\Config\Filters as BaseFilters;
-use App\Filters\SslRedirect;
 use CodeIgniter\Filters\Cors;
 use CodeIgniter\Filters\CSRF;
 use CodeIgniter\Filters\DebugToolbar;
@@ -31,7 +30,6 @@ class Filters extends BaseFilters
         'honeypot'      => Honeypot::class,
         'invalidchars'  => InvalidChars::class,
         'secureheaders' => SecureHeaders::class,
-        'sslredirect'   => SslRedirect::class,
         'cors'          => Cors::class,
         'forcehttps'    => ForceHTTPS::class,
         'pagecache'     => PageCache::class,
@@ -53,11 +51,10 @@ class Filters extends BaseFilters
      */
     public array $required = [
         'before' => [
-            // Both used to run at the top of public/index.php, before the framework
-            // booted, so they have to keep applying to requests that match no route.
+            // Used to run at the top of public/index.php, before the framework booted, so
+            // it has to keep applying to requests that match no route.
             // A CORS preflight is exactly that: OPTIONS on a path with no OPTIONS route.
             'cors',
-            'sslredirect',
             'forcehttps', // Force Global Secure Requests
             'pagecache',  // Web Page Caching
         ],

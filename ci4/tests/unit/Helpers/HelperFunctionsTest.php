@@ -22,6 +22,7 @@ class HelperFunctionsTest extends CIUnitTestCase {
 
     private string|false $devRemoteBaseUrl;
     private string|false $tagName;
+    private string|false $baseUrl;
 
     // <editor-fold desc="The file itself">
 
@@ -366,7 +367,13 @@ class HelperFunctionsTest extends CIUnitTestCase {
      * - so the host has to be in place before the configuration and the services that read
      * it are built, which is what the two resets are for.
      */
+    /**
+     * An installation served on `$host`, as the chart sets one up: BASE_URL names it, and a
+     * request arrives on it. BASE_URL is what the addresses are built from; the request's own
+     * host is not trusted for that.
+     */
     private function arrive(string $host, bool $secure = false): void {
+        putenv('BASE_URL=' . ($secure ? 'https' : 'http') . '://' . $host);
         $_SERVER['HTTP_HOST'] = $host;
 
         unset($_SERVER['HTTPS']);
@@ -386,11 +393,13 @@ class HelperFunctionsTest extends CIUnitTestCase {
         // loads, so they are put back as they were rather than simply cleared.
         $this->devRemoteBaseUrl = getenv('DEV_REMOTE_BASE_URL');
         $this->tagName          = getenv('TAG_NAME');
+        $this->baseUrl          = getenv('BASE_URL');
     }
 
     protected function tearDown(): void {
         $this->restore('DEV_REMOTE_BASE_URL', $this->devRemoteBaseUrl);
         $this->restore('TAG_NAME', $this->tagName);
+        $this->restore('BASE_URL', $this->baseUrl);
 
         unset($_SERVER['HTTP_HOST'], $_SERVER['HTTPS']);
 

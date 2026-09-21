@@ -146,10 +146,9 @@ class OAuthAgent extends \App\Core\BaseController {
      * ingress whose pod address the installation does not know. So it was false on every
      * request kso actually serves, and the refresh token cookie went out **without
      * `Secure`**: the browser would attach a year of access to plain http to the same host,
-     * which kso answers unless `SSL_REDIRECT` is on.
+     * which kso answers.
      *
-     * The same signal `Config\App::__construct()` builds the base URL from and
-     * `SslRedirect` redirects on.
+     * The same signal `Config\App::__construct()` falls back on for the base URL.
      */
     private function arrivedOverForwardedTls(): bool {
         return $this->request->hasHeader('X-Forwarded-Proto')
