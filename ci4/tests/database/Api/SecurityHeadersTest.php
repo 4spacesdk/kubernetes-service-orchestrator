@@ -19,6 +19,15 @@ use App\ControllerTestCase;
  */
 class SecurityHeadersTest extends ControllerTestCase {
 
+    // The image holds ci4 and not docker/, so there the installed config is what is read.
+    private const DOCKERFILE = ROOTPATH . '../docker/Dockerfile';
+    private const HTTPD_CONF = ROOTPATH . '../docker/apache/httpd.conf';
+    private const INSTALLED_HTTPD_CONF = '/etc/apache2/httpd.conf';
+
+    private function httpdConf(): string {
+        return (string) file_get_contents(is_file(self::HTTPD_CONF) ? self::HTTPD_CONF : self::INSTALLED_HTTPD_CONF);
+    }
+
     public function testAnApiResponseCarriesTheSecurityHeaders(): void {
         $response = $this->signedIn()->get('deployments')->response();
 
@@ -58,7 +67,7 @@ class SecurityHeadersTest extends ControllerTestCase {
      * against is somebody tidying the config file.
      */
     public function testTheServerIsConfiguredToSendThemForEverythingItServes(): void {
-        $conf = (string) file_get_contents(ROOTPATH . '../docker/apache/httpd.conf');
+        $conf = $this->httpdConf();
 
         foreach ([
             'Header always set X-Frame-Options "SAMEORIGIN"',
@@ -82,7 +91,7 @@ class SecurityHeadersTest extends ControllerTestCase {
      * max-age ran out.
      */
     public function testHstsIsTiedToTheRequestHavingBeenOverTls(): void {
-        $conf = (string) file_get_contents(ROOTPATH . '../docker/apache/httpd.conf');
+        $conf = $this->httpdConf();
 
         $this->assertStringContainsString('SetEnvIf X-Forwarded-Proto "^https$" KSO_OVER_TLS', $conf);
         $this->assertStringContainsString('SetEnvIf HTTPS "^on$" KSO_OVER_TLS', $conf);
@@ -96,10 +105,11 @@ class SecurityHeadersTest extends ControllerTestCase {
      * And the version number PHP puts on every response, switched off in the image.
      */
     public function testPhpDoesNotAnnounceItsVersion(): void {
-        $this->assertStringContainsString(
-            'expose_php=Off',
-            (string) file_get_contents(ROOTPATH . '../docker/Dockerfile')
-        );
+        if (is_file(self::DOCKERFILE)) {
+            $this->assertStringContainsString('expose_php=Off', (string) file_get_contents(self::DOCKERFILE));
+        } else {
+            $this->assertFalse(filter_var(ini_get('expose_php'), FILTER_VALIDATE_BOOL));
+        }
     }
 
     /**
@@ -111,7 +121,7 @@ class SecurityHeadersTest extends ControllerTestCase {
      * parts that matter - no inline script, no eval - and the scope.
      */
     public function testTheAppAndTheSignInPagesOnlyRunScriptsKsoServes(): void {
-        $conf = (string) file_get_contents(ROOTPATH . '../docker/apache/httpd.conf');
+        $conf = $this->httpdConf();
 
         $this->assertSame(1, preg_match('#Header always set Content-Security-Policy "([^"]+)" "expr=([^"]+)"#', $conf, $m));
         [, $policy, $scope] = $m;
@@ -124,7 +134,11 @@ class SecurityHeadersTest extends ControllerTestCase {
         $this->assertStringContainsString('(app|api/login)', $scope);
 
         // The variable always expands: an unset one leaves the literal in the header.
-        $this->assertStringContainsString('ENV ZMQ_EXTERNAL_URL=""', (string) file_get_contents(ROOTPATH . '../docker/Dockerfile'));
+        if (is_file(self::DOCKERFILE)) {
+            $this->assertStringContainsString('ENV ZMQ_EXTERNAL_URL=""', (string) file_get_contents(self::DOCKERFILE));
+        } else {
+            $this->assertNotFalse(getenv('ZMQ_EXTERNAL_URL'));
+        }
     }
     // </editor-fold>
 
