@@ -34,6 +34,7 @@ deployment:
   # database passwords, webhook tokens - are encrypted with, along with the refresh-token
   # cookie. Any 32 characters will do, but it has to be this installation's own and it has
   # to stay the same: change it and the stored credentials cannot be read back.
+  # Generate one on Linux or macOS with:  openssl rand -base64 24
   encryptionKey: ""
 
   # Old keys, comma separated. Set this when rotating encryptionKey, so rows written with

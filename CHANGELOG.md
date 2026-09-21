@@ -72,7 +72,7 @@
 * Added unit, database and integration test suites
 
 ### Upgrade guide
-1. Set `deployment.encryptionKey` in the chart to 32 characters of your own. It is what the stored credentials are encrypted with, and it has to stay the same afterwards - change it and they cannot be read back. Rotating it later means putting the old one in `deployment.previousEncryptionKeys` and saving each affected record once
+1. Set `deployment.encryptionKey` in the chart to 32 characters of your own - `openssl rand -base64 24` makes one on Linux or macOS. It is what the stored credentials are encrypted with, and it has to stay the same afterwards - change it and they cannot be read back. Rotating it later means putting the old one in `deployment.previousEncryptionKeys` and saving each affected record once
 2. Deploy new image
 3. Run migrations [(Guide)](https://github.com/4spacesdk/kubernetes-service-orchestrator?tab=readme-ov-file#migrate-database-helm). Registry credentials and the GitHub App move to Integrations automatically
 4. Harbor and Azure: open each container registry and click "Set up auto update", then remove the old webhooks from the registry
