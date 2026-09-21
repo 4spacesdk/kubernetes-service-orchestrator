@@ -43,6 +43,7 @@ class RestGetSweepTest extends ControllerTestCase {
         'app_token',
         'auth_bearer_token',
         'mfa_secret_hash',
+        'password_reset_token_hash',
         'private_key',
     ];
 

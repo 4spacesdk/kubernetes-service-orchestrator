@@ -53,6 +53,8 @@ class PublicSurfaceTest extends ControllerTestCase {
         'post login/forgotPassword',
         'get login/renewPassword',
         'post login/renewPassword',
+        'get login/resetPassword',
+        'post login/resetPassword',
         'get login/success',
         'get login/twoFactor',
         'post login/twoFactor',

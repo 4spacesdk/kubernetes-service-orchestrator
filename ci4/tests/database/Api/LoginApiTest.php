@@ -58,6 +58,7 @@ class LoginApiTest extends ControllerTestCase {
         foreach ($this->emailSettingsAsFound as $name => $value) {
             $value === false ? putenv($name) : putenv("{$name}={$value}");
         }
+        \CodeIgniter\Config\Services::resetSingle('email');
 
         parent::tearDown();
     }
@@ -771,61 +772,164 @@ class LoginApiTest extends ControllerTestCase {
     // every test here green.
 
     /**
-     * Today's behaviour, and the shape of it is worth being precise about, because it is not
-     * the usual one. There is no reset token and nothing to click: the address is enough,
-     * and the account's password is replaced with a freshly generated one there and then.
-     *
-     * So anyone who knows an operator's address can lock that operator out of kso, from the
-     * unauthenticated form, as often as they like. The generated password is then sent by
-     * e-mail in plain text. Replacing this with a token that has to be followed before
-     * anything changes turns this test red.
+     * Asking changes nothing about the account. Anyone who knows an operator's address can
+     * ask on their behalf, so the password is only replaced once the link in the mail has
+     * been followed.
      */
-    public function testTheOldPasswordIsAlreadyDeadBeforeTheEmailIsSent(): void {
-        $this->pretendEmailIsConfigured();
+    public function testAskingForANewPasswordLeavesTheOldOneWorking(): void {
+        $this->catchEmail();
         Fixtures::user(['username' => 'forgetful@example.org', 'password' => 'the-old-one']);
 
         $told = $this->body($this->post('login/forgotPassword', ['username' => 'forgetful@example.org']));
-        $this->assertStringContainsString('Check your e-mail inbox', $told);
+        $this->assertStringContainsString('a link to choose a new password is on its way', $told);
 
         $withTheOldOne = $this->post('login', ['username' => 'forgetful@example.org', 'password' => 'the-old-one']);
-        $this->assertStringContainsString('Wrong password', $this->body($withTheOldOne));
+        $this->assertSame(getFrontendUrl(), $this->location($withTheOldOne));
     }
 
     /**
-     * And the reason that ordering matters. An installation that cannot send mail throws on
-     * the way out - after the password has already been replaced - so the account is left
-     * with a password that now exists nowhere at all. The operator is locked out by asking
-     * for help.
-     *
-     * Generating the password only once the mail has gone turns this test red.
+     * The mail carries a link and no password, and the token in it is not what is stored:
+     * a dump of the users table should not hand out working links.
      */
-    public function testAnInstallationThatCannotSendMailStillDestroysThePassword(): void {
+    public function testTheMailCarriesALinkAndTheDatabaseOnlyItsHash(): void {
+        $email = $this->catchEmail();
+        $user = Fixtures::user(['username' => 'forgetful@example.org', 'password' => 'the-old-one']);
+
+        $this->post('login/forgotPassword', ['username' => 'forgetful@example.org']);
+
+        $token = $this->tokenIn($email);
+        $stored = $this->storedUser($user->id);
+        $this->assertSame(64, strlen($token));
+        $this->assertSame(hash('sha256', $token), $stored->password_reset_token_hash);
+        $this->assertStringNotContainsString($token, (string) $stored->password_reset_token_hash);
+    }
+
+    /**
+     * The link goes to the installation's configured address, not to whatever `Host` the
+     * request that asked for it carried.
+     */
+    public function testTheLinkPointsAtTheConfiguredAddress(): void {
+        $email = $this->catchEmail();
+        Fixtures::user(['username' => 'forgetful@example.org']);
+        $asFound = getenv('BASE_URL');
+        putenv('BASE_URL=https://kso.example.org');
+
+        try {
+            $this->post('login/forgotPassword', ['username' => 'forgetful@example.org']);
+        } finally {
+            $asFound === false ? putenv('BASE_URL') : putenv("BASE_URL={$asFound}");
+        }
+
+        $this->assertStringContainsString('https://kso.example.org/api/login/resetPassword?token=', $this->bodyOf($email));
+    }
+
+    /**
+     * An installation that cannot send mail says the same as one that can, and the account
+     * keeps its password. It used to lose it: the password was replaced before the mail
+     * failed, and then existed nowhere.
+     */
+    public function testAnInstallationThatCannotSendMailLeavesThePasswordAlone(): void {
         $this->pretendEmailIsNotConfigured();
         Fixtures::user(['username' => 'forgetful@example.org', 'password' => 'the-old-one']);
 
-        $refusal = null;
-        try {
-            $this->post('login/forgotPassword', ['username' => 'forgetful@example.org']);
-        } catch (\Exception $e) {
-            $refusal = $e->getMessage();
-        }
-        $this->assertSame('Email host is not configured', $refusal);
+        $told = $this->body($this->post('login/forgotPassword', ['username' => 'forgetful@example.org']));
+        $this->assertStringContainsString('a link to choose a new password is on its way', $told);
 
         $withTheOldOne = $this->post('login', ['username' => 'forgetful@example.org', 'password' => 'the-old-one']);
-        $this->assertStringContainsString('Wrong password', $this->body($withTheOldOne));
+        $this->assertSame(getFrontendUrl(), $this->location($withTheOldOne));
     }
 
     /**
-     * The same enumeration as on the sign-in form, from a page that needs no password at
-     * all: a known address is told to check its inbox and an unknown one is told it is
-     * unknown. The same finding as the sign-in form, not one of its own.
+     * A known and an unknown address are told the same, so the form cannot be used to find
+     * out who has an account.
      */
-    public function testAnUnknownAddressIsToldThatItIsUnknown(): void {
-        $this->pretendEmailIsConfigured();
+    public function testAnUnknownAddressIsToldTheSameAsAKnownOne(): void {
+        $this->catchEmail();
+        Fixtures::user(['username' => 'known@example.org']);
 
-        $page = $this->body($this->post('login/forgotPassword', ['username' => 'nobody@example.org']));
+        $known = $this->body($this->post('login/forgotPassword', ['username' => 'known@example.org']));
+        $unknown = $this->body($this->post('login/forgotPassword', ['username' => 'nobody@example.org']));
 
-        $this->assertStringContainsString('Unknown e-mail', $page);
+        $this->assertSame($this->theMessageOn($known), $this->theMessageOn($unknown));
+    }
+
+    /**
+     * The whole way: ask, follow the link, choose, and sign in with the new password.
+     */
+    public function testFollowingTheLinkSetsTheNewPassword(): void {
+        $email = $this->catchEmail();
+        Fixtures::user(['username' => 'forgetful@example.org', 'password' => 'the-old-one']);
+        $this->post('login/forgotPassword', ['username' => 'forgetful@example.org']);
+        $token = $this->tokenIn($email);
+
+        $form = $this->body($this->get('login/resetPassword?token=' . $token));
+        $this->assertStringContainsString('name="password_confirm"', $form);
+
+        $done = $this->post('login/resetPassword?token=' . $token, [
+            'password' => 'A-brand-new-1',
+            'password_confirm' => 'A-brand-new-1',
+        ]);
+        $this->assertStringStartsWith(base_url('login') . '?error_message=', $this->location($done));
+        $this->assertNull($this->whoTheSessionSaysIsSignedIn(), 'the link sets a password; signing in is still the form, and the second factor');
+
+        $withTheNewOne = $this->post('login', ['username' => 'forgetful@example.org', 'password' => 'A-brand-new-1']);
+        $this->assertSame(getFrontendUrl(), $this->location($withTheNewOne));
+    }
+
+    /**
+     * A link works once.
+     */
+    public function testALinkCannotBeUsedTwice(): void {
+        $user = Fixtures::user(['username' => 'forgetful@example.org']);
+        $token = $this->aResetLinkFor($user);
+
+        $this->post('login/resetPassword?token=' . $token, ['password' => 'A-brand-new-1', 'password_confirm' => 'A-brand-new-1']);
+        $again = $this->post('login/resetPassword?token=' . $token, ['password' => 'Another-new-2', 'password_confirm' => 'Another-new-2']);
+
+        $this->assertStringContainsString('expired or has already been used', $this->body($again));
+        $withTheFirst = $this->post('login', ['username' => 'forgetful@example.org', 'password' => 'A-brand-new-1']);
+        $this->assertSame(getFrontendUrl(), $this->location($withTheFirst));
+    }
+
+    /**
+     * An expired link, a wrong one and none at all are all turned away without a form.
+     */
+    #[DataProvider('linksThatDoNotWork')]
+    public function testALinkThatDoesNotWorkShowsNoForm(string $which): void {
+        $user = Fixtures::user(['username' => 'forgetful@example.org', 'password' => 'the-old-one']);
+        $token = $this->aResetLinkFor($user, $which === 'expired' ? '-1 minute' : '+1 hour');
+
+        $query = match ($which) {
+            'expired' => $token,
+            'wrong' => str_repeat('0', 64),
+            'missing' => '',
+        };
+        $page = $this->post('login/resetPassword?token=' . $query, ['password' => 'A-brand-new-1', 'password_confirm' => 'A-brand-new-1']);
+
+        $this->assertStringContainsString('expired or has already been used', $this->body($page));
+        $withTheOldOne = $this->post('login', ['username' => 'forgetful@example.org', 'password' => 'the-old-one']);
+        $this->assertSame(getFrontendUrl(), $this->location($withTheOldOne));
+    }
+
+    public static function linksThatDoNotWork(): array {
+        return ['expired' => ['expired'], 'wrong' => ['wrong'], 'missing' => ['missing']];
+    }
+
+    /**
+     * The new password is held to the same rules as a renewal, and a refused one leaves the
+     * link working.
+     */
+    public function testAWeakPasswordThroughTheLinkIsRefusedAndTheLinkKept(): void {
+        $user = Fixtures::user(['username' => 'forgetful@example.org']);
+        $token = $this->aResetLinkFor($user);
+
+        $refused = $this->body($this->post('login/resetPassword?token=' . $token, ['password' => 'short', 'password_confirm' => 'short']));
+        $this->assertSame('At least eight characters', $this->theWarningShownOn($refused));
+
+        $mistyped = $this->body($this->post('login/resetPassword?token=' . $token, ['password' => 'A-brand-new-1', 'password_confirm' => 'A-brand-new-2']));
+        $this->assertSame('Must be identical', $this->theWarningShownOn($mistyped));
+
+        $this->assertNotNull(User::FindByPasswordResetToken($token));
     }
 
     // </editor-fold>
@@ -960,6 +1064,50 @@ class LoginApiTest extends ControllerTestCase {
         $right = $this->currentCodeFor($user);
 
         return str_pad((string) (((int) $right + 1) % 1000000), strlen($right), '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Replaces the mailer with CodeIgniter's mock, which keeps what it was asked to send.
+     */
+    private function catchEmail(): \CodeIgniter\Test\Mock\MockEmail {
+        $this->pretendEmailIsConfigured();
+        $email = new \CodeIgniter\Test\Mock\MockEmail(config('Email'));
+        \CodeIgniter\Config\Services::injectMock('email', $email);
+
+        return $email;
+    }
+
+    private function bodyOf(\CodeIgniter\Test\Mock\MockEmail $email): string {
+        return (string) ($email->archive['body'] ?? '');
+    }
+
+    private function tokenIn(\CodeIgniter\Test\Mock\MockEmail $email): string {
+        preg_match('#resetPassword\?token=([0-9a-f]+)#', $this->bodyOf($email), $matches);
+
+        return $matches[1] ?? '';
+    }
+
+    /**
+     * A link as the mail would carry it, written straight to the row.
+     */
+    private function aResetLinkFor(User $user, string $expires = '+1 hour'): string {
+        $token = bin2hex(random_bytes(32));
+        \Config\Database::connect()->table('users')->where('id', $user->id)->update([
+            'password_reset_token_hash' => hash('sha256', $token),
+            'password_reset_expires' => date('Y-m-d H:i:s', strtotime($expires)),
+        ]);
+
+        return $token;
+    }
+
+    private function storedUser(int|string $id): object {
+        return \Config\Database::connect()->table('users')->where('id', $id)->get()->getRow();
+    }
+
+    private function theMessageOn(string $page): string {
+        preg_match('#alert alert-warning mt-4" role="alert">\s*(.*?)\s*</div>#s', $page, $matches);
+
+        return trim($matches[1] ?? '');
     }
 
     private function pretendEmailIsConfigured(): void {

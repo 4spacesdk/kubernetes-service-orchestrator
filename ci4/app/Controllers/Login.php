@@ -275,6 +275,12 @@ class Login extends \App\Core\BaseController {
         return null;
     }
 
+    /**
+     * The same answer whether or not the address has an account, so the form cannot be used
+     * to find out which do.
+     */
+    private const string PasswordResetRequested = 'If the address belongs to an account, a link to choose a new password is on its way.';
+
     public function forgotPassword(): string {
         session()->setFlashdata(self::RememberedDestination, session()->getFlashdata(self::RememberedDestination));
 
@@ -285,18 +291,53 @@ class Login extends \App\Core\BaseController {
                 ->find();
 
             if ($user->exists()) {
-                $user->sendForgotPasswordEmail();
-                Data::set('success', true);
-                Data::set('message', 'Check your e-mail inbox');
-            } else {
-                Data::set('success', false);
-                Data::set('message', 'Unknown e-mail');
+                // Logged rather than shown: saying the mail could not be sent would say
+                // that there was someone to send it to.
+                try {
+                    $user->sendPasswordResetEmail();
+                } catch (\Throwable $e) {
+                    log_message('error', 'Password reset mail for user {id} not sent: {message}', [
+                        'id' => $user->id,
+                        'message' => $e->getMessage(),
+                    ]);
+                }
             }
+
+            Data::set('success', true);
+            Data::set('message', self::PasswordResetRequested);
         } else {
             Data::set('success', false);
         }
 
         return view('Login/ForgotPassword');
+    }
+
+    /**
+     * Where the link in the mail leads: choose a new password, twice, held to the same rules
+     * as a renewal. The token is spent when the password is set, and the visitor is sent to
+     * sign in with it - through the second factor, if they have one.
+     */
+    public function resetPassword(): string|ResponseInterface {
+        $user = User::FindByPasswordResetToken((string) $this->request->getGet('token'));
+        if ($user === null) {
+            Data::set('message', 'This link has expired or has already been used. Ask for a new one.');
+            return view('Login/ForgotPassword');
+        }
+
+        if ($_POST) {
+            $password = (string) $this->request->getPost('password');
+
+            if ($password !== (string) $this->request->getPost('password_confirm')) {
+                Data::set('description', 'Must be identical');
+            } else if (($passError = $this->firstUnsatisfiedPasswordRule($password)) !== null) {
+                Data::set('description', $passError);
+            } else {
+                $user->resetPassword($password);
+                return $this->response->redirect(base_url('login') . '?error_message=' . urlencode('Your password has been changed. Sign in with it.'));
+            }
+        }
+
+        return view('Login/PasswordRenewal', Data::getStore());
     }
 
 }

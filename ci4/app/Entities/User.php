@@ -15,6 +15,8 @@ use App\Models\UserModel;
  * @property string $type
  * @property bool $renew_password
  * @property string $mfa_secret_hash
+ * @property string|null $password_reset_token_hash
+ * @property string|null $password_reset_expires
  *
  *  Many
  * @property RbacRole $rbac_roles
@@ -71,6 +73,7 @@ class User extends \RestExtension\Entities\User {
     public function getTableFields() {
         return [
             'id', 'first_name', 'last_name', 'username', 'password', 'renew_password', 'scope', 'type',
+            'password_reset_token_hash', 'password_reset_expires',
         ];
     }
 
@@ -78,32 +81,84 @@ class User extends \RestExtension\Entities\User {
 
     use EncryptsFields;
 
-    public $hiddenFields = ['password', 'mfa_secret_hash'];
+    public $hiddenFields = ['password', 'mfa_secret_hash', 'password_reset_token_hash', 'password_reset_expires'];
 
     public function getScopes(): array {
         return strlen($this->scope) ? explode(' ', $this->scope) : [];
     }
 
-    private static function generatePassword(): string {
-        return bin2hex(openssl_random_pseudo_bytes(4));
-    }
+    /**
+     * How long a link to choose a new password works.
+     */
+    public const int PasswordResetMinutes = 60;
 
     /**
-     * @throws \Exception
+     * Mails a link to choose a new password. The password itself is not touched: that
+     * happens only when the link is followed, so asking for one on someone else's behalf
+     * changes nothing for them.
+     *
+     * A new request replaces the token of the last one.
+     *
+     * @throws \Exception when the installation cannot send mail
      */
-    public function sendForgotPasswordEmail(): void {
-        $password = self::generatePassword();
-        $this->password = $this->encryptPassword($password);
-        $this->renew_password = true;
+    public function sendPasswordResetEmail(): void {
+        $token = bin2hex(random_bytes(32));
+        $this->password_reset_token_hash = hash('sha256', $token);
+        $this->password_reset_expires = date('Y-m-d H:i:s', time() + self::PasswordResetMinutes * 60);
         $this->save();
 
-        $emailLib = new EmailLib();
-        $emailLib->send(
-            '4 Spaces KSO | New password',
-            "Your new password is \"{$password}\"",
+        $link = self::PasswordResetLinkBase() . '?token=' . $token;
+        $minutes = self::PasswordResetMinutes;
+        (new EmailLib())->send(
+            '4 Spaces KSO | Choose a new password',
+            "Follow this link to choose a new password: <a href=\"{$link}\">{$link}</a><br><br>"
+            . "It works once, for {$minutes} minutes. If you did not ask for it, ignore this e-mail - your password is unchanged.",
             $this->first_name,
             $this->username
         );
+    }
+
+    /**
+     * The address the link points at, from the installation's configured `BASE_URL`.
+     *
+     * Not from `base_url()`: `Config\App` builds that from the request's `Host` header, so
+     * someone asking for a link on an operator's behalf with a `Host` of their own would get
+     * the operator's token mailed to the operator inside a link to the asker's site. The
+     * chart always sets `BASE_URL`; the request is the fallback only for an installation
+     * that does not.
+     */
+    private static function PasswordResetLinkBase(): string {
+        $configured = rtrim((string) getenv('BASE_URL'), '/');
+
+        return $configured !== '' ? "{$configured}/api/login/resetPassword" : base_url('login/resetPassword');
+    }
+
+    /**
+     * The user a link to choose a new password was sent to, while it still works.
+     */
+    public static function FindByPasswordResetToken(string $token): ?User {
+        if ($token === '') {
+            return null;
+        }
+
+        /** @var User $user */
+        $user = (new UserModel())
+            ->where('password_reset_token_hash', hash('sha256', $token))
+            ->where('password_reset_expires >', date('Y-m-d H:i:s'))
+            ->find();
+
+        return $user->exists() ? $user : null;
+    }
+
+    /**
+     * Sets the password chosen through the link and spends the token.
+     */
+    public function resetPassword(string $password): void {
+        $this->password = self::encryptPassword($password);
+        $this->renew_password = false;
+        $this->password_reset_token_hash = null;
+        $this->password_reset_expires = null;
+        $this->save();
     }
 
     /**
