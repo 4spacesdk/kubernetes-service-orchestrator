@@ -119,7 +119,7 @@ function onDuplicateItemBtnClicked(row: Row) {
 
 function onDeleteItemBtnClicked(row: Row) {
     bus.emit('confirm', {
-        body: `Do you want to delete <strong>${row.item.name}</strong>?`,
+        body: `Do you want to delete "${row.item.name}"?`,
         confirmIcon: 'fa fa-trash',
         confirmColor: 'red',
 

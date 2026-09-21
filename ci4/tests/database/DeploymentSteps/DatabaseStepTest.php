@@ -149,18 +149,25 @@ class DatabaseStepTest extends DatabaseTestCase {
      * Running twice would create a second database and a second user, and leave the
      * deployment pointing at the new one - so the first one, with the customer's data in
      * it, would still be there and nothing would be using it.
+     *
+     * It is not an error either. A database outlives a terminate and a pause, so every
+     * redeploy of such a workspace gets here - and it used to fail resuming one with
+     * "Database already created".
      */
-    public function testDeployingRefusesToCreateASecondDatabase(): void {
+    public function testDeployingAgainLeavesTheDatabaseAloneAndReportsNothing(): void {
         $deployment = Fixtures::deployment([
             'database_name' => 'tenant_api',
             'database_user' => 'tenant_api',
             'database_pass' => 'secret',
         ]);
+        $step = new DatabaseStep();
 
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessage('Database already created');
+        // No service to connect to: reaching one would fail the test with an exception.
+        $step->startDeployCommand($deployment);
 
-        (new DatabaseStep())->startDeployCommand($deployment);
+        $this->assertSame('tenant_api', $deployment->database_name);
+        $this->assertSame('secret', $deployment->database_pass);
+        $this->assertSame(DeploymentStepHelper::DatabaseStatus_Success, $step->getStatus($deployment));
     }
 
     /**

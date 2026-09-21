@@ -80,9 +80,8 @@ function onNoBtnClicked() {
             class="w-100 h-100">
             <v-card-title >{{ titleText }}</v-card-title>
             <v-divider/>
-            <v-card-text v-html="bodyText">
-
-            </v-card-text>
+            <!-- Text, never HTML: bodies carry names that operators typed. -->
+            <v-card-text class="dialog-body">{{ bodyText }}</v-card-text>
             <v-divider/>
             <v-card-actions>
                 <v-spacer/>

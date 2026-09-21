@@ -277,7 +277,7 @@ function onDeployBtnClicked(row: Row, onFinish?: () => void, onError?: () => voi
 
 function onTerminateBtnClicked(row: Row) {
     bus.emit('confirm', {
-        body: `Do you want to terminate <strong>${row.item.name}</strong>?`,
+        body: `Do you want to terminate "${row.item.name}"?`,
         confirmIcon: 'fa fa-skull',
         confirmColor: 'warning',
 
@@ -357,7 +357,7 @@ function onBatchTerminateBtnClicked() {
     ];
 
     bus.emit('confirm', {
-        body: `Do you want to terminate <strong>${selectedRows.length} rows</strong>?`,
+        body: `Do you want to terminate ${selectedRows.length} rows?`,
         confirmIcon: 'fa fa-skull',
         confirmColor: 'warning',
 

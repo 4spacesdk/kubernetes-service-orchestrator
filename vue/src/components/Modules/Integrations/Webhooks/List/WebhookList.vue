@@ -102,7 +102,7 @@ function onDeliveryListBtnClicked(item: Webhook) {
 
 function deleteItem(item: Webhook) {
     bus.emit('confirm', {
-        body: `Do you want to delete <strong>${item.name}</strong>?`,
+        body: `Do you want to delete "${item.name}"?`,
         confirmIcon: 'fa fa-trash',
         confirmColor: 'red',
 

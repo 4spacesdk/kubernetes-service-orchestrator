@@ -486,7 +486,7 @@ class Workspace extends Entity {
         foreach ($deployments as $deployment) {
             $errors = $deployment->deployAllSteps();
             if ($errors) {
-                $allErrors[] = "<strong>{$deployment->name}</strong><br>{$errors}<br>";
+                $allErrors[] = "{$deployment->name}\n{$errors}";
             }
         }
         $this->deployments = $deployments;
@@ -498,7 +498,7 @@ class Workspace extends Entity {
 
         $this->checkStatus();
 
-        return count($allErrors) ? implode("\n", $allErrors) : null;
+        return count($allErrors) ? implode("\n\n", $allErrors) : null;
     }
 
     /**
@@ -548,7 +548,7 @@ class Workspace extends Entity {
         foreach ($deployments as $deployment) {
             $errors = $deployment->terminateAllSteps();
             if ($errors) {
-                $allErrors[] = "<strong>{$deployment->name}</strong><br>{$errors}<br>";
+                $allErrors[] = "{$deployment->name}\n{$errors}";
             }
 
             $deployment->updateStatus(\DeploymentStatusTypes::Inactive, false);
@@ -562,7 +562,7 @@ class Workspace extends Entity {
 
         $this->checkStatus();
 
-        return count($allErrors) ? implode("\n", $allErrors) : null;
+        return count($allErrors) ? implode("\n\n", $allErrors) : null;
     }
 
     public function getUrl(): string {

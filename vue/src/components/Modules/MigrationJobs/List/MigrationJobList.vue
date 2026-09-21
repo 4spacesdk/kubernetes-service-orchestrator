@@ -130,15 +130,10 @@ function onShowKubernetesLogsBtnClicked(row: MigrationJob) {
 }
 
 function onShowLogsBtnClicked(row: MigrationJob) {
-    const code = row?.log
-        ?.trim()
-        ?.split('\n')
-        ?.map(line => `<span class="d-block">${line}</span>`)
-        ?.join('') ?? '';
-
     bus.emit('info', {
         title: 'Migration Job: Log',
-        body: `<code class="line-numbers">${code}</code>`
+        body: row?.log?.trim() ?? '',
+        monospace: true,
     })
 }
 

@@ -3,6 +3,7 @@
 ## Unreleased
 
 ### Fixed bugs
+* Deploying a workspace that already has its database - after a pause or a terminate - no longer fails with "Database already created"
 * Changing the image of a deployment specification was undone on save, and the old image was overwritten with the copy the dialog had loaded. The same for every other form that picks a related row by id
 * Deploys: a rollout still running could fail the next with `409 Conflict`, a custom resource without a namespace landed in `default`, an empty or malformed one was accepted, init containers from another registry could not be pulled, and setting a version reported success when the deploy had failed
 * Deploys: a field kso spells wrong is refused by the cluster instead of dropped without a word, and two fields every Deployment, Job and CronJob carried are gone
@@ -34,6 +35,8 @@
 ### Security
 * The sign-in pages show messages from a link as text, so a crafted link can no longer run script on the sign-in page
 * A sign-in link can only send the operator on within kso, not to another site
+* Dialogs show text, never HTML. A migration or auto update log could run script in the operator's browser - and the log is written by the customer's own container
+* Chart: kso's database password, encryption keys and mail password are read from a Secret instead of written into the pod spec, where anyone who could read the deployment could read them. `deployment.existingSecret` takes one of your own. A password such as `12345` or `true` no longer breaks the install
 * Responses no longer carry the debug log outside development - queries, remote servers' answers and error messages went to every caller, signed in or not. The database connection test says why it failed instead
 * Swagger - the page and the API description it reads, both served without a sign-in - is off outside development. Set `SWAGGER_ENABLED=true` to keep it
 * The two-factor QR code is drawn by kso itself. It used to be fetched from api.qrserver.com with the secret in the url

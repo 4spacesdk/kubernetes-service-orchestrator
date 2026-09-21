@@ -5,6 +5,8 @@ import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInter
 export interface InfoDialog_Input {
     title?: string;
     body: string;
+    // A log or other machine output: kept as it is, in a monospace font.
+    monospace?: boolean;
 }
 
 const props = defineProps<{input: InfoDialog_Input, events: DialogEventsInterface}>();
@@ -59,9 +61,10 @@ function onCloseBtnClicked() {
             class="w-100 h-100">
             <v-card-title >{{ titleText }}</v-card-title>
             <v-divider/>
-            <v-card-text v-html="bodyText">
-
-            </v-card-text>
+            <!-- Text, never HTML: bodies carry logs and names that come from customers and clusters. -->
+            <v-card-text
+                class="dialog-body"
+                :class="{ 'dialog-body--monospace': props.input.monospace }">{{ bodyText }}</v-card-text>
             <v-divider/>
             <v-card-actions>
                 <v-spacer/>

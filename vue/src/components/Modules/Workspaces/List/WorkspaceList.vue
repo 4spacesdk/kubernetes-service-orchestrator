@@ -167,7 +167,7 @@ function onCreateItemBtnClicked(type: DeploymentPackage) {
 
 function onDeployItemBtnClicked(item: Workspace) {
     bus.emit("confirm", {
-        body: `Do you want to deploy <strong>${item.name}</strong>?`,
+        body: `Do you want to deploy "${item.name}"?`,
         confirmIcon: "fa fa-play",
         confirmColor: "green",
 
@@ -185,7 +185,7 @@ function onDeployItemBtnClicked(item: Workspace) {
                 const api = Api.workspaces().deployPutById(item.id!);
                 api.setErrorHandler((response) => {
                     if (response.error) {
-                        workerProps.onFinishBody = response.error.replaceAll("\n", "<br>");
+                        workerProps.onFinishBody = response.error;
                     }
                     return true;
                 });
@@ -200,7 +200,7 @@ function onDeployItemBtnClicked(item: Workspace) {
 
 function onTerminateItemBtnClicked(item: Workspace) {
     bus.emit("confirm", {
-        body: `Do you want to terminate <strong>${item.name}</strong>?`,
+        body: `Do you want to terminate "${item.name}"?`,
         confirmIcon: "fa fa-skull",
         confirmColor: "red",
 
@@ -218,7 +218,7 @@ function onTerminateItemBtnClicked(item: Workspace) {
                 const api = Api.workspaces().terminatePutById(item.id!);
                 api.setErrorHandler((response) => {
                     if (response.error) {
-                        workerProps.onFinishBody = response.error.replaceAll("\n", "<br>");
+                        workerProps.onFinishBody = response.error;
                     }
                     return true;
                 });
@@ -239,8 +239,8 @@ function onTerminateItemBtnClicked(item: Workspace) {
 function onPauseItemBtnClicked(item: Workspace) {
     bus.emit("confirm", {
         body:
-            `Do you want to pause <strong>${item.name}</strong>?` +
-            "<br><br>This shuts the workspace down like Terminate does, and its disks go with it" +
+            `Do you want to pause "${item.name}"?` +
+            "\n\nThis shuts the workspace down like Terminate does, and its disks go with it" +
             " unless their reclaim policy keeps them. The pause stays until someone takes it off.",
         confirmIcon: "fa fa-pause",
         confirmColor: "red",
@@ -259,7 +259,7 @@ function onPauseItemBtnClicked(item: Workspace) {
                 const api = Api.workspaces().pausePutById(item.id!);
                 api.setErrorHandler((response) => {
                     if (response.error) {
-                        workerProps.onFinishBody = response.error.replaceAll("\n", "<br>");
+                        workerProps.onFinishBody = response.error;
                     }
                     return true;
                 });
@@ -289,7 +289,7 @@ function onResumeItemBtnClicked(item: Workspace) {
 
 function onDeleteItemBtnClicked(item: Row) {
     bus.emit("confirm", {
-        body: `Do you want to delete <strong>${item.workspace.name}</strong>?`,
+        body: `Do you want to delete "${item.workspace.name}"?`,
         confirmIcon: "fa fa-trash",
         confirmColor: "red",
 

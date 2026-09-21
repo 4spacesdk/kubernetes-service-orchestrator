@@ -440,7 +440,7 @@ class Deployment extends Entity {
         foreach ($steps as $step) {
             $errors = $step->tryExecuteDeployCommand($this);
             if ($errors) {
-                $allErrors[] = "<strong>{$step->getName()}</strong>: {$errors}";
+                $allErrors[] = "{$step->getName()}: {$errors}";
             }
         }
         $this->checkStatus(false);
@@ -459,7 +459,7 @@ class Deployment extends Entity {
         foreach ($steps as $step) {
             $errors = $step->tryExecuteTerminateCommand($this);
             if ($errors) {
-                $allErrors[] = "<strong>{$step->getName()}</strong>: {$errors}";
+                $allErrors[] = "{$step->getName()}: {$errors}";
             }
         }
         $this->checkStatus(false);

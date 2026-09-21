@@ -161,7 +161,7 @@ function onDuplicateItemBtnClicked(item: Row) {
 
 function onDeleteItemBtnClicked(item: Row) {
     bus.emit("confirm", {
-        body: `Do you want to delete <strong>${item.gateway.name}</strong>?`,
+        body: `Do you want to delete "${item.gateway.name}"?`,
         confirmIcon: "fa fa-trash",
         confirmColor: "red",
 
@@ -208,7 +208,7 @@ function onDeployBtnClicked(row: Row) {
 
 function onTerminateBtnClicked(row: Row) {
     bus.emit("confirm", {
-        body: `Do you want to terminate <strong>${row.gateway.name}</strong> from the cluster?`,
+        body: `Do you want to terminate "${row.gateway.name}" from the cluster?`,
         confirmIcon: "fa fa-stop",
         confirmColor: "orange",
 

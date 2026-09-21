@@ -130,7 +130,7 @@ function onEditItemBtnClicked(item: Row) {
 
 function onDeleteItemBtnClicked(item: Row) {
     bus.emit('confirm', {
-        body: `Do you want to delete <strong>${item.domain.name}</strong>?`,
+        body: `Do you want to delete "${item.domain.name}"?`,
         confirmIcon: 'fa fa-trash',
         confirmColor: 'red',
 

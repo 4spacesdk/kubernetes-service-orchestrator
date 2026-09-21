@@ -202,3 +202,14 @@ body,
 .text-capitalize-first-letter:first-letter {
   text-transform: uppercase;
 }
+
+// Dialog bodies are text, never HTML: line breaks in the text are kept.
+.dialog-body {
+    white-space: pre-line;
+}
+
+.dialog-body--monospace {
+    white-space: pre-wrap;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.8125rem;
+}

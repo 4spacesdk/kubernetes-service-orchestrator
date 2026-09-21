@@ -80,14 +80,10 @@ function onRefreshBtnClicked() {
 
 function onShowLogBtnClicked() {
 
-    const code = lastMigrationJob.value?.log?.trim().split('\n').map(k => {
-        if(k.length)
-            return `<span>${k}</span>`;
-    }).join('');
-
     bus.emit('info', {
         title: 'Migration Job: Log',
-        body: `<code class="line-numbers">${code}</code>`
+        body: lastMigrationJob.value?.log?.trim() ?? '',
+        monospace: true,
     })
 }
 

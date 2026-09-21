@@ -106,7 +106,7 @@ function onCertificateEventsClicked() {
             bus.emit('info', {
                 title: props.domain.name,
                 body: events.length
-                    ? events.map(event => `${event.age}: ${event.message}`).join('<br>')
+                    ? events.map(event => `${event.age}: ${event.message}`).join('\n')
                     : 'No events found',
             });
         });
@@ -122,7 +122,7 @@ function onCertificateStatusClicked() {
                     `Not before: ${status.notBefore}`,
                     `Not after: ${status.notAfter}`,
                     '',
-                    '<strong>Conditions</strong>'
+                    'Conditions'
                 ];
                 lines.push(...status.conditions!
                     .map(condition => {
@@ -131,7 +131,7 @@ function onCertificateStatusClicked() {
                 );
                 bus.emit('info', {
                     title: props.domain.name,
-                    body: lines.join('<br>')
+                    body: lines.join('\n')
                 });
             } else {
                 bus.emit('info', {

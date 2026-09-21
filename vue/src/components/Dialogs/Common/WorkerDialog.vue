@@ -67,8 +67,9 @@ function onCloseBtnClicked() {
             <v-card-title >{{ titleText }}</v-card-title>
             <v-divider/>
             <v-card-text>
-                <span v-if="isWorking" v-html="bodyText"></span>
-                <span v-if="!isWorking" v-html="props.input.onFinishBody ?? 'All done'"></span>
+                <!-- Text, never HTML: the finish text can be an error from the cluster. -->
+                <span v-if="isWorking" class="dialog-body">{{ bodyText }}</span>
+                <span v-if="!isWorking" class="dialog-body">{{ props.input.onFinishBody ?? 'All done' }}</span>
             </v-card-text>
             <v-divider/>
             <v-card-actions>

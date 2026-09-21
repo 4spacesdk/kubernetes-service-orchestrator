@@ -161,15 +161,10 @@ function onDeleteBtnClicked(row: Row) {
 }
 
 function onShowLogsBtnClicked(row: Row) {
-    const code = row.item?.log
-        ?.trim()
-        ?.split('\n')
-        ?.map(line => `<span class="d-block">${line}</span>`)
-        ?.join('') ?? '';
-
     bus.emit('info', {
         title: 'Log',
-        body: `<code class="line-numbers">${code}</code>`
+        body: row.item?.log?.trim() ?? '',
+        monospace: true,
     })
 }
 

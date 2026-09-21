@@ -94,7 +94,7 @@ function onEditItemBtnClicked(item: OAuthClient) {
 
 function deleteItem(item: OAuthClient) {
     bus.emit('confirm', {
-        body: `Do you want to delete <strong>${item.client_id}</strong>?`,
+        body: `Do you want to delete "${item.client_id}"?`,
         confirmIcon: 'fa fa-trash',
         confirmColor: 'red',
 

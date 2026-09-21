@@ -226,8 +226,14 @@ class DatabaseStep extends BaseDeploymentStep {
      * @throws \Exception
      */
     public function startDeployCommand(Deployment $deployment, ?string $reason = null): void {
+        // Already there: nothing to do. Deploying is "make it so", and a database outlives a
+        // terminate and a pause - it cannot be terminated at all - so every redeploy of a
+        // workspace that has one gets here. It used to throw, which made resuming a paused
+        // workspace report "Database already created" as a failure. Creating it again is what
+        // must not happen: a second database and user, with the customer's data left behind in
+        // the first.
         if ($this->getStatus($deployment) == DeploymentStepHelper::DatabaseStatus_Success) {
-            throw new \Exception('Database already created');
+            return;
         }
 
         [$dbName, $dbUser] = self::AvailableNamesFor($deployment);
