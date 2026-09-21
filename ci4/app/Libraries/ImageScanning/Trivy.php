@@ -53,6 +53,9 @@ class Trivy {
                 [
                     $this->binary, 'image',
                     '--quiet',
+                    // Trivy sends usage data to Aqua by default; nothing about the customers'
+                    // images leaves kso that does not have to.
+                    '--disable-telemetry',
                     '--scanners', 'vuln',
                     '--format', 'json',
                     '--output', $report,

@@ -2,17 +2,25 @@
 # Stands in for Trivy in the tests (TRIVY_BINARY). Writes the report in FAKE_TRIVY_REPORT to
 # the --output file, and records each call in FAKE_TRIVY_LOG: the image, and the registry
 # credentials it was handed, if any. An image containing FAKE_TRIVY_FAIL is refused the way
-# Trivy refuses one it cannot pull.
+# Trivy refuses one it cannot pull. A call without --disable-telemetry is refused: kso does
+# not report on its customers to Aqua.
 output=''
 reference=''
+telemetry='on'
 while [ $# -gt 0 ]; do
   case "$1" in
     --output) output="$2"; shift 2 ;;
     --scanners|--format|--timeout|--cache-dir) shift 2 ;;
+    --disable-telemetry) telemetry='off'; shift ;;
     image|--quiet) shift ;;
     *) reference="$1"; shift ;;
   esac
 done
+
+if [ "$telemetry" != 'off' ]; then
+  echo "FATAL	called without --disable-telemetry" >&2
+  exit 1
+fi
 
 credentials='none'
 if [ -n "$DOCKER_CONFIG" ] && [ -f "$DOCKER_CONFIG/config.json" ]; then
