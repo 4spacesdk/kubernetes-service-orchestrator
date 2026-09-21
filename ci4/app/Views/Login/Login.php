@@ -334,9 +334,9 @@ use App\Libraries\EmailLib;
                         </div>
 
                         <div class="-form-label-group mb-2 position-relative">
-                            <label for="inputPassword" class="small">Kodeord</label>
+                            <label for="inputPassword" class="small">Password</label>
                             <input type="password" id="inputPassword" name="password" class="form-control"
-                                   placeholder="Kodeord" required>
+                                   placeholder="Password" required>
                             <a class="toggle-password"></a>
                         </div>
 

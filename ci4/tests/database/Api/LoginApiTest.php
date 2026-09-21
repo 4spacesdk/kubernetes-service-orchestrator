@@ -226,22 +226,58 @@ class LoginApiTest extends ControllerTestCase {
     // <editor-fold desc="Where the visitor is sent afterwards">
 
     /**
-     * Today's behaviour, and it should not be. The destination is taken from the query
-     * string of the sign-in link with nothing checked about it, so a link to kso's own
-     * login page can deliver a freshly authenticated operator to any address at all. The
-     * operator sees kso, types their password into kso, and lands somewhere else.
-     *
-     * Restricting it to this installation's own hostnames turns this test red.
+     * The destination comes from a link anyone can write, and the operator has just typed
+     * their password into kso's own page. A link may only send them on within kso.
      */
-    public function testTheDestinationIsWhateverTheLinkAsksFor(): void {
+    #[DataProvider('destinationsElsewhere')]
+    public function testASignInIsNotSentToAnotherSite(string $destination): void {
         Fixtures::user(['username' => 'operator', 'password' => 'the-right-one']);
 
         $response = $this->post(
-            'login?request_uri=' . urlencode('https://somewhere-else.example/collect'),
+            'login?request_uri=' . urlencode($destination),
             ['username' => 'operator', 'password' => 'the-right-one']
         );
 
-        $this->assertSame('https://somewhere-else.example/collect', $this->location($response));
+        $this->assertSame(getFrontendUrl(), $this->location($response));
+    }
+
+    public static function destinationsElsewhere(): array {
+        return [
+            'another host' => ['https://somewhere-else.example/collect'],
+            'no scheme' => ['//somewhere-else.example/collect'],
+            'a backslash browsers read as a slash' => ['/\\somewhere-else.example/collect'],
+            'our host as a user name' => ['http://api@somewhere-else.example/'],
+            'script' => ['javascript:alert(1)'],
+            'a line break' => ["/app\r\nSet-Cookie: x=1"],
+        ];
+    }
+
+    /**
+     * What a link may ask for: a path, the API itself - which is where an OAuth sign-in
+     * returns to finish - and the frontend.
+     */
+    #[DataProvider('destinationsWithinKso')]
+    public function testASignInIsSentOnWithinKso(\Closure $destinationFor): void {
+        $destination = $destinationFor();
+        Fixtures::user(['username' => 'operator', 'password' => 'the-right-one']);
+
+        $response = $this->post(
+            'login?request_uri=' . urlencode($destination),
+            ['username' => 'operator', 'password' => 'the-right-one']
+        );
+
+        $this->assertSame($destination, $this->location($response));
+    }
+
+    /**
+     * Closures, because a data provider runs before the application knows its own address.
+     */
+    public static function destinationsWithinKso(): array {
+        return [
+            'a path' => [fn() => '/app/workspaces/7'],
+            'the API' => [fn() => base_url('/authorize') . '?client_id=kso'],
+            'the frontend' => [fn() => getFrontendUrl('app/workspaces/7')],
+        ];
     }
 
     /**
@@ -253,11 +289,39 @@ class LoginApiTest extends ControllerTestCase {
         Fixtures::user(['username' => 'operator', 'password' => 'the-right-one']);
 
         $response = $this->post(
-            'login?request_uri=' . urlencode('https://first.example/') . '&redirect_uri=' . urlencode('https://second.example/'),
+            'login?request_uri=' . urlencode('/first') . '&redirect_uri=' . urlencode('/second'),
             ['username' => 'operator', 'password' => 'the-right-one']
         );
 
-        $this->assertSame('https://second.example/', $this->location($response));
+        $this->assertSame('/second', $this->location($response));
+    }
+
+    /**
+     * A destination is checked where it is read, so one that reached the session some other
+     * way is held to the same rule.
+     */
+    public function testARememberedDestinationElsewhereIsNotFollowedEither(): void {
+        Fixtures::user(['username' => 'operator', 'password' => 'the-right-one']);
+
+        $this->withSession($this->rememberedDestination('https://somewhere-else.example/collect'));
+        $response = $this->post('login', ['username' => 'operator', 'password' => 'the-right-one']);
+
+        $this->assertSame(getFrontendUrl(), $this->location($response));
+    }
+
+    /**
+     * An OAuth sign-in returns to `/authorize` to finish. The auth extension's `/authorize`
+     * remembers itself before sending the visitor to the form, and the form has to read it
+     * under the same name.
+     */
+    public function testAnOAuthSignInReturnsToAuthorize(): void {
+        Fixtures::user(['username' => 'operator', 'password' => 'the-right-one']);
+
+        $this->withSession($this->rememberedDestination(base_url('/authorize') . '?client_id=kso'));
+        $this->get('login?scope=');
+        $response = $this->withSession()->post('login', ['username' => 'operator', 'password' => 'the-right-one']);
+
+        $this->assertSame(base_url('/authorize') . '?client_id=kso', $this->location($response));
     }
 
     /**
@@ -266,10 +330,10 @@ class LoginApiTest extends ControllerTestCase {
      * would land on the frontend's front page instead.
      */
     public function testTheDestinationSurvivesTheRoundTripThroughTheForm(): void {
-        $this->get('login?request_uri=' . urlencode('https://deep.example/link'));
+        $this->get('login?request_uri=' . urlencode($this->deepLink()));
 
-        $this->assertSame('https://deep.example/link', $_SESSION['request_url'] ?? null);
-        $this->assertArrayHasKey('request_url', $_SESSION['__ci_vars'] ?? [], 'kept as flashdata, not for ever');
+        $this->assertSame($this->deepLink(), $_SESSION['requestUrl'] ?? null);
+        $this->assertArrayHasKey('requestUrl', $_SESSION['__ci_vars'] ?? [], 'kept as flashdata, not for ever');
     }
 
     /**
@@ -279,10 +343,10 @@ class LoginApiTest extends ControllerTestCase {
     public function testWhatTheFormRememberedIsWhereTheSignInGoes(): void {
         Fixtures::user(['username' => 'operator', 'password' => 'the-right-one']);
 
-        $this->withSession($this->rememberedDestination('request_url', 'https://deep.example/link'));
+        $this->withSession($this->rememberedDestination($this->deepLink()));
         $response = $this->post('login', ['username' => 'operator', 'password' => 'the-right-one']);
 
-        $this->assertSame('https://deep.example/link', $this->location($response));
+        $this->assertSame($this->deepLink(), $this->location($response));
     }
 
     // </editor-fold>
@@ -435,11 +499,11 @@ class LoginApiTest extends ControllerTestCase {
 
         $this->withSession(array_merge(
             ['2fa_in_progress' => 'mfa-operator'],
-            $this->rememberedDestination('request_url', 'https://deep.example/link')
+            $this->rememberedDestination($this->deepLink())
         ));
         $response = $this->post('login/twoFactor', ['code' => $this->currentCodeFor($user)]);
 
-        $this->assertSame('https://deep.example/link', $this->location($response));
+        $this->assertSame($this->deepLink(), $this->location($response));
     }
 
     /**
@@ -449,11 +513,11 @@ class LoginApiTest extends ControllerTestCase {
     public function testADeepLinkArrivesAtItsDestinationThroughTheWholeSignIn(): void {
         $user = $this->userWithASecondFactor(['username' => 'mfa-operator', 'password' => 'the-right-one']);
 
-        $this->get('login?request_uri=' . urlencode('https://deep.example/link'));
+        $this->get('login?request_uri=' . urlencode($this->deepLink()));
         $this->withSession()->post('login', ['username' => 'mfa-operator', 'password' => 'the-right-one']);
         $response = $this->withSession()->post('login/twoFactor', ['code' => $this->currentCodeFor($user)]);
 
-        $this->assertSame('https://deep.example/link', $this->location($response));
+        $this->assertSame($this->deepLink(), $this->location($response));
     }
 
     /**
@@ -655,14 +719,14 @@ class LoginApiTest extends ControllerTestCase {
 
         $this->withSession(array_merge(
             ['user_id' => $user->id],
-            $this->rememberedDestination('request_url', 'https://deep.example/link')
+            $this->rememberedDestination($this->deepLink())
         ));
         $renewal = $this->post('login/renewPassword', [
             'password' => 'A-brand-new-1',
             'password_confirm' => 'A-brand-new-1',
         ]);
 
-        $this->assertSame('https://deep.example/link', $this->location($renewal));
+        $this->assertSame($this->deepLink(), $this->location($renewal));
     }
 
     public function testTheRenewalFormAsksForThePasswordTwice(): void {
@@ -862,8 +926,15 @@ class LoginApiTest extends ControllerTestCase {
      *
      * @return array<string, mixed>
      */
-    private function rememberedDestination(string $key, string $url): array {
-        return [$key => $url, '__ci_vars' => [$key => 'new']];
+    private function rememberedDestination(string $url): array {
+        return ['requestUrl' => $url, '__ci_vars' => ['requestUrl' => 'new']];
+    }
+
+    /**
+     * A page in the frontend, which is somewhere a sign-in may send the visitor on to.
+     */
+    private function deepLink(): string {
+        return getFrontendUrl('app/workspaces/7');
     }
 
     private function userWithASecondFactor(array $overrides = []): User {

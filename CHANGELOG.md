@@ -15,7 +15,7 @@
 * When kso cannot reach the cluster, or makes a mistake talking to it, the status panels, the shell, the node list and the connection test say what went wrong instead of a server error - which routing step could not be asked, and the cluster's own reason for refusing a manifest. The status panel also died on a resource that has no status yet, or none at all
 * A kubeconfig with more than one user authenticates as the one its current context names, not the first in the file
 * Database services could not be connected to at all: the test button said no to every service, and a deploy could not create the tenant's database or user. A deleted service answers no, and an unknown driver says which driver
-* Sign-in: a deep link with two-factor lands on the link, the refresh token cookie is marked Secure behind a TLS-terminating proxy, a grant carrying no id token is a token rather than a server error, a refused renewal answers 400, and the password form names the first rule the new password breaks
+* Sign-in: a page opened while signed out is where the sign-in lands, a deep link with two-factor lands on the link, the refresh token cookie is marked Secure behind a TLS-terminating proxy, a grant carrying no id token is a token rather than a server error, a refused renewal answers 400, and the password form names the first rule the new password breaks
 * A token without a scope, and a request nobody had signed in, answer "not allowed" instead of a server error
 * Endpoints that could not work are gone: twenty that answered OK and wrote nothing, three that replaced a whole OAuth client, user or gateway and erased every field left out, `PUT /deployments/{id}/ingress`, and five naming code that no longer exists
 * Reading something that does not exist answers 404 instead of a resource with every field null; updating something that does not exist is refused instead of answering OK
@@ -32,6 +32,7 @@
 
 ### Security
 * The sign-in pages show messages from a link as text, so a crafted link can no longer run script on the sign-in page
+* A sign-in link can only send the operator on within kso, not to another site
 * The cron endpoint no longer runs every scheduled job for whoever asks: it takes a token the chart generates and gives to both kso and the scheduler. The endpoint that ran a single named job is gone; nothing called it
 * A customer's database password is drawn from the system's own randomness; it used to come from a generator whose output can be worked out from enough of it
 * Responses carry the usual browser protections - `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `X-Permitted-Cross-Domain-Policies`, and HSTS when the request came over TLS - and no longer announce the Apache and PHP versions

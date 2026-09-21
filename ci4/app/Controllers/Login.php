@@ -18,8 +18,11 @@ class Login extends \App\Core\BaseController {
      * A constant because it was spelt `requestUrl` in `index()` and `request_url` in every
      * other method here, so the two never met: an operator who followed a deep link and has
      * a second factor was always delivered to the frontend's front page instead.
+     *
+     * `requestUrl` because that is what the auth extension's `/authorize` writes before it
+     * sends a visitor here, so that an OAuth sign-in returns to `/authorize` to finish.
      */
-    private const string RememberedDestination = 'request_url';
+    private const string RememberedDestination = 'requestUrl';
 
     public function requireAuth(string $method): bool {
         return false;
@@ -35,9 +38,7 @@ class Login extends \App\Core\BaseController {
         if ($this->request->getGet('redirect_uri')) {
             $requestUrl = $this->request->getGet('redirect_uri');
         }
-        if (!$requestUrl) {
-            $requestUrl = getFrontendUrl();
-        }
+        $requestUrl = self::SafeDestination($requestUrl);
         session()->setFlashdata(self::RememberedDestination, $requestUrl);
         $data['requestUrl'] = $requestUrl;
 
@@ -105,12 +106,45 @@ class Login extends \App\Core\BaseController {
         return view('Login/Login', $data);
     }
 
-    public function twoFactor(): string|ResponseInterface {
-        /** @var string $requestUrl */
-        $requestUrl = session()->getFlashdata(self::RememberedDestination);
-        if (!$requestUrl) {
-            $requestUrl = getFrontendUrl();
+    /**
+     * Where a sign-in may send the visitor afterwards: a path on this host, or an address
+     * on the API's or the frontend's own origin. Anything else - including nothing - is the
+     * frontend's front page.
+     *
+     * The destination comes from the query string of a link anyone can write, and the
+     * visitor has just typed their password into kso's own page, so without this the link
+     * could hand a freshly signed-in operator to any site at all.
+     *
+     * Checked where it is read rather than where it is stored, so a destination that got
+     * into the session some other way is held to the same rule.
+     */
+    private static function SafeDestination(mixed $url): string {
+        if (!is_string($url) || $url === '' || preg_match('/[\\\\\x00-\x20\x7f]/', $url)) {
+            return getFrontendUrl();
         }
+
+        // A path. `//host` is not one: a browser reads it as an address on another host.
+        if (str_starts_with($url, '/') && !str_starts_with($url, '//')) {
+            return $url;
+        }
+
+        $origin = static function(string $url): ?string {
+            $parts = parse_url($url);
+            if (!is_array($parts) || !isset($parts['host'])
+                || !in_array(strtolower($parts['scheme'] ?? ''), ['http', 'https'], true)) {
+                return null;
+            }
+            return strtolower("{$parts['scheme']}://{$parts['host']}") . (isset($parts['port']) ? ":{$parts['port']}" : '');
+        };
+
+        $allowed = [$origin(base_url()), $origin(getFrontendUrl())];
+        $wanted = $origin($url);
+
+        return $wanted !== null && in_array($wanted, $allowed, true) ? $url : getFrontendUrl();
+    }
+
+    public function twoFactor(): string|ResponseInterface {
+        $requestUrl = self::SafeDestination(session()->getFlashdata(self::RememberedDestination));
 
         $username = session()->get('2fa_in_progress');
         if (!$username) {
@@ -169,11 +203,7 @@ class Login extends \App\Core\BaseController {
     }
 
     public function renewPassword(): string|ResponseInterface {
-        /** @var string $requestUrl */
-        $requestUrl = session()->getFlashdata(self::RememberedDestination);
-        if (!$requestUrl) {
-            $requestUrl = getFrontendUrl();
-        }
+        $requestUrl = self::SafeDestination(session()->getFlashdata(self::RememberedDestination));
 
         if ($_POST) {
 
