@@ -5,16 +5,16 @@ found by `composer audit`, `npm audit` and [Trivy](https://trivy.dev). A release
 this file as it was when it was tagged. Written every week by
 [a scheduled workflow](.github/workflows/security-status.yml) - do not edit by hand.
 
-Updated: 2026-09-21 16:09 UTC
+Updated: 2026-09-21 16:12 UTC
 
-Main at: `e39a395`
+Main at: `d1486a3`
 
 | Source | Critical | High | Medium | Low | Unknown |
 |--------|---------:|-----:|-------:|----:|--------:|
 | PHP · ci4/composer.lock | 0 | 0 | 0 | 0 | 0 |
 | PHP · zmq-client/composer.lock | 0 | 1 | 6 | 0 | 0 |
 | PHP · zmq-server/composer.lock | 0 | 1 | 7 | 0 | 0 |
-| JavaScript · vue/package-lock.json | 1 | 40 | 36 | 4 | 0 |
+| JavaScript · vue/package-lock.json | 1 | 50 | 43 | 6 | 0 |
 | Image · 4spaces/kubernetes-service-orchestrator:dev | 1 | 2 | 12 | 0 | 0 |
 
 ## PHP · ci4/composer.lock
@@ -56,17 +56,25 @@ Nothing known.
 | high | [GHSA-fv7c-fp4j-7gwp](https://github.com/advisories/GHSA-fv7c-fp4j-7gwp) | @babel/plugin-transform-modules-systemjs | 7.25.0 | not >=7.12.0 <=7.29.3 | @babel/plugin-transform-modules-systemjs generates arbitrary code when compiling malicious input |
 | high | [GHSA-3g43-6gmg-66jw](https://github.com/advisories/GHSA-3g43-6gmg-66jw) | axios | 0.19.2 | not >=0.19.0 <0.31.1 | axios Vulnerable to Credential Theft and Response Hijacking via Prototype Pollution Gadget in Config Merge |
 | high | [GHSA-43fc-jf86-j433](https://github.com/advisories/GHSA-43fc-jf86-j433) | axios | 0.19.2 | not <=0.30.2 | Axios is Vulnerable to Denial of Service via __proto__ Key in mergeConfig |
+| high | [GHSA-6chq-wfr3-2hj9](https://github.com/advisories/GHSA-6chq-wfr3-2hj9) | axios | 0.19.2 | not <=0.31.0 | Axios: Header Injection via Prototype Pollution |
 | high | [GHSA-cph5-m8f7-6c5x](https://github.com/advisories/GHSA-cph5-m8f7-6c5x) | axios | 0.19.2 | not <0.21.2 | axios Inefficient Regular Expression Complexity vulnerability |
 | high | [GHSA-hfxv-24rg-xrqf](https://github.com/advisories/GHSA-hfxv-24rg-xrqf) | axios | 0.19.2 | not <=0.31.1 | Axios: Regular Expression Denial of Service (ReDoS) via Cookie Name Injection |
+| high | [GHSA-j5f8-grm9-p9fc](https://github.com/advisories/GHSA-j5f8-grm9-p9fc) | axios | 0.19.2 | not <=0.31.1 | Axios: Proxy-Authorization header leaks to redirect target when proxy is re-evaluated to direct connection |
 | high | [GHSA-jr5f-v2jv-69x6](https://github.com/advisories/GHSA-jr5f-v2jv-69x6) | axios | 0.19.2 | not <0.30.0 | axios Requests Vulnerable To Possible SSRF and Credential Leakage via Absolute URL |
+| high | [GHSA-p92q-9vqr-4j8v](https://github.com/advisories/GHSA-p92q-9vqr-4j8v) | axios | 0.19.2 | not <=0.31.1 | Axios: Proxy-Authorization Credential Leak to Origin Server Across HTTP-to-HTTPS Redirect in Axios Node.js HTTP Adapter |
+| high | [GHSA-pf86-5x62-jrwf](https://github.com/advisories/GHSA-pf86-5x62-jrwf) | axios | 0.19.2 | not <=0.31.0 | Axios: Prototype Pollution Gadgets - Response Tampering, Data Exfiltration, and Request Hijacking |
+| high | [GHSA-pjwm-pj3p-43mv](https://github.com/advisories/GHSA-pjwm-pj3p-43mv) | axios | 0.19.2 | not <=0.31.1 | axios's shouldBypassProxy does not recognize IPv4-mapped IPv6 addresses, allowing NO_PROXY bypass (incomplete fix for C… |
+| high | [GHSA-pmwg-cvhr-8vh7](https://github.com/advisories/GHSA-pmwg-cvhr-8vh7) | axios | 0.19.2 | not <=0.31.0 | Axios: Incomplete Fix for CVE-2025-62718 — NO_PROXY Protection Bypassed via RFC 1122 Loopback Subnet (127.0.0.0/8) in A… |
 | high | [GHSA-3jxr-9vmj-r5cp](https://github.com/advisories/GHSA-3jxr-9vmj-r5cp) | brace-expansion | 1.1.11 | not <1.1.16 | brace-expansion: DoS via exponential-time expansion of consecutive non-expanding {} groups |
 | high | [GHSA-mh99-v99m-4gvg](https://github.com/advisories/GHSA-mh99-v99m-4gvg) | brace-expansion | 1.1.11 | not >=2.0.0 <2.1.3 | brace-expansion: DoS via unbounded expansion length causing an out-of-memory process crash |
 | high | [GHSA-rgw5-rvv9-x895](https://github.com/advisories/GHSA-rgw5-rvv9-x895) | brace-expansion | 1.1.11 | not <1.1.18 | brace-expansion: DoS via unbounded intermediate arrays, bypassing the CVE-2026-14257 mitigation |
+| high | [GHSA-73wf-gq98-2v4g](https://github.com/advisories/GHSA-73wf-gq98-2v4g) | browserslist | 4.23.2 | not <=4.28.6 | Browserslist: Uncaught crash / prototype write via untrusted browserslist-stats.json custom stats (normalizeStats) |
 | high | [GHSA-c83g-rgw3-j3cx](https://github.com/advisories/GHSA-c83g-rgw3-j3cx) | browserslist | 4.23.2 | not <=4.28.6 | Browserslist: Unbounded memory growth (no cache eviction) via distinct query results, leading to eventual OOM |
 | high | [GHSA-3xgq-45jj-v275](https://github.com/advisories/GHSA-3xgq-45jj-v275) | cross-spawn | 7.0.3 | not >=7.0.0 <7.0.5 | Regular Expression Denial of Service (ReDoS) in cross-spawn |
 | high | [GHSA-4c8g-83qw-93j6](https://github.com/advisories/GHSA-4c8g-83qw-93j6) | fast-uri | 3.0.1 | not >=3.0.0 <3.1.3 | fast-uri vulnerable to host confusion via failed IDN canonicalization |
 | high | [GHSA-7p8r-x3mc-p8w7](https://github.com/advisories/GHSA-7p8r-x3mc-p8w7) | fast-uri | 3.0.1 | not >=3.0.0 <3.1.5 | fast-uri vulnerable to host confusion via backslash authority introducer |
 | high | [GHSA-f65p-4m7j-42xc](https://github.com/advisories/GHSA-f65p-4m7j-42xc) | fast-uri | 3.0.1 | not >=3.0.0 <3.1.6 | fast-uri vulnerable to server-side request forgery via malformed IPv6 normalization |
+| high | [GHSA-jqff-g426-hqxp](https://github.com/advisories/GHSA-jqff-g426-hqxp) | fast-uri | 3.0.1 | not >=3.0.0 <3.1.6 | fast-uri vulnerable to host confusion via percent-encoded scheme normalization |
 | high | [GHSA-q3j6-qgpj-74h6](https://github.com/advisories/GHSA-q3j6-qgpj-74h6) | fast-uri | 3.0.1 | not >=3.0.0 <=3.1.0 | fast-uri vulnerable to path traversal via percent-encoded dot segments |
 | high | [GHSA-v2hh-gcrm-f6hx](https://github.com/advisories/GHSA-v2hh-gcrm-f6hx) | fast-uri | 3.0.1 | not >=3.0.0 <=3.1.3 | fast-uri vulnerable to host confusion via literal backslash authority delimiter |
 | high | [GHSA-v39h-62p7-jpjc](https://github.com/advisories/GHSA-v39h-62p7-jpjc) | fast-uri | 3.0.1 | not >=3.0.0 <=3.1.1 | fast-uri vulnerable to host confusion via percent-encoded authority delimiters |
@@ -80,12 +88,13 @@ Nothing known.
 | high | [GHSA-52cp-r559-cp3m](https://github.com/advisories/GHSA-52cp-r559-cp3m) | js-yaml | 4.1.0 | not >=4.0.0 <4.3.0 | js-yaml: YAML merge-key chains can force quadratic CPU consumption |
 | high | [GHSA-5p4m-2wfm-xmqj](https://github.com/advisories/GHSA-5p4m-2wfm-xmqj) | js-yaml | 4.1.0 | not >=4.0.0 <4.3.1 | JS-YAML: Quadratic CPU consumption in !!omap resolution (3.x and 4.x) — CVE-2026-59870 fix not backported |
 | high | [GHSA-r5fr-rjxr-66jc](https://github.com/advisories/GHSA-r5fr-rjxr-66jc) | lodash | 4.17.21 | not >=4.0.0 <=4.17.23 | lodash vulnerable to Code Injection via `_.template` imports key names |
-| high | [GHSA-23c5-xmqv-rm74](https://github.com/advisories/GHSA-23c5-xmqv-rm74) | minimatch | 3.1.2 | not <3.1.4 | minimatch ReDoS: nested *() extglobs generate catastrophically backtracking regular expressions |
+| high | [GHSA-23c5-xmqv-rm74](https://github.com/advisories/GHSA-23c5-xmqv-rm74) | minimatch | 3.1.2 | not >=9.0.0 <9.0.7 | minimatch ReDoS: nested *() extglobs generate catastrophically backtracking regular expressions |
 | high | [GHSA-3ppc-4f35-3m26](https://github.com/advisories/GHSA-3ppc-4f35-3m26) | minimatch | 3.1.2 | not >=9.0.0 <9.0.6 | minimatch has a ReDoS via repeated wildcards with non-matching literal in pattern |
 | high | [GHSA-7r86-cg39-jmmj](https://github.com/advisories/GHSA-7r86-cg39-jmmj) | minimatch | 3.1.2 | not >=9.0.0 <9.0.7 | minimatch has ReDoS: matchOne() combinatorial backtracking via multiple non-adjacent GLOBSTAR segments |
 | high | [GHSA-28wg-ghj8-5hjv](https://github.com/advisories/GHSA-28wg-ghj8-5hjv) | nanoid | 3.3.7 | not <3.3.16 | nanoid: non-secure generators can loop indefinitely with negative size |
 | high | [GHSA-2v37-7h3g-55p8](https://github.com/advisories/GHSA-2v37-7h3g-55p8) | nanoid | 3.3.7 | not <3.3.18 | nanoid: custom generators can loop indefinitely when size is zero |
 | high | [GHSA-xwg4-73v4-xw9w](https://github.com/advisories/GHSA-xwg4-73v4-xw9w) | nanoid | 3.3.7 | not <3.3.12 | nanoid: Integer Overflow or Wraparound |
+| high | [GHSA-c2c7-rcm5-vvqj](https://github.com/advisories/GHSA-c2c7-rcm5-vvqj) | picomatch | 2.3.1 | not <2.3.2 | Picomatch has a ReDoS vulnerability via extglob quantifiers |
 | high | [GHSA-6g55-p6wh-862q](https://github.com/advisories/GHSA-6g55-p6wh-862q) | postcss | 8.4.40 | not <=8.5.11 | PostCSS: Arbitrary file read and information disclosure via attacker-controlled sourceMappingURL in CSS comments |
 | high | [GHSA-r28c-9q8g-f849](https://github.com/advisories/GHSA-r28c-9q8g-f849) | postcss | 8.4.40 | not <=8.5.17 | PostCSS: Path Traversal in Previous Source Map Auto-Loading (sourceMappingURL) leads to Arbitrary .map File Disclosure |
 | high | [GHSA-gcx4-mw62-g8wm](https://github.com/advisories/GHSA-gcx4-mw62-g8wm) | rollup | 3.29.4 | not >=3.0.0 <3.29.5 | DOM Clobbering Gadget found in rollup bundled scripts that leads to XSS |
@@ -93,15 +102,23 @@ Nothing known.
 | high | [GHSA-5c6j-r48x-rmvq](https://github.com/advisories/GHSA-5c6j-r48x-rmvq) | serialize-javascript | 4.0.0 | not <=7.0.2 | Serialize JavaScript is Vulnerable to RCE via RegExp.flags and Date.prototype.toISOString() |
 | high | [GHSA-395f-4hp3-45gv](https://github.com/advisories/GHSA-395f-4hp3-45gv) | shell-quote | 1.8.1 | not <=1.8.4 | shell-quote: Quadratic-complexity Denial of Service in `parse()` (CWE-407) |
 | high | [GHSA-c27g-q93r-2cwf](https://github.com/advisories/GHSA-c27g-q93r-2cwf) | vite | 4.5.3 | not <=5.4.8 | launch-editor vulnerable to command injection via the crafted request on Windows |
+| high | [GHSA-fx2h-pf6j-xcff](https://github.com/advisories/GHSA-fx2h-pf6j-xcff) | vite | 4.5.3 | not <=6.4.2 | vite: `server.fs.deny` bypass on Windows alternate paths |
 | medium | [GHSA-968p-4wvh-cqc8](https://github.com/advisories/GHSA-968p-4wvh-cqc8) | @babel/helpers | 7.25.0 | not <7.26.10 | Babel has inefficient RegExp complexity in generated code with .replace when transpiling named capturing groups |
 | medium | [GHSA-968p-4wvh-cqc8](https://github.com/advisories/GHSA-968p-4wvh-cqc8) | @babel/runtime | 7.25.0 | not <7.26.10 | Babel has inefficient RegExp complexity in generated code with .replace when transpiling named capturing groups |
 | medium | [GHSA-2g4f-4pwh-qvx6](https://github.com/advisories/GHSA-2g4f-4pwh-qvx6) | ajv | 6.12.6 | not >=7.0.0-alpha.0 <8.18.0 | ajv has ReDoS when using `$data` option |
+| medium | [GHSA-3p68-rc4w-qgx5](https://github.com/advisories/GHSA-3p68-rc4w-qgx5) | axios | 0.19.2 | not <0.31.0 | Axios has a NO_PROXY Hostname Normalization Bypass that Leads to SSRF |
 | medium | [GHSA-4w2v-q235-vp99](https://github.com/advisories/GHSA-4w2v-q235-vp99) | axios | 0.19.2 | not <0.21.1 | Axios vulnerable to Server-Side Request Forgery |
+| medium | [GHSA-5c9x-8gcm-mpgx](https://github.com/advisories/GHSA-5c9x-8gcm-mpgx) | axios | 0.19.2 | not <=0.31.0 | Axios' HTTP adapter-streamed uploads bypass maxBodyLength when maxRedirects: 0 |
 | medium | [GHSA-62hf-57xw-28j9](https://github.com/advisories/GHSA-62hf-57xw-28j9) | axios | 0.19.2 | not <=0.31.0 | Axios: unbounded recursion in toFormData causes DoS via deeply nested request data |
 | medium | [GHSA-7q8q-rj6j-mhjq](https://github.com/advisories/GHSA-7q8q-rj6j-mhjq) | axios | 0.19.2 | not >=0.8.0 <0.33.0 | Axios: Nested axios option objects can consume polluted prototype values |
+| medium | [GHSA-898c-q2cr-xwhg](https://github.com/advisories/GHSA-898c-q2cr-xwhg) | axios | 0.19.2 | not <=0.31.1 | axios has DoS & Header Injection via Prototype Pollution Read-Side Gadgets in axios merge functions |
 | medium | [GHSA-fvcv-3m26-pcqx](https://github.com/advisories/GHSA-fvcv-3m26-pcqx) | axios | 0.19.2 | not <0.31.0 | Axios has Unrestricted Cloud Metadata Exfiltration via Header Injection Chain |
+| medium | [GHSA-m7pr-hjqh-92cm](https://github.com/advisories/GHSA-m7pr-hjqh-92cm) | axios | 0.19.2 | not <=0.31.0 | Axios: no_proxy bypass via IP alias allows SSRF |
 | medium | [GHSA-mmx7-hfxf-jppx](https://github.com/advisories/GHSA-mmx7-hfxf-jppx) | axios | 0.19.2 | not <0.33.0 | Axios: Prototype pollution gadgets can alter axios request construction |
+| medium | [GHSA-vf2m-468p-8v99](https://github.com/advisories/GHSA-vf2m-468p-8v99) | axios | 0.19.2 | not <=0.31.0 | Axios: HTTP adapter streamed responses bypass maxContentLength |
+| medium | [GHSA-w9j2-pvgh-6h63](https://github.com/advisories/GHSA-w9j2-pvgh-6h63) | axios | 0.19.2 | not <=0.31.0 | Axios: Authentication Bypass via Prototype Pollution Gadget in `validateStatus` Merge Strategy |
 | medium | [GHSA-wf5p-g6vw-rhxx](https://github.com/advisories/GHSA-wf5p-g6vw-rhxx) | axios | 0.19.2 | not >=0.8.1 <0.28.0 | Axios Cross-Site Request Forgery Vulnerability |
+| medium | [GHSA-xx6v-rp6x-q39c](https://github.com/advisories/GHSA-xx6v-rp6x-q39c) | axios | 0.19.2 | not <=0.31.0 | Axios: XSRF Token Cross-Origin Leakage via Prototype Pollution Gadget in `withXSRFToken` Boolean Coercion |
 | medium | [GHSA-f886-m6hf-6m8v](https://github.com/advisories/GHSA-f886-m6hf-6m8v) | brace-expansion | 1.1.11 | not >=2.0.0 <2.0.3 | brace-expansion: Zero-step sequence causes process hang and memory exhaustion |
 | medium | [GHSA-67mh-4wv8-2f99](https://github.com/advisories/GHSA-67mh-4wv8-2f99) | esbuild | 0.18.20 | not <=0.24.2 | esbuild enables any website to send any requests to the development server and read the response |
 | medium | [GHSA-cxjh-pqwp-8mfp](https://github.com/advisories/GHSA-cxjh-pqwp-8mfp) | follow-redirects | 1.5.10 | not <=1.15.5 | follow-redirects' Proxy-Authorization header kept across hosts |
@@ -130,20 +147,22 @@ Nothing known.
 | medium | [GHSA-xcj6-pq6g-qj4x](https://github.com/advisories/GHSA-xcj6-pq6g-qj4x) | vite | 4.5.3 | not <4.5.12 | Vite allows server.fs.deny to be bypassed with .svg or relative paths |
 | medium | [GHSA-g3ch-rx76-35fx](https://github.com/advisories/GHSA-g3ch-rx76-35fx) | vue-template-compiler | 2.7.16 | not >=2.0.0 <3.0.0 | vue-template-compiler vulnerable to client-side Cross-Site Scripting (XSS) |
 
-<details><summary>4 low or unknown</summary>
+<details><summary>6 low or unknown</summary>
 
 | Severity | Id | Package | Installed | Fix | Title |
 |----------|----|---------|-----------|-----|-------|
 | low | [GHSA-4x5r-pxfx-6jf8](https://github.com/advisories/GHSA-4x5r-pxfx-6jf8) | @babel/core | 7.24.9 | not <=7.29.0 | @babel/core: Arbitrary File Read via sourceMappingURL Comment |
+| low | [GHSA-xhjh-pmcv-23jw](https://github.com/advisories/GHSA-xhjh-pmcv-23jw) | axios | 0.19.2 | not <=0.31.0 | Axios: Null Byte Injection via Reverse-Encoding in AxiosURLSearchParams |
 | low | [GHSA-v6h2-p8h4-qcjw](https://github.com/advisories/GHSA-v6h2-p8h4-qcjw) | brace-expansion | 1.1.11 | not >=2.0.0 <=2.0.1 | brace-expansion Regular Expression Denial of Service vulnerability |
 | low | [GHSA-w9m9-85wc-3x92](https://github.com/advisories/GHSA-w9m9-85wc-3x92) | postcss-selector-parser | 6.1.1 | not >=6.1.0 <6.1.3 | postcss-selector-parser allows denial of service through uncontrolled AST recursion |
 | low | [GHSA-g4jq-h2w9-997c](https://github.com/advisories/GHSA-g4jq-h2w9-997c) | vite | 4.5.3 | not <=5.4.19 | Vite middleware may serve files starting with the same name with the public directory |
+| low | [GHSA-jqfw-vq24-v9c3](https://github.com/advisories/GHSA-jqfw-vq24-v9c3) | vite | 4.5.3 | not <=5.4.19 | Vite's `server.fs` settings were not applied to HTML files |
 
 </details>
 
 ## Image · 4spaces/kubernetes-service-orchestrator:dev
 
-*built from 63115db - behind main, whose latest push is not built yet · alpine 3.24.2 · 4spaces/kubernetes-service-orchestrator@sha256:44fb213a5893b2c15e749417209b2d7f17fb37c8b409901ca8d54f508bac145b*
+*built from e39a395 - behind main, whose latest push is not built yet · alpine 3.24.2 · 4spaces/kubernetes-service-orchestrator@sha256:fa854112ecd98fe250851e195c81c3ae11ebfb184ace3637d5db2c2a5eeb16d4*
 
 | Severity | Id | Package | Installed | Fix | Title |
 |----------|----|---------|-----------|-----|-------|
