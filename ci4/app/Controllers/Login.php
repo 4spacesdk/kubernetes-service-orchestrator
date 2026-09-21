@@ -162,7 +162,7 @@ class Login extends \App\Core\BaseController {
     public function success(): void {
         $user = AuthExtension::checkSession();
         if ($user) {
-            echo 'Success - Welcome ' . $user->name();
+            echo 'Success - Welcome ' . esc($user->name());
         } else {
             $this->response->redirect(base_url('/login'));
         }

@@ -324,7 +324,7 @@ use DebugTool\Data; ?>
 
                         <?php if (isset($error)) { ?>
                         <div class="alert alert-warning mt-4" role="alert">
-                            <?= $error ?>
+                            <?= esc($error) ?>
                         </div>
                         <?php } ?>
 

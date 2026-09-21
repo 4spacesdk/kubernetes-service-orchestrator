@@ -305,7 +305,7 @@
                 <div class="card-body">
                     <h5 class="card-title text-center"><i class="far fa-badge-check -fa-2x -align-middle text-primary"></i> Password renewal</h5>
                     <div class="alert alert-warning clearfix <?= isset(DebugTool\Data::getStore()['description']) ? '' : '' ?>" role="alert" id="validation">
-                        <p><?= isset(DebugTool\Data::getStore()['description']) ? DebugTool\Data::getStore()['description']: '' ?></p>
+                        <p><?= esc(DebugTool\Data::getStore()['description'] ?? '') ?></p>
 
                         <div  id="pswd_info_b"  class="pswd_info">
                             <p>Password requirement</p>
@@ -331,7 +331,7 @@
                         </div>
 
                         <?php if(isset(DebugTool\Data::getStore()['description'])) { ?>
-                        <div class="alert alert-warning" role="alert"><?=DebugTool\Data::getStore()['description']?></div>
+                        <div class="alert alert-warning" role="alert"><?= esc(DebugTool\Data::getStore()['description']) ?></div>
                         <?php } ?>
 
                         <button class="btn btn-lg btn-primary btn-block text-uppercase" type="submit">Save</button>

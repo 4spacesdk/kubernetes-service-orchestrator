@@ -342,7 +342,7 @@ use App\Libraries\EmailLib;
 
                         <?php if (isset($loginResponse) && $loginResponse) { ?>
                             <div class="alert alert-warning" role="alert">
-                                <?= $loginResponse ?>
+                                <?= esc($loginResponse) ?>
                             </div>
                         <?php } ?>
 

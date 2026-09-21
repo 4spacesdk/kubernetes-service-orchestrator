@@ -315,7 +315,7 @@ use DebugTool\Data; ?>
 
                         <?php if (Data::get('message')) { ?>
                         <div class="alert alert-warning mt-4" role="alert">
-                            <?=Data::get('message')?>
+                            <?= esc(Data::get('message')) ?>
                         </div>
                         <?php } ?>
 

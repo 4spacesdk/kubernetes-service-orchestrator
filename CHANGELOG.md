@@ -31,6 +31,7 @@
 * `?app_version=` with nothing after it counted as a version, and a timestamp written with a space between date and time came back a day earlier with the time dropped
 
 ### Security
+* The sign-in pages show messages from a link as text, so a crafted link can no longer run script on the sign-in page
 * The cron endpoint no longer runs every scheduled job for whoever asks: it takes a token the chart generates and gives to both kso and the scheduler. The endpoint that ran a single named job is gone; nothing called it
 * A customer's database password is drawn from the system's own randomness; it used to come from a generator whose output can be worked out from enough of it
 * Responses carry the usual browser protections - `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `X-Permitted-Cross-Domain-Policies`, and HSTS when the request came over TLS - and no longer announce the Apache and PHP versions

@@ -93,17 +93,27 @@ class LoginApiTest extends ControllerTestCase {
     }
 
     /**
-     * Today's behaviour, and it should not be. The view writes the message out with a bare
-     * `<?=` and no escaping, so anything in `error_message` is rendered as markup - on the
-     * unauthenticated sign-in page, from a link an attacker controls.
-     *
-     * This test passes because the hole is open. Closing it turns it red, which is the
-     * point: it is here so that a fix is visible rather than silent.
+     * The message comes from a link anyone can write, onto the unauthenticated page where the
+     * operator is about to type their password, so it is shown as text and never as markup.
      */
-    public function testTheMessageFromTheQueryStringIsWrittenIntoThePageUnescaped(): void {
+    public function testTheMessageFromTheQueryStringIsWrittenIntoThePageAsText(): void {
         $page = $this->body($this->get('login?error_message=' . urlencode('<script>alert(1)</script>')));
 
-        $this->assertStringContainsString('<script>alert(1)</script>', $page);
+        $this->assertStringNotContainsString('<script>alert(1)</script>', $page);
+        $this->assertStringContainsString('&lt;script&gt;alert(1)&lt;/script&gt;', $page);
+    }
+
+    /**
+     * The second way in: `twoFactor()` bounces a marker naming a user who no longer exists
+     * back to the form with that username in the message.
+     */
+    public function testAUsernameBouncedBackFromTheCodeFormIsWrittenAsText(): void {
+        $this->withSession(['2fa_in_progress' => '<img src=x onerror=alert(1)>']);
+
+        $bounce = $this->get('login/twoFactor')->getRedirectUrl();
+        $page = $this->body($this->get(substr($bounce, strlen(base_url()))));
+
+        $this->assertStringNotContainsString('<img src=x', $page);
     }
 
     // </editor-fold>
@@ -792,6 +802,17 @@ class LoginApiTest extends ControllerTestCase {
         $this->withSession(['user_id' => $user->id]);
 
         $this->assertStringContainsString('Welcome Ada', $this->body($this->get('login/success')));
+    }
+
+    /**
+     * The name is whatever the user or an administrator typed, so it is written as text.
+     */
+    public function testTheNameOnTheSuccessPageIsWrittenAsText(): void {
+        $user = Fixtures::user(['username' => 'greeted', 'first_name' => '<b>Ada</b>', 'last_name' => '']);
+
+        $this->withSession(['user_id' => $user->id]);
+
+        $this->assertStringContainsString('Welcome &lt;b&gt;Ada&lt;/b&gt;', $this->body($this->get('login/success')));
     }
 
     // </editor-fold>
