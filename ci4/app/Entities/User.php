@@ -1,6 +1,7 @@
 <?php namespace App\Entities;
 
 use App\Entities\Concerns\EncryptsFields;
+use App\Exceptions\ValidationException;
 use App\Libraries\EmailLib;
 use App\Models\UserModel;
 
@@ -27,6 +28,8 @@ use App\Models\UserModel;
 class User extends \RestExtension\Entities\User {
 
     public static function post($data) {
+        $data = self::withThePasswordHashed($data);
+
         if (isset($data['username'])) {
             // Ensure unique username
             /** @var User $item */
@@ -38,32 +41,75 @@ class User extends \RestExtension\Entities\User {
             }
         }
 
-        /** @var User $item */
-        $item = parent::post($data);
-
-        $item->postSave($data);
-        return $item;
+        return parent::post($data);
     }
 
     public static function patch($id, $data) {
-        /** @var User $item */
-        $item = parent::patch($id, $data);
-        $item->postSave($data);
-        return $item;
+        return parent::patch($id, self::withThePasswordHashed($data));
     }
 
     public static function put($id, $data) {
-        /** @var User $item */
-        $item = parent::put($id, $data);
-        $item->postSave($data);
-        return $item;
+        return parent::put($id, self::withThePasswordHashed($data));
     }
 
-    public function postSave(array $data) {
-        if (isset($data['password']) && strlen($data['password']) >= 6) {
-            $this->password = self::encryptPassword($data['password']);
-            $this->save();
+    /**
+     * The password as it is to be written: hashed, before anything reaches the table.
+     *
+     * It used to be written as sent and hashed afterwards, and only when it was at least six
+     * characters - so a shorter one set through the API stayed in the column in plain text,
+     * and every other one was there in plain text until the second save. It is now held to
+     * the same rules as a renewal and refused if it breaks one.
+     *
+     * An empty password means "unchanged": the form sends one only when it is filled in.
+     *
+     * @throws ValidationException naming the first rule the password breaks
+     */
+    private static function withThePasswordHashed(mixed $data): mixed {
+        if (!is_array($data) || !array_key_exists('password', $data)) {
+            return $data;
         }
+
+        $password = (string) $data['password'];
+        if ($password === '') {
+            unset($data['password']);
+            return $data;
+        }
+
+        $broken = self::FirstUnsatisfiedPasswordRule($password);
+        if ($broken !== null) {
+            throw new ValidationException("Password: {$broken}");
+        }
+
+        $data['password'] = self::encryptPassword($password);
+        return $data;
+    }
+
+    /**
+     * The first rule a new password does not satisfy, or null when it satisfies all four.
+     *
+     * First rather than last. The four checks used to write to one variable without
+     * stopping, so the message named whichever rule was checked last - and "At least one
+     * letter" could never be it, because anything without a letter has no capital either
+     * and the capital was checked afterwards.
+     *
+     * The order is from the most basic complaint to the most specific, so that a password
+     * failing several rules is told the one worth fixing first.
+     */
+    public static function FirstUnsatisfiedPasswordRule(string $password): ?string {
+        if (strlen($password) < 8) {
+            return 'At least eight characters';
+        }
+        if (!preg_match("#[a-zA-Z]+#", $password)) {
+            return 'At least one letter';
+        }
+        if (!preg_match("#[0-9]+#", $password)) {
+            return 'At least one number';
+        }
+        if (!preg_match("#[A-Z]+#", $password)) {
+            return 'At least one uppercase letter';
+        }
+
+        return null;
     }
 
     public static function encryptPassword(string $password): string {

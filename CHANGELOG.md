@@ -34,6 +34,7 @@
 ### Security
 * The sign-in pages show messages from a link as text, so a crafted link can no longer run script on the sign-in page
 * A sign-in link can only send the operator on within kso, not to another site
+* A password set through the API is hashed before it is written and held to the same rules as a renewal; a short one used to be stored in plain text. Any left from before are hashed and must be renewed at the next sign-in
 * The sign-in form no longer says whether a username exists, by its message or by how long it takes, and after ten failed attempts in a row a username - or its two-factor code - is refused for 15 minutes. Every attempt is kept for 90 days in `sign_in_attempts`: who, whether it worked, address and browser
 * A forgotten password is replaced through a one-time link in the mail, valid for an hour, instead of on the spot with the new one mailed in plain text. Asking on someone else's behalf changes nothing, and the form no longer says whether an address has an account
 * The cron endpoint no longer runs every scheduled job for whoever asks: it takes a token the chart generates and gives to both kso and the scheduler. The endpoint that ran a single named job is gone; nothing called it

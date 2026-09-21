@@ -245,7 +245,7 @@ class OAuthClientPostTest extends DatabaseTestCase {
     }
 
     /**
-     * No password: `User::postSave()` hashes one with bcrypt, and none of this needs a user
+     * No password: `User::post()` hashes one with bcrypt, and none of this needs a user
      * that can sign in.
      */
     private function aUser(): User {

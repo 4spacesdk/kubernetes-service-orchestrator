@@ -175,6 +175,94 @@ class UsersApiTest extends ControllerTestCase {
         ]);
     }
 
+    // <editor-fold desc="Passwords">
+
+    /**
+     * A password set through the API is hashed before it is written. A short one used to be
+     * written as sent and never hashed, and every other one sat in the column in plain text
+     * until a second save.
+     */
+    public function testAPasswordSetThroughTheApiIsNeverStoredAsSent(): void {
+        $user = \App\Fixtures::user(['username' => 'someone@example.org']);
+
+        $response = $this->withBodyFormat('json')->signedIn()->patch("users/{$user->id}", ['password' => 'A-good-one-1']);
+
+        $this->assertSame(200, $response->response()->getStatusCode());
+        $stored = $this->storedPassword($user->id);
+        $this->assertNotSame('A-good-one-1', $stored);
+        $this->assertTrue(password_verify('A-good-one-1', $stored));
+    }
+
+    /**
+     * One that breaks a rule is refused with the rule, and the old one stays.
+     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('passwordsThatBreakARule')]
+    public function testAPasswordThatBreaksARuleIsRefusedAndNothingIsWritten(string $password, string $rule): void {
+        $user = \App\Fixtures::user(['username' => 'someone@example.org', 'password' => 'the-old-one']);
+        $before = $this->storedPassword($user->id);
+
+        $response = $this->withBodyFormat('json')->signedIn()->patch("users/{$user->id}", ['password' => $password]);
+
+        $this->assertSame(400, $response->response()->getStatusCode());
+        $this->assertSame("Password: {$rule}", $this->decode($response)['error'] ?? null);
+        $this->assertSame($before, $this->storedPassword($user->id));
+    }
+
+    public static function passwordsThatBreakARule(): array {
+        return [
+            'five characters' => ['abc12', 'At least eight characters'],
+            'no number' => ['NoNumbersHere', 'At least one number'],
+            'no capital' => ['no-capital-1', 'At least one uppercase letter'],
+        ];
+    }
+
+    /**
+     * A new user with a short password is not created with it.
+     */
+    public function testANewUserWithAShortPasswordIsRefused(): void {
+        $response = $this->withBodyFormat('json')->signedIn()->post('users', ['username' => 'new@example.org', 'password' => 'abc']);
+
+        $this->assertSame(400, $response->response()->getStatusCode());
+        $this->assertSame(0, $this->db->table('users')->where('username', 'new@example.org')->countAllResults());
+    }
+
+    /**
+     * The form sends the field empty when it is not filled in, and that keeps the password.
+     */
+    public function testAnEmptyPasswordLeavesTheOldOne(): void {
+        $user = \App\Fixtures::user(['username' => 'someone@example.org', 'password' => 'the-old-one']);
+        $before = $this->storedPassword($user->id);
+
+        $this->withBodyFormat('json')->signedIn()->patch("users/{$user->id}", ['first_name' => 'Renamed', 'password' => '']);
+
+        $this->assertSame($before, $this->storedPassword($user->id));
+    }
+
+    /**
+     * What an earlier short password left behind is hashed in place - the user can still
+     * sign in with it - and marked for renewal, because it is too short for the rules.
+     */
+    public function testTheMigrationHashesAPasswordLeftInPlainText(): void {
+        $plain = \App\Fixtures::user(['username' => 'plain@example.org']);
+        $hashed = \App\Fixtures::user(['username' => 'hashed@example.org', 'password' => 'the-right-one']);
+        $this->db->table('users')->where('id', $plain->id)->update(['password' => 'abc', 'renew_password' => 0]);
+        $hashBefore = $this->storedPassword($hashed->id);
+
+        // Required by path: a migration's file name starts with its date, so it cannot be autoloaded.
+        require_once APPPATH . 'Database/Migrations/2026-09-21-120000_HashPlainTextPasswords.php';
+        (new \App\Database\Migrations\HashPlainTextPasswords())->up();
+
+        $this->assertTrue(password_verify('abc', $this->storedPassword($plain->id)));
+        $this->assertSame('1', (string) $this->db->table('users')->where('id', $plain->id)->get()->getRow('renew_password'));
+        $this->assertSame($hashBefore, $this->storedPassword($hashed->id));
+    }
+
+    // </editor-fold>
+
+    private function storedPassword(int|string $id): string {
+        return (string) $this->db->table('users')->where('id', $id)->get()->getRow('password');
+    }
+
     /**
      * @return array<string, mixed>
      */

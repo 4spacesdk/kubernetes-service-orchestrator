@@ -23,6 +23,8 @@ const item = ref<User>(new User());
 const isMe = ref<boolean>(false);
 const password = ref('');
 const passwordConfirm = ref('');
+const showPassword = ref(false);
+const showPasswordConfirm = ref(false);
 
 const roles = ref<RbacRole[]>([]);
 const roleProps = ref<{ title: string, subtitle: string }[]>([]);
@@ -102,7 +104,13 @@ function onSaveBtnClicked() {
 
     const api = item.value!.exists() ? Api.users().patchById(item.value!.id!) : Api.users().post();
 
-    if (password.value?.length >= 6 && password.value.localeCompare(passwordConfirm.value) === 0) {
+    // Only when filled in; an empty field leaves the password as it is. The rules are
+    // checked by the API, which answers with the one that is broken.
+    if (password.value) {
+        if (password.value !== passwordConfirm.value) {
+            bus.emit("toast", { text: "The two passwords are not the same", color: "red" });
+            return;
+        }
         item.value!.password = password.value;
     }
 
@@ -198,17 +206,21 @@ function onMFARemoveBtnClicked() {
                     <v-col cols="6">
                         <v-text-field
                             persistent-hint
-                            hint="Enter your password to access this website"
+                            hint="At least eight characters, with a number and an uppercase letter. Leave empty to keep it."
                             variant="outlined"
                             v-model="password"
-                            type="password"
+                            :type="showPassword ? 'text' : 'password'"
+                            :append-inner-icon="showPassword ? 'fa fa-eye-slash' : 'fa fa-eye'"
+                            @click:append-inner="showPassword = !showPassword"
                             label="Password"/>
                     </v-col>
                     <v-col cols="6">
                         <v-text-field
                             variant="outlined"
                             v-model="passwordConfirm"
-                            type="password"
+                            :type="showPasswordConfirm ? 'text' : 'password'"
+                            :append-inner-icon="showPasswordConfirm ? 'fa fa-eye-slash' : 'fa fa-eye'"
+                            @click:append-inner="showPasswordConfirm = !showPasswordConfirm"
                             label="Confirm password"/>
                     </v-col>
 

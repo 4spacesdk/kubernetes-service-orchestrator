@@ -241,7 +241,7 @@ class Login extends \App\Core\BaseController {
 
             if ($password == $passwordConfirm) {
 
-                $passError = $this->firstUnsatisfiedPasswordRule((string) $password);
+                $passError = User::FirstUnsatisfiedPasswordRule((string) $password);
 
                 if ($passError === null) {
 
@@ -274,34 +274,6 @@ class Login extends \App\Core\BaseController {
         session()->setFlashdata(self::RememberedDestination, $requestUrl);
 
         return view('Login/PasswordRenewal', Data::getStore());
-    }
-
-    /**
-     * The first rule a new password does not satisfy, or null when it satisfies all four.
-     *
-     * First rather than last. The four checks used to write to one variable without
-     * stopping, so the message named whichever rule was checked last - and "At least one
-     * letter" could never be it, because anything without a letter has no capital either
-     * and the capital was checked afterwards.
-     *
-     * The order is from the most basic complaint to the most specific, so that a password
-     * failing several rules is told the one worth fixing first.
-     */
-    private function firstUnsatisfiedPasswordRule(string $password): ?string {
-        if (strlen($password) < 8) {
-            return 'At least eight characters';
-        }
-        if (!preg_match("#[a-zA-Z]+#", $password)) {
-            return 'At least one letter';
-        }
-        if (!preg_match("#[0-9]+#", $password)) {
-            return 'At least one number';
-        }
-        if (!preg_match("#[A-Z]+#", $password)) {
-            return 'At least one uppercase letter';
-        }
-
-        return null;
     }
 
     /**
@@ -358,7 +330,7 @@ class Login extends \App\Core\BaseController {
 
             if ($password !== (string) $this->request->getPost('password_confirm')) {
                 Data::set('description', 'Must be identical');
-            } else if (($passError = $this->firstUnsatisfiedPasswordRule($password)) !== null) {
+            } else if (($passError = User::FirstUnsatisfiedPasswordRule($password)) !== null) {
                 Data::set('description', $passError);
             } else {
                 $user->resetPassword($password);

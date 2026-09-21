@@ -1,6 +1,7 @@
 <?php namespace App\Controllers;
 
 use App\Core\ResourceController;
+use App\Exceptions\ValidationException;
 use App\Helpers\Client;
 use App\Libraries\MFALib;
 use DebugTool\Data;
@@ -18,6 +19,27 @@ class Users extends ResourceController {
      * @return void
      */
     public function put($id = 0) {
+    }
+
+    /**
+     * A password that breaks a rule is refused with the rule, rather than as a server error.
+     */
+    public function post() {
+        try {
+            parent::post();
+        } catch (ValidationException $e) {
+            $this->fail($e->getMessage());
+            return;
+        }
+    }
+
+    public function patch($id = 0) {
+        try {
+            parent::patch($id);
+        } catch (ValidationException $e) {
+            $this->fail($e->getMessage());
+            return;
+        }
     }
 
     /**
