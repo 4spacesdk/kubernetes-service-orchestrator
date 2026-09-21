@@ -8,6 +8,10 @@ This service enables interaction with the Kubernetes API and facilitates the eff
 * Handling of Kubernetes API calls and resource management.
 * Option for custom configurations and adaptations.
 
+## Security status
+Known vulnerabilities in the main branch - its dependencies and the `:dev` image built from it -
+are listed in [SECURITY-STATUS.md](SECURITY-STATUS.md), updated every week.
+
 ## Install kso
 ### Create `values.yaml` file
 For a complete set of options see [link](https://github.com/4spacesdk/helm-charts/blob/master/charts/kubernetes-service-orchestrator/values.yaml)

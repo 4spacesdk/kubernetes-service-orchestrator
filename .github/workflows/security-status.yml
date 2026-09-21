@@ -1,0 +1,78 @@
+# Writes SECURITY-STATUS.md once a week: known vulnerabilities in main - its PHP and
+# JavaScript lock files, and the `:dev` image Cloud Build makes from it on every push - in one
+# place and without mails or pull requests.
+#
+# Only reads: the lock files in the repository and the image on Docker Hub. The one write is
+# the commit of SECURITY-STATUS.md, with [skip ci] so Cloud Build does not build it.
+name: Security status
+
+on:
+  schedule:
+    - cron: '0 5 * * 1' # Mondays, 05:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: security-status
+  cancel-in-progress: false
+
+jobs:
+  status:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      IMAGE: 4spaces/kubernetes-service-orchestrator:dev
+      TRIVY_IMAGE: aquasec/trivy:0.74.0
+    steps:
+      - uses: actions/checkout@v7
+
+      # composer audit reads composer.lock and asks Packagist; nothing is installed, so the
+      # PHP version and extensions do not have to match the image.
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          tools: composer:v2
+          coverage: none
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+
+      # Each scanner exits non-zero when it finds something, which is the ordinary case
+      # here, so the exit code is not what decides whether the step worked - a report that
+      # is missing or unreadable is, and the script says so in the file.
+      - name: composer audit
+        run: |
+          mkdir -p build/security
+          for dir in ci4 zmq-client zmq-server; do
+            composer audit --locked --format=json --no-interaction --working-dir="$dir" \
+              > "build/security/composer-$dir.json" || true
+          done
+
+      - name: npm audit
+        working-directory: vue
+        run: npm audit --json --package-lock-only > ../build/security/npm-vue.json || true
+
+      - name: Trivy
+        run: |
+          docker run --rm -v "$PWD/build/security:/out" "$TRIVY_IMAGE" \
+            image --quiet --format json --output /out/trivy.json "$IMAGE" || true
+
+      - name: Write SECURITY-STATUS.md
+        run: php scripts/security-status.php build/security SECURITY-STATUS.md "$IMAGE"
+
+      - name: Commit when it changed
+        run: |
+          # The date, the commit and the image digest change every run; only commit when a finding did.
+          if git diff --quiet --ignore-matching-lines='^Updated: ' --ignore-matching-lines='^Main at: ' --ignore-matching-lines='^\*built from ' -- SECURITY-STATUS.md \
+             && git ls-files --error-unmatch SECURITY-STATUS.md >/dev/null 2>&1; then
+            echo "No change in findings."
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add SECURITY-STATUS.md
+          git commit -m 'Update the security status [skip ci]'
+          git push
