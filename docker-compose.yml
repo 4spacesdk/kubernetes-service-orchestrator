@@ -99,7 +99,9 @@ services:
     restart: unless-stopped
     tty: true
     ports:
-      - "${DATABASE_PORT}:3306"
+      # Localhost only: the root password is `root`, and the rest of the network has no business
+      # with it. kso reaches it over the compose network.
+      - "127.0.0.1:${DATABASE_PORT}:3306"
 
     environment:
       MYSQL_ROOT_PASSWORD: root

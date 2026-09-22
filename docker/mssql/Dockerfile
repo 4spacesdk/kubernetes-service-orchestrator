@@ -1,5 +1,5 @@
 # We choose exact tag (not 'latest'), to be sure that new version won't break creating image
-FROM mcr.microsoft.com/mssql/server:2022-latest
+FROM mcr.microsoft.com/mssql/server:2022-CU27-ubuntu-22.04
 
 # change active user to root
 USER root
