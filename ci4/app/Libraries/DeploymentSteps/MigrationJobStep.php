@@ -32,6 +32,14 @@ use RenokiCo\PhpK8s\Kinds\K8sPod;
 
 class MigrationJobStep extends BaseDeploymentStep {
 
+    /**
+     * The job's callback token, from the job's Secret - see `MigrationJob::issueCallbackToken()`.
+     * Read by the shell rather than substituted by Kubernetes, so it is not in the container's
+     * arguments either.
+     */
+    public const string CallbackTokenVariable = 'MIGRATION_JOB_TOKEN';
+    private const string CallbackTokenHeaderArgument = '-H "' . \App\Controllers\MigrationJobs::TokenHeader . ': $' . self::CallbackTokenVariable . '"';
+
     public function getIdentifier(): string {
         return DeploymentSteps::Migration;
     }
@@ -142,12 +150,23 @@ class MigrationJobStep extends BaseDeploymentStep {
             unset($remote['status']);
         }
 
+        // The callback token is written by each run and is in no manifest kso builds, so it
+        // would be a difference in every preview that nobody can act on.
+        $remoteSecretData = $this->workloadSecret->remoteData($deployment, (new KubeAuth())->authenticate());
+        if ($remoteSecretData !== null) {
+            $remoteSecretData = array_filter(
+                $remoteSecretData,
+                fn (string $key) => !str_ends_with($key, '.' . self::CallbackTokenVariable),
+                ARRAY_FILTER_USE_KEY
+            ) ?: null;
+        }
+
         return json_encode(SecretPreview::of(
             $local,
             $remote ?? null,
             $this->workloadSecret,
             $deployment,
-            $this->workloadSecret->remoteData($deployment, (new KubeAuth())->authenticate())
+            $remoteSecretData
         ));
     }
 
@@ -244,6 +263,13 @@ class MigrationJobStep extends BaseDeploymentStep {
         /** @var Container $container */
         $container = $template->getContainers()[0];
         $container->addEnv('MIGRATION_JOB_ID', (string)$migrationJob->id);
+        $container->addToAttribute('env', [
+            'name' => self::CallbackTokenVariable,
+            'valueFrom' => ['secretKeyRef' => [
+                'name' => $this->workloadSecret->name,
+                'key' => $this->workloadSecret->add($deployment->name, self::CallbackTokenVariable, $migrationJob->issueCallbackToken()),
+            ]],
+        ]);
         $template->setContainers([$container]);
         $resource->setTemplate(KubeHelper::AsTemplate($template));
 
@@ -327,13 +353,13 @@ class MigrationJobStep extends BaseDeploymentStep {
                 // Tell KSO about migration job started. Only a status, so the migration runs
                 // whether or not kso answers (#42), and the retries are kept short: waiting
                 // on it would hold up the release it is reporting on.
-                'curl --connect-timeout 5 --max-time 30 --retry 5 --retry-delay 5 --retry-max-time 60 -i -v -X PUT ' . $this->getMigrationStartedUrl()
+                'curl --connect-timeout 5 --max-time 30 --retry 5 --retry-delay 5 --retry-max-time 60 -i -v -X PUT ' . $this->getMigrationStartedUrl() . ' ' . self::CallbackTokenHeaderArgument
 
                 // Perform migration
                 . ' ; ' . $spec->database_migration_command
 
                 // Tell KSO about migration job ended
-                . ' | curl --connect-timeout 5 --max-time 300 --retry 10 --retry-delay 5 --retry-max-time 300 -i -v -X PUT --data-binary @- ' . $this->getMigrationEndedUrl(),
+                . ' | curl --connect-timeout 5 --max-time 300 --retry 10 --retry-delay 5 --retry-max-time 300 -i -v -X PUT --data-binary @- ' . $this->getMigrationEndedUrl() . ' ' . self::CallbackTokenHeaderArgument,
             ])
             ->addEnv('ENVIRONMENT', \Environments::Development)
             ->addEnv('BASE_URL', $deployment->getUrl(true, true));

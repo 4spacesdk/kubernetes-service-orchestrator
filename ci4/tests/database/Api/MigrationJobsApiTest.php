@@ -7,18 +7,17 @@ use App\Fixtures;
  * How a migration job reports back.
  *
  * The job runs inside the customer's cluster and calls home when it starts and when it
- * finishes, posting its log as the request body. **These two endpoints take no token** -
- * the job has none - which is accepted deliberately; the job id is all that stands in for
- * authentication.
- *
- * That makes what they write worth knowing exactly.
+ * finishes, posting its log as the request body. The two endpoints are public - the pod has no
+ * sign-in - so the pod sends a token of its own, issued for that one job, and a call without it
+ * writes nothing. The ids are sequential: without the token anyone could end a job with a log
+ * that makes the post-update commands run before the migration has.
  */
 class MigrationJobsApiTest extends ControllerTestCase {
 
     public function testStartingMarksTheJobStarted(): void {
         $job = $this->migrationJob();
 
-        $body = $this->decode($this->put("migration-jobs/{$job['id']}/started"));
+        $body = $this->decode($this->withJobToken($job)->put("migration-jobs/{$job['id']}/started"));
 
         $this->assertSame('OK', $body['status']);
         $this->assertSame(\MigrationJobStatusTypes::Started, $this->row($job['id'])['status']);
@@ -34,7 +33,7 @@ class MigrationJobsApiTest extends ControllerTestCase {
     public function testTheTimestampSurvivesTheTypoInItsFormat(): void {
         $job = $this->migrationJob();
 
-        $this->put("migration-jobs/{$job['id']}/started");
+        $this->withJobToken($job)->put("migration-jobs/{$job['id']}/started");
 
         $started = $this->row($job['id'])['started'];
         $this->assertNotSame('0000-00-00 00:00:00', $started);
@@ -44,37 +43,98 @@ class MigrationJobsApiTest extends ControllerTestCase {
     public function testEndingMarksTheJobEnded(): void {
         $job = $this->migrationJob();
 
-        $body = $this->decode($this->put("migration-jobs/{$job['id']}/ended"));
+        $body = $this->decode($this->withJobToken($job)->put("migration-jobs/{$job['id']}/ended"));
 
         $this->assertSame('OK', $body['status']);
         $this->assertNotSame('0000-00-00 00:00:00', $this->row($job['id'])['ended']);
     }
 
     /**
-     * **The log cannot be tested from here.** `setEnded()` reads the body with
-     * `file_get_contents('php://input')`, and under PHPUnit that stream is empty however
-     * the request was built - the harness never writes to it. So what the job posts, and
-     * what `validateLog()` then makes of it, is out of reach of a feature test; it would
-     * need the endpoint to read the framework's request object instead.
+     * The log is the request body, read through the request object - it used to be read from
+     * `php://input`, which the test harness never writes to, so it could not be tested at all.
      */
-    public function testTheLogArrivesEmptyWhateverWasSent(): void {
+    public function testTheLogIsWhatTheJobSent(): void {
         $job = $this->migrationJob();
 
-        $this->withBody("Migrated 4 files\nDone.")->put("migration-jobs/{$job['id']}/ended");
+        $this->withJobToken($job)->withBody("Migrated 4 files\nDone.\n")->put("migration-jobs/{$job['id']}/ended");
 
+        $this->assertSame("Migrated 4 files\nDone.", $this->row($job['id'])['log']);
+    }
+
+    /**
+     * Neither endpoint needs a sign-in; each needs the job's own token.
+     */
+    public function testBothEndpointsAnswerTheJobsOwnToken(): void {
+        $job = $this->migrationJob();
+
+        $this->assertSame('OK', $this->decode($this->withJobToken($job)->put("migration-jobs/{$job['id']}/started"))['status']);
+        $this->assertSame('OK', $this->decode($this->withJobToken($job)->withBody('log')->put("migration-jobs/{$job['id']}/ended"))['status']);
+    }
+
+    /**
+     * Without the token nothing is written - no start, no end, no log.
+     */
+    public function testACallWithoutTheTokenIsRefusedAndWritesNothing(): void {
+        $job = $this->migrationJob();
+
+        $started = $this->put("migration-jobs/{$job['id']}/started");
+        $ended = $this->withBody('Done.')->put("migration-jobs/{$job['id']}/ended");
+
+        $this->assertSame(401, $started->response()->getStatusCode());
+        $this->assertSame(401, $ended->response()->getStatusCode());
+        $row = $this->row($job['id']);
+        $this->assertSame(\MigrationJobStatusTypes::Deploying, $row['status']);
+        $this->assertSame('', $row['log']);
+        $this->assertNull($row['ended']);
+    }
+
+    /**
+     * A token is for its own job only.
+     */
+    public function testAnotherJobsTokenIsRefused(): void {
+        $job = $this->migrationJob();
+        $other = $this->migrationJob();
+
+        $response = $this->withJobToken($other)->withBody('Done.')->put("migration-jobs/{$job['id']}/ended");
+
+        $this->assertSame(401, $response->response()->getStatusCode());
         $this->assertSame('', $this->row($job['id'])['log']);
     }
 
     /**
-     * No token anywhere in these two calls - the job has none to send. Pinned so that adding
-     * authentication is a deliberate act rather than something that breaks the cluster
-     * quietly.
+     * A job started before there were tokens has none, and accepts nothing - rather than
+     * accepting anything, which is what an empty hash compared to an empty header would do.
      */
-    public function testBothEndpointsAnswerWithoutSigningIn(): void {
+    public function testAJobWithoutATokenAcceptsNothing(): void {
         $job = $this->migrationJob();
+        $this->db->table('migration_jobs')->where('id', $job['id'])->update(['callback_token_hash' => null]);
 
-        $this->assertSame('OK', $this->decode($this->put("migration-jobs/{$job['id']}/started"))['status']);
-        $this->assertSame('OK', $this->decode($this->withBody('log')->put("migration-jobs/{$job['id']}/ended"))['status']);
+        $response = $this->withHeaders([\App\Controllers\MigrationJobs::TokenHeader => ''])->put("migration-jobs/{$job['id']}/started");
+
+        $this->assertSame(401, $response->response()->getStatusCode());
+    }
+
+    /**
+     * The hash is never sent anywhere: the job is pushed to every open browser and listed by
+     * the API.
+     */
+    public function testTheTokensHashStaysInTheDatabase(): void {
+        $job = new \App\Entities\MigrationJob();
+        $job->find($this->migrationJob()['id']);
+
+        $this->assertArrayNotHasKey('callback_token_hash', $job->toArray());
+    }
+
+    /**
+     * An id that is not there is a 404. It used to be saved as a new row.
+     */
+    public function testAnUnknownJobIsNotFoundAndNotCreated(): void {
+        $before = $this->db->table('migration_jobs')->countAllResults();
+
+        $response = $this->withBody('Done.')->put('migration-jobs/424242/ended');
+
+        $this->assertSame(404, $response->response()->getStatusCode());
+        $this->assertSame($before, $this->db->table('migration_jobs')->countAllResults());
     }
 
     /**
@@ -157,16 +217,25 @@ class MigrationJobsApiTest extends ControllerTestCase {
      */
     private function migrationJob(): array {
         $deployment = Fixtures::deployableDeployment();
+        $token = bin2hex(random_bytes(8));
         $this->db->table('migration_jobs')->insert([
             'deployment_id' => $deployment->id,
             'status' => \MigrationJobStatusTypes::Deploying,
             'log' => '',
             'command' => 'php spark migrate',
             'image' => 'registry.example.org/app:1.0',
+            'callback_token_hash' => hash('sha256', $token),
             'created' => date('Y-m-d H:i:s'),
         ]);
 
-        return $this->row((int) $this->db->insertID());
+        return $this->row((int) $this->db->insertID()) + ['token' => $token];
+    }
+
+    /**
+     * @param array<string, mixed> $job
+     */
+    private function withJobToken(array $job): static {
+        return $this->withHeaders([\App\Controllers\MigrationJobs::TokenHeader => $job['token']]);
     }
 
     /**

@@ -19,8 +19,39 @@ use \App\Libraries\DeploymentSteps\DeploymentStep;
  * @property string $log
  * @property string $image
  * @property string $command
+ * @property string|null $callback_token_hash
  */
 class MigrationJob extends Entity {
+
+    public $hiddenFields = ['callback_token_hash'];
+
+    /**
+     * What the job's pod proves itself with when it reports that it started and ended.
+     *
+     * The two callbacks are public - the pod has no sign-in - and the ids are sequential, so
+     * without it anyone who could reach the API could end a job with a log of their choosing,
+     * and `validateLog()` would run the post-update commands in the live pods before the real
+     * migration had finished. One token per job, handed to its pod through the job's Secret;
+     * only its SHA-256 is stored, as for the password reset tokens.
+     *
+     * @return string the token, for the pod
+     */
+    public function issueCallbackToken(): string {
+        $token = bin2hex(random_bytes(32));
+        $this->callback_token_hash = hash('sha256', $token);
+        $this->save();
+
+        return $token;
+    }
+
+    /**
+     * A job with no token - one started before there were tokens - accepts nothing.
+     */
+    public function acceptsCallbackToken(string $token): bool {
+        $expected = (string) $this->callback_token_hash;
+
+        return $expected !== '' && hash_equals($expected, hash('sha256', $token));
+    }
 
     public function rerun(): void {
         $deployment = new Deployment();

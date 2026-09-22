@@ -574,6 +574,37 @@ class MigrationJobStepTest extends ManifestTestCase {
     }
 
     /**
+     * The job's callback token reaches its pod through the job's Secret, not the pod spec, and
+     * the row keeps only its hash - the token the pod gets is one the callbacks accept.
+     */
+    public function testDeployingHandsThePodItsCallbackTokenThroughTheSecret(): void {
+        $deployment = $this->migratableDeployment();
+        $resource = $this->jobThatIsNotThereYet($deployment);
+        $step = $this->stepWhoseResourceIs($resource);
+
+        $step->startDeployCommand($deployment);
+
+        $env = array_column($resource->getTemplate()->getContainers()[0]->getAttribute('env'), null, 'name');
+        $reference = $env[MigrationJobStep::CallbackTokenVariable]['valueFrom']['secretKeyRef'] ?? null;
+        $this->assertNotNull($reference, 'the token is not read from the Secret');
+        $this->assertArrayNotHasKey('value', $env[MigrationJobStep::CallbackTokenVariable]);
+
+        $token = $step->writtenSecret->data()[$reference['key']];
+        $this->assertTrue($this->lastMigrationJob($deployment)->acceptsCallbackToken($token));
+        $this->assertNotSame($token, $this->lastMigrationJob($deployment)->callback_token_hash);
+    }
+
+    /**
+     * Both callbacks send the token, read by the shell from the environment - so it is not in
+     * the container's arguments either.
+     */
+    public function testBothCallbacksSendTheToken(): void {
+        $script = $this->container($this->migratableDeployment())['args'][1];
+
+        $this->assertSame(2, substr_count($script, '-H "X-Migration-Job-Token: $MIGRATION_JOB_TOKEN"'));
+    }
+
+    /**
      * Replacing a migration means deleting the old job and waiting for it to go, and the
      * job disappears underneath that wait - that is the point of it. The read that finds it
      * gone throws, and the step has to carry on and create the new one anyway; giving up
@@ -651,9 +682,17 @@ class MigrationJobStepTest extends ManifestTestCase {
             public function __construct(private readonly K8sJob $resource) {
             }
 
+            public ?\App\Libraries\Kubernetes\WorkloadSecret $writtenSecret = null;
+
             protected function getResource(Deployment $deployment, bool $auth = false): K8sJob {
-                // As the real one leaves it for a deployment without secret variables.
-                $this->workloadSecret = \App\Libraries\Kubernetes\WorkloadSecret::For($deployment->name, 'job');
+                // As the real one leaves it for a deployment without secret variables - but
+                // writing the job without a cluster, and keeping the Secret to be read: the
+                // callback token is always in it.
+                $this->workloadSecret = $this->writtenSecret = new class (\App\Libraries\Kubernetes\WorkloadSecret::For($deployment->name, 'job')->name) extends \App\Libraries\Kubernetes\WorkloadSecret {
+                    public function applyWith(\RenokiCo\PhpK8s\Kinds\K8sResource $workload, Deployment $deployment, ?callable $write = null, bool $removeUnused = true): void {
+                        $write($workload);
+                    }
+                };
 
                 return $this->resource;
             }
