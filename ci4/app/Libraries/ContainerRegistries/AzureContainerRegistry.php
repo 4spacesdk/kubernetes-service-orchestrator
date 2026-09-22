@@ -1,7 +1,12 @@
 <?php namespace App\Libraries\ContainerRegistries;
 
+use App\Libraries\OutboundUrl;
 use DebugTool\Data;
 
+/**
+ * The registry's own host is typed by an operator, so calls to it go through OutboundUrl, as
+ * Harbor's do. Microsoft's sign-in and management hosts are fixed.
+ */
 class AzureContainerRegistry extends BaseContainerRegistry {
 
     public function getUrlPrefix(): string {
@@ -82,7 +87,7 @@ class AzureContainerRegistry extends BaseContainerRegistry {
         $ch = curl_init();
         curl_setopt($ch, CURLOPT_HTTPHEADER, ["Authorization: Bearer {$token}"]);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_URL, "https://{$this->registry->azure_registry_name}/acr/v1/_catalog?n=1000");
+        OutboundUrl::Apply($ch, "https://{$this->registry->azure_registry_name}/acr/v1/_catalog?n=1000");
         $response = curl_exec($ch);
         $json = json_decode((string) $response, true);
         if (!is_array($json) || !isset($json['repositories'])) {
@@ -124,7 +129,7 @@ class AzureContainerRegistry extends BaseContainerRegistry {
             "Authorization: Bearer {$registryAccessToken}",
         ]);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_URL, "https://{$this->registry->azure_registry_name}/acr/v1/{$this->getRepoName($url)}/_tags");
+        OutboundUrl::Apply($ch, "https://{$this->registry->azure_registry_name}/acr/v1/{$this->getRepoName($url)}/_tags");
         $response = curl_exec($ch);
         $json = json_decode((string) $response, true);
         if (!is_array($json) || !isset($json['tags'])) {
@@ -185,7 +190,7 @@ class AzureContainerRegistry extends BaseContainerRegistry {
             "Content-Type: application/x-www-form-urlencoded",
         ]);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_URL, "https://{$this->registry->azure_registry_name}/oauth2/exchange");
+        OutboundUrl::Apply($ch, "https://{$this->registry->azure_registry_name}/oauth2/exchange");
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
             'grant_type' => 'access_token',
@@ -219,7 +224,7 @@ class AzureContainerRegistry extends BaseContainerRegistry {
             "Content-Type: application/x-www-form-urlencoded",
         ]);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_URL, "https://{$this->registry->azure_registry_name}/oauth2/token");
+        OutboundUrl::Apply($ch, "https://{$this->registry->azure_registry_name}/oauth2/token");
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query([
             'refresh_token' => $registryRefreshToken,
