@@ -11,8 +11,13 @@ class OAuthAgent extends \App\Core\BaseController {
         return false;
     }
 
+    /**
+     * kso's own OAuth endpoints, called from inside the container. In development BASE_URL is
+     * the port docker-compose publishes (8950), which does not exist inside the container, so
+     * it becomes the port Apache listens on there.
+     */
     private function getBaseUrl($relativePath = '', ?string $scheme = null): string {
-        return str_replace(':8950', '', base_url($relativePath, $scheme));
+        return str_replace(':8950', ':8080', base_url($relativePath, $scheme));
     }
 
     public function token(): void {

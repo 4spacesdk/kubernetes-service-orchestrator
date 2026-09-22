@@ -185,6 +185,34 @@ class LoginApiTest extends ControllerTestCase {
     }
 
     /**
+     * A refused attempt puts the e-mail back in the form, and the cursor in the password - so
+     * only the password is typed again. The same for a username that does not exist: the form
+     * shows what was typed, which says nothing about whether it is someone.
+     */
+    public function testARefusedSignInKeepsTheEmailAndFocusesThePassword(): void {
+        Fixtures::user(['username' => 'someone@example.org', 'password' => 'the-right-one']);
+
+        foreach (['someone@example.org', 'nobody@example.org'] as $username) {
+            $page = $this->body($this->post('login', ['username' => $username, 'password' => 'wrong']));
+
+            // Escaped for an attribute, as the browser reads it back: `@` is written `&#x40;`.
+            $this->assertMatchesRegularExpression('#name="username"[^>]*value="' . preg_quote(esc($username, 'attr'), '#') . '"#', $page);
+            $this->assertMatchesRegularExpression('#id="inputPassword"[^>]*autofocus#', $page);
+            $this->assertDoesNotMatchRegularExpression('#id="inputEmail"[^>]*autofocus#', $page);
+        }
+    }
+
+    /**
+     * What was typed is written into the attribute as text, like every other value on the page.
+     */
+    public function testTheKeptEmailIsWrittenAsText(): void {
+        $page = $this->body($this->post('login', ['username' => '"><script>alert(1)</script>', 'password' => 'wrong']));
+
+        $this->assertStringNotContainsString('<script>alert(1)', $page);
+        $this->assertStringContainsString('value="' . esc('"><script>alert(1)</script>', 'attr') . '"', $page);
+    }
+
+    /**
      * Nor can the time it takes. A known username costs a bcrypt check; an unknown one used
      * to return at once, which gave the answer away as surely as the message did.
      */

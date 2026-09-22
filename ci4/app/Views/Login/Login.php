@@ -323,13 +323,15 @@ use App\Libraries\EmailLib;
                             <label for="inputEmail" class="small">E-mail</label>
                             <input type="email" id="inputEmail" name="username" class="form-control"
                                    placeholder="E-mail" required
-                                   autofocus="autofocus">
+                                   value="<?= esc($username ?? '', 'attr') ?>"
+                                   <?= empty($username) ? 'autofocus="autofocus"' : '' ?>>
                         </div>
 
                         <div class="-form-label-group mb-2 position-relative">
                             <label for="inputPassword" class="small">Password</label>
                             <input type="password" id="inputPassword" name="password" class="form-control"
-                                   placeholder="Password" required>
+                                   placeholder="Password" required
+                                   <?= empty($username) ? '' : 'autofocus="autofocus"' ?>>
                             <button type="button" class="toggle-password" data-toggle-password="inputPassword" aria-label="Show password" aria-pressed="false"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg></button>
                         </div>
 

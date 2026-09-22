@@ -1,6 +1,6 @@
 <script setup lang="ts">
 
-import {onMounted} from "vue";
+import {onMounted, ref} from "vue";
 import AuthService from "@/services/AuthService";
 import {useRoute, useRouter} from "vue-router";
 
@@ -12,13 +12,24 @@ const DestinationKey = 'login-destination';
 
 const router = useRouter();
 
+/**
+ * The code from the sign-in could not be exchanged for a token. The page stops there: signing
+ * in again at once would come straight back with a new code - the session on the server is
+ * still there - and fail the same way, reloading the tab for ever.
+ */
+const exchangeFailed = ref(false);
+
 onMounted(() => {
     const route = useRoute();
 
     // Check for code
     if (route.query.code) {
-        AuthService.exchangeCodeForAccessToken(route.query.code as string, () => {
-            checkLoggedIn();
+        AuthService.exchangeCodeForAccessToken(route.query.code as string, succeeded => {
+            if (succeeded) {
+                checkLoggedIn();
+            } else {
+                exchangeFailed.value = true;
+            }
         });
         return;
     }
@@ -80,6 +91,11 @@ function login() {
             color="primary">
             <v-card-title>Login</v-card-title>
             <v-card-text>
+                <p
+                    v-if="exchangeFailed"
+                    class="mb-4">
+                    The sign-in could not be completed. Try again, and if it keeps failing, look at kso's log.
+                </p>
                 <v-btn
                     @click="login">Login
                 </v-btn>

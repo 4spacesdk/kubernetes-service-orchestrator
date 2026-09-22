@@ -47,7 +47,7 @@ class AuthService {
             });
     }
 
-    public exchangeCodeForAccessToken(code: string, onFinish: () => void) {
+    public exchangeCodeForAccessToken(code: string, onFinish: (succeeded: boolean) => void) {
         const redirectUri = `${location.origin}/app/login`;
         const grantType = 'authorization_code';
         const clientId = 'webclient';
@@ -61,9 +61,9 @@ class AuthService {
             code,
             accessToken => {
                 this.setToken(accessToken, true);
-                onFinish();
+                onFinish(true);
             },
-            error => onFinish()
+            error => onFinish(false)
         );
     }
 

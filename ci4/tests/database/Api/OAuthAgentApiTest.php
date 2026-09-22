@@ -316,20 +316,28 @@ class OAuthAgentApiTest extends ControllerTestCase {
     }
 
     /**
-     * The port the developer's machine publishes kso on is stripped out of the loopback
-     * url before the call.
+     * The port the developer's machine publishes kso on becomes the one Apache listens on
+     * inside the container, before the call.
      *
      * On a developer machine `base_url()` is built from the browser's host, which is
      * `localhost:8950` - a port that only exists outside the container, where docker maps
-     * it. The call to the token endpoint is made from *inside*, where the application
-     * answers on the default port, so the port has to come off or every sign-in in
-     * development fails to reach an authorisation server that is running fine.
+     * it. The call to the token endpoint is made from *inside*, where Apache listens on
+     * 8080. It used to take the port off and call 80, which stopped answering when the
+     * container stopped running as root - every sign-in in development then failed, and the
+     * app retried it for ever.
      */
-    public function testTheDevelopmentPortIsStrippedFromTheLoopbackUrl(): void {
+    public function testTheDevelopmentPortBecomesTheContainersPortInTheLoopbackUrl(): void {
         config(App::class)->baseURL = $this->upstreamUrl(':8950');
-        $this->theAuthorisationServerAnswers(self::aGrant());
+        $inside = $this->upstreamDirectory . ':8080';
+        mkdir($inside);
+        file_put_contents("{$inside}/token", self::aGrant());
 
-        $body = $this->bodyOf($this->post('oauth-agent/token', ['grant_type' => 'authorization_code']));
+        try {
+            $body = $this->bodyOf($this->post('oauth-agent/token', ['grant_type' => 'authorization_code']));
+        } finally {
+            unlink("{$inside}/token");
+            rmdir($inside);
+        }
 
         $this->assertSame('issued-access-token', $body['access_token']);
     }

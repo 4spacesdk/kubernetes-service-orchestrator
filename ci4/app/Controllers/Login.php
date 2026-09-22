@@ -64,6 +64,11 @@ class Login extends \App\Core\BaseController {
             $username = (string) $this->request->getPost('username');
             $password = (string) $this->request->getPost('password');
 
+            // Back in the form when the attempt is refused, so only the password is typed again.
+            // It is what the visitor wrote, whether or not such a user exists - the form still
+            // says nothing about which ones do.
+            $data['username'] = $username;
+
             /** @var User $user */
             $user = (new UserModel())
                 ->where('username', $username)

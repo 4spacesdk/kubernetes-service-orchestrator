@@ -178,7 +178,7 @@ class ApiService {
                 if (retry > 0) {
                     this.checkForRetry(error, shouldRetry => {
                         if (shouldRetry) {
-                            this.me(callback, retry--);
+                            this.me(callback, retry - 1);
                         } else {
                             checkError();
                         }
@@ -211,7 +211,7 @@ class ApiService {
                 if (retry > 0) {
                     this.checkForRetry(error, shouldRetry => {
                         if (shouldRetry) {
-                            this.get(request, axios, url, params, callback, retry--, withCredentials);
+                            this.get(request, axios, url, params, callback, retry - 1, withCredentials);
                         } else {
                             checkError();
                         }
@@ -245,7 +245,7 @@ class ApiService {
                 if (retry > 0) {
                     this.checkForRetry(error, shouldRetry => {
                         if (shouldRetry) {
-                            this.post(request, axios, url, data, params, callback, retry--, withCredentials);
+                            this.post(request, axios, url, data, params, callback, retry - 1, withCredentials);
                         } else {
                             checkError();
                         }
@@ -279,7 +279,7 @@ class ApiService {
                 if (retry > 0) {
                     this.checkForRetry(error, shouldRetry => {
                         if (shouldRetry) {
-                            this.put(request, axios, url, data, params, callback, retry--, withCredentials);
+                            this.put(request, axios, url, data, params, callback, retry - 1, withCredentials);
                         } else {
                             checkError();
                         }
@@ -313,7 +313,7 @@ class ApiService {
                 if (retry > 0) {
                     this.checkForRetry(error, shouldRetry => {
                         if (shouldRetry) {
-                            this.patch(request, axios, url, data, params, callback, retry--, withCredentials);
+                            this.patch(request, axios, url, data, params, callback, retry - 1, withCredentials);
                         } else {
                             checkError();
                         }
@@ -347,7 +347,7 @@ class ApiService {
                 if (retry > 0) {
                     this.checkForRetry(error, shouldRetry => {
                         if (shouldRetry) {
-                            this.delete(request, axios, url, params, callback, retry--, withCredentials);
+                            this.delete(request, axios, url, params, callback, retry - 1, withCredentials);
                         } else {
                             checkError();
                         }
@@ -391,7 +391,7 @@ class ApiService {
                 if (retry > 0) {
                     this.checkForRetry(error, shouldRetry => {
                         if (shouldRetry) {
-                            this.download(request, axios, url, params, fileName, callback, retry--);
+                            this.download(request, axios, url, params, fileName, callback, retry - 1);
                         } else {
                             checkError();
                         }
@@ -430,7 +430,7 @@ class ApiService {
                 if (retry > 0) {
                     this.checkForRetry(error, shouldRetry => {
                         if (shouldRetry) {
-                            this.upload(request, axios, url, data, params, callback, retry--);
+                            this.upload(request, axios, url, data, params, callback, retry - 1);
                         } else {
                             checkError();
                         }

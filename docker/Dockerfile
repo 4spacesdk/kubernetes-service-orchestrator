@@ -84,10 +84,17 @@ RUN cp /usr/local/etc/php/conf.d/docker-php-ext-gd.ini /etc/php85/conf.d/gd.ini
 #
 # Without this the whole build fails on Apple Silicon the moment the layer is not cached,
 # which is what used to happen.
+#
+# The packages are not signed with an Alpine key, so apk has to be told to take them
+# (--allow-untrusted). What stands in for the signature is the checksum: fetched over TLS with
+# the certificate checked, and compared with the sha256 of the files as Microsoft signed them -
+# verified against Microsoft's release key when they were pinned. A new version needs new sums.
 ARG TARGETARCH
 RUN if [ "$TARGETARCH" = "amd64" ] || [ -z "$TARGETARCH" ]; then \
-    wget --no-check-certificate https://download.microsoft.com/download/8/6/8/868e5fc4-7bfe-494d-8f9d-115cbcdb52ae/msodbcsql18_18.1.2.1-1_amd64.apk && \
-    wget --no-check-certificate https://download.microsoft.com/download/8/6/8/868e5fc4-7bfe-494d-8f9d-115cbcdb52ae/mssql-tools18_18.1.1.1-1_amd64.apk && \
+    curl -fsSLO https://download.microsoft.com/download/8/6/8/868e5fc4-7bfe-494d-8f9d-115cbcdb52ae/msodbcsql18_18.1.2.1-1_amd64.apk && \
+    curl -fsSLO https://download.microsoft.com/download/8/6/8/868e5fc4-7bfe-494d-8f9d-115cbcdb52ae/mssql-tools18_18.1.1.1-1_amd64.apk && \
+    echo "6845b54e693a1896aec4a188aa28de14a99297aeacb00da88953e0526b01f3af  msodbcsql18_18.1.2.1-1_amd64.apk" | sha256sum -c - && \
+    echo "a12b9f841c6c88b5d6a1cc8f04a63ade6efaa3ebae440887c79ab6556fee4c5b  mssql-tools18_18.1.1.1-1_amd64.apk" | sha256sum -c - && \
     apk add --allow-untrusted msodbcsql18_18.1.2.1-1_amd64.apk && \
     apk add --allow-untrusted mssql-tools18_18.1.1.1-1_amd64.apk && \
     apk add --no-cache --virtual .persistent-deps freetds && \
@@ -132,12 +139,14 @@ RUN { \
       echo "pcov.directory=/var/www/html/ci4/app"; \
     } > /usr/local/etc/php/conf.d/docker-php-ext-pcov-defaults.ini
 
-# Install gke-auth
+# Install gke-auth. A version, not @latest: go checks what it fetches against sum.golang.org,
+# so a pinned version is the same code on every build.
 ARG GKE_AUTH_ENABLED=false
-RUN if [[ "$GKE_AUTH_ENABLED" == "TRUE" ]] ; then GOBIN=/usr/local/bin go install github.com/imjasonh/gke-auth@latest ; fi
+RUN if [[ "$GKE_AUTH_ENABLED" == "TRUE" ]] ; then GOBIN=/usr/local/bin go install github.com/imjasonh/gke-auth@v0.3.3 ; fi
 
-# Install composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/bin/ --filename=composer
+# Composer, copied from its official image like Trivy below, instead of running whatever the
+# installer script at getcomposer.org says that day. Pinned - bump it on purpose.
+COPY --from=composer:2.10.3 /usr/bin/composer /usr/bin/composer
 
 # Trivy, which scans the customers' images for known vulnerabilities (app:scan-container-images).
 # Copied from the official image: it is built for both architectures, so this picks the one
