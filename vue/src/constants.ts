@@ -299,20 +299,34 @@ export type Events = {
         | undefined;
 };
 
+/**
+ * Whether kso's resources are in the cluster - a sync status, as Argo CD has it. Whether the
+ * workload is doing well is `HealthStatusTypes`, beside it.
+ */
 export const DeploymentStatusTypes = {
     Draft: "draft",
-    Deploying: "deploying",
-    Active: "active",
+    OutOfSync: "out_of_sync",
+    Synced: "synced",
     Inactive: "inactive",
-    Error: "error",
+};
+
+/**
+ * Runtime health, beside the status - Argo CD's six. See `Libraries/Health` in the backend.
+ */
+export const HealthStatusTypes = {
+    Healthy: "healthy",
+    Progressing: "progressing",
+    Degraded: "degraded",
+    Suspended: "suspended",
+    Missing: "missing",
+    Unknown: "unknown",
 };
 
 export const WorkspaceStatusTypes = {
     Draft: "draft",
-    Deploying: "deploying",
-    Active: "active",
+    OutOfSync: "out_of_sync",
+    Synced: "synced",
     Inactive: "inactive",
-    Error: "error",
     Paused: "paused",
 };
 

@@ -11,7 +11,8 @@ import { EventEmitter } from "@/helpers/EventEmitter";
 import debounce from "lodash.debounce";
 import WorkspaceDeploymentDomains from "@/components/Modules/Workspaces/WorkspaceDeploymentDomains/WorkspaceDeploymentDomains.vue";
 import AuthService from "@/services/AuthService";
-import { WorkspaceStatusTypes, RbacPermissions } from "@/constants";
+import { WorkspaceStatusTypes, HealthStatusTypes, RbacPermissions } from "@/constants";
+import WorkspaceHealth from "@/components/Modules/Workspaces/WorkspaceHealth/WorkspaceHealth.vue";
 import { useRouter } from "vue-router";
 
 interface Row {
@@ -24,9 +25,11 @@ const router = useRouter();
 const itemCount = ref(0);
 const rows = ref<Row[]>([]);
 const headers = ref([
+    // The namespace is under the name rather than in a column of its own: it is rarely what
+    // anybody is looking for, and the row is wide enough as it is. It is still searched.
     { title: "Name", key: "workspace.name_readable", sortable: true },
-    { title: "Namespace", key: "workspace.namespace", sortable: true },
     { title: "Status", key: "status", sortable: true },
+    { title: "Health", key: "health", sortable: true },
     { title: "Url", key: "url", sortable: false },
     { title: "", key: "actions", sortable: false },
 ]);
@@ -43,32 +46,40 @@ const statusOptions = ref([
         title: "Draft",
     },
     {
-        value: WorkspaceStatusTypes.Deploying,
-        title: "Deploying",
+        value: WorkspaceStatusTypes.OutOfSync,
+        title: "Out of sync",
     },
     {
-        value: WorkspaceStatusTypes.Active,
-        title: "Active",
+        value: WorkspaceStatusTypes.Synced,
+        title: "Synced",
     },
     {
         value: WorkspaceStatusTypes.Inactive,
         title: "Inactive",
     },
     {
-        value: WorkspaceStatusTypes.Error,
-        title: "Error",
-    },
-    {
         value: WorkspaceStatusTypes.Paused,
         title: "Paused",
     },
 ]);
-const selectedStatus = ref([WorkspaceStatusTypes.Deploying, WorkspaceStatusTypes.Active, WorkspaceStatusTypes.Error]);
+const selectedStatus = ref([WorkspaceStatusTypes.OutOfSync, WorkspaceStatusTypes.Synced]);
+
+/** Empty is every health - including none, which is what a workspace with only drafts has. */
+const healthOptions = ref([
+    { value: HealthStatusTypes.Degraded, title: "Degraded" },
+    { value: HealthStatusTypes.Missing, title: "Missing" },
+    { value: HealthStatusTypes.Progressing, title: "Progressing" },
+    { value: HealthStatusTypes.Unknown, title: "Unknown" },
+    { value: HealthStatusTypes.Healthy, title: "Healthy" },
+    { value: HealthStatusTypes.Suspended, title: "Suspended" },
+]);
+const selectedHealth = ref<string[]>([]);
 const {search: searchValue, page, itemsPerPage, sortBy, applyOrdering, applyPaging} = useListState({
-    sortable: {"workspace.name_readable": "name_readable", "workspace.namespace": "namespace", "status": "status"},
+    // Health sorts by how bad it is; the names would sort alphabetically into nonsense.
+    sortable: {"workspace.name_readable": "name_readable", "status": "status", "health": "health_severity"},
     defaultSort: {key: "workspace.name_readable", order: "asc"},
     itemsPerPage: -1,
-    filters: { status: selectedStatus },
+    filters: { status: selectedStatus, health: selectedHealth },
 });
 
 const rbacDeveloper = ref(false);
@@ -105,7 +116,7 @@ watch(
     }, 500)
 );
 watch(
-    selectedStatus,
+    [selectedStatus, selectedHealth],
     debounce(() => {
         getItems(true, true);
     }, 500)
@@ -132,6 +143,9 @@ function getItems(doItems = true, doCount = false) {
     }
 
     api.whereIn("status", selectedStatus.value);
+    if (selectedHealth.value.length) {
+        api.whereIn("health", selectedHealth.value);
+    }
 
     if (doItems) {
         applyPaging(api);
@@ -421,6 +435,20 @@ function onWorkspaceTemplatesShortcutClicked() {
                         closable-chips
                         clearable
                     />
+
+                    <v-select
+                        v-model="selectedHealth"
+                        :items="healthOptions"
+                        label="Health"
+                        variant="outlined"
+                        multiple
+                        item-value="value"
+                        item-title="title"
+                        hide-details
+                        chips
+                        closable-chips
+                        clearable
+                    />
                 </div>
             </div>
         </v-toolbar>
@@ -444,57 +472,23 @@ function onWorkspaceTemplatesShortcutClicked() {
                 <WorkspaceDeploymentStatus :workspace="item.workspace" />
             </template>
 
+            <template v-slot:item.health="{ item }">
+                <WorkspaceHealth :workspace="item.workspace" @click="onShowDeploymentsBtnClicked(item.workspace)" />
+            </template>
+
             <template v-slot:item.url="{ item }">
                 <workspace-deployment-domains :workspace="item.workspace" />
             </template>
 
             <template v-slot:item.workspace.name_readable="{ item }">
-
                 <name-link @click="onShowDeploymentsBtnClicked(item.workspace)">{{ item.workspace.name_readable }}</name-link>
-
+                <div class="namespace">{{ item.workspace.namespace }}</div>
             </template>
 
             <template v-slot:item.actions="{ item }">
                 <div class="d-flex justify-end ga-1">
-                    <v-btn
-                        v-if="rbacDeveloper"
-                        variant="plain"
-                        color="primary"
-                        @click="onShowDeploymentsBtnClicked(item.workspace)"
-                        size="small"
-                        density="comfortable"
-                        icon
-                    >
-                        <v-icon>fa fa-box</v-icon>
-                        <v-tooltip activator="parent" location="bottom">Deployments</v-tooltip>
-                    </v-btn>
-
-                    <v-btn
-                        v-if="rbacDeveloper"
-                        variant="plain"
-                        color="primary"
-                        @click="onShowLogsBtnClicked(item.workspace)"
-                        size="small"
-                        density="comfortable"
-                        icon
-                    >
-                        <v-icon>fa fa-rectangle-list</v-icon>
-                        <v-tooltip activator="parent" location="bottom">Kubernetes Logs</v-tooltip>
-                    </v-btn>
-
-                    <v-btn
-                        v-if="rbacDeveloper"
-                        variant="plain"
-                        color="primary"
-                        @click="onShowMigrationJobsBtnClicked(item.workspace)"
-                        size="small"
-                        density="comfortable"
-                        icon
-                    >
-                        <v-icon>fa fa-truck-arrow-right</v-icon>
-                        <v-tooltip activator="parent" location="bottom">Migration Jobs</v-tooltip>
-                    </v-btn>
-
+                    <!-- Deployments is the name itself, and logs and migration jobs are in the
+                         menu: the two most used, Settings and Deploy, are the ones on the row. -->
                     <v-menu v-if="rbacWorkspaceUpdate" min-width="250">
                         <template v-slot:activator="{ props }">
                             <v-btn v-bind="props" variant="plain" color="primary" size="small" density="comfortable" icon>
@@ -527,6 +521,25 @@ function onWorkspaceTemplatesShortcutClicked() {
                         </template>
                         <v-list density="compact">
                             <v-list-item
+                                v-if="rbacDeveloper"
+                                prepend-icon="fa fa-rectangle-list"
+                                title="Kubernetes Logs"
+                                @click="onShowLogsBtnClicked(item.workspace)"
+                            />
+                            <v-list-item
+                                v-if="rbacDeveloper"
+                                prepend-icon="fa fa-truck-arrow-right"
+                                title="Migration Jobs"
+                                @click="onShowMigrationJobsBtnClicked(item.workspace)"
+                            />
+                            <v-list-item
+                                v-if="rbacDeveloper"
+                                prepend-icon="fa fa-clock-rotate-left"
+                                title="History"
+                                @click="onShowHistoryBtnClicked(item.workspace)"
+                            />
+                            <v-divider v-if="rbacDeveloper || rbacWorkspaceUpdate" class="my-1" />
+                            <v-list-item
                                 v-if="rbacDeveloper && !item.workspace.is_paused"
                                 prepend-icon="fa fa-pause"
                                 title="Pause"
@@ -553,12 +566,6 @@ function onWorkspaceTemplatesShortcutClicked() {
                                 base-color="red"
                                 @click="onDeleteItemBtnClicked(item)"
                             />
-                            <v-list-item
-                                v-if="rbacDeveloper"
-                                prepend-icon="fa fa-clock-rotate-left"
-                                title="History"
-                                @click="onShowHistoryBtnClicked(item.workspace)"
-                            />
                         </v-list>
                     </v-menu>
                 </div>
@@ -568,6 +575,13 @@ function onWorkspaceTemplatesShortcutClicked() {
 </template>
 
 <style scoped>
+.namespace {
+    font-size: 11px;
+    line-height: 1.2;
+    color: rgb(var(--v-theme-on-surface));
+    opacity: 0.6;
+}
+
 .table > *,
 .table {
     background: transparent;

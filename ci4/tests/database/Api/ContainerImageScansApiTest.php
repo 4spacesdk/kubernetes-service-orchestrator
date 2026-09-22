@@ -11,9 +11,9 @@ class ContainerImageScansApiTest extends ControllerTestCase {
     public function testScanNowQueuesTheImagesRunningTags(): void {
         $image = Fixtures::containerImage(['url' => 'registry.example.org/tenant/api']);
         $spec = Fixtures::deploymentSpecification(['container_image_id' => $image->id]);
-        $workspace = Fixtures::workspace(['status' => \WorkspaceStatusTypes::Active]);
+        $workspace = Fixtures::workspace(['status' => \WorkspaceStatusTypes::Synced]);
         Fixtures::deployment(['deployment_specification_id' => $spec->id, 'workspace_id' => $workspace->id,
-            'status' => \DeploymentStatusTypes::Active, 'version' => '1.2.3']);
+            'status' => \DeploymentStatusTypes::Synced, 'version' => '1.2.3']);
 
         $body = $this->decode($this->signedIn()->put("container-images/{$image->id}/scan"));
 

@@ -18,6 +18,39 @@ class Events {
     }
 
     /**
+     * The deployment's health or its reason changed - see `Libraries/Health`.
+     */
+    public static function Deployment_Changed_Health(int $deploymentId): string {
+        return Events::Generate("deployment.$deploymentId.changed.health");
+    }
+
+    public static function Workspace_Changed_Health(int $workspaceId): string {
+        return Events::Generate("workspace.$workspaceId.changed.health");
+    }
+
+    /**
+     * Some deployment's health changed. What the menu recounts its Degraded badge on, so it
+     * needs one channel rather than one per deployment.
+     */
+    public static function Deployments_Changed_Health(): string {
+        return Events::Generate("deployments.changed.health");
+    }
+
+    /**
+     * A new health has held long enough to be worth telling somebody - the webhook.
+     */
+    public static function Deployment_Health_Settled(): string {
+        return Events::Generate("deployment.health.settled");
+    }
+
+    /**
+     * Look at one deployment again shortly, while it rolls out - see `HealthCheck::Follow()`.
+     */
+    public static function Deployment_Health_Follow(): string {
+        return Events::Generate("deployment.health.follow");
+    }
+
+    /**
      * A scan of one of the image's tags was queued, started, or finished.
      */
     public static function ContainerImage_Scans_Changed(int $containerImageId): string {

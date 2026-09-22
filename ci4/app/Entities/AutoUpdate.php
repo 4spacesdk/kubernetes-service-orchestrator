@@ -35,9 +35,8 @@ class AutoUpdate extends Entity {
             ->where('auto_update_enabled', true)
             ->where('image', $image)
             ->whereIn('status', [
-                DeploymentStatusTypes::Deploying,
-                DeploymentStatusTypes::Active,
-                DeploymentStatusTypes::Error,
+                DeploymentStatusTypes::OutOfSync,
+                DeploymentStatusTypes::Synced,
             ])
             ->find();
 

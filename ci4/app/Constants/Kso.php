@@ -23,7 +23,8 @@ class CronJobIds {
         CleanupQueue = 10,
         CleanupApiLogs = 11,
         CleanupOAuthTokens = 12,
-        CleanupAuditEvents = 13
+        CleanupAuditEvents = 13,
+        CheckHealth = 14
     ;
 }
 
@@ -50,23 +51,33 @@ class Environments {
     }
 }
 
+/**
+ * Whether kso's resources for a deployment are in the cluster - a sync status, in Argo CD's
+ * sense. Not whether the workload is doing well: that is `HealthStatusTypes`, beside it.
+ *
+ * These were Active and Deploying, with an Error nothing ever set. "Deploying" was what a
+ * deployment said when any of its resources was missing - also for good, after somebody deleted
+ * one with kubectl - and Active promised more than it measured.
+ */
 class DeploymentStatusTypes {
+    /** Not complete enough to be deployed. */
     const string Draft = 'draft';
-    const string Deploying = 'deploying';
-    const string Active = 'active';
+    /** Some of its resources are not in the cluster - while a deploy runs, or after one was removed. */
+    const string OutOfSync = 'out_of_sync';
+    /** Every one of its resources is in the cluster. */
+    const string Synced = 'synced';
+    /** Switched off, and left off until it is deployed again. */
     const string Inactive = 'inactive';
-    const string Error = 'error';
 }
 
 class WorkspaceStatusTypes {
     const string Draft = 'draft';
-    const string Deploying = 'deploying';
-    const string Active = 'active';
+    const string OutOfSync = 'out_of_sync';
+    const string Synced = 'synced';
     const string Inactive = 'inactive';
-    const string Error = 'error';
 
     /**
-     * Set by a person and left alone by `Workspace::checkStatus()`, unlike the five above,
+     * Set by a person and left alone by `Workspace::checkStatus()`, unlike the four above,
      * which are recomputed from the deployments every time anything happens to one.
      */
     const string Paused = 'paused';
@@ -88,6 +99,61 @@ class MigrationJobStatusTypes {
         Failed_PostCommands = 'failed-post-commands';
 }
 
+/**
+ * Whether a deployment's workload is doing well right now - a second axis beside its status,
+ * which only says whether kso's resources are in the cluster. Argo CD's six, unchanged, so the
+ * words mean what they mean everywhere else. See `Libraries/Health`.
+ *
+ * Health never writes the status: auto update picks deployments by status, and a crash loop
+ * must not change what it does.
+ */
+class HealthStatusTypes {
+    const string
+        Healthy = 'healthy',
+        Progressing = 'progressing',
+        Degraded = 'degraded',
+        Suspended = 'suspended',
+        Missing = 'missing',
+        Unknown = 'unknown'
+    ;
+
+    /**
+     * How bad each one is - what a workspace takes the worst of, and what the lists sort by.
+     * Suspended is below Healthy: a paused deployment is the one thing nobody needs to look at.
+     */
+    private const array Severities = [
+        self::Suspended => 0,
+        self::Healthy => 1,
+        self::Unknown => 2,
+        self::Progressing => 3,
+        self::Missing => 4,
+        self::Degraded => 5,
+    ];
+
+    public static function Severity(?string $health): ?int {
+        return $health === null ? null : (self::Severities[$health] ?? self::Severities[self::Unknown]);
+    }
+
+    /**
+     * The worst of them, ignoring the nulls - a deployment with no health is one there is
+     * nothing to say about, not one that is doing badly. Null when there are none.
+     */
+    public static function Worst(?string ...$healths): ?string {
+        $worst = null;
+        foreach ($healths as $health) {
+            if ($health !== null && ($worst === null || self::Severity($health) > self::Severity($worst))) {
+                $worst = $health;
+            }
+        }
+        return $worst;
+    }
+
+    /** The two a webhook is sent for even when nothing has been sent before. */
+    public static function IsBad(?string $health): bool {
+        return $health === self::Degraded || $health === self::Missing;
+    }
+}
+
 class WebHookTypes {
     const string
         Workspace_Created = 'workspace-created',
@@ -96,7 +162,8 @@ class WebHookTypes {
         Workspace_Deployed = 'workspace-deployed',
         Workspace_Terminated = 'workspace-terminated',
         Deployment_Deployed = 'deployment-deployed',
-        Deployment_Terminated = 'deployment-terminated';
+        Deployment_Terminated = 'deployment-terminated',
+        Deployment_Health_Changed = 'deployment-health-changed';
 
     public static function All(): array {
         return [
@@ -107,6 +174,7 @@ class WebHookTypes {
             self::Workspace_Terminated,
             self::Deployment_Deployed,
             self::Deployment_Terminated,
+            self::Deployment_Health_Changed,
         ];
     }
 }

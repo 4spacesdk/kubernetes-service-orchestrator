@@ -16,6 +16,19 @@ export class Events {
         return Events.Generate(`workspace.${workspace}.changed.status`);
     }
 
+    public static Deployment_Changed_Health(deploymentId: number): string {
+        return Events.Generate(`deployment.${deploymentId}.changed.health`);
+    }
+
+    public static Workspace_Changed_Health(workspaceId: number): string {
+        return Events.Generate(`workspace.${workspaceId}.changed.health`);
+    }
+
+    /** Some deployment's health changed - one channel for the menu's count. */
+    public static Deployments_Changed_Health(): string {
+        return Events.Generate(`deployments.changed.health`);
+    }
+
     public static ContainerImage_Scans_Changed(containerImageId: number): string {
         return Events.Generate(`container-image.${containerImageId}.scans.changed`);
     }

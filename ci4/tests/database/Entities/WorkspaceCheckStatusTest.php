@@ -12,48 +12,31 @@ use App\DatabaseTestCase;
  */
 class WorkspaceCheckStatusTest extends DatabaseTestCase {
 
-    public function testAllActiveMakesTheWorkspaceActive(): void {
+    public function testAllSyncedMakesTheWorkspaceSynced(): void {
         $workspace = $this->workspaceWith([
-            \DeploymentStatusTypes::Active,
-            \DeploymentStatusTypes::Active,
+            \DeploymentStatusTypes::Synced,
+            \DeploymentStatusTypes::Synced,
         ]);
 
         $workspace->checkStatus();
 
-        $this->assertSame(\WorkspaceStatusTypes::Active, $workspace->status);
+        $this->assertSame(\WorkspaceStatusTypes::Synced, $workspace->status);
     }
 
-    public function testOneErrorMakesTheWorkspaceError(): void {
+    /**
+     * There is no Error any more: nothing ever set it on a deployment, so a
+     * workspace was only ever Error by hand. One deployment out of sync is the whole
+     * workspace out of sync.
+     */
+    public function testOneOutOfSyncMakesTheWorkspaceOutOfSync(): void {
         $workspace = $this->workspaceWith([
-            \DeploymentStatusTypes::Active,
-            \DeploymentStatusTypes::Error,
+            \DeploymentStatusTypes::Synced,
+            \DeploymentStatusTypes::OutOfSync,
         ]);
 
         $workspace->checkStatus();
 
-        $this->assertSame(\WorkspaceStatusTypes::Error, $workspace->status);
-    }
-
-    public function testErrorWinsOverDeploying(): void {
-        $workspace = $this->workspaceWith([
-            \DeploymentStatusTypes::Deploying,
-            \DeploymentStatusTypes::Error,
-        ]);
-
-        $workspace->checkStatus();
-
-        $this->assertSame(\WorkspaceStatusTypes::Error, $workspace->status);
-    }
-
-    public function testOneDeployingMakesTheWorkspaceDeploying(): void {
-        $workspace = $this->workspaceWith([
-            \DeploymentStatusTypes::Active,
-            \DeploymentStatusTypes::Deploying,
-        ]);
-
-        $workspace->checkStatus();
-
-        $this->assertSame(\WorkspaceStatusTypes::Deploying, $workspace->status);
+        $this->assertSame(\WorkspaceStatusTypes::OutOfSync, $workspace->status);
     }
 
     /**
@@ -112,13 +95,13 @@ class WorkspaceCheckStatusTest extends DatabaseTestCase {
      */
     public function testDeployingOneDeploymentTakesAPausedWorkspaceOutOfInactive(): void {
         $workspace = $this->workspaceWith(
-            [\DeploymentStatusTypes::Inactive, \DeploymentStatusTypes::Deploying],
+            [\DeploymentStatusTypes::Inactive, \DeploymentStatusTypes::OutOfSync],
             \WorkspaceStatusTypes::Inactive
         );
 
         $workspace->checkStatus();
 
-        $this->assertSame(\WorkspaceStatusTypes::Deploying, $workspace->status);
+        $this->assertSame(\WorkspaceStatusTypes::OutOfSync, $workspace->status);
     }
 
     /**

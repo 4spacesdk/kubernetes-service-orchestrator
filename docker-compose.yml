@@ -95,6 +95,34 @@ services:
     networks:
       - deploy-service-network
 
+  # The scheduler. What the CronJob in the chart does: call /api/jobby once a minute with the
+  # cron token, and kso starts the jobs that are due. Woken at the top of each minute rather
+  # than every 60 seconds, because kso asks whether a job is due in the minute the call lands
+  # in - a loop that drifts skips a minute now and then. A failed call is printed and the loop
+  # carries on, so `docker compose logs cron` shows a refusal instead of silence.
+  cron:
+    image: curlimages/curl:8.22.0
+    container_name: 4s-deploy-service-cron
+    restart: unless-stopped
+    depends_on:
+      - deploy
+
+    environment:
+      - CRON_TOKEN=${KSO_CRON_TOKEN}
+
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        while true; do
+          sleep $$((60 - $$(date +%s) % 60))
+          curl -fsS -o /dev/null -H "X-Cron-Token: $$CRON_TOKEN" http://deploy:8080/api/jobby \
+            || echo "$$(date -Iseconds) /api/jobby failed"
+        done
+
+    networks:
+      - deploy-service-network
+
   db:
     image: mysql:8.0
     container_name: 4s-deploy-service-db

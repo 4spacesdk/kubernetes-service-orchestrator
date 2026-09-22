@@ -235,7 +235,7 @@ class DeploymentStepsTest extends ClusterTestCase {
         $step->startDeployCommand($deployment);
 
         // Ready is not the same as existing: a pod is there long before its container is
-        // serving, and that distinction is what the workspace page reports as "deploying".
+        // serving, and that distinction is what a deployment's health reports as Progressing.
         // Both are asked for together because `hasNonReadyContainer()` answers false for a
         // deployment with no pods at all, so on its own it is not a wait.
         $this->eventuallyWithinAMinute(function () use ($step, $deployment) {
@@ -519,7 +519,7 @@ class DeploymentStepsTest extends ClusterTestCase {
      */
     private function deploymentForTriggers(array $overrides = []): \App\Entities\Deployment {
         $deployment = $this->deploymentInTheTestNamespace(array_merge(
-            ['status' => \DeploymentStatusTypes::Active],
+            ['status' => \DeploymentStatusTypes::Synced],
             $overrides
         ));
 

@@ -132,15 +132,15 @@ class ResourceFilterApiTest extends ControllerTestCase {
      * `[a,b]` form - so this is the one call shape the branch was written for.
      */
     public function testAWorkspaceStatusFilterAnswersOnlyTheListedStatuses(): void {
-        $this->workspaceNamed('is-active', [], \WorkspaceStatusTypes::Active);
+        $this->workspaceNamed('is-synced', [], \WorkspaceStatusTypes::Synced);
         $this->workspaceNamed('is-inactive', [], \WorkspaceStatusTypes::Inactive);
         $this->workspaceNamed('is-draft', [], \WorkspaceStatusTypes::Draft);
 
         $names = $this->namesOf(
-            $this->signedIn()->get('workspaces?filter=status:[active,inactive]')
+            $this->signedIn()->get('workspaces?filter=status:[synced,inactive]')
         );
 
-        $this->assertContains('is-active', $names);
+        $this->assertContains('is-synced', $names);
         $this->assertContains('is-inactive', $names);
         $this->assertNotContains('is-draft', $names, 'a status that was not asked for');
     }
@@ -153,34 +153,34 @@ class ResourceFilterApiTest extends ControllerTestCase {
      * status picker sends exactly that, and it means "all".
      */
     public function testAnEmptyStatusListIsNotAFilter(): void {
-        $this->workspaceNamed('is-active', [], \WorkspaceStatusTypes::Active);
+        $this->workspaceNamed('is-synced', [], \WorkspaceStatusTypes::Synced);
         $this->workspaceNamed('is-draft', [], \WorkspaceStatusTypes::Draft);
 
         $names = $this->namesOf($this->signedIn()->get('workspaces?filter=status:[]'));
 
-        $this->assertContains('is-active', $names);
+        $this->assertContains('is-synced', $names);
         $this->assertContains('is-draft', $names);
     }
 
     /**
      * A scalar status filter narrows, like the same syntax does on every other resource.
      *
-     * It used to be dropped in silence. `filter=status:active` parses to the string
-     * `active`, the `is_array()` guard rejected it and added nothing - but `ignoreAuto` had
+     * It used to be dropped in silence. `filter=status:synced` parses to the string
+     * `synced`, the `is_array()` guard rejected it and added nothing - but `ignoreAuto` had
      * been set two lines above, so the extension did not apply it either. The response was
      * `200 OK`, shaped exactly like a filtered one, carrying rows in every other status.
      *
      * The fix is not a branch for scalars: it is setting `ignoreAuto` only where a condition
-     * is actually added. Left alone, the extension applies `status = 'active'` itself, which
+     * is actually added. Left alone, the extension applies `status = 'synced'` itself, which
      * is what it does for every other field.
      */
     public function testAScalarStatusFilterNarrowsToThatStatus(): void {
-        $this->workspaceNamed('is-active', [], \WorkspaceStatusTypes::Active);
+        $this->workspaceNamed('is-synced', [], \WorkspaceStatusTypes::Synced);
         $this->workspaceNamed('is-draft', [], \WorkspaceStatusTypes::Draft);
 
-        $names = $this->namesOf($this->signedIn()->get('workspaces?filter=status:active'));
+        $names = $this->namesOf($this->signedIn()->get('workspaces?filter=status:synced'));
 
-        $this->assertSame(['is-active'], $names);
+        $this->assertSame(['is-synced'], $names);
     }
 
     // </editor-fold>
@@ -208,12 +208,12 @@ class ResourceFilterApiTest extends ControllerTestCase {
             'domain_tls' => 'https',
         ]);
 
-        $mine = $this->workspaceNamed('mine', [], \WorkspaceStatusTypes::Active);
+        $mine = $this->workspaceNamed('mine', [], \WorkspaceStatusTypes::Synced);
         $mine->subdomain = 'mine';
         $mine->domain_id = $domain->id;
         $mine->save();
 
-        $theirs = $this->workspaceNamed('theirs', [], \WorkspaceStatusTypes::Active);
+        $theirs = $this->workspaceNamed('theirs', [], \WorkspaceStatusTypes::Synced);
         $theirs->subdomain = 'theirs';
         $theirs->domain_id = $domain->id;
         $theirs->save();
@@ -265,7 +265,7 @@ class ResourceFilterApiTest extends ControllerTestCase {
      * to set the empty collection, which makes this test fail.
      */
     public function testAWorkspaceWithoutDeploymentsHasNoDeploymentsKeyAtAll(): void {
-        $this->workspaceNamed('no-deployments', [], \WorkspaceStatusTypes::Active);
+        $this->workspaceNamed('no-deployments', [], \WorkspaceStatusTypes::Synced);
 
         $byName = $this->byName($this->signedIn()->get('workspaces?include=deployment'));
 

@@ -6,10 +6,11 @@ import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch}
 import type {Ref} from 'vue'
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
-import { DeploymentStatusTypes } from "@/constants";
+import { DeploymentStatusTypes, HealthStatusTypes } from "@/constants";
 import {Deployment, DeploymentSpecification} from "@/core/services/Deploy/models";
 import DeploymentEditButton from "@/components/Modules/Setup/Deployments/EditButton/DeploymentEditButton.vue";
 import DeploymentStatus from "@/components/Modules/Setup/Deployments/DeploymentStatus/DeploymentStatus.vue";
+import DeploymentHealth from "@/components/Modules/Setup/Deployments/DeploymentHealth/DeploymentHealth.vue";
 import DeploymentLastMigrationStatus
     from "@/components/Modules/Setup/Deployments/DeploymentLastMigrationStatus/DeploymentLastMigrationStatus.vue";
 import DateView from "@/components/Modules/Common/DateView.vue";
@@ -36,9 +37,10 @@ const router = useRouter();
 const itemCount = ref(0);
 const rows = ref<Deployment[]>([]);
 const headers = ref([
+    // The namespace is under the name, as on the workspaces list: nine columns did not fit.
     {title: 'Name', key: 'name', sortable: true},
-    {title: 'Namespace', key: 'namespace', sortable: true},
     {title: 'Status', key: 'status', sortable: true},
+    {title: 'Health', key: 'health', sortable: true},
     {title: 'Last Migration', key: 'last-migration', sortable: false},
     {title: 'Version', key: 'version', sortable: true},
     {title: 'Last Update', key: 'last_updated', sortable: true},
@@ -60,18 +62,29 @@ const showDeploymentSpecsWarning = ref(true);
  */
 const statusOptions = ref([
     {value: DeploymentStatusTypes.Draft, title: 'Draft'},
-    {value: DeploymentStatusTypes.Deploying, title: 'Deploying'},
-    {value: DeploymentStatusTypes.Active, title: 'Active'},
+    {value: DeploymentStatusTypes.OutOfSync, title: 'Out of sync'},
+    {value: DeploymentStatusTypes.Synced, title: 'Synced'},
     {value: DeploymentStatusTypes.Inactive, title: 'Inactive'},
-    {value: DeploymentStatusTypes.Error, title: 'Error'},
 ]);
-const selectedStatus = ref([DeploymentStatusTypes.Deploying, DeploymentStatusTypes.Active, DeploymentStatusTypes.Error]);
+const selectedStatus = ref([DeploymentStatusTypes.OutOfSync, DeploymentStatusTypes.Synced]);
+
+/** Empty is every health - including none, which is what a Draft has. */
+const healthOptions = ref([
+    {value: HealthStatusTypes.Degraded, title: 'Degraded'},
+    {value: HealthStatusTypes.Missing, title: 'Missing'},
+    {value: HealthStatusTypes.Progressing, title: 'Progressing'},
+    {value: HealthStatusTypes.Unknown, title: 'Unknown'},
+    {value: HealthStatusTypes.Healthy, title: 'Healthy'},
+    {value: HealthStatusTypes.Suspended, title: 'Suspended'},
+]);
+const selectedHealth = ref<string[]>([]);
 /** Inside a dialog the list is scoped by its caller: no status filter, and not in the url. */
 const isScoped = !!props.filterByWorkspaceId || !!props.filterByIds;
-const filtersOnTheList: Record<string, Ref<string[]>> = isScoped ? {} : {status: selectedStatus};
+const filtersOnTheList: Record<string, Ref<string[]>> = isScoped ? {} : {status: selectedStatus, health: selectedHealth};
 
 const {search: searchValue, page, itemsPerPage, sortBy, applyOrdering, applyPaging} = useListState({
-    sortable: {'name': 'name', 'namespace': 'namespace', 'status': 'status', 'version': 'version', 'last_updated': 'last_updated'},
+    // Health sorts by how bad it is; the names would sort alphabetically into nonsense.
+    sortable: {'name': 'name', 'status': 'status', 'health': 'health_severity', 'version': 'version', 'last_updated': 'last_updated'},
     defaultSort: {key: 'name', order: 'asc'},
     filters: filtersOnTheList,
     syncWithUrl: !isScoped,
@@ -98,7 +111,7 @@ watch(searchValue, debounce(() => {
     getItems(true, true);
 }, 500));
 
-watch(selectedStatus, debounce(() => {
+watch([selectedStatus, selectedHealth], debounce(() => {
     getItems(true, true);
 }, 500));
 
@@ -121,6 +134,9 @@ function getItems(doItems = true, doCount = false) {
         api.where('workspace_id', props.filterByWorkspaceId);
     } else {
         api.whereIn('status', selectedStatus.value);
+        if (selectedHealth.value.length) {
+            api.whereIn('health', selectedHealth.value);
+        }
     }
 
     if (searchValue.value?.length) {
@@ -310,6 +326,24 @@ function onBulkUpdateVersionBtnClicked() {
                         width="420"
                         max-width="420"
                     />
+
+                    <v-select
+                        v-if="!props.filterByWorkspaceId"
+                        v-model="selectedHealth"
+                        :items="healthOptions"
+                        label="Health"
+                        density="compact"
+                        variant="outlined"
+                        multiple
+                        item-value="value"
+                        item-title="title"
+                        hide-details
+                        chips
+                        closable-chips
+                        clearable
+                        width="320"
+                        max-width="320"
+                    />
                 </div>
             </div>
         </v-toolbar>
@@ -345,10 +379,15 @@ function onBulkUpdateVersionBtnClicked() {
                     </template>
                     <deployment-edit-button :deployment="item"/>
                 </v-menu>
+                <div class="namespace">{{ item.namespace }}</div>
             </template>
             <template v-slot:item.status="{ item }">
                 <deployment-status
                     :deployment="item"/>
+            </template>
+
+            <template v-slot:item.health="{ item }">
+                <DeploymentHealth :deployment="item"/>
             </template>
 
             <template v-slot:item.last-migration="{ item }">
@@ -399,57 +438,42 @@ function onBulkUpdateVersionBtnClicked() {
                         <v-tooltip activator="parent" location="bottom">Resources</v-tooltip>
                     </v-btn>
 
-                    <v-btn
-                        :disabled="!item.canMigrate"
-                        variant="plain" color="primary" 
-                        @click="onShowMigrationJobsBtnClicked(item)"
-                        size="small"
-                        density="comfortable"
-                        icon
-                    >
-                        <v-icon>fa fa-truck-arrow-right</v-icon>
-                        <v-tooltip activator="parent" location="bottom">Migration Jobs</v-tooltip>
-                    </v-btn>
-
-                    <v-btn
-                        variant="plain" color="primary"
-                        @click="onShowHistoryBtnClicked(item)"
-                        size="small"
-                        density="comfortable"
-                        icon
-                    >
-                        <v-icon>fa fa-clock-rotate-left</v-icon>
-                        <v-tooltip activator="parent" location="bottom">History</v-tooltip>
-                    </v-btn>
-
-                    <v-menu
-                        min-width="250">
+                    <!-- Settings is the name itself. Delete belongs in the menu with the rest
+                         of what is worth a second thought, not beside Pods. -->
+                    <v-menu location="bottom end">
                         <template v-slot:activator="{ props }">
                             <v-btn
                                 v-bind="props"
                                 variant="plain" color="primary"
+                                aria-label="More"
                                 size="small"
                                 density="comfortable"
                                 icon
                             >
-                                <v-icon>fa fa-cog</v-icon>
-                                <v-tooltip activator="parent" location="bottom">Settings</v-tooltip>
+                                <v-icon>fa fa-ellipsis-vertical</v-icon>
                             </v-btn>
                         </template>
-                        <deployment-edit-button
-                            :deployment="item"/>
+                        <v-list density="compact">
+                            <v-list-item
+                                :disabled="!item.canMigrate"
+                                prepend-icon="fa fa-truck-arrow-right"
+                                title="Migration Jobs"
+                                @click="onShowMigrationJobsBtnClicked(item)"
+                            />
+                            <v-list-item
+                                prepend-icon="fa fa-clock-rotate-left"
+                                title="History"
+                                @click="onShowHistoryBtnClicked(item)"
+                            />
+                            <v-divider class="my-1"/>
+                            <v-list-item
+                                prepend-icon="fa fa-trash"
+                                title="Delete"
+                                base-color="red"
+                                @click="onDeleteItemBtnClicked(item)"
+                            />
+                        </v-list>
                     </v-menu>
-
-                    <v-btn
-                        variant="plain" color="red" 
-                        @click="onDeleteItemBtnClicked(item)"
-                        size="small"
-                        density="comfortable"
-                        icon
-                    >
-                        <v-icon>fa fa-trash</v-icon>
-                        <v-tooltip activator="parent" location="bottom">Delete</v-tooltip>
-                    </v-btn>
                 </div>
             </template>
         </v-data-table-server>
@@ -458,6 +482,13 @@ function onBulkUpdateVersionBtnClicked() {
 </template>
 
 <style scoped>
+.namespace {
+    font-size: 11px;
+    line-height: 1.2;
+    color: rgb(var(--v-theme-on-surface));
+    opacity: 0.6;
+}
+
 .bulk-bar {
     background: rgba(var(--v-theme-primary), 0.08);
 }

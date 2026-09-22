@@ -28,6 +28,10 @@ export class WorkspaceDefinition extends BaseModel {
     database_service?: DatabaseService;
     status?: string;
     is_paused?: boolean;
+    health?: string;
+    health_severity?: number;
+    health_reason?: string;
+    health_changed_at?: string;
     deployments?: Deployment[];
     labels?: Label[];
     id?: number;
@@ -63,6 +67,10 @@ export class WorkspaceDefinition extends BaseModel {
             delete this.database_service;
             delete this.status;
             delete this.is_paused;
+            delete this.health;
+            delete this.health_severity;
+            delete this.health_reason;
+            delete this.health_changed_at;
             delete this.deployments;
             delete this.labels;
             delete this.id;
@@ -124,6 +132,18 @@ export class WorkspaceDefinition extends BaseModel {
         }
         if (data.is_paused != null) {
             this.is_paused = data.is_paused;
+        }
+        if (data.health != null) {
+            this.health = data.health;
+        }
+        if (data.health_severity != null) {
+            this.health_severity = data.health_severity;
+        }
+        if (data.health_reason != null) {
+            this.health_reason = data.health_reason;
+        }
+        if (data.health_changed_at != null) {
+            this.health_changed_at = data.health_changed_at;
         }
         if (data.deployments != null) {
             this.deployments = data.deployments.map((i: any) => new Deployment(i));

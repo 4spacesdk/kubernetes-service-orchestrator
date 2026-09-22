@@ -54,20 +54,15 @@ function render(status: string) {
             color.value = "grey";
             text.value = "Inactive";
             break;
-        case DeploymentStatusTypes.Deploying:
-            icon.value = "fa fa-box";
+        case DeploymentStatusTypes.OutOfSync:
+            icon.value = "fa fa-circle-arrow-up";
             color.value = "orange";
-            text.value = "Deploying";
+            text.value = "Out of sync";
             break;
-        case DeploymentStatusTypes.Active:
+        case DeploymentStatusTypes.Synced:
             icon.value = "fa fa-check";
             color.value = "green";
-            text.value = "Active";
-            break;
-        case DeploymentStatusTypes.Error:
-            icon.value = "fa fa-circle-xmark";
-            color.value = "red";
-            text.value = "Error";
+            text.value = "Synced";
             break;
         default:
             icon.value = "fa fa-circle-info";
@@ -98,8 +93,13 @@ function onRefreshBtnClicked() {
             <v-tooltip activator="parent" location="bottom">Refresh</v-tooltip>
         </v-btn>
 
-        <span>{{ text }}</span>
+        <span class="status">{{ text }}</span>
     </div>
 </template>
 
-<style scoped></style>
+<style scoped>
+/* "Out of sync" broke over three lines and made every row three lines tall. */
+.status {
+    white-space: nowrap;
+}
+</style>

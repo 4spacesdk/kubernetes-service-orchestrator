@@ -334,7 +334,7 @@ class WorkspacesApiTest extends ControllerTestCase {
      * workspace that looks stale.
      */
     public function testTheStatusEndpointRecomputesFromTheDeployments(): void {
-        $workspace = Fixtures::workspace(['status' => \WorkspaceStatusTypes::Active]);
+        $workspace = Fixtures::workspace(['status' => \WorkspaceStatusTypes::Synced]);
         Fixtures::deployment(['workspace_id' => $workspace->id, 'status' => \DeploymentStatusTypes::Draft]);
 
         $body = $this->decode($this->signedIn()->get("workspaces/{$workspace->id}/status"));
@@ -344,7 +344,7 @@ class WorkspacesApiTest extends ControllerTestCase {
         // Which status it lands on is `checkStatus()`'s business, and
         // WorkspaceCheckStatusTest covers the rules. What matters here is that the
         // endpoint recomputed rather than handing back the stored value.
-        $this->assertNotSame(\WorkspaceStatusTypes::Active, $body['resource']['status']);
+        $this->assertNotSame(\WorkspaceStatusTypes::Synced, $body['resource']['status']);
 
         $stored = new Workspace();
         $stored->find($workspace->id);
@@ -432,7 +432,7 @@ class WorkspacesApiTest extends ControllerTestCase {
      * creating a workspace and adding anything to it.
      */
     public function testDeployingAWorkspaceWithoutDeploymentsSucceeds(): void {
-        $workspace = Fixtures::workspace(['status' => \WorkspaceStatusTypes::Active]);
+        $workspace = Fixtures::workspace(['status' => \WorkspaceStatusTypes::Synced]);
 
         $body = $this->decode($this->signedIn()->put("workspaces/{$workspace->id}/deploy"));
 
@@ -469,7 +469,7 @@ class WorkspacesApiTest extends ControllerTestCase {
      * ended up with. A workspace that was switched off now stays switched off.
      */
     public function testTerminatingAWorkspaceWithoutDeploymentsLeavesItInactive(): void {
-        $workspace = Fixtures::workspace(['status' => \WorkspaceStatusTypes::Active]);
+        $workspace = Fixtures::workspace(['status' => \WorkspaceStatusTypes::Synced]);
 
         $body = $this->decode($this->signedIn()->put("workspaces/{$workspace->id}/terminate"));
 
@@ -483,7 +483,7 @@ class WorkspacesApiTest extends ControllerTestCase {
      * switched-off workspace that is merely asked about must not drift back to Draft.
      */
     public function testAskingAgainLeavesATerminatedEmptyWorkspaceInactive(): void {
-        $workspace = Fixtures::workspace(['status' => \WorkspaceStatusTypes::Active]);
+        $workspace = Fixtures::workspace(['status' => \WorkspaceStatusTypes::Synced]);
         $this->signedIn()->put("workspaces/{$workspace->id}/terminate");
 
         $this->reload($workspace)->checkStatus();
@@ -529,7 +529,7 @@ class WorkspacesApiTest extends ControllerTestCase {
      * is exactly what used to make the pause fall off.
      */
     public function testPausingShutsTheWorkspaceDownAndSaysSo(): void {
-        $workspace = Fixtures::workspace(['status' => \WorkspaceStatusTypes::Active]);
+        $workspace = Fixtures::workspace(['status' => \WorkspaceStatusTypes::Synced]);
 
         $body = $this->decode($this->signedIn()->put("workspaces/{$workspace->id}/pause"));
 
@@ -549,7 +549,7 @@ class WorkspacesApiTest extends ControllerTestCase {
         $workspace->find($deployment->workspace_id);
         $workspace->pause();
 
-        foreach ([\DeploymentStatusTypes::Deploying, \DeploymentStatusTypes::Error, \DeploymentStatusTypes::Active] as $status) {
+        foreach ([\DeploymentStatusTypes::OutOfSync, \DeploymentStatusTypes::Synced] as $status) {
             $deployment->status = $status;
             $deployment->save();
             $this->reload($workspace)->checkStatus();
@@ -567,7 +567,7 @@ class WorkspacesApiTest extends ControllerTestCase {
      * is Deploy, and that is a decision of its own.
      */
     public function testResumingTakesThePauseOffAndLeavesItTerminated(): void {
-        $workspace = Fixtures::workspace(['status' => \WorkspaceStatusTypes::Active]);
+        $workspace = Fixtures::workspace(['status' => \WorkspaceStatusTypes::Synced]);
         $this->signedIn()->put("workspaces/{$workspace->id}/pause");
 
         $body = $this->decode($this->signedIn()->put("workspaces/{$workspace->id}/resume"));

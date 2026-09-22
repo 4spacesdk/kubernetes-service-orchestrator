@@ -47,7 +47,7 @@ use App\Entities\Workspace;
  * only the fields it depends on, and the rest are whatever the helper considers ordinary.
  * Adding a field to an entity therefore never touches an existing call site.
  *
- *     $workspace = Fixtures::workspace(['status' => \WorkspaceStatusTypes::Active]);
+ *     $workspace = Fixtures::workspace(['status' => \WorkspaceStatusTypes::Synced]);
  *     $deployment = Fixtures::deployment(['workspace_id' => $workspace->id]);
  *
  * Defaults cover only what a test is likely to care about. Columns the schema gives a
@@ -716,7 +716,7 @@ class Fixtures {
      * @param array<string, mixed> $overrides
      */
     public static function autoUpdatableDeployment(array $overrides = []): Deployment {
-        $workspaceStatus = $overrides['workspace_status'] ?? \WorkspaceStatusTypes::Active;
+        $workspaceStatus = $overrides['workspace_status'] ?? \WorkspaceStatusTypes::Synced;
         $workspacePaused = $overrides['workspace_paused'] ?? false;
         unset($overrides['workspace_status'], $overrides['workspace_paused']);
 
@@ -724,7 +724,7 @@ class Fixtures {
 
         return self::deployment(array_merge([
             'workspace_id' => $workspace->id,
-            'status' => \DeploymentStatusTypes::Active,
+            'status' => \DeploymentStatusTypes::Synced,
             'version' => 'old',
             'auto_update_enabled' => true,
             'auto_update_require_approval' => false,

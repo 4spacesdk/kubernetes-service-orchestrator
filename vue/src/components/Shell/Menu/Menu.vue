@@ -6,9 +6,11 @@ import {
     onUnmounted,
     reactive,
     ref,
+    watch,
 } from "vue";
 import { useRouter } from "vue-router";
-import { RbacPermissions } from "@/constants";
+import { useDisplay } from "vuetify";
+import { HealthStatusTypes, RbacPermissions } from "@/constants";
 import AuthService from "@/services/AuthService";
 import { Api } from "@/core/services/Deploy/Api";
 import { System } from "@/core/services/Deploy/models";
@@ -23,6 +25,8 @@ interface MenuCategory {
     items: MenuItem[];
     active?: boolean;
     badge?: number;
+    /** Secondary unless something is wrong - the Degraded counts are red. */
+    badgeColor?: string;
 }
 
 interface MenuItem {
@@ -31,6 +35,7 @@ interface MenuItem {
     active?: boolean;
     permissions: string[];
     badge?: number;
+    badgeColor?: string;
 }
 
 const router = useRouter();
@@ -191,6 +196,33 @@ const categories = ref<MenuCategory[]>([
 const autoUpdatesBadgePushSubscription1 = ref<PushSubscription>();
 const autoUpdatesBadgePushSubscription2 = ref<PushSubscription>();
 const autoUpdatesBadgePushSubscription3 = ref<PushSubscription>();
+const healthBadgePushSubscription = ref<PushSubscription>();
+
+/**
+ * The menu stands open where there is room for it, and folds in to an 80px rail - opening over
+ * the page on hover - where there is not. The lists need about 1030px, so `lg` and up (1280px)
+ * keeps both; below that the menu is what gives way.
+ */
+const { lgAndUp } = useDisplay();
+const isRail = ref(!lgAndUp.value);
+
+watch(lgAndUp, (roomForIt) => {
+    isRail.value = !roomForIt;
+});
+
+function badgeOf(category: MenuCategory): { count: number; color: string } | null {
+    if (category.badge) {
+        return { count: category.badge, color: category.badgeColor ?? "secondary" };
+    }
+    const items = category.items.filter((item) => item.badge);
+    if (!items.length) {
+        return null;
+    }
+    return {
+        count: items.reduce((sum, item) => sum + (item.badge ?? 0), 0),
+        color: items.find((item) => item.badgeColor)?.badgeColor ?? "secondary",
+    };
+}
 
 function onLogoClicked(event: Event) {
     router
@@ -238,13 +270,50 @@ onMounted(() => {
         (data) => countAutoUpdates()
     );
     countAutoUpdates();
+
+    healthBadgePushSubscription.value = PushService.subscribe(
+        Events.Deployments_Changed_Health(),
+        (data) => countDegraded()
+    );
+    countDegraded();
 });
 
 onUnmounted(() => {
     autoUpdatesBadgePushSubscription1.value?.unsubscribe();
     autoUpdatesBadgePushSubscription2.value?.unsubscribe();
     autoUpdatesBadgePushSubscription3.value?.unsubscribe();
+    healthBadgePushSubscription.value?.unsubscribe();
 });
+
+/**
+ * What is Degraded right now: workspaces on Sites, which everybody sees, and deployments on
+ * Deployments under Setup. Recounted when any deployment's health changes.
+ */
+function countDegraded() {
+    Api.workspaces()
+        .get()
+        .where("health", HealthStatusTypes.Degraded)
+        .count((value) => {
+            const category = categories.value.find((category) => category.identifier == "sites");
+            if (category) {
+                category.badge = value;
+                category.badgeColor = "error";
+            }
+        });
+
+    Api.deployments()
+        .get()
+        .where("health", HealthStatusTypes.Degraded)
+        .count((value) => {
+            const item = categories.value
+                .find((category) => category.identifier == "setup")
+                ?.items.find((item) => item.url == "/setup/deployments");
+            if (item) {
+                item.badge = value;
+                item.badgeColor = "error";
+            }
+        });
+}
 
 function countAutoUpdates() {
     Api.autoUpdates()
@@ -262,14 +331,18 @@ function countAutoUpdates() {
 </script>
 
 <template>
+    <!-- `rail` follows the breakpoint, and the event is only read: bound with v-model, a hover
+         would set it false and the layout would make room for the full width, pushing the page
+         aside instead of opening over it. `mini-variant` was Vuetify 2's name for this and did
+         nothing here - the menu stood open at 256px on every screen, wide or not. -->
     <v-navigation-drawer
-        :app="true"
         color="surface"
-        :expand-on-hover="true"
-        :mini-variant="true"
-        :right="false"
-        :permanent="true"
-        :mini-variant-width="80"
+        permanent
+        :rail="!lgAndUp"
+        :rail-width="80"
+        :expand-on-hover="!lgAndUp"
+        @update:rail="isRail = $event && !lgAndUp"
+        :class="{ folded: isRail }"
         flat
         elevation="0"
     >
@@ -296,7 +369,14 @@ function countAutoUpdates() {
                     link
                 >
                     <template v-slot:prepend>
-                        <v-icon size="16">{{ category.icon }}</v-icon>
+                        <v-badge
+                            v-if="isRail && badgeOf(category)"
+                            :color="badgeOf(category)!.color"
+                            :content="badgeOf(category)!.count"
+                        >
+                            <v-icon size="16">{{ category.icon }}</v-icon>
+                        </v-badge>
+                        <v-icon v-else size="16">{{ category.icon }}</v-icon>
                     </template>
                     <v-list-item-title>{{ category.name }}</v-list-item-title>
 
@@ -304,7 +384,7 @@ function countAutoUpdates() {
                         <v-badge
                             v-if="category.badge"
                             inline
-                            color="secondary"
+                            :color="category.badgeColor ?? 'secondary'"
                             :content="category.badge"
                         />
                     </template>
@@ -318,7 +398,14 @@ function countAutoUpdates() {
                     <template v-slot:activator="{ props }">
                         <v-list-item v-bind="props">
                             <template v-slot:prepend>
-                                <v-icon size="16">{{ category.icon }}</v-icon>
+                                <v-badge
+                                    v-if="isRail && badgeOf(category)"
+                                    :color="badgeOf(category)!.color"
+                                    :content="badgeOf(category)!.count"
+                                >
+                                    <v-icon size="16">{{ category.icon }}</v-icon>
+                                </v-badge>
+                                <v-icon v-else size="16">{{ category.icon }}</v-icon>
                             </template>
                             <v-list-item-title>{{
                                 category.name
@@ -340,7 +427,7 @@ function countAutoUpdates() {
                                 <v-badge
                                     v-if="item.badge"
                                     inline
-                                    color="secondary"
+                                    :color="item.badgeColor ?? 'secondary'"
                                     :content="item.badge"
                                 />
                             </template>
@@ -366,6 +453,14 @@ function countAutoUpdates() {
 
 :deep(.v-navigation-drawer) {
     box-shadow: none !important;
+}
+
+/* Folded, the rail is 80px of icon: an open group's items would show as a column of cut-off
+   words under its icon, and each title as its first letter against the edge. */
+.folded :deep(.v-list-group__items),
+.folded :deep(.v-list-item__append),
+.folded :deep(.v-list-item-title) {
+    display: none;
 }
 
 .v-list-group--open {

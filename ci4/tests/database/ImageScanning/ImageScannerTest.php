@@ -84,10 +84,10 @@ class ImageScannerTest extends DatabaseTestCase {
 
     public static function deploymentsThatAreNotRunning(): array {
         return [
-            'a draft' => [\DeploymentStatusTypes::Draft, \WorkspaceStatusTypes::Active, false],
-            'terminated' => [\DeploymentStatusTypes::Inactive, \WorkspaceStatusTypes::Active, false],
-            'in a paused workspace' => [\DeploymentStatusTypes::Active, \WorkspaceStatusTypes::Paused, true],
-            'in a terminated workspace' => [\DeploymentStatusTypes::Active, \WorkspaceStatusTypes::Inactive, false],
+            'a draft' => [\DeploymentStatusTypes::Draft, \WorkspaceStatusTypes::Synced, false],
+            'terminated' => [\DeploymentStatusTypes::Inactive, \WorkspaceStatusTypes::Synced, false],
+            'in a paused workspace' => [\DeploymentStatusTypes::Synced, \WorkspaceStatusTypes::Paused, true],
+            'in a terminated workspace' => [\DeploymentStatusTypes::Synced, \WorkspaceStatusTypes::Inactive, false],
         ];
     }
 
@@ -244,12 +244,12 @@ class ImageScannerTest extends DatabaseTestCase {
 
     private function aDeploymentRunning(ContainerImage $image, string $tag, array $overrides = []): Deployment {
         $spec = Fixtures::deploymentSpecification(['container_image_id' => $image->id]);
-        $workspace = Fixtures::workspace(['status' => \WorkspaceStatusTypes::Active]);
+        $workspace = Fixtures::workspace(['status' => \WorkspaceStatusTypes::Synced]);
 
         return Fixtures::deployment(array_merge([
             'deployment_specification_id' => $spec->id,
             'workspace_id' => $workspace->id,
-            'status' => \DeploymentStatusTypes::Active,
+            'status' => \DeploymentStatusTypes::Synced,
             'version' => $tag,
         ], $overrides));
     }

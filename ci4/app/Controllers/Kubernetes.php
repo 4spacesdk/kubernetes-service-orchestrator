@@ -1,6 +1,7 @@
 <?php namespace App\Controllers;
 
 use App\Libraries\Audit\Audit;
+use App\Libraries\Health\HealthCheck;
 use App\Libraries\Kubernetes\KubeAuth;
 use App\Libraries\Kubernetes\KubeHelper;
 use App\Libraries\Kubernetes\KubeLog;
@@ -195,6 +196,8 @@ class Kubernetes extends \App\Core\BaseController {
      */
     public function nodeInfo(): void {
         $kubeAuth = new KubeAuth();
+        // `health_checked_at` goes beside the cluster's answer in every branch, not as part of
+        // it: the check can stop - a scheduler that is not running - while the cluster answers.
         try {
             $cluster = $kubeAuth->authenticate();
             $nodes = $cluster->node()->all();
@@ -202,6 +205,7 @@ class Kubernetes extends \App\Core\BaseController {
                 'status' => 'success',
                 'message' => '',
                 'nodes' => array_map(fn(K8sNode $node) => $node->getInfo(), $nodes->all()),
+                'health_checked_at' => HealthCheck::LastCheckedAt(),
             ]);
         } catch (KubernetesAPIException $e) {
             Data::set('resource', [
@@ -209,6 +213,7 @@ class Kubernetes extends \App\Core\BaseController {
                 'message' => $e->getMessage(),
                 'details' => $e->getPayload(),
                 'nodes' => [],
+                'health_checked_at' => HealthCheck::LastCheckedAt(),
             ]);
         } catch (\Throwable $e) {
             // Throwable, like everywhere else that turns a cluster failure into an answer:
@@ -218,6 +223,7 @@ class Kubernetes extends \App\Core\BaseController {
                 'status' => 'error',
                 'message' => $e->getMessage(),
                 'nodes' => [],
+                'health_checked_at' => HealthCheck::LastCheckedAt(),
             ]);
         }
         $this->success();

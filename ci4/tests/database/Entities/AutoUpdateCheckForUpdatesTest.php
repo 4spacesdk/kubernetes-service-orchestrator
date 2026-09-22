@@ -105,14 +105,14 @@ class AutoUpdateCheckForUpdatesTest extends DatabaseTestCase {
     }
 
     /**
-     * A deployment that failed its last deploy is still a candidate: a new tag is often
-     * exactly what fixes it.
+     * A deployment that is not all there - its last deploy did not finish - is still a
+     * candidate: a new tag is often exactly what fixes it.
      */
-    public function testDeploymentInErrorIsStillUpdated(): void {
+    public function testAnOutOfSyncDeploymentIsStillUpdated(): void {
         $deployment = Fixtures::autoUpdatableDeployment([
             'image' => self::Image,
             'auto_update_tag_regex' => 'latest-minor',
-            'status' => \DeploymentStatusTypes::Error,
+            'status' => \DeploymentStatusTypes::OutOfSync,
         ]);
 
         AutoUpdate::CheckForUpdates(self::Image, 'latest-minor');

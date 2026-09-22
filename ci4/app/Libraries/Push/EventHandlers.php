@@ -2,6 +2,7 @@
 
 use App\Entities\AutoUpdate;
 use App\Entities\Deployment;
+use App\Libraries\Health\HealthCheck;
 use App\Libraries\WebHooks\WebhookHelper;
 use DebugTool\Data;
 
@@ -37,6 +38,10 @@ class EventHandlers {
             Events::Deployment_Deployed() => ['method' => 'deploymentDeployed', 'delay' => 0],
             Events::Deployment_Terminated() => ['method' => 'deploymentTerminated', 'delay' => 0],
             Events::AutoUpdate_Approved() => ['method' => 'autoUpdateApproved', 'delay' => 0],
+            Events::Deployment_Health_Settled() => ['method' => 'deploymentHealthSettled', 'delay' => 0],
+            // The pace a rollout is followed at. Each look queues the next, so nothing waits in
+            // the worker in between.
+            Events::Deployment_Health_Follow() => ['method' => 'deploymentHealthFollow', 'delay' => HealthCheck::FollowEvery],
         ];
     }
 
@@ -95,6 +100,18 @@ class EventHandlers {
 
     private static function deploymentDeployed(ChangeEvent $changeEvent): void {
         WebhookHelper::Deliver(\WebHookTypes::Deployment_Deployed, json_encode($changeEvent->next));
+
+        if (isset($changeEvent->next['id'])) {
+            HealthCheck::StartFollowing((int) $changeEvent->next['id']);
+        }
+    }
+
+    private static function deploymentHealthSettled(ChangeEvent $changeEvent): void {
+        WebhookHelper::Deliver(\WebHookTypes::Deployment_Health_Changed, json_encode($changeEvent->next));
+    }
+
+    private static function deploymentHealthFollow(ChangeEvent $changeEvent): void {
+        HealthCheck::Follow((int) ($changeEvent->next['deployment_id'] ?? 0), (int) ($changeEvent->next['until'] ?? 0));
     }
 
     private static function deploymentTerminated(ChangeEvent $changeEvent): void {

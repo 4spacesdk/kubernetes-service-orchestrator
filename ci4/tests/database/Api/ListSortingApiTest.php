@@ -118,12 +118,14 @@ class ListSortingApiTest extends ControllerTestCase {
             'database_services' => ['name', 'driver'],
             'workspace_templates' => ['name'],
             'deployment_specifications' => ['name', 'workload_type', 'network_type', 'enable_database', 'enable_rbac'],
-            'deployments' => ['name', 'namespace', 'status', 'version', 'last_updated'],
+            // No namespace: it is under the name on the list, not a column of its own.
+            'deployments' => ['name', 'status', 'health_severity', 'version', 'last_updated'],
             'domains' => ['name'],
             'email_services' => ['name'],
             'gateways' => ['name', 'gateway_class_name', 'namespace'],
             'users' => ['name', 'username'],
-            'workspaces' => ['name_readable', 'namespace', 'status'],
+            // No namespace: it is under the name on the list, not a column of its own.
+            'workspaces' => ['name_readable', 'status', 'health_severity'],
         ];
 
         $cases = [];

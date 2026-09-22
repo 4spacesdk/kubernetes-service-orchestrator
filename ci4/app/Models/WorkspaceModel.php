@@ -41,12 +41,12 @@ class WorkspaceModel extends Model implements ResourceModelInterface {
 
             // `ignoreAuto` is set only where a condition is actually added, and that is the
             // whole of this fix. It used to be set two lines earlier, before the guard - so
-            // `filter=status:active`, which parses to a string rather than a list, fell
+            // `filter=status:synced`, which parses to a string rather than a list, fell
             // through the guard *and* told the extension not to apply it. The answer was
             // `200 OK`, shaped exactly like a filtered one, carrying every status there is.
             //
             // A scalar needs no branch of its own now: left alone, the extension applies it
-            // as the ordinary `status = 'active'` it always was on every other resource.
+            // as the ordinary `status = 'synced'` it always was on every other resource.
             if (is_array($statuses) && count($statuses) > 0 && $statuses[0] !== '') {
                 // An empty list means "all", which is what a cleared status picker sends -
                 // `whereIn('status', [''])` would answer nothing at all.

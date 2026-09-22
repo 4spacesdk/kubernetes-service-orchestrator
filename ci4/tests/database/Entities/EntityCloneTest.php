@@ -132,7 +132,7 @@ class EntityCloneTest extends DatabaseTestCase {
     public function testACloneKeepsTheValuesTheRowWasLoadedWithRatherThanTheCurrentOnes(): void {
         $deployment = Fixtures::deployment(['name' => 'web', 'status' => \DeploymentStatusTypes::Draft]);
         $deployment->name = 'renamed';
-        $deployment->status = \DeploymentStatusTypes::Active;
+        $deployment->status = \DeploymentStatusTypes::Synced;
 
         $clone = $deployment->getClone();
 

@@ -53,11 +53,11 @@ class ContainerImageRunningDeploymentsApiTest extends ControllerTestCase {
 
     private function aDeployment(ContainerImage $image, array $deployment = [], array $workspace = []): Deployment {
         $spec = Fixtures::deploymentSpecification(['container_image_id' => $image->id]);
-        $workspace = Fixtures::workspace(array_merge(['status' => \WorkspaceStatusTypes::Active], $workspace));
+        $workspace = Fixtures::workspace(array_merge(['status' => \WorkspaceStatusTypes::Synced], $workspace));
         return Fixtures::deployment(array_merge([
             'deployment_specification_id' => $spec->id,
             'workspace_id' => $workspace->id,
-            'status' => \DeploymentStatusTypes::Active,
+            'status' => \DeploymentStatusTypes::Synced,
             'version' => '1',
         ], $deployment));
     }

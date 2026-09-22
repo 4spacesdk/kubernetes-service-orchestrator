@@ -1,0 +1,57 @@
+<?php namespace App\Libraries\Health;
+
+use App\Entities\Deployment;
+
+/**
+ * The part of a deployment its health is worked out from, lifted off the entity so that
+ * `HealthEvaluator` needs neither the database nor the ORM - it is tested in the unit suite.
+ */
+readonly class Workload {
+
+    /**
+     * @param string|null $suspendedBecause Why kso is not to look at the cluster for it -
+     *   a paused workspace or a deployment switched off. Null when it should be looked at.
+     * @param array{status: string, image: string}|null $lastMigration
+     */
+    public function __construct(
+        public string $workloadType,
+        public string $namespace,
+        public string $name,
+        public string $version,
+        public ?string $suspendedBecause = null,
+        public ?array $lastMigration = null,
+    ) {
+    }
+
+    public static function Of(Deployment $deployment, string $workloadType): Workload {
+        $suspendedBecause = null;
+        if ($deployment->status === \DeploymentStatusTypes::Inactive) {
+            $suspendedBecause = 'Switched off';
+        } else if ($deployment->isInAPausedOrInactiveWorkspace()) {
+            $suspendedBecause = 'The workspace is paused or switched off';
+        }
+
+        $lastMigration = null;
+        if ($deployment->last_migration_job_id) {
+            if (!$deployment->last_migration_job->exists()) {
+                $deployment->last_migration_job->find();
+            }
+            if ($deployment->last_migration_job->exists()) {
+                $lastMigration = [
+                    'status' => (string) $deployment->last_migration_job->status,
+                    'image' => (string) $deployment->last_migration_job->image,
+                ];
+            }
+        }
+
+        return new Workload(
+            $workloadType,
+            (string) $deployment->namespace,
+            (string) $deployment->name,
+            (string) $deployment->version,
+            $suspendedBecause,
+            $lastMigration,
+        );
+    }
+
+}

@@ -45,6 +45,12 @@ export class DeploymentDefinition extends BaseModel {
     knative_concurrency_limit_soft?: number;
     knative_concurrency_limit_hard?: number;
     knative_scheduled_minscale_is_enabled?: boolean;
+    health?: string;
+    health_severity?: number;
+    health_reason?: string;
+    health_changed_at?: string;
+    health_checked_at?: string;
+    health_notified?: string;
     last_migration_job_id?: number;
     last_migration_job?: MigrationJob;
     environment_variables?: EnvironmentVariable[];
@@ -102,6 +108,12 @@ export class DeploymentDefinition extends BaseModel {
             delete this.knative_concurrency_limit_soft;
             delete this.knative_concurrency_limit_hard;
             delete this.knative_scheduled_minscale_is_enabled;
+            delete this.health;
+            delete this.health_severity;
+            delete this.health_reason;
+            delete this.health_changed_at;
+            delete this.health_checked_at;
+            delete this.health_notified;
             delete this.last_migration_job_id;
             delete this.last_migration_job;
             delete this.environment_variables;
@@ -213,6 +225,24 @@ export class DeploymentDefinition extends BaseModel {
         }
         if (data.knative_scheduled_minscale_is_enabled != null) {
             this.knative_scheduled_minscale_is_enabled = data.knative_scheduled_minscale_is_enabled;
+        }
+        if (data.health != null) {
+            this.health = data.health;
+        }
+        if (data.health_severity != null) {
+            this.health_severity = data.health_severity;
+        }
+        if (data.health_reason != null) {
+            this.health_reason = data.health_reason;
+        }
+        if (data.health_changed_at != null) {
+            this.health_changed_at = data.health_changed_at;
+        }
+        if (data.health_checked_at != null) {
+            this.health_checked_at = data.health_checked_at;
+        }
+        if (data.health_notified != null) {
+            this.health_notified = data.health_notified;
         }
         if (data.last_migration_job_id != null) {
             this.last_migration_job_id = data.last_migration_job_id;

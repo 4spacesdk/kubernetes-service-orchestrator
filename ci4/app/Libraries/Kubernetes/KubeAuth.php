@@ -5,13 +5,44 @@ use RenokiCo\PhpK8s\KubernetesCluster;
 
 class KubeAuth {
 
+    /**
+     * The cluster every `authenticate()` hands back while it is set - see `Using()`.
+     *
+     * Deployment steps build their own `KubeAuth`, deep inside `checkStatus()`, so this is the
+     * one place that can put an `IndexedCluster` in their hands without changing all of them.
+     */
+    private static ?KubernetesCluster $override = null;
+
     public function __construct() {
+    }
+
+    /**
+     * Run $work with every `authenticate()` answering $cluster - the status check reading from a
+     * `ClusterIndex` rather than asking the api server per step. Put back afterwards, whatever
+     * happens: a cron run that threw would otherwise leave every later request on the index.
+     *
+     * @template T
+     * @param \Closure(): T $work
+     * @return T
+     */
+    public static function Using(KubernetesCluster $cluster, \Closure $work): mixed {
+        $previous = self::$override;
+        self::$override = $cluster;
+        try {
+            return $work();
+        } finally {
+            self::$override = $previous;
+        }
     }
 
     /**
      * @throws \Exception
      */
     public function authenticate(): KubernetesCluster {
+        if (self::$override) {
+            return self::$override;
+        }
+
         switch (env('KUBERNETES_AUTH')) {
             case 'kube-config':
                 return $this->authenticateWithKubeConfig();
@@ -22,8 +53,59 @@ class KubeAuth {
         }
     }
 
+    /**
+     * Run $work against a cluster that answers from one round of lists - the cheap way to check
+     * the status of more than a couple of deployments at once.
+     *
+     * A cluster that cannot be read leaves $work to ask it step by step, and fail the way it
+     * would have: this is a shortcut, not a second answer.
+     *
+     * @template T
+     * @param \Closure(): T $work
+     * @return T
+     */
+    public static function UsingAnIndex(\Closure $work): mixed {
+        try {
+            $cluster = (new KubeAuth())->indexed(ClusterIndex::Of([]));
+            $cluster->useIndex(ClusterIndex::Fetch($cluster));
+        } catch (\Throwable $e) {
+            Data::debug('No index, asking the cluster as usual:', KubeHelper::PrintException($e));
+            return $work();
+        }
+
+        return self::Using($cluster, $work);
+    }
+
+    /**
+     * The same cluster, connected the same way, that answers what the index knows.
+     *
+     * @throws \Exception
+     */
+    public function indexed(ClusterIndex $index): IndexedCluster {
+        $previous = self::$override;
+        self::$override = null;
+        try {
+            $this->as = IndexedCluster::class;
+            $cluster = $this->authenticate();
+        } finally {
+            $this->as = KubernetesCluster::class;
+            self::$override = $previous;
+        }
+
+        /** @var IndexedCluster $cluster */
+        return $cluster->useIndex($index);
+    }
+
+    /**
+     * Which class the factories below build. They are `new static`, so asking `IndexedCluster`
+     * for a kubeconfig gives an `IndexedCluster` connected exactly as the ordinary one.
+     *
+     * @var class-string<KubernetesCluster>
+     */
+    private string $as = KubernetesCluster::class;
+
     private function authenticateWithInClusterConfiguration(): KubernetesCluster {
-        return KubernetesCluster::inClusterConfiguration(getenv('REMOTE_CLUSTER_URL'));
+        return ($this->as)::inClusterConfiguration(getenv('REMOTE_CLUSTER_URL'));
     }
 
     private function authenticateWithKubeConfig(): KubernetesCluster {
@@ -48,7 +130,7 @@ class KubeAuth {
             $config = file_get_contents('/home/www-data/.kube/config');
         }
 
-        $cluster = KubernetesCluster::fromKubeConfigYaml($config);
+        $cluster = ($this->as)::fromKubeConfigYaml($config);
         $userConfig = $this->userForTheCurrentContext(yaml_parse($config));
 
         if (isset($userConfig['user']['exec'])) {

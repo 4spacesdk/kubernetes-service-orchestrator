@@ -83,7 +83,7 @@ abstract class BaseDeploymentStep {
             return $error;
         }
         try {
-            $deployment->updateStatus(DeploymentStatusTypes::Deploying, true);
+            $deployment->updateStatus(DeploymentStatusTypes::OutOfSync, true);
             $this->startDeployCommand($deployment, $reason);
         } catch (\Throwable $e) {
             return KubeHelper::PrintException($e);

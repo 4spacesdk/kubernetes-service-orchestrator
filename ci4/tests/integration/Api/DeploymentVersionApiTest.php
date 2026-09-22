@@ -22,7 +22,7 @@ class DeploymentVersionApiTest extends ClusterControllerTestCase {
 
         $this->assertSame('OK', $body['status'], $body['error'] ?? '');
         $this->assertSame('1.29.1-alpine', $this->reload($deployment)->version);
-        $this->assertSame(\DeploymentStatusTypes::Active, $this->reload($deployment)->status, 'the rollout was never attempted');
+        $this->assertSame(\DeploymentStatusTypes::Synced, $this->reload($deployment)->status, 'the rollout was never attempted');
     }
 
     /**
@@ -44,7 +44,7 @@ class DeploymentVersionApiTest extends ClusterControllerTestCase {
     }
 
     private function deploymentThatIsInTheCluster(): Deployment {
-        $deployment = $this->deploymentInTheTestNamespace(['status' => \DeploymentStatusTypes::Active]);
+        $deployment = $this->deploymentInTheTestNamespace(['status' => \DeploymentStatusTypes::Synced]);
         Fixtures::servicePort([
             'deployment_specification_id' => $deployment->deployment_specification_id,
             'name' => 'http',

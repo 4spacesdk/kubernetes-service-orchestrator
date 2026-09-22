@@ -41,6 +41,7 @@ class WebhooksApiTest extends ControllerTestCase {
             ['name' => 'workspace-terminated'],
             ['name' => 'deployment-deployed'],
             ['name' => 'deployment-terminated'],
+            ['name' => 'deployment-health-changed'],
         ], $body['resources']);
     }
 

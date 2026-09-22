@@ -19,10 +19,9 @@ const color = ref("grey");
 const isLoading = ref(false);
 const isHovering = ref(false);
 const deploymentsInDraftStatus = ref<Deployment[]>([]);
-const deploymentsInDeploymentStatus = ref<Deployment[]>([]);
-const deploymentsInActiveStatus = ref<Deployment[]>([]);
+const deploymentsOutOfSync = ref<Deployment[]>([]);
+const deploymentsSynced = ref<Deployment[]>([]);
 const deploymentsInInactiveStatus = ref<Deployment[]>([]);
-const deploymentsInErrorStatus = ref<Deployment[]>([]);
 const pushSubscription = ref<PushSubscription>();
 
 onMounted(() => {
@@ -66,10 +65,9 @@ function reload() {
 
 function render() {
     deploymentsInDraftStatus.value = deployments.value.filter((deployment) => deployment.status == DeploymentStatusTypes.Draft);
-    deploymentsInDeploymentStatus.value = deployments.value.filter((deployment) => deployment.status == DeploymentStatusTypes.Deploying);
-    deploymentsInActiveStatus.value = deployments.value.filter((deployment) => deployment.status == DeploymentStatusTypes.Active);
+    deploymentsOutOfSync.value = deployments.value.filter((deployment) => deployment.status == DeploymentStatusTypes.OutOfSync);
+    deploymentsSynced.value = deployments.value.filter((deployment) => deployment.status == DeploymentStatusTypes.Synced);
     deploymentsInInactiveStatus.value = deployments.value.filter((deployment) => deployment.status == DeploymentStatusTypes.Inactive);
-    deploymentsInErrorStatus.value = deployments.value.filter((deployment) => deployment.status == DeploymentStatusTypes.Error);
 
     // A pause is a decision somebody made, and it outranks whatever the deployments add up
     // to: the status is recomputed from them, so it drifts on its own.
@@ -77,14 +75,10 @@ function render() {
         icon.value = "fa fa-pause";
         color.value = "grey";
         text.value = "Paused";
-    } else if (deploymentsInErrorStatus.value.length) {
-        icon.value = "fa fa-circle-xmark";
-        color.value = "red";
-        text.value = "Error";
-    } else if (deploymentsInDeploymentStatus.value.length) {
-        icon.value = "fa fa-box";
+    } else if (deploymentsOutOfSync.value.length) {
+        icon.value = "fa fa-circle-arrow-up";
         color.value = "orange";
-        text.value = "Deploying";
+        text.value = "Out of sync";
     } else if (deploymentsInDraftStatus.value.length) {
         icon.value = "fa fa-check";
         color.value = "grey";
@@ -93,10 +87,10 @@ function render() {
         icon.value = "fa fa-check";
         color.value = "grey";
         text.value = "Inactive";
-    } else if (deploymentsInActiveStatus.value.length) {
+    } else if (deploymentsSynced.value.length) {
         icon.value = "fa fa-check";
         color.value = "green";
-        text.value = "Active";
+        text.value = "Synced";
     } else {
         icon.value = "fa fa-circle-info";
         color.value = "grey";
@@ -126,12 +120,7 @@ function onRefreshBtnClicked() {
                     <v-tooltip activator="parent" location="bottom">Refresh</v-tooltip>
                 </v-btn>
 
-                <v-btn v-bind="props" variant="plain" color="grey" size="small" icon>
-                    <v-icon>fa fa-circle-info</v-icon>
-                    <v-tooltip activator="parent" location="bottom">Show deployments</v-tooltip>
-                </v-btn>
-
-                <span>{{ text }}</span>
+                <span class="status">{{ text }}</span>
             </div>
         </template>
 
@@ -142,16 +131,16 @@ function onRefreshBtnClicked() {
                     <v-col cols="12">
                         <div class="d-flex align-center w-100 justify-space-between">
                             <v-icon class="me-1" color="green">fa fa-check</v-icon>
-                            <div class="d-flex align-center"><span>Active</span></div>
-                            <v-chip size="small" class="ms-auto" color="green">{{ deploymentsInActiveStatus.length }}</v-chip>
+                            <div class="d-flex align-center"><span>Synced</span></div>
+                            <v-chip size="small" class="ms-auto" color="green">{{ deploymentsSynced.length }}</v-chip>
                         </div>
                     </v-col>
 
                     <v-col cols="12">
                         <div class="d-flex align-center w-100">
-                            <v-icon class="me-1" color="orange">fa fa-box</v-icon>
-                            <div class="d-flex align-center"><span>Deploying</span></div>
-                            <v-chip size="small" class="ms-auto" color="orange">{{ deploymentsInDeploymentStatus.length }}</v-chip>
+                            <v-icon class="me-1" color="orange">fa fa-circle-arrow-up</v-icon>
+                            <div class="d-flex align-center"><span>Out of sync</span></div>
+                            <v-chip size="small" class="ms-auto" color="orange">{{ deploymentsOutOfSync.length }}</v-chip>
                         </div>
                     </v-col>
 
@@ -171,17 +160,15 @@ function onRefreshBtnClicked() {
                         </div>
                     </v-col>
 
-                    <v-col cols="12">
-                        <div class="d-flex align-center w-100">
-                            <v-icon class="me-1" color="red">fa fa-circle-xmark</v-icon>
-                            <div class="d-flex align-center"><span>Error</span></div>
-                            <v-chip size="small" class="ms-auto" color="red">{{ deploymentsInErrorStatus.length }}</v-chip>
-                        </div>
-                    </v-col>
                 </v-row>
             </v-card-text>
         </v-card>
     </v-menu>
 </template>
 
-<style scoped></style>
+<style scoped>
+/* "Out of sync" broke over three lines and made the row three lines tall. */
+.status {
+    white-space: nowrap;
+}
+</style>

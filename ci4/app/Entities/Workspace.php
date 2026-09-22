@@ -36,11 +36,20 @@ use App\Core\Entity;
  * @property string $status
  * @property bool $is_paused
  *
+ * # Runtime health - the worst of the deployments', see `updateHealth()`
+ * @property string $health
+ * @property int $health_severity
+ * @property string $health_reason
+ * @property string $health_changed_at
+ *
  * Many
  * @property Deployment $deployments
  * @property Label $labels
  */
 class Workspace extends Entity {
+
+    /** Worked out by kso every minute - see `Libraries/Health`. */
+    public const array AuditIgnoredFields = ['health', 'health_severity', 'health_reason', 'health_changed_at'];
 
     /**
      * @throws ValidationException
@@ -384,9 +393,8 @@ class Workspace extends Entity {
 
         // A pause is a decision, not a state to derive. Everything below reads the
         // deployments and writes what they add up to, which is exactly how a pause used to
-        // fall off: a workspace with no deployments went back to Draft, one deployment
-        // deploying made the whole workspace Deploying, and a failing one made it Error -
-        // and Error is a status auto update acts on.
+        // fall off: a workspace with no deployments went back to Draft, and one deployment
+        // out of sync made the whole workspace out of sync - a status auto update acts on.
         if ($this->is_paused) {
             if ($this->status != \WorkspaceStatusTypes::Paused) {
                 $this->updateStatus(\WorkspaceStatusTypes::Paused);
@@ -403,22 +411,16 @@ class Workspace extends Entity {
 
         $newStatus = \WorkspaceStatusTypes::Draft;
 
-        $hasError = false;
-        $hasDeploying = false;
-        $allActive = true;
+        $anyOutOfSync = false;
+        $allSynced = true;
         $anyDraft = false;
 
         foreach ($deployments as $deployment) {
-            if ($deployment->status == \DeploymentStatusTypes::Error) {
-                $hasError = true;
+            if ($deployment->status == \DeploymentStatusTypes::OutOfSync) {
+                $anyOutOfSync = true;
             }
-            if ($deployment->status == \DeploymentStatusTypes::Deploying) {
-                $hasDeploying = true;
-            }
-            if ($deployment->status == \DeploymentStatusTypes::Active) {
-                // Keep allActive true if this is active
-            } else {
-                $allActive = false;
+            if ($deployment->status != \DeploymentStatusTypes::Synced) {
+                $allSynced = false;
             }
             if ($deployment->status == \DeploymentStatusTypes::Draft) {
                 $anyDraft = true;
@@ -429,15 +431,13 @@ class Workspace extends Entity {
         }
 
         if ($deployments->count() == 0) {
-            $allActive = false;
+            $allSynced = false;
         }
 
-        if ($hasError) {
-            $newStatus = \WorkspaceStatusTypes::Error;
-        } else if ($hasDeploying) {
-            $newStatus = \WorkspaceStatusTypes::Deploying;
-        } else if ($allActive) {
-            $newStatus = \WorkspaceStatusTypes::Active;
+        if ($anyOutOfSync) {
+            $newStatus = \WorkspaceStatusTypes::OutOfSync;
+        } else if ($allSynced) {
+            $newStatus = \WorkspaceStatusTypes::Synced;
         } else if ($oldStatus == \WorkspaceStatusTypes::Inactive && ($anyDraft || $deployments->count() == 0)) {
             // A workspace that was switched off stays switched off until something is
             // actually running in it again. The `count() == 0` half is what `terminate()`
@@ -458,6 +458,52 @@ class Workspace extends Entity {
         }
     }
 
+    /**
+     * The worst health among the deployments, and which of them it comes from - "api:
+     * CrashLoopBackOff (…)". A deployment with no health (Draft, a custom resource) has no say.
+     * Only the ones at the worst are named, and none when that is Healthy or Suspended.
+     */
+    public function updateHealth(int $now): void {
+        /** @var Deployment $deployments */
+        $deployments = (new DeploymentModel())
+            ->where('workspace_id', $this->id)
+            ->find();
+
+        $healths = [];
+        foreach ($deployments as $deployment) {
+            $healths[] = $deployment->health;
+        }
+        $health = \HealthStatusTypes::Worst(...$healths);
+
+        $reasons = [];
+        if ($health !== null && \HealthStatusTypes::Severity($health) > \HealthStatusTypes::Severity(\HealthStatusTypes::Healthy)) {
+            foreach ($deployments as $deployment) {
+                if ($deployment->health === $health) {
+                    $reasons[] = $deployment->name . ': ' . ($deployment->health_reason ?: $deployment->health);
+                }
+            }
+        }
+        $reason = mb_strimwidth(implode('; ', $reasons), 0, 1000, '…');
+
+        $healthChanged = $this->health !== $health;
+        if (!$healthChanged && ($this->health_reason ?? '') === $reason) {
+            return;
+        }
+
+        if ($healthChanged) {
+            $this->health = $health;
+            $this->health_severity = \HealthStatusTypes::Severity($health);
+            $this->health_changed_at = $health === null ? null : date('Y-m-d H:i:s', $now);
+        }
+        $this->health_reason = $reason;
+        $this->save();
+
+        Publisher::getInstance()->send(
+            Events::Workspace_Changed_Health($this->id),
+            (new ChangeEvent(null, $this->toArray()))->toArray()
+        );
+    }
+
     public function updateStatus(string $newStatus): void {
         $this->status = $newStatus;
         $this->save();
@@ -476,7 +522,7 @@ class Workspace extends Entity {
     }
 
     public function deploy(): ?string {
-        $this->status = \WorkspaceStatusTypes::Deploying;
+        $this->status = \WorkspaceStatusTypes::OutOfSync;
         $this->save();
 
         /** @var Deployment $deployments */
@@ -506,9 +552,9 @@ class Workspace extends Entity {
      * Pause the workspace: terminate it and remember that a person decided to.
      *
      * The status is recomputed from the deployments, so it cannot hold a pause - a
-     * workspace with none goes back to Draft on its own, one deployment deploying makes the
-     * whole workspace Deploying, and a failing one makes it Error, which auto update does
-     * *not* skip. The flag is what the lists, auto update and the notifications go by.
+     * workspace with none goes back to Draft on its own, and one deployment out of sync makes
+     * the whole workspace Out of sync, which auto update does *not* skip. The flag is what the
+     * lists, auto update and the notifications go by.
      *
      * The workload is shut down, as before. Volumes go with it, by their reclaim policy -
      * that is the part still to be decided before this is offered as anything more.

@@ -6,7 +6,6 @@ import {ContainerImageScan} from "./models";
 import {ContainerImage} from "./models";
 import {ContainerRegistry} from "./models";
 import {DatabaseService} from "./models";
-import {WorkspaceTemplate} from "./models";
 import {DeploymentSpecification} from "./models";
 import {Deployment} from "./models";
 import {MigrationJob} from "./models";
@@ -26,6 +25,7 @@ import {System} from "./models";
 import {User} from "./models";
 import {Webhook} from "./models";
 import {WebhookDelivery} from "./models";
+import {WorkspaceTemplate} from "./models";
 import {Workspace} from "./models";
 import {GatewayAnnotation} from "./models";
 import {PostUpdateActionCondition} from "./models";
@@ -92,29 +92,6 @@ export interface DeploymentCronJobNamesGetResponse {
 
 export interface DeploymentCronJobRunResponse {
     job?: string;
-}
-
-export interface WorkspaceTemplateDeploymentSpecification {
-    deploymentSpecification?: DeploymentSpecification;
-    defaultEnablePodioNotification?: boolean;
-    defaultImagePullPolicy?: string;
-    defaultVersion?: string;
-    defaultEnvironment?: string;
-    defaultCpuRequest?: number;
-    defaultCpuLimit?: number;
-    defaultMemoryRequest?: number;
-    defaultMemoryLimit?: number;
-    defaultReplicas?: number;
-    defaultKnativeConcurrencyLimitSoft?: number;
-    defaultKnativeConcurrencyLimitHard?: number;
-    defaultAutoUpdateEnabled?: boolean;
-    defaultAutoUpdateTagRegex?: string;
-    defaultAutoUpdateRequireApproval?: boolean;
-    defaultKnativeScheduledMinScaleIds?: number[];
-}
-
-export interface WorkspaceTemplateDeploymentSpecificationList {
-    values?: WorkspaceTemplateDeploymentSpecification[];
 }
 
 export interface DeploymentSpecGetResponse {
@@ -320,6 +297,7 @@ export interface KubernetesNodeInfoResponse {
     status?: string;
     message?: string;
     nodes?: KubernetesNodeInfo[];
+    health_checked_at?: string;
 }
 
 export interface KubernetesPod {
@@ -453,6 +431,29 @@ export interface UsersMFASetupPrepareResponse {
 
 export interface WebhookTypesGetResponse {
     name?: string;
+}
+
+export interface WorkspaceTemplateDeploymentSpecification {
+    deploymentSpecification?: DeploymentSpecification;
+    defaultEnablePodioNotification?: boolean;
+    defaultImagePullPolicy?: string;
+    defaultVersion?: string;
+    defaultEnvironment?: string;
+    defaultCpuRequest?: number;
+    defaultCpuLimit?: number;
+    defaultMemoryRequest?: number;
+    defaultMemoryLimit?: number;
+    defaultReplicas?: number;
+    defaultKnativeConcurrencyLimitSoft?: number;
+    defaultKnativeConcurrencyLimitHard?: number;
+    defaultAutoUpdateEnabled?: boolean;
+    defaultAutoUpdateTagRegex?: string;
+    defaultAutoUpdateRequireApproval?: boolean;
+    defaultKnativeScheduledMinScaleIds?: number[];
+}
+
+export interface WorkspaceTemplateDeploymentSpecificationList {
+    values?: WorkspaceTemplateDeploymentSpecification[];
 }
 
 
@@ -592,6 +593,132 @@ export class AuditEventsGetById extends BaseApi<AuditEvent> {
     }
 }
 
+export class AuditEventsPost extends BaseApi<AuditEvent> {
+
+    public topic = 'Resources.AuditEvents';
+    protected method = 'post';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/audit_events`;
+    }
+
+    protected convertToResource(data: any): AuditEvent {
+        return new AuditEvent(data);
+    }
+
+    public save(data: AuditEvent, next?: (value: AuditEvent) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class AuditEventsPutById extends BaseApi<AuditEvent> {
+
+    public topic = 'Resources.AuditEvents';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/audit_events/${id}`;
+    }
+
+    protected convertToResource(data: any): AuditEvent {
+        return new AuditEvent(data);
+    }
+
+    public save(data: AuditEvent, next?: (value: AuditEvent) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class AuditEventsPut extends BaseApi<AuditEvent> {
+
+    public topic = 'Resources.AuditEvents';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/audit_events`;
+    }
+
+    protected convertToResource(data: any): AuditEvent {
+        return new AuditEvent(data);
+    }
+
+    public save(data: AuditEvent, next?: (value: AuditEvent) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class AuditEventsPatchById extends BaseApi<AuditEvent> {
+
+    public topic = 'Resources.AuditEvents';
+    protected method = 'patch';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/audit_events/${id}`;
+    }
+
+    protected convertToResource(data: any): AuditEvent {
+        return new AuditEvent(data);
+    }
+
+    public save(data: AuditEvent, next?: (value: AuditEvent) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class AuditEventsPatch extends BaseApi<AuditEvent> {
+
+    public topic = 'Resources.AuditEvents';
+    protected method = 'patch';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/audit_events`;
+    }
+
+    protected convertToResource(data: any): AuditEvent {
+        return new AuditEvent(data);
+    }
+
+    public save(data: AuditEvent, next?: (value: AuditEvent) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class AuditEventsDeleteById extends BaseApi<AuditEvent> {
+
+    public topic = 'Resources.AuditEvents';
+    protected method = 'delete';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/audit_events/${id}`;
+    }
+
+    protected convertToResource(data: any): AuditEvent {
+        return new AuditEvent(data);
+    }
+
+    public delete(next?: (value: AuditEvent) => void) {
+        return super.executeDelete(next);
+    }
+}
+
 class AuditEvents {
 
     public get(): AuditEventsGet {
@@ -602,7 +729,32 @@ class AuditEvents {
         return new AuditEventsGetById(id);
     }
 
+    public post(): AuditEventsPost {
+        return new AuditEventsPost();
+    }
+
+    public putById(id: number): AuditEventsPutById {
+        return new AuditEventsPutById(id);
+    }
+
+    public put(): AuditEventsPut {
+        return new AuditEventsPut();
+    }
+
+    public patchById(id: number): AuditEventsPatchById {
+        return new AuditEventsPatchById(id);
+    }
+
+    public patch(): AuditEventsPatch {
+        return new AuditEventsPatch();
+    }
+
+    public deleteById(id: number): AuditEventsDeleteById {
+        return new AuditEventsDeleteById(id);
+    }
+
 }
+
 
 export class AutoUpdatesGet extends BaseApi<AutoUpdate> {
 
@@ -2393,390 +2545,6 @@ class DatabaseServices {
 
     public testConnectionGetById(id: number): DatabaseServicesTestConnectionGetById {
         return new DatabaseServicesTestConnectionGetById(id);
-    }
-
-}
-
-
-export class WorkspaceTemplatesGet extends BaseApi<WorkspaceTemplate> {
-
-    public topic = 'Resources.WorkspaceTemplates';
-    protected method = 'get';
-    protected scope = '';
-    protected summary = '';
-
-    public constructor() {
-        super();
-        this.uri = `/workspace_templates`;
-    }
-
-    protected convertToResource(data: any): WorkspaceTemplate {
-        return new WorkspaceTemplate(data);
-    }
-
-    public where(name: string, value: any): WorkspaceTemplatesGet {
-        this.filter().where(name, value);
-        return this;
-    }
-
-    public whereEquals(name: string, value: any): WorkspaceTemplatesGet {
-        this.filter().whereEquals(name, value);
-        return this;
-    }
-
-    public whereIn(name: string, value: any[]): WorkspaceTemplatesGet {
-        this.filter().whereIn(name, value);
-        return this;
-    }
-
-    public whereInArray(name: string, value: any[]): WorkspaceTemplatesGet {
-        this.filter().whereInArray(name, value);
-        return this;
-    }
-
-    public whereNot(name: string, value: any): WorkspaceTemplatesGet {
-        this.filter().whereNot(name, value);
-        return this;
-    }
-
-    public whereNotIn(name: string, value: any[]): WorkspaceTemplatesGet {
-        this.filter().whereNotIn(name, value);
-        return this;
-    }
-
-    public whereGreaterThan(name: string, value: any): WorkspaceTemplatesGet {
-        this.filter().whereGreaterThan(name, value);
-        return this;
-    }
-
-    public whereGreaterThanOrEqual(name: string, value: any): WorkspaceTemplatesGet {
-        this.filter().whereGreaterThanOrEqual(name, value);
-        return this;
-    }
-
-    public whereLessThan(name: string, value: any): WorkspaceTemplatesGet {
-        this.filter().whereLessThan(name, value);
-        return this;
-    }
-
-    public whereLessThanOrEqual(name: string, value: any): WorkspaceTemplatesGet {
-        this.filter().whereLessThanOrEqual(name, value);
-        return this;
-    }
-
-    public search(name: string, value: any): WorkspaceTemplatesGet {
-        this.filter().search(name, value);
-        return this;
-    }
-
-    public include(name: string): WorkspaceTemplatesGet {
-        this.getInclude().include(name);
-        return this;
-    }
-
-    public orderBy(name: string, direction: string): WorkspaceTemplatesGet {
-        this.ordering().orderBy(name, direction);
-        return this;
-    }
-
-    public orderAsc(name: string): WorkspaceTemplatesGet {
-        this.ordering().orderAsc(name);
-        return this;
-    }
-
-    public orderDesc(name: string): WorkspaceTemplatesGet {
-        this.ordering().orderDesc(name);
-        return this;
-    }
-
-    public limit(value: number): WorkspaceTemplatesGet {
-        this.limitValue = value;
-        return this;
-    }
-
-    public offset(value: number): WorkspaceTemplatesGet {
-        this.offsetValue = value;
-        return this;
-    }
-
-    public count(next?: (value: number) => void) {
-        return this.executeCount(next);
-    }
-
-    public find(next?: (value: WorkspaceTemplate[]) => void) {
-        return super.executeFind(next);
-    }
-}
-
-export class WorkspaceTemplatesGetById extends BaseApi<WorkspaceTemplate> {
-
-    public topic = 'Resources.WorkspaceTemplates';
-    protected method = 'get';
-    protected scope = '';
-    protected summary = '';
-
-    public constructor(id: number) {
-        super();
-        this.uri = `/workspace_templates/${id}`;
-    }
-
-    protected convertToResource(data: any): WorkspaceTemplate {
-        return new WorkspaceTemplate(data);
-    }
-
-    public include(name: string): WorkspaceTemplatesGetById {
-        this.getInclude().include(name);
-        return this;
-    }
-
-    public find(next?: (value: WorkspaceTemplate[]) => void) {
-        return super.executeFind(next);
-    }
-}
-
-export class WorkspaceTemplatesPost extends BaseApi<WorkspaceTemplate> {
-
-    public topic = 'Resources.WorkspaceTemplates';
-    protected method = 'post';
-    protected scope = '';
-    protected summary = '';
-
-    public constructor() {
-        super();
-        this.uri = `/workspace_templates`;
-    }
-
-    protected convertToResource(data: any): WorkspaceTemplate {
-        return new WorkspaceTemplate(data);
-    }
-
-    public save(data: WorkspaceTemplate, next?: (value: WorkspaceTemplate) => void) {
-        return super.executeSave(data, next);
-    }
-}
-
-export class WorkspaceTemplatesPatchById extends BaseApi<WorkspaceTemplate> {
-
-    public topic = 'Resources.WorkspaceTemplates';
-    protected method = 'patch';
-    protected scope = '';
-    protected summary = '';
-
-    public constructor(id: number) {
-        super();
-        this.uri = `/workspace_templates/${id}`;
-    }
-
-    protected convertToResource(data: any): WorkspaceTemplate {
-        return new WorkspaceTemplate(data);
-    }
-
-    public save(data: WorkspaceTemplate, next?: (value: WorkspaceTemplate) => void) {
-        return super.executeSave(data, next);
-    }
-}
-
-export class WorkspaceTemplatesPatch extends BaseApi<WorkspaceTemplate> {
-
-    public topic = 'Resources.WorkspaceTemplates';
-    protected method = 'patch';
-    protected scope = '';
-    protected summary = '';
-
-    public constructor() {
-        super();
-        this.uri = `/workspace_templates`;
-    }
-
-    protected convertToResource(data: any): WorkspaceTemplate {
-        return new WorkspaceTemplate(data);
-    }
-
-    public save(data: WorkspaceTemplate, next?: (value: WorkspaceTemplate) => void) {
-        return super.executeSave(data, next);
-    }
-}
-
-export class WorkspaceTemplatesDeleteById extends BaseApi<WorkspaceTemplate> {
-
-    public topic = 'Resources.WorkspaceTemplates';
-    protected method = 'delete';
-    protected scope = '';
-    protected summary = '';
-
-    public constructor(id: number) {
-        super();
-        this.uri = `/workspace_templates/${id}`;
-    }
-
-    protected convertToResource(data: any): WorkspaceTemplate {
-        return new WorkspaceTemplate(data);
-    }
-
-    public delete(next?: (value: WorkspaceTemplate) => void) {
-        return super.executeDelete(next);
-    }
-}
-
-export class WorkspaceTemplatesDuplicatePostById extends BaseApi<WorkspaceTemplate> {
-
-    public topic = 'Resources.WorkspaceTemplates';
-    protected method = 'post';
-    protected scope = '';
-    protected summary = '';
-
-    public constructor(id: number) {
-        super();
-        this.uri = `/workspace-templates/${id}/duplicate`;
-    }
-
-    protected convertToResource(data: any): WorkspaceTemplate {
-        return new WorkspaceTemplate(data);
-    }
-
-    public save(data: any, next?: (value: WorkspaceTemplate) => void) {
-        return super.executeSave(data, next);
-    }
-}
-
-export class WorkspaceTemplatesUpdateDeploymentSpecificationsPutById extends BaseApi<WorkspaceTemplate> {
-
-    public topic = 'Resources.WorkspaceTemplates';
-    protected method = 'put';
-    protected scope = '';
-    protected summary = '';
-
-    public constructor(id: number) {
-        super();
-        this.uri = `/workspace-templates/${id}/deployment-specifications`;
-    }
-
-    protected convertToResource(data: any): WorkspaceTemplate {
-        return new WorkspaceTemplate(data);
-    }
-
-    public save(data: WorkspaceTemplateDeploymentSpecificationList, next?: (value: WorkspaceTemplate) => void) {
-        return super.executeSave(data, next);
-    }
-}
-
-export class WorkspaceTemplatesUpdateEnvironmentVariablesPutById extends BaseApi<WorkspaceTemplate> {
-
-    public topic = 'Resources.WorkspaceTemplates';
-    protected method = 'put';
-    protected scope = '';
-    protected summary = '';
-
-    public constructor(id: number) {
-        super();
-        this.uri = `/workspace-templates/${id}/environment-variables`;
-    }
-
-    protected convertToResource(data: any): WorkspaceTemplate {
-        return new WorkspaceTemplate(data);
-    }
-
-    public save(data: EnvironmentVariableList, next?: (value: WorkspaceTemplate) => void) {
-        return super.executeSave(data, next);
-    }
-}
-
-export class WorkspaceTemplatesCopyEnvironmentVariableToDeploymentsPutByWorkspaceTemplateId extends BaseApi<WorkspaceTemplate> {
-
-    public topic = 'Resources.WorkspaceTemplates';
-    protected method = 'put';
-    protected scope = '';
-    protected summary = '';
-
-    public constructor(workspaceTemplateId: number) {
-        super();
-        this.uri = `/workspace-templates/${workspaceTemplateId}/environment-variables/copy-to-deployments`;
-    }
-
-    protected convertToResource(data: any): WorkspaceTemplate {
-        return new WorkspaceTemplate(data);
-    }
-
-    public name(value: string): WorkspaceTemplatesCopyEnvironmentVariableToDeploymentsPutByWorkspaceTemplateId {
-        this.addQueryParameter('name', value);
-        return this;
-    }
-
-    public override(value: boolean): WorkspaceTemplatesCopyEnvironmentVariableToDeploymentsPutByWorkspaceTemplateId {
-        this.addQueryParameter('override', value);
-        return this;
-    }
-
-    public save(data: any, next?: (value: WorkspaceTemplate) => void) {
-        return super.executeSave(data, next);
-    }
-}
-
-export class WorkspaceTemplatesUpdateLabelsPutByWorkspaceTemplateId extends BaseApi<WorkspaceTemplate> {
-
-    public topic = 'Resources.WorkspaceTemplates';
-    protected method = 'put';
-    protected scope = '';
-    protected summary = '';
-
-    public constructor(workspaceTemplateId: number) {
-        super();
-        this.uri = `/workspace-templates/${workspaceTemplateId}/labels`;
-    }
-
-    protected convertToResource(data: any): WorkspaceTemplate {
-        return new WorkspaceTemplate(data);
-    }
-
-    public save(data: LabelList, next?: (value: WorkspaceTemplate) => void) {
-        return super.executeSave(data, next);
-    }
-}
-
-class WorkspaceTemplates {
-
-    public get(): WorkspaceTemplatesGet {
-        return new WorkspaceTemplatesGet();
-    }
-
-    public getById(id: number): WorkspaceTemplatesGetById {
-        return new WorkspaceTemplatesGetById(id);
-    }
-
-    public post(): WorkspaceTemplatesPost {
-        return new WorkspaceTemplatesPost();
-    }
-
-    public patchById(id: number): WorkspaceTemplatesPatchById {
-        return new WorkspaceTemplatesPatchById(id);
-    }
-
-    public patch(): WorkspaceTemplatesPatch {
-        return new WorkspaceTemplatesPatch();
-    }
-
-    public deleteById(id: number): WorkspaceTemplatesDeleteById {
-        return new WorkspaceTemplatesDeleteById(id);
-    }
-
-    public duplicatePostById(id: number): WorkspaceTemplatesDuplicatePostById {
-        return new WorkspaceTemplatesDuplicatePostById(id);
-    }
-
-    public updateDeploymentSpecificationsPutById(id: number): WorkspaceTemplatesUpdateDeploymentSpecificationsPutById {
-        return new WorkspaceTemplatesUpdateDeploymentSpecificationsPutById(id);
-    }
-
-    public updateEnvironmentVariablesPutById(id: number): WorkspaceTemplatesUpdateEnvironmentVariablesPutById {
-        return new WorkspaceTemplatesUpdateEnvironmentVariablesPutById(id);
-    }
-
-    public copyEnvironmentVariableToDeploymentsPutByWorkspaceTemplateId(workspaceTemplateId: number): WorkspaceTemplatesCopyEnvironmentVariableToDeploymentsPutByWorkspaceTemplateId {
-        return new WorkspaceTemplatesCopyEnvironmentVariableToDeploymentsPutByWorkspaceTemplateId(workspaceTemplateId);
-    }
-
-    public updateLabelsPutByWorkspaceTemplateId(workspaceTemplateId: number): WorkspaceTemplatesUpdateLabelsPutByWorkspaceTemplateId {
-        return new WorkspaceTemplatesUpdateLabelsPutByWorkspaceTemplateId(workspaceTemplateId);
     }
 
 }
@@ -8995,6 +8763,390 @@ class Webhooks {
 }
 
 
+export class WorkspaceTemplatesGet extends BaseApi<WorkspaceTemplate> {
+
+    public topic = 'Resources.WorkspaceTemplates';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/workspace_templates`;
+    }
+
+    protected convertToResource(data: any): WorkspaceTemplate {
+        return new WorkspaceTemplate(data);
+    }
+
+    public where(name: string, value: any): WorkspaceTemplatesGet {
+        this.filter().where(name, value);
+        return this;
+    }
+
+    public whereEquals(name: string, value: any): WorkspaceTemplatesGet {
+        this.filter().whereEquals(name, value);
+        return this;
+    }
+
+    public whereIn(name: string, value: any[]): WorkspaceTemplatesGet {
+        this.filter().whereIn(name, value);
+        return this;
+    }
+
+    public whereInArray(name: string, value: any[]): WorkspaceTemplatesGet {
+        this.filter().whereInArray(name, value);
+        return this;
+    }
+
+    public whereNot(name: string, value: any): WorkspaceTemplatesGet {
+        this.filter().whereNot(name, value);
+        return this;
+    }
+
+    public whereNotIn(name: string, value: any[]): WorkspaceTemplatesGet {
+        this.filter().whereNotIn(name, value);
+        return this;
+    }
+
+    public whereGreaterThan(name: string, value: any): WorkspaceTemplatesGet {
+        this.filter().whereGreaterThan(name, value);
+        return this;
+    }
+
+    public whereGreaterThanOrEqual(name: string, value: any): WorkspaceTemplatesGet {
+        this.filter().whereGreaterThanOrEqual(name, value);
+        return this;
+    }
+
+    public whereLessThan(name: string, value: any): WorkspaceTemplatesGet {
+        this.filter().whereLessThan(name, value);
+        return this;
+    }
+
+    public whereLessThanOrEqual(name: string, value: any): WorkspaceTemplatesGet {
+        this.filter().whereLessThanOrEqual(name, value);
+        return this;
+    }
+
+    public search(name: string, value: any): WorkspaceTemplatesGet {
+        this.filter().search(name, value);
+        return this;
+    }
+
+    public include(name: string): WorkspaceTemplatesGet {
+        this.getInclude().include(name);
+        return this;
+    }
+
+    public orderBy(name: string, direction: string): WorkspaceTemplatesGet {
+        this.ordering().orderBy(name, direction);
+        return this;
+    }
+
+    public orderAsc(name: string): WorkspaceTemplatesGet {
+        this.ordering().orderAsc(name);
+        return this;
+    }
+
+    public orderDesc(name: string): WorkspaceTemplatesGet {
+        this.ordering().orderDesc(name);
+        return this;
+    }
+
+    public limit(value: number): WorkspaceTemplatesGet {
+        this.limitValue = value;
+        return this;
+    }
+
+    public offset(value: number): WorkspaceTemplatesGet {
+        this.offsetValue = value;
+        return this;
+    }
+
+    public count(next?: (value: number) => void) {
+        return this.executeCount(next);
+    }
+
+    public find(next?: (value: WorkspaceTemplate[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class WorkspaceTemplatesGetById extends BaseApi<WorkspaceTemplate> {
+
+    public topic = 'Resources.WorkspaceTemplates';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/workspace_templates/${id}`;
+    }
+
+    protected convertToResource(data: any): WorkspaceTemplate {
+        return new WorkspaceTemplate(data);
+    }
+
+    public include(name: string): WorkspaceTemplatesGetById {
+        this.getInclude().include(name);
+        return this;
+    }
+
+    public find(next?: (value: WorkspaceTemplate[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class WorkspaceTemplatesPost extends BaseApi<WorkspaceTemplate> {
+
+    public topic = 'Resources.WorkspaceTemplates';
+    protected method = 'post';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/workspace_templates`;
+    }
+
+    protected convertToResource(data: any): WorkspaceTemplate {
+        return new WorkspaceTemplate(data);
+    }
+
+    public save(data: WorkspaceTemplate, next?: (value: WorkspaceTemplate) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class WorkspaceTemplatesPatchById extends BaseApi<WorkspaceTemplate> {
+
+    public topic = 'Resources.WorkspaceTemplates';
+    protected method = 'patch';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/workspace_templates/${id}`;
+    }
+
+    protected convertToResource(data: any): WorkspaceTemplate {
+        return new WorkspaceTemplate(data);
+    }
+
+    public save(data: WorkspaceTemplate, next?: (value: WorkspaceTemplate) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class WorkspaceTemplatesPatch extends BaseApi<WorkspaceTemplate> {
+
+    public topic = 'Resources.WorkspaceTemplates';
+    protected method = 'patch';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/workspace_templates`;
+    }
+
+    protected convertToResource(data: any): WorkspaceTemplate {
+        return new WorkspaceTemplate(data);
+    }
+
+    public save(data: WorkspaceTemplate, next?: (value: WorkspaceTemplate) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class WorkspaceTemplatesDeleteById extends BaseApi<WorkspaceTemplate> {
+
+    public topic = 'Resources.WorkspaceTemplates';
+    protected method = 'delete';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/workspace_templates/${id}`;
+    }
+
+    protected convertToResource(data: any): WorkspaceTemplate {
+        return new WorkspaceTemplate(data);
+    }
+
+    public delete(next?: (value: WorkspaceTemplate) => void) {
+        return super.executeDelete(next);
+    }
+}
+
+export class WorkspaceTemplatesDuplicatePostById extends BaseApi<WorkspaceTemplate> {
+
+    public topic = 'Resources.WorkspaceTemplates';
+    protected method = 'post';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/workspace-templates/${id}/duplicate`;
+    }
+
+    protected convertToResource(data: any): WorkspaceTemplate {
+        return new WorkspaceTemplate(data);
+    }
+
+    public save(data: any, next?: (value: WorkspaceTemplate) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class WorkspaceTemplatesUpdateDeploymentSpecificationsPutById extends BaseApi<WorkspaceTemplate> {
+
+    public topic = 'Resources.WorkspaceTemplates';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/workspace-templates/${id}/deployment-specifications`;
+    }
+
+    protected convertToResource(data: any): WorkspaceTemplate {
+        return new WorkspaceTemplate(data);
+    }
+
+    public save(data: WorkspaceTemplateDeploymentSpecificationList, next?: (value: WorkspaceTemplate) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class WorkspaceTemplatesUpdateEnvironmentVariablesPutById extends BaseApi<WorkspaceTemplate> {
+
+    public topic = 'Resources.WorkspaceTemplates';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/workspace-templates/${id}/environment-variables`;
+    }
+
+    protected convertToResource(data: any): WorkspaceTemplate {
+        return new WorkspaceTemplate(data);
+    }
+
+    public save(data: EnvironmentVariableList, next?: (value: WorkspaceTemplate) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class WorkspaceTemplatesCopyEnvironmentVariableToDeploymentsPutByWorkspaceTemplateId extends BaseApi<WorkspaceTemplate> {
+
+    public topic = 'Resources.WorkspaceTemplates';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(workspaceTemplateId: number) {
+        super();
+        this.uri = `/workspace-templates/${workspaceTemplateId}/environment-variables/copy-to-deployments`;
+    }
+
+    protected convertToResource(data: any): WorkspaceTemplate {
+        return new WorkspaceTemplate(data);
+    }
+
+    public name(value: string): WorkspaceTemplatesCopyEnvironmentVariableToDeploymentsPutByWorkspaceTemplateId {
+        this.addQueryParameter('name', value);
+        return this;
+    }
+
+    public override(value: boolean): WorkspaceTemplatesCopyEnvironmentVariableToDeploymentsPutByWorkspaceTemplateId {
+        this.addQueryParameter('override', value);
+        return this;
+    }
+
+    public save(data: any, next?: (value: WorkspaceTemplate) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class WorkspaceTemplatesUpdateLabelsPutByWorkspaceTemplateId extends BaseApi<WorkspaceTemplate> {
+
+    public topic = 'Resources.WorkspaceTemplates';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(workspaceTemplateId: number) {
+        super();
+        this.uri = `/workspace-templates/${workspaceTemplateId}/labels`;
+    }
+
+    protected convertToResource(data: any): WorkspaceTemplate {
+        return new WorkspaceTemplate(data);
+    }
+
+    public save(data: LabelList, next?: (value: WorkspaceTemplate) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+class WorkspaceTemplates {
+
+    public get(): WorkspaceTemplatesGet {
+        return new WorkspaceTemplatesGet();
+    }
+
+    public getById(id: number): WorkspaceTemplatesGetById {
+        return new WorkspaceTemplatesGetById(id);
+    }
+
+    public post(): WorkspaceTemplatesPost {
+        return new WorkspaceTemplatesPost();
+    }
+
+    public patchById(id: number): WorkspaceTemplatesPatchById {
+        return new WorkspaceTemplatesPatchById(id);
+    }
+
+    public patch(): WorkspaceTemplatesPatch {
+        return new WorkspaceTemplatesPatch();
+    }
+
+    public deleteById(id: number): WorkspaceTemplatesDeleteById {
+        return new WorkspaceTemplatesDeleteById(id);
+    }
+
+    public duplicatePostById(id: number): WorkspaceTemplatesDuplicatePostById {
+        return new WorkspaceTemplatesDuplicatePostById(id);
+    }
+
+    public updateDeploymentSpecificationsPutById(id: number): WorkspaceTemplatesUpdateDeploymentSpecificationsPutById {
+        return new WorkspaceTemplatesUpdateDeploymentSpecificationsPutById(id);
+    }
+
+    public updateEnvironmentVariablesPutById(id: number): WorkspaceTemplatesUpdateEnvironmentVariablesPutById {
+        return new WorkspaceTemplatesUpdateEnvironmentVariablesPutById(id);
+    }
+
+    public copyEnvironmentVariableToDeploymentsPutByWorkspaceTemplateId(workspaceTemplateId: number): WorkspaceTemplatesCopyEnvironmentVariableToDeploymentsPutByWorkspaceTemplateId {
+        return new WorkspaceTemplatesCopyEnvironmentVariableToDeploymentsPutByWorkspaceTemplateId(workspaceTemplateId);
+    }
+
+    public updateLabelsPutByWorkspaceTemplateId(workspaceTemplateId: number): WorkspaceTemplatesUpdateLabelsPutByWorkspaceTemplateId {
+        return new WorkspaceTemplatesUpdateLabelsPutByWorkspaceTemplateId(workspaceTemplateId);
+    }
+
+}
+
+
 export class WorkspacesGet extends BaseApi<Workspace> {
 
     public topic = 'Resources.Workspaces';
@@ -9658,10 +9810,6 @@ export class Api {
         return new DatabaseServices();
     }
 
-    public static workspaceTemplates(): WorkspaceTemplates {
-        return new WorkspaceTemplates();
-    }
-
     public static deploymentSpecifications(): DeploymentSpecifications {
         return new DeploymentSpecifications();
     }
@@ -9748,6 +9896,10 @@ export class Api {
 
     public static webhooks(): Webhooks {
         return new Webhooks();
+    }
+
+    public static workspaceTemplates(): WorkspaceTemplates {
+        return new WorkspaceTemplates();
     }
 
     public static workspaces(): Workspaces {

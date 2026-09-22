@@ -221,10 +221,10 @@ class DeploymentStepsApiTest extends ClusterControllerTestCase {
         $this->assertSame(\DeploymentStatusTypes::Draft, $this->statusOfTheDeployment($deployment));
 
         $this->signedIn()->put('deployment-steps/' . DeploymentSteps::Service . "/deploy?deploymentId={$deployment->id}");
-        $this->assertSame(\DeploymentStatusTypes::Active, $this->statusOfTheDeployment($deployment));
+        $this->assertSame(\DeploymentStatusTypes::Synced, $this->statusOfTheDeployment($deployment));
 
         $this->signedIn()->put('deployment-steps/' . DeploymentSteps::Service . "/terminate?deploymentId={$deployment->id}");
-        $this->assertSame(\DeploymentStatusTypes::Deploying, $this->statusOfTheDeployment($deployment));
+        $this->assertSame(\DeploymentStatusTypes::OutOfSync, $this->statusOfTheDeployment($deployment));
     }
 
     /**

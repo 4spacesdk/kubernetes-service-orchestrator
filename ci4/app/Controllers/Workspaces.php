@@ -10,6 +10,8 @@ use App\Entities\Workspace;
 use App\Exceptions\ValidationException;
 use App\Interfaces\LabelList;
 use App\Libraries\Audit\Audit;
+use App\Libraries\Kubernetes\ClusterIndex;
+use App\Libraries\Kubernetes\KubeAuth;
 use App\Models\DeploymentModel;
 use App\Models\WorkspaceTemplateDeploymentSpecificationModel;
 use App\Models\MigrationJobModel;
@@ -325,9 +327,19 @@ class Workspaces extends ResourceController {
         $deployments = (new DeploymentModel())
             ->where('workspace_id', $item->id)
             ->find();
-        foreach ($deployments as $deployment) {
-            $deployment->checkStatus(false);
-        }
+
+        // Off one round of lists rather than a call per step per deployment. This is the
+        // refresh button on the workspaces list, and a workspace of six deployments was some
+        // forty calls to the cluster, one after the other. Only where it pays: the index has its
+        // own cost, and a workspace of one or two is quicker asked about directly.
+        $checkThemAll = function () use ($deployments) {
+            foreach ($deployments as $deployment) {
+                $deployment->checkStatus(false);
+            }
+        };
+        $deployments->count() >= ClusterIndex::WorthItFrom
+            ? KubeAuth::UsingAnIndex($checkThemAll)
+            : $checkThemAll();
         $item->deployments = $deployments;
 
         $item->checkStatus();

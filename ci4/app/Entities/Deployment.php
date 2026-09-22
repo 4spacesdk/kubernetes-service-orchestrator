@@ -59,6 +59,14 @@ use DebugTool\Data;
  * @property int $knative_concurrency_limit_hard
  * @property bool $knative_scheduled_minscale_is_enabled
  *
+ * # Runtime health - see `Libraries/Health`
+ * @property string $health
+ * @property int $health_severity
+ * @property string $health_reason
+ * @property string $health_changed_at
+ * @property string $health_checked_at
+ * @property string $health_notified
+ *
  * # Migration Job
  * @property int $last_migration_job_id
  * @property MigrationJob $last_migration_job
@@ -93,7 +101,10 @@ class Deployment extends Entity {
     public const array EncryptedFields = self::SecretFields;
 
     /** Kept up to date by kso as it checks on the deployment. */
-    public const array AuditIgnoredFields = ['last_updated', 'last_migration_job_id'];
+    public const array AuditIgnoredFields = [
+        'last_updated', 'last_migration_job_id',
+        'health', 'health_severity', 'health_reason', 'health_changed_at', 'health_checked_at', 'health_notified',
+    ];
 
     use EncryptsFields;
     use WriteOnlySecrets;
@@ -431,11 +442,11 @@ class Deployment extends Entity {
         }
 
         if ($hasFailedStep) {
-            $this->updateStatus(\DeploymentStatusTypes::Deploying, $cascadeWorkspaceCheck);
+            $this->updateStatus(\DeploymentStatusTypes::OutOfSync, $cascadeWorkspaceCheck);
             return;
         }
 
-        $this->updateStatus(\DeploymentStatusTypes::Active, $cascadeWorkspaceCheck);
+        $this->updateStatus(\DeploymentStatusTypes::Synced, $cascadeWorkspaceCheck);
     }
 
     public function deployAllSteps(): ?string {

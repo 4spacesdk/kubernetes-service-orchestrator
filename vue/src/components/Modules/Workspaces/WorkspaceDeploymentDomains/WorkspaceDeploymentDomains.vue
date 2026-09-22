@@ -49,7 +49,9 @@ function setup() {
 
     rows.value.sort((a, b) => a.url.localeCompare(b.url));
 
-    text.value = rows.value.length > 0 ? rows.value[0].url : '';
+    // Without the scheme: every url here is https, and it costs 60px in a column that is
+    // already the widest. The whole url is in the menu, and in the link that opens.
+    text.value = rows.value.length > 0 ? rows.value[0].url.replace(/^https?:\/\//, '') : '';
 
     render();
 }
@@ -81,10 +83,11 @@ function onDeploymentRowClicked(item: Row) {
     >
         <template v-slot:activator="{props}">
             <div
-                class="d-flex justify-start align-center"
+                class="d-flex justify-start align-center url"
                 v-bind="props"
             >
                 <span class="text-truncate">{{ text }}</span>
+                <span v-if="rows.length > 1" class="more">+{{ rows.length - 1 }}</span>
             </div>
         </template>
 
@@ -111,6 +114,16 @@ function onDeploymentRowClicked(item: Row) {
 </template>
 
 <style scoped>
+
+.url {
+    max-width: 220px;
+}
+
+.more {
+    font-size: 11px;
+    opacity: 0.6;
+    margin-left: 4px;
+}
 
 .list-wrapper {
     min-width: 120px;

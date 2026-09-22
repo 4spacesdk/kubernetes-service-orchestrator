@@ -20,10 +20,10 @@ use PHPUnit\Framework\Attributes\DataProvider;
  * The first part goes the whole way: `Publisher::send()` puts the event on the queue, the
  * worker's side takes it off again, and `HandleEvent` runs it.
  *
- * The rest pins **which decision each handler makes**: seven of them pick a webhook type, one
- * looks at a deployment after its migration job, and the last rolls an update out. The event
- * name and the type it delivers is the only thing telling the seven apart, and a swap between
- * two of them is not something anyone notices.
+ * The rest pins **which decision each handler makes**: eight of them pick a webhook type, one
+ * looks at a deployment after its migration job, one follows a rollout's health, and the last
+ * rolls an update out. The event name and the type it delivers is the only thing telling the
+ * eight apart, and a swap between two of them is not something anyone notices.
  */
 class EventHandlersTest extends DatabaseTestCase {
 
@@ -93,6 +93,8 @@ class EventHandlersTest extends DatabaseTestCase {
             Events::Deployment_Deployed(),
             Events::Deployment_Terminated(),
             Events::AutoUpdate_Approved(),
+            Events::Deployment_Health_Settled(),
+            Events::Deployment_Health_Follow(),
         ];
         return array_combine($events, array_map(fn ($event) => [$event], $events));
     }
@@ -130,7 +132,7 @@ class EventHandlersTest extends DatabaseTestCase {
 
     // </editor-fold>
 
-    // <editor-fold desc="The seven handlers that deliver a webhook">
+    // <editor-fold desc="The eight handlers that deliver a webhook">
 
     /**
      * Every handler delivers its own webhook type and no other.
@@ -202,6 +204,7 @@ class EventHandlersTest extends DatabaseTestCase {
             'workspaceTerminated' => [Events::Workspace_Terminated(), \WebHookTypes::Workspace_Terminated],
             'deploymentDeployed' => [Events::Deployment_Deployed(), \WebHookTypes::Deployment_Deployed],
             'deploymentTerminated' => [Events::Deployment_Terminated(), \WebHookTypes::Deployment_Terminated],
+            'deploymentHealthSettled' => [Events::Deployment_Health_Settled(), \WebHookTypes::Deployment_Health_Changed],
         ];
     }
 
@@ -217,7 +220,7 @@ class EventHandlersTest extends DatabaseTestCase {
      */
     #[DataProvider('theStatusesThatEndAMigrationJob')]
     public function testAFinishedMigrationJobMakesTheDeploymentLookAtItself(string $status): void {
-        $deployment = Fixtures::deployment(['status' => \DeploymentStatusTypes::Active]);
+        $deployment = Fixtures::deployment(['status' => \DeploymentStatusTypes::Synced]);
 
         $this->handle(Events::MigrationJob_Changed_Status(0), [
             'status' => $status,
@@ -245,14 +248,14 @@ class EventHandlersTest extends DatabaseTestCase {
      */
     #[DataProvider('theStatusesThatMeanAJobIsStillRunning')]
     public function testAMigrationJobThatIsStillRunningIsLeftAlone(string $status): void {
-        $deployment = Fixtures::deployment(['status' => \DeploymentStatusTypes::Active]);
+        $deployment = Fixtures::deployment(['status' => \DeploymentStatusTypes::Synced]);
 
         $this->handle(Events::MigrationJob_Changed_Status(0), [
             'status' => $status,
             'deployment_id' => $deployment->id,
         ]);
 
-        $this->assertSame(\DeploymentStatusTypes::Active, $this->statusOf($deployment));
+        $this->assertSame(\DeploymentStatusTypes::Synced, $this->statusOf($deployment));
     }
 
     /**
@@ -311,7 +314,7 @@ class EventHandlersTest extends DatabaseTestCase {
      */
     public function testAPausedWorkspaceStopsTheRollout(): void {
         $autoUpdate = $this->anApprovedAutoUpdate('image', '2.0.0', [
-            'workspace_status' => \WorkspaceStatusTypes::Active,
+            'workspace_status' => \WorkspaceStatusTypes::Synced,
             'workspace_paused' => true,
         ]);
 

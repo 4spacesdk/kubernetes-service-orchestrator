@@ -690,7 +690,7 @@ class DeploymentsApiTest extends ControllerTestCase {
      * endpoint answers rather than breaking the page.
      */
     public function testTheStatusEndpointRecomputesTheStatusWithoutACluster(): void {
-        $deployment = Fixtures::deployableDeployment(['status' => \DeploymentStatusTypes::Active]);
+        $deployment = Fixtures::deployableDeployment(['status' => \DeploymentStatusTypes::Synced]);
 
         $body = $this->decode($this->signedIn()->get("deployments/{$deployment->id}/status"));
 
