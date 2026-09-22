@@ -3,6 +3,7 @@
 use App\Models\OAuthClientModel;
 use App\Core\Entity;
 use App\Entities\Concerns\WriteOnlySecrets;
+use AuthExtension\OAuth2\Pdo;
 
 /**
  * Class OAuthClient
@@ -31,7 +32,11 @@ class OAuthClient extends Entity {
     public $hiddenFields = self::SecretFields;
 
     public static function patch($id, $data) {
-        return parent::patch($id, self::keepStoredSecrets($data));
+        $data = self::keepStoredSecrets($data);
+        if (is_array($data) && isset($data['client_secret'])) {
+            $data['client_secret'] = Pdo::hashClientSecret((string) $data['client_secret']);
+        }
+        return parent::patch($id, $data);
     }
 
     public static function post($data) {
@@ -57,7 +62,9 @@ class OAuthClient extends Entity {
 
         $item = new OAuthClient();
         $item->client_id = $data['client_id'] ?? bin2hex(random_bytes(16));
-        $item->client_secret = $data['client_secret'] ?? bin2hex(random_bytes(16));
+        // Stored as a hash, like every other client's (CI4AuthExtension v1.3.0): whoever creates the
+        // client types the secret, or reads it from the answer to this request, and nowhere after.
+        $item->client_secret = Pdo::hashClientSecret($data['client_secret'] ?? bin2hex(random_bytes(16)));
         $item->grant_types = $data['grant_types'] ?? '';
         $item->redirect_uri = $data['redirect_uri'] ?? '';
         if (isset($userId)) {

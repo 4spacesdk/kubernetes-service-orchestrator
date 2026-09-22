@@ -1,6 +1,7 @@
 <?php namespace App\Commands;
 
 use App\Libraries\Reencryption;
+use AuthExtension\AuthExtension;
 use CodeIgniter\CLI\BaseCommand;
 use CodeIgniter\CLI\CLI;
 
@@ -24,6 +25,13 @@ class ReencryptStoredCredentials extends BaseCommand {
 
     public function run(array $params) {
         $result = (new Reencryption())->run();
+
+        // The OAuth signing keys, which CI4AuthExtension encrypts with the same key. Here rather
+        // than in `Reencryption`: the OAuth storage writes on a connection of its own, which a
+        // test's transaction does not roll back.
+        $signingKeys = AuthExtension::reencryptSigningKeys();
+        $result['rewritten'] += $signingKeys['rewritten'];
+        $result['unreadable'] = [...$result['unreadable'], ...$signingKeys['unreadable']];
 
         CLI::write("Rewrote {$result['rewritten']} values with the current key.");
         if ($result['unreadable'] !== []) {

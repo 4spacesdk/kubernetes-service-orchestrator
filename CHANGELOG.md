@@ -63,6 +63,9 @@
 * Webhooks, Harbor and Azure registries are only called over http and https, and not on kso's own pod or the cloud's metadata service. A webhook url to a local file used to put the file's contents in the delivery log. A delivery that is refused says why in the log
 * The image no longer carries PHPUnit and the other development dependencies. The test suites run in an image built from it with only those added
 * The image checks what it downloads: Microsoft's SQL Server packages against pinned checksums, fetched with the certificate checked, and Composer and gke-auth at pinned versions instead of whatever an installer script or `@latest` gave that day
+* No credentials in the clear in the database any more. OAuth tokens, authorization codes and client secrets are stored as hashes and the signing key encrypted, and the API's logs keep no access token and write credential headers as `[redacted]` (CI4AuthExtension v1.3.0, CI4RESTExtension v1.0.14). The rows already there are brought in line by a migration, and expired tokens and log rows older than a month are removed every night
+* A list can be filtered, searched, sorted or narrowed to fields only on its own columns, and never on a hidden one such as a password hash
+* Chart: on Kubernetes 1.30 and later, an admission policy stops kso's service account from changing anything in, or exec'ing into, kube-system, kube-public and kube-node-lease, and from binding cluster-admin, admin or edit cluster-wide - the way somebody with code in kso's pod could have taken the cluster. More namespaces with `admissionPolicy.protectedNamespaces`
 * The container runs as www-data instead of root, with Apache on port 8080. The chart sets `runAsNonRoot`, drops every capability and forbids privilege escalation by default
 * Chart: the cron job runs as non-root from a pinned curl image, without the service account token, and a NetworkPolicy that admits only kso's two ports can be turned on with `networkPolicy.enabled`. A pod that cannot reach its database is taken out of the Service
 * Apache serves only `/api` and `/app`. The rest of the application's files - the PHP dependencies and the tests among them - could be listed and run by url
@@ -104,6 +107,7 @@
 
 10. The chart runs Centrifugo as a sidecar and routes `/connection` to it instead of `/socket` to port 9100. If you route to kso yourself, send `/connection` to the Service's `push` port (8000) with WebSockets allowed, and drop `/socket`
 11. The image runs as www-data (uid 82) and Apache listens on 8080. The chart's Service still answers on 80, so routing through it needs nothing. If you run the image outside the chart, map to 8080; if you set `securityContext` or `podSecurityContext` yourself, keep `runAsUser: 82` and `fsGroup: 82`
+12. Take a database backup before migrating: the migration hashes the stored OAuth tokens and client secrets and encrypts the signing key, and cannot be undone. Signed-in sessions survive it. Afterwards run `php spark auth:rotate-signing-key` once - the old key was stored in the clear in every backup until now
 
 ### Notes
 * An image built for arm64 has no MSSQL driver

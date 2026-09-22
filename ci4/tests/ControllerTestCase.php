@@ -231,7 +231,8 @@ abstract class ControllerTestCase extends DatabaseTestCase {
         $userId = (int) $db->insertID();
 
         $db->table('oauth_access_tokens')->insert([
-            'access_token' => self::$token,
+            // As the storage writes it since CI4AuthExtension v1.3.0.
+            'access_token' => \AuthExtension\OAuth2\Pdo::hashToken(self::$token),
             'client_id' => self::$client,
             'user_id' => (string) $userId,
             'expires' => date('Y-m-d H:i:s', time() + DAY),
@@ -244,7 +245,7 @@ abstract class ControllerTestCase extends DatabaseTestCase {
     private static function removeSignInFixtures(): void {
         $db = \Config\Database::connect('tests');
 
-        $db->table('oauth_access_tokens')->where('access_token', self::$token)->delete();
+        $db->table('oauth_access_tokens')->where('access_token', \AuthExtension\OAuth2\Pdo::hashToken(self::$token))->delete();
         $db->table('users')->where('username', self::$username)->delete();
         $db->table('oauth_clients')->where('client_id', self::$client)->delete();
     }

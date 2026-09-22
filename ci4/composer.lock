@@ -4,25 +4,27 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "cf24ab97cccf024023b3d6d390e53b00",
+    "content-hash": "241f92a52cdca3ca41a6914c5bc40608",
     "packages": [
         {
             "name": "4spacesdk/ci4authextension",
-            "version": "v1.2.7",
+            "version": "v1.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/4spacesdk/CI4AuthExtension.git",
-                "reference": "1f6d42420684e0157b860c7dea5331b4449e7cb9"
+                "reference": "a84352b9841f520798d0bc9864944093e83f07c3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/4spacesdk/CI4AuthExtension/zipball/1f6d42420684e0157b860c7dea5331b4449e7cb9",
-                "reference": "1f6d42420684e0157b860c7dea5331b4449e7cb9",
+                "url": "https://api.github.com/repos/4spacesdk/CI4AuthExtension/zipball/a84352b9841f520798d0bc9864944093e83f07c3",
+                "reference": "a84352b9841f520798d0bc9864944093e83f07c3",
                 "shasum": ""
             },
             "require": {
                 "4spacesdk/ci4debugtool": "1.0.8",
-                "bshaffer/oauth2-server-php": "v1.14.1",
+                "4spacesdk/ci4ormextension": "^1.1",
+                "bshaffer/oauth2-server-php": "^1.14.2",
+                "codeigniter4/framework": "^4.7",
                 "ext-openssl": "*",
                 "kelvinmo/simplejwt": "^1.1.2",
                 "php": ">=8.0"
@@ -46,9 +48,9 @@
             "description": "Easy OAuth2 integration with CodeIgniter 4",
             "support": {
                 "issues": "https://github.com/4spacesdk/CI4AuthExtension/issues",
-                "source": "https://github.com/4spacesdk/CI4AuthExtension/tree/v1.2.7"
+                "source": "https://github.com/4spacesdk/CI4AuthExtension/tree/v1.3.0"
             },
-            "time": "2026-09-22T09:39:30+00:00"
+            "time": "2026-09-22T14:01:24+00:00"
         },
         {
             "name": "4spacesdk/ci4debugtool",
@@ -133,24 +135,23 @@
         },
         {
             "name": "4spacesdk/ci4restextension",
-            "version": "v1.0.13",
+            "version": "v1.0.14",
             "source": {
                 "type": "git",
                 "url": "https://github.com/4spacesdk/CI4RESTExtension.git",
-                "reference": "620112096053fecb8dfcf9210e5f4a484ae8cb75"
+                "reference": "4d611fa1bc12f7e1855a711d96e9ff02324ee570"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/4spacesdk/CI4RESTExtension/zipball/620112096053fecb8dfcf9210e5f4a484ae8cb75",
-                "reference": "620112096053fecb8dfcf9210e5f4a484ae8cb75",
+                "url": "https://api.github.com/repos/4spacesdk/CI4RESTExtension/zipball/4d611fa1bc12f7e1855a711d96e9ff02324ee570",
+                "reference": "4d611fa1bc12f7e1855a711d96e9ff02324ee570",
                 "shasum": ""
             },
             "require": {
                 "4spacesdk/ci4debugtool": ">=1.0.0",
+                "4spacesdk/ci4ormextension": "^1.1",
+                "codeigniter4/framework": "^4.0",
                 "php": ">=8.0"
-            },
-            "suggest": {
-                "4spacesdk/ci4restextension-zmq": "For pushing changes to ZMQ"
             },
             "type": "library",
             "autoload": {
@@ -171,9 +172,9 @@
             "description": "REST Extension for CodeIgniter 4",
             "support": {
                 "issues": "https://github.com/4spacesdk/CI4RESTExtension/issues",
-                "source": "https://github.com/4spacesdk/CI4RESTExtension/tree/v1.0.13"
+                "source": "https://github.com/4spacesdk/CI4RESTExtension/tree/v1.0.14"
             },
-            "time": "2026-09-20T15:58:35+00:00"
+            "time": "2026-09-22T13:57:52+00:00"
         },
         {
             "name": "bacon/bacon-qr-code",
@@ -292,16 +293,16 @@
         },
         {
             "name": "bshaffer/oauth2-server-php",
-            "version": "v1.14.1",
+            "version": "v1.14.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/bshaffer/oauth2-server-php.git",
-                "reference": "096db2c86a7d67a2ba45e72be7d208c342694542"
+                "reference": "1c715c2d2f71254d1c683b8c89a0f16b61ccd0d6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/bshaffer/oauth2-server-php/zipball/096db2c86a7d67a2ba45e72be7d208c342694542",
-                "reference": "096db2c86a7d67a2ba45e72be7d208c342694542",
+                "url": "https://api.github.com/repos/bshaffer/oauth2-server-php/zipball/1c715c2d2f71254d1c683b8c89a0f16b61ccd0d6",
+                "reference": "1c715c2d2f71254d1c683b8c89a0f16b61ccd0d6",
                 "shasum": ""
             },
             "require": {
@@ -348,9 +349,9 @@
             ],
             "support": {
                 "issues": "https://github.com/bshaffer/oauth2-server-php/issues",
-                "source": "https://github.com/bshaffer/oauth2-server-php/tree/v1.14.1"
+                "source": "https://github.com/bshaffer/oauth2-server-php/tree/v1.14.2"
             },
-            "time": "2023-07-07T17:53:54+00:00"
+            "time": "2025-03-28T21:13:45+00:00"
         },
         {
             "name": "carbonphp/carbon-doctrine-types",

@@ -32,6 +32,13 @@ class RestExtension extends BaseConfig {
     public $enableErrorLog          = TRUE;
 
     /*
+     * Headers the error log writes as [redacted], on top of the extension's own - Authorization,
+     * Proxy-Authorization, Cookie and Set-Cookie. The scheduler's token is as good as a password
+     * for /api/jobby.
+     */
+    public array $redactedHeaders   = ['X-Cron-Token'];
+
+    /*
      * Enable rate limit
      */
     public $enableRateLimit         = FALSE;

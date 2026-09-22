@@ -19,17 +19,17 @@ use App\Entities\User;
  * id has just created a credential nobody can use.
  *
  * **No credential in this file is a real one.** Every id and secret is generated here, and
- * nothing is read from the environment. That `client_secret` comes back to the caller in
- * cleartext is pinned in `OAuthClientsApiTest`, not here.
+ * nothing is read from the environment. The secret is stored as a `password_hash()` since
+ * CI4AuthExtension v1.3.0, and never handed back - see `OAuthClientsApiTest`.
  */
 class OAuthClientPostTest extends DatabaseTestCase {
 
     // <editor-fold desc="The credentials">
 
     /**
-     * Nothing given, so both halves are minted: sixteen random bytes each, hex encoded.
-     * The other two columns are written empty rather than left out - `oauth_clients` has no
-     * nullable column in it.
+     * Nothing given, so both halves are minted: sixteen random bytes each, hex encoded - the
+     * secret stored as its hash. The other two columns are written empty rather than left out -
+     * `oauth_clients` has no nullable column in it.
      */
     public function testAClientWithNothingGivenGetsGeneratedCredentials(): void {
         $client = OAuthClient::post([]);
@@ -37,7 +37,7 @@ class OAuthClientPostTest extends DatabaseTestCase {
         $row = $this->row($client->client_id);
         $this->assertNotNull($row, 'nothing was written');
         $this->assertMatchesRegularExpression('/^[0-9a-f]{32}$/', $row['client_id']);
-        $this->assertMatchesRegularExpression('/^[0-9a-f]{32}$/', $row['client_secret']);
+        $this->assertTrue(\AuthExtension\OAuth2\Pdo::isHashedClientSecret($row['client_secret']), 'the secret is stored in the clear');
         $this->assertSame('', $row['grant_types']);
         $this->assertSame('', $row['redirect_uri']);
     }
@@ -55,7 +55,8 @@ class OAuthClientPostTest extends DatabaseTestCase {
     }
 
     /**
-     * What is given is what is written, all four fields.
+     * What is given is what is written, all four fields - the secret as a hash that the given
+     * secret verifies against.
      */
     public function testWhatIsGivenIsWrittenAsItIs(): void {
         $given = $this->credentials();
@@ -68,12 +69,14 @@ class OAuthClientPostTest extends DatabaseTestCase {
         ]);
 
         $this->assertSame($given['client_id'], $client->client_id);
+        $row = $this->row($given['client_id']);
+        $this->assertTrue(password_verify($given['client_secret'], $row['client_secret']), 'the stored hash is not of the given secret');
+        unset($row['client_secret']);
         $this->assertSame([
             'client_id' => $given['client_id'],
-            'client_secret' => $given['client_secret'],
             'grant_types' => 'authorization_code',
             'redirect_uri' => 'https://example.org/callback',
-        ], $this->row($given['client_id']));
+        ], $row);
     }
 
     /**
