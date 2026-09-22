@@ -15,6 +15,7 @@ export class MigrationJobDefinition extends BaseModel {
     log?: string;
     image?: string;
     command?: string;
+    callback_token_hash?: string;
     id?: number;
     created?: string;
     updated?: string;
@@ -40,6 +41,7 @@ export class MigrationJobDefinition extends BaseModel {
             delete this.log;
             delete this.image;
             delete this.command;
+            delete this.callback_token_hash;
             delete this.id;
             delete this.created;
             delete this.updated;
@@ -75,6 +77,9 @@ export class MigrationJobDefinition extends BaseModel {
         }
         if (data.command != null) {
             this.command = data.command;
+        }
+        if (data.callback_token_hash != null) {
+            this.callback_token_hash = data.callback_token_hash;
         }
         if (data.id != null) {
             this.id = data.id;

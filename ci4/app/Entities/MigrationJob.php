@@ -19,7 +19,7 @@ use \App\Libraries\DeploymentSteps\DeploymentStep;
  * @property string $log
  * @property string $image
  * @property string $command
- * @property string|null $callback_token_hash
+ * @property string $callback_token_hash nullable in the database; the generator has no union types
  */
 class MigrationJob extends Entity {
 

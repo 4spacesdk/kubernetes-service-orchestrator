@@ -6,7 +6,9 @@ use App\Core\Entity;
  * One row of the audit trail - see `App\Libraries\Audit\Audit`, which is the only thing that
  * writes them. Read through the API.
  *
- * @property string $created
+ * `created` and `id` are not listed here: the model generator adds them to every entity, and a
+ * second `created` in the docblock became a duplicate property in the generated TypeScript.
+ *
  * @property int $user_id
  * @property string $client_id
  * @property string $ip_address
