@@ -61,6 +61,7 @@
 * The sign-in forms carry a CSRF token, so a form on another site can no longer sign the visitor in to an account of its choosing
 * The session cookie is Secure when kso's base url is https
 * The password renewal form only changes the password of a user an administrator has asked to renew; any other session could use it to set a new one
+* The forgotten-password form sends at most three links an hour to an address, so it can no longer be used to flood someone's inbox. A request over the limit gets the same answer and no mail
 * Signing out revokes the browser's refresh and access tokens and clears the refresh token cookie; it used to end only the session, and the next person at the machine could renew. A changed password - reset, renewed or set by an administrator - ends every sign-in the user has, tokens and sessions, except the session that changed it
 * The sign-in sends a random state and exchanges only a code that comes back with it. It used to be the same word every time, so a code started elsewhere could be handed to the login page
 * An access token in the url - kso in an iframe - is taken out of the url once read, and the sign-in no longer sends its PKCE verifier to authorize, only when it exchanges the code

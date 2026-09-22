@@ -35,7 +35,17 @@ class LoginThrottle {
 
     public const string
         Password = 'password',
-        Code = 'code';
+        Code = 'code',
+        PasswordReset = 'password_reset';
+
+    /**
+     * Links to choose a new password, per address and hour. Each one is a mail to somebody's
+     * inbox, and the form is public: without a limit it could send a known user as many as
+     * the server answers. Three is enough for a link that went to spam and one more.
+     */
+    public const int MaxPasswordResets = 3;
+
+    public const int PasswordResetWindowSeconds = 60 * 60;
 
     /**
      * Failures since the last success, within the window. By id and not by time, because a
@@ -61,6 +71,26 @@ class LoginThrottle {
             ->countAllResults();
 
         return $failures >= self::MaxFailures;
+    }
+
+    /**
+     * Every request counts, whether or not the address has an account - otherwise being
+     * refused would say that it does.
+     */
+    public static function IsPasswordResetRefused(string $username): bool {
+        return Database::connect()->table('sign_in_attempts')
+            ->where('username', self::Clip($username, 255))
+            ->where('step', self::PasswordReset)
+            ->where('refused', 0)
+            ->where('created >', date('Y-m-d H:i:s', time() - self::PasswordResetWindowSeconds))
+            ->countAllResults() >= self::MaxPasswordResets;
+    }
+
+    /**
+     * @param bool $sent whether a mail went out - there is no account behind the address otherwise
+     */
+    public static function RecordPasswordReset(string $username, ?int $userId, bool $sent): void {
+        self::Record(self::PasswordReset, $username, $userId, succeeded: $sent);
     }
 
     public static function RecordSuccess(string $step, string $username, int $userId): void {

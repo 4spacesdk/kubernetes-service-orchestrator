@@ -309,22 +309,34 @@ class Login extends \App\Core\BaseController {
         session()->setFlashdata(self::RememberedDestination, session()->getFlashdata(self::RememberedDestination));
 
         if ($this->request->getPost('username')) {
+            $username = (string) $this->request->getPost('username');
+
             /** @var User $user */
             $user = (new \App\Models\UserModel())
-                ->where('username', $this->request->getPost('username'))
+                ->where('username', $username)
                 ->find();
+            $userId = $user->exists() ? (int) $user->id : null;
 
-            if ($user->exists()) {
-                // Logged rather than shown: saying the mail could not be sent would say
-                // that there was someone to send it to.
-                try {
-                    $user->sendPasswordResetEmail();
-                } catch (\Throwable $e) {
-                    log_message('error', 'Password reset mail for user {id} not sent: {message}', [
-                        'id' => $user->id,
-                        'message' => $e->getMessage(),
-                    ]);
+            // Turned away with the same answer as any other request, so the form says
+            // nothing about which addresses have an account or have been asked for.
+            if (LoginThrottle::IsPasswordResetRefused($username)) {
+                LoginThrottle::RecordRefusal(LoginThrottle::PasswordReset, $username, $userId);
+            } else {
+                $sent = false;
+                if ($user->exists()) {
+                    // Logged rather than shown: saying the mail could not be sent would say
+                    // that there was someone to send it to.
+                    try {
+                        $user->sendPasswordResetEmail();
+                        $sent = true;
+                    } catch (\Throwable $e) {
+                        log_message('error', 'Password reset mail for user {id} not sent: {message}', [
+                            'id' => $user->id,
+                            'message' => $e->getMessage(),
+                        ]);
+                    }
                 }
+                LoginThrottle::RecordPasswordReset($username, $userId, $sent);
             }
 
             Data::set('success', true);

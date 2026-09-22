@@ -1019,6 +1019,56 @@ class LoginApiTest extends ControllerTestCase {
     }
 
     /**
+     * Each request is a mail in somebody's inbox, from a public form. Three an hour per
+     * address; the fourth gets the same answer and no mail.
+     */
+    public function testAFourthLinkWithinTheHourIsNotSent(): void {
+        $email = $this->catchEmail();
+        Fixtures::user(['username' => 'forgetful@example.org']);
+        for ($i = 0; $i < LoginThrottle::MaxPasswordResets; $i++) {
+            $this->post('login/forgotPassword', ['username' => 'forgetful@example.org']);
+        }
+        $answered = $this->theMessageOn($this->body($this->post('login/forgotPassword', ['username' => 'someone@example.org'])));
+        $email->archive = [];
+
+        $page = $this->body($this->post('login/forgotPassword', ['username' => 'forgetful@example.org']));
+
+        $this->assertSame([], $email->archive, 'a fourth mail was sent');
+        $this->assertNotSame('', $answered);
+        $this->assertSame($answered, $this->theMessageOn($page), 'the refusal is told apart');
+        $this->assertSame(1, $this->db->table('sign_in_attempts')->where('step', LoginThrottle::PasswordReset)->where('refused', 1)->countAllResults());
+    }
+
+    /**
+     * An address without an account is counted too - a limit only for real accounts would
+     * say which addresses have one.
+     */
+    public function testAnAddressWithoutAnAccountIsCountedTheSame(): void {
+        for ($i = 0; $i < LoginThrottle::MaxPasswordResets; $i++) {
+            $this->post('login/forgotPassword', ['username' => 'nobody@example.org']);
+        }
+
+        $this->assertTrue(LoginThrottle::IsPasswordResetRefused('nobody@example.org'));
+        $this->assertFalse(LoginThrottle::IsPasswordResetRefused('somebody-else@example.org'));
+    }
+
+    public function testRequestsOutsideTheHourDoNotCount(): void {
+        for ($i = 0; $i < LoginThrottle::MaxPasswordResets; $i++) {
+            $this->db->table('sign_in_attempts')->insert([
+                'username' => 'forgetful@example.org',
+                'step' => LoginThrottle::PasswordReset,
+                'succeeded' => 1,
+                'refused' => 0,
+                'ip_address' => '',
+                'user_agent' => '',
+                'created' => date('Y-m-d H:i:s', time() - LoginThrottle::PasswordResetWindowSeconds - 60),
+            ]);
+        }
+
+        $this->assertFalse(LoginThrottle::IsPasswordResetRefused('forgetful@example.org'));
+    }
+
+    /**
      * The link goes to the installation's configured address, not to whatever `Host` the
      * request that asked for it carried.
      */
