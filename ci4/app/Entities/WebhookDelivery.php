@@ -1,5 +1,6 @@
 <?php namespace App\Entities;
 
+use App\Libraries\OutboundUrl;
 use DebugTool\Data;
 use App\Core\Entity;
 use App\Entities\Concerns\EncryptsFields;
@@ -95,7 +96,17 @@ class WebhookDelivery extends Entity {
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_HEADER, 1);
-        curl_setopt($ch, CURLOPT_URL, $this->url);
+        try {
+            OutboundUrl::Apply($ch, (string) $this->url);
+        } catch (\InvalidArgumentException $e) {
+            // Written down like any other failed delivery, so the log says why nothing went out.
+            $this->response_time = 0;
+            $this->response_code = 0;
+            $this->response_headers = '';
+            $this->response_body = 'Not sent: ' . $e->getMessage();
+            $this->save();
+            return;
+        }
 
         switch($this->method) {
             case 'get':

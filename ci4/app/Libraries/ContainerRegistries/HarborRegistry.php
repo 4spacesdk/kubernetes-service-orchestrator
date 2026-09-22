@@ -1,5 +1,7 @@
 <?php namespace App\Libraries\ContainerRegistries;
 
+use App\Libraries\OutboundUrl;
+
 class HarborRegistry extends BaseContainerRegistry {
 
     public function getUrlPrefix(): string {
@@ -59,7 +61,8 @@ class HarborRegistry extends BaseContainerRegistry {
         ]);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($body));
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_URL, "https://{$this->registry->harbor_url}{$path}");
+        // The base url is typed by an operator; see OutboundUrl.
+        OutboundUrl::Apply($ch, "https://{$this->registry->harbor_url}{$path}");
         $response = curl_exec($ch);
         $status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
         if ($response === false || $status >= 400) {
@@ -141,7 +144,8 @@ class HarborRegistry extends BaseContainerRegistry {
             'authorization: Basic ' . base64_encode("{$this->registry->harbor_username}:{$this->registry->harbor_password}"),
         ]);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_URL, "https://{$this->registry->harbor_url}{$path}");
+        // The base url is typed by an operator; see OutboundUrl.
+        OutboundUrl::Apply($ch, "https://{$this->registry->harbor_url}{$path}");
         $response = curl_exec($ch);
         $status = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
         $json = json_decode((string) $response, true);
