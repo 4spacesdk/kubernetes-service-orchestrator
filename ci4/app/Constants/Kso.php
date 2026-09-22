@@ -19,7 +19,8 @@ class CronJobIds {
         CleanupZmqEvents = 6, // Removed in v1.9.0
         CleanupSignInAttempts = 7,
         ScanContainerImages = 8,
-        ScanQueuedContainerImages = 9
+        ScanQueuedContainerImages = 9,
+        CleanupQueue = 10
     ;
 }
 
