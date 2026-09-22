@@ -20,6 +20,12 @@ use App\Entities\Concerns\WriteOnlySecrets;
  * @property string $user
  * @property string $pass write-only, see WriteOnlySecrets
  * @property bool $has_pass
+ * @property bool $tls
+ * @property bool $tls_verify MySQL: the server's certificate is checked - signed by the CA and naming the host. Off, it is not checked at all
+ * @property string $tls_ca PEM. MySQL; without one the connection is encrypted but the server not checked
+ * @property string $tls_client_cert PEM, MySQL
+ * @property string $tls_client_key PEM, MySQL; write-only, see WriteOnlySecrets
+ * @property bool $has_tls_client_key
  *
  * Many
  * @property Workspace $workspaces
@@ -31,7 +37,7 @@ class DatabaseService extends Entity {
 
     use EncryptsFields;
 
-    public const array SecretFields = ['pass'];
+    public const array SecretFields = ['pass', 'tls_client_key'];
 
     use WriteOnlySecrets;
 
@@ -49,8 +55,37 @@ class DatabaseService extends Entity {
         }
     }
 
+    /**
+     * A connection to the service, over TLS when it asks for it.
+     *
+     * MySQLi reads the certificates from files, and only while connecting, so they are written
+     * to temporary files that are removed as soon as the connection is made - the client key is
+     * on disk only while connecting. That connection is therefore made here rather than on the
+     * first query, and not shared: its settings name files that are gone, so it cannot reconnect.
+     *
+     * MSSQL has no CA of its own per connection. `Encrypt` checks the server against the
+     * image's trust store, which holds the public CAs Azure SQL is signed by.
+     */
     public function prepareConnection(): BaseConnection {
-        return Database::connect([
+        $files = [];
+        try {
+            $db = Database::connect($this->connectionSettings($files), false);
+            if ($files !== []) {
+                $db->initialize();
+            }
+            return $db;
+        } finally {
+            foreach ($files as $file) {
+                @unlink($file);
+            }
+        }
+    }
+
+    /**
+     * @param list<string> $files the temporary files written, for the caller to remove
+     */
+    private function connectionSettings(array &$files): array {
+        return [
             'DSN'      => '',
             'hostname' => $this->host,
             'username' => $this->user,
@@ -75,7 +110,7 @@ class DatabaseService extends Entity {
             'charset'  => 'utf8',
             'DBCollat' => 'utf8_general_ci',
             'swapPre'  => '',
-            'encrypt'  => false,
+            'encrypt'  => $this->tlsSettings($files),
             'compress' => false,
             'strictOn' => false,
             'failover' => [],
@@ -90,7 +125,43 @@ class DatabaseService extends Entity {
             // An empty port stays harmless: the driver reads `0` as "not set" and uses its
             // own default, the same as it did for `""`.
             'port' => (int) $this->port,
-        ]);
+        ];
+    }
+
+    /**
+     * @param list<string> $files
+     * @return array<string, string|bool>|bool the driver's `encrypt`
+     */
+    private function tlsSettings(array &$files): array|bool {
+        if (!$this->tls) {
+            return false;
+        }
+        if ($this->driver === \DatabaseDrivers::MSSQL) {
+            return true;
+        }
+
+        // An empty array is TLS too, just without checking who answered.
+        $settings = [];
+        foreach (['ssl_ca' => 'tls_ca', 'ssl_cert' => 'tls_client_cert', 'ssl_key' => 'tls_client_key'] as $key => $field) {
+            $pem = trim((string) $this->{$field});
+            if ($pem !== '') {
+                $files[] = $settings[$key] = self::TemporaryFile($pem);
+            }
+        }
+        if ($settings !== []) {
+            $settings['ssl_verify'] = (bool) $this->tls_verify;
+        }
+
+        return $settings;
+    }
+
+    /**
+     * Readable by this process only - `tempnam()` makes it 0600.
+     */
+    private static function TemporaryFile(string $pem): string {
+        $file = tempnam(sys_get_temp_dir(), 'kso-db-tls-');
+        file_put_contents($file, $pem . "\n");
+        return $file;
     }
 
     public function testConnection(): bool {

@@ -223,9 +223,34 @@ class Database extends Config
         $this->default['database'] = getenv('DB_NAME');
         $this->default['username'] = getenv('DB_USER');
         $this->default['password'] = getenv('DB_PASS');
+        $this->default['encrypt'] = self::TlsFromEnv();
 
         // Same target, stock driver. See the note on $sessions above.
         $this->sessions = $this->default;
         $this->sessions['DBDriver'] = 'MySQLi';
+    }
+
+    /**
+     * TLS to the database, from the certificates the chart mounts: DB_SSL_CA, and DB_SSL_CERT
+     * with DB_SSL_KEY for a server that asks for a client certificate. The keys are the MySQLi
+     * driver's, and the OAuth storage reads the same ones for its own connection.
+     *
+     * The server's certificate is checked - signed by the CA and naming the host - unless
+     * DB_SSL_VERIFY is `false`, which turns off both: neither MySQLi nor PDO can check one
+     * without the other. Nothing set, no TLS - as before.
+     *
+     * @return array<string, string|bool>|false
+     */
+    public static function TlsFromEnv(): array|false {
+        $files = array_filter([
+            'ssl_ca' => (string) getenv('DB_SSL_CA'),
+            'ssl_cert' => (string) getenv('DB_SSL_CERT'),
+            'ssl_key' => (string) getenv('DB_SSL_KEY'),
+        ]);
+        if ($files === []) {
+            return false;
+        }
+
+        return $files + ['ssl_verify' => strtolower((string) getenv('DB_SSL_VERIFY')) !== 'false'];
     }
 }

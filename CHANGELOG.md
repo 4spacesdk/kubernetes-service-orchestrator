@@ -96,6 +96,8 @@
 * Upgraded to PHP 8.5, Alpine 3.24 and CodeIgniter 4.7. The image also builds on arm64
 * jobby is gone - it had not been released since 2020 - and with it the abandoned SwiftMailer and the cap on symfony/process, now 6.4. kso decides itself which cron jobs are due
 * The access log records the sign-in redirects
+* TLS to kso's database, with a CA and optionally a client certificate from a Secret: `deployment.database.tls` in the chart. The OAuth tables' own connection uses it too (CI4AuthExtension v1.3.1)
+* Database Services: TLS, with a CA and a client certificate for MySQL, and `Encrypt` against the image's public CAs for MSSQL. The client key is stored encrypted and write-only
 * Added unit, database and integration test suites
 
 ### Upgrade guide

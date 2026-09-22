@@ -54,6 +54,8 @@ function render() {
         });
     } else {
         item.value = props.input.databaseService;
+        // What the column defaults to, so the switch shows what will be stored.
+        item.value.tls_verify ??= true;
         showDialog.value = true;
     }
 }
@@ -152,6 +154,59 @@ function onCloseBtnClicked() {
                             persistent-hint
                             :hint="secretHint(item, 'pass')"/>
                     </v-col>
+
+                    <v-col cols="12">
+                        <v-switch
+                            v-model="item.tls"
+                            color="primary"
+                            hide-details
+                            label="TLS"/>
+                    </v-col>
+                    <template v-if="item.tls && item.driver == 'mssql'">
+                        <v-col cols="12" class="text-body-2 text-medium-emphasis">
+                            The server's certificate is checked against the public CAs kso's image trusts, as for Azure SQL.
+                        </v-col>
+                    </template>
+                    <template v-if="item.tls && item.driver == 'mysql'">
+                        <v-col cols="12">
+                            <v-switch
+                                v-model="item.tls_verify"
+                                color="primary"
+                                persistent-hint
+                                hint="Signed by the CA and naming the host. Off, the connection is encrypted but the server is not checked"
+                                label="Check the server's certificate"/>
+                        </v-col>
+                        <v-col cols="12">
+                            <v-textarea
+                                variant="outlined"
+                                v-model="item.tls_ca"
+                                rows="3"
+                                class="font-monospace"
+                                persistent-hint
+                                hint="PEM. Without one, the server is not checked"
+                                label="CA certificate"/>
+                        </v-col>
+                        <v-col cols="6">
+                            <v-textarea
+                                variant="outlined"
+                                v-model="item.tls_client_cert"
+                                rows="3"
+                                class="font-monospace"
+                                persistent-hint
+                                hint="PEM, for a server that asks for one"
+                                label="Client certificate"/>
+                        </v-col>
+                        <v-col cols="6">
+                            <v-textarea
+                                variant="outlined"
+                                v-model="item.tls_client_key"
+                                rows="3"
+                                class="font-monospace"
+                                persistent-hint
+                                :hint="secretHint(item, 'tls_client_key')"
+                                label="Client key"/>
+                        </v-col>
+                    </template>
 
                 </v-row>
             </v-card-text>

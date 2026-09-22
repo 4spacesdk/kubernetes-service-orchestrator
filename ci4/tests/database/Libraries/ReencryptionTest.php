@@ -91,7 +91,7 @@ class ReencryptionTest extends DatabaseTestCase {
     public function testTheColumnsAreEveryEntitysEncryptedFields(): void {
         $columns = Reencryption::Columns();
 
-        $this->assertSame(['pass'], $columns['database_services']);
+        $this->assertSame(['pass', 'tls_client_key'], $columns['database_services']);
         $this->assertSame(['database_pass'], $columns['deployments']);
         $this->assertSame(['mfa_secret_hash'], $columns['users']);
         foreach (['environment_variables', 'deployment_specification_environment_variables', 'deployment_package_environment_variables', 'init_container_environment_variables'] as $table) {

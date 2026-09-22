@@ -16,6 +16,12 @@ export class DatabaseServiceDefinition extends BaseModel {
     user?: string;
     pass?: string;
     has_pass?: boolean;
+    tls?: boolean;
+    tls_verify?: boolean;
+    tls_ca?: string;
+    tls_client_cert?: string;
+    tls_client_key?: string;
+    has_tls_client_key?: boolean;
     workspaces?: Workspace[];
     deployments?: Deployment[];
     id?: number;
@@ -43,6 +49,12 @@ export class DatabaseServiceDefinition extends BaseModel {
             delete this.user;
             delete this.pass;
             delete this.has_pass;
+            delete this.tls;
+            delete this.tls_verify;
+            delete this.tls_ca;
+            delete this.tls_client_cert;
+            delete this.tls_client_key;
+            delete this.has_tls_client_key;
             delete this.workspaces;
             delete this.deployments;
             delete this.id;
@@ -80,6 +92,24 @@ export class DatabaseServiceDefinition extends BaseModel {
         }
         if (data.has_pass != null) {
             this.has_pass = data.has_pass;
+        }
+        if (data.tls != null) {
+            this.tls = data.tls;
+        }
+        if (data.tls_verify != null) {
+            this.tls_verify = data.tls_verify;
+        }
+        if (data.tls_ca != null) {
+            this.tls_ca = data.tls_ca;
+        }
+        if (data.tls_client_cert != null) {
+            this.tls_client_cert = data.tls_client_cert;
+        }
+        if (data.tls_client_key != null) {
+            this.tls_client_key = data.tls_client_key;
+        }
+        if (data.has_tls_client_key != null) {
+            this.has_tls_client_key = data.has_tls_client_key;
         }
         if (data.workspaces != null) {
             this.workspaces = data.workspaces.map((i: any) => new Workspace(i));
