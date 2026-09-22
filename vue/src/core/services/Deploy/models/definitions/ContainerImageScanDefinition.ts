@@ -23,6 +23,7 @@ export class ContainerImageScanDefinition extends BaseModel {
     unknown?: number;
     findings?: string;
     scanned_at?: string;
+    is_manual?: boolean;
     id?: number;
     created?: string;
     updated?: string;
@@ -56,6 +57,7 @@ export class ContainerImageScanDefinition extends BaseModel {
             delete this.unknown;
             delete this.findings;
             delete this.scanned_at;
+            delete this.is_manual;
             delete this.id;
             delete this.created;
             delete this.updated;
@@ -115,6 +117,9 @@ export class ContainerImageScanDefinition extends BaseModel {
         }
         if (data.scanned_at != null) {
             this.scanned_at = data.scanned_at;
+        }
+        if (data.is_manual != null) {
+            this.is_manual = data.is_manual;
         }
         if (data.id != null) {
             this.id = data.id;

@@ -7,11 +7,10 @@ import bus from "@/plugins/bus";
 import { WorkspaceTemplate, Workspace } from "@/core/services/Deploy/models";
 import WorkspaceEditButton from "@/components/Modules/Workspaces/EditButton/WorkspaceEditButton.vue";
 import WorkspaceDeploymentStatus from "@/components/Modules/Workspaces/WorkspaceDeploymentStatus/WorkspaceDeploymentStatus.vue";
-import { EventEmitter } from "@/helpers/EventEmitter";
 import debounce from "lodash.debounce";
 import WorkspaceDeploymentDomains from "@/components/Modules/Workspaces/WorkspaceDeploymentDomains/WorkspaceDeploymentDomains.vue";
-import AuthService from "@/services/AuthService";
-import { WorkspaceStatusTypes, HealthStatusTypes, RbacPermissions } from "@/constants";
+import { WorkspaceStatusTypes, HealthStatusTypes } from "@/constants";
+import { useWorkspaceActions } from "@/composables/useWorkspaceActions";
 import WorkspaceHealth from "@/components/Modules/Workspaces/WorkspaceHealth/WorkspaceHealth.vue";
 import { useRouter } from "vue-router";
 
@@ -82,17 +81,21 @@ const {search: searchValue, page, itemsPerPage, sortBy, applyOrdering, applyPagi
     filters: { status: selectedStatus, health: selectedHealth },
 });
 
-const rbacDeveloper = ref(false);
-const rbacWorkspaceCreate = ref(false);
-const rbacWorkspaceUpdate = ref(false);
-const rbacWorkspaceDelete = ref(false);
+const {
+    rbacDeveloper,
+    rbacWorkspaceCreate,
+    rbacWorkspaceUpdate,
+    deploy,
+    terminate,
+    pause,
+    resume,
+    remove,
+    showMigrationJobs,
+    showHistory,
+    showLogs,
+} = useWorkspaceActions();
 
 onMounted(() => {
-    rbacDeveloper.value = AuthService.currentAuthUser?.hasPermission(RbacPermissions.Developer) ?? false;
-    rbacWorkspaceCreate.value = AuthService.currentAuthUser?.hasPermission(RbacPermissions.Workspaces.Create) ?? false;
-    rbacWorkspaceUpdate.value = AuthService.currentAuthUser?.hasPermission(RbacPermissions.Workspaces.Update) ?? false;
-    rbacWorkspaceDelete.value = AuthService.currentAuthUser?.hasPermission(RbacPermissions.Workspaces.Delete) ?? false;
-
     bus.on("workspaceSaved", onItemSaved);
 
     getItems(false, true);
@@ -179,183 +182,8 @@ function onCreateItemBtnClicked(type: WorkspaceTemplate) {
     });
 }
 
-function onDeployItemBtnClicked(item: Workspace) {
-    bus.emit("confirm", {
-        body: `Do you want to deploy "${item.name}"?`,
-        confirmIcon: "fa fa-play",
-        confirmColor: "green",
-
-        responseCallback: (confirmed: boolean) => {
-            if (confirmed) {
-                const workerProps = {
-                    title: `Deploying ${item.name}`,
-                    body: "This may take a minute",
-                    onFinishBody: "All done",
-                    onIsWorkingChangeEventEmitter: new EventEmitter<boolean>(),
-                };
-                bus.emit("worker", workerProps);
-
-                workerProps.onIsWorkingChangeEventEmitter.emit(true);
-                const api = Api.workspaces().deployPutById(item.id!);
-                api.setErrorHandler((response) => {
-                    if (response.error) {
-                        workerProps.onFinishBody = response.error;
-                    }
-                    return true;
-                });
-                api.save(null, () => {
-                    workerProps.onIsWorkingChangeEventEmitter.emit(false);
-                    bus.emit("workspaceSaved");
-                });
-            }
-        },
-    });
-}
-
-function onTerminateItemBtnClicked(item: Workspace) {
-    bus.emit("confirm", {
-        body: `Do you want to terminate "${item.name}"?`,
-        confirmIcon: "fa fa-skull",
-        confirmColor: "red",
-
-        responseCallback: (confirmed: boolean) => {
-            if (confirmed) {
-                const workerProps = {
-                    title: `Terminating ${item.name}`,
-                    body: "This may take a minute",
-                    onFinishBody: "All done",
-                    onIsWorkingChangeEventEmitter: new EventEmitter<boolean>(),
-                };
-                bus.emit("worker", workerProps);
-
-                workerProps.onIsWorkingChangeEventEmitter.emit(true);
-                const api = Api.workspaces().terminatePutById(item.id!);
-                api.setErrorHandler((response) => {
-                    if (response.error) {
-                        workerProps.onFinishBody = response.error;
-                    }
-                    return true;
-                });
-                api.save(null, () => {
-                    workerProps.onIsWorkingChangeEventEmitter.emit(false);
-                    bus.emit("workspaceSaved");
-                });
-            }
-        },
-    });
-}
-
-/**
- * Pause terminates the workspace and records that a person decided to, so the pause is not
- * recomputed away. The confirmation says what that costs: it is the same shutdown as
- * Terminate, disks and all.
- */
-function onPauseItemBtnClicked(item: Workspace) {
-    bus.emit("confirm", {
-        body:
-            `Do you want to pause "${item.name}"?` +
-            "\n\nThis shuts the workspace down like Terminate does, and its disks go with it" +
-            " unless their reclaim policy keeps them. The pause stays until someone takes it off.",
-        confirmIcon: "fa fa-pause",
-        confirmColor: "red",
-
-        responseCallback: (confirmed: boolean) => {
-            if (confirmed) {
-                const workerProps = {
-                    title: `Pausing ${item.name}`,
-                    body: "This may take a minute",
-                    onFinishBody: "All done",
-                    onIsWorkingChangeEventEmitter: new EventEmitter<boolean>(),
-                };
-                bus.emit("worker", workerProps);
-
-                workerProps.onIsWorkingChangeEventEmitter.emit(true);
-                const api = Api.workspaces().pausePutById(item.id!);
-                api.setErrorHandler((response) => {
-                    if (response.error) {
-                        workerProps.onFinishBody = response.error;
-                    }
-                    return true;
-                });
-                api.save(null, () => {
-                    workerProps.onIsWorkingChangeEventEmitter.emit(false);
-                    bus.emit("workspaceSaved");
-                });
-            }
-        },
-    });
-}
-
-/**
- * Takes the pause off. The workspace stays shut down - Deploy is the button that brings it
- * back, and that is a decision of its own.
- */
-function onResumeItemBtnClicked(item: Workspace) {
-    const api = Api.workspaces().resumePutById(item.id!);
-    api.setErrorHandler((response) => {
-        if (response.error) {
-            bus.emit("toast", {text: response.error});
-        }
-        return false;
-    });
-    api.save(null, () => bus.emit("workspaceSaved"));
-}
-
-function onDeleteItemBtnClicked(item: Row) {
-    bus.emit("confirm", {
-        body: `Do you want to delete "${item.workspace.name}"?`,
-        confirmIcon: "fa fa-trash",
-        confirmColor: "red",
-
-        responseCallback: (confirmed: boolean) => {
-            if (confirmed) {
-                item.isLoadingDeleteBtn = true;
-                Api.workspaces()
-                    .get()
-                    .where("id", item.workspace.id!)
-                    .include("deployment")
-                    .find((workspaces) => {
-                        item.isLoadingDeleteBtn = false;
-
-                        if (workspaces[0].deployments?.length) {
-                            bus.emit("toast", {
-                                text: "All deployments must be terminated and deleted before you can delete the workspace",
-                            });
-                        } else {
-                            Api.workspaces()
-                                .deleteById(item.workspace.id!)
-                                .delete(() => bus.emit("workspaceSaved"));
-                        }
-                    });
-            }
-        },
-    });
-}
-
-function onShowMigrationJobsBtnClicked(item: Workspace) {
-    bus.emit("migrationJobList", {
-        workspace: item,
-    });
-}
-
-function onShowHistoryBtnClicked(item: Workspace) {
-    bus.emit("auditEventList", {
-        resourceType: "Workspace",
-        resourceId: item.id!,
-        title: item.name_readable,
-    });
-}
-
-function onShowDeploymentsBtnClicked(item: Workspace) {
-    bus.emit("workspaceDeploymentList", {
-        workspace: item,
-    });
-}
-
-function onShowLogsBtnClicked(item: Workspace) {
-    bus.emit("workspaceLogs", {
-        workspace: item,
-    });
+function onOpenItemClicked(item: Workspace) {
+    router.push({ name: "WorkspaceById", params: { id: item.id } });
 }
 
 function onWorkspaceTemplatesShortcutClicked() {
@@ -473,7 +301,7 @@ function onWorkspaceTemplatesShortcutClicked() {
             </template>
 
             <template v-slot:item.health="{ item }">
-                <WorkspaceHealth :workspace="item.workspace" @click="onShowDeploymentsBtnClicked(item.workspace)" />
+                <WorkspaceHealth :workspace="item.workspace" @click="onOpenItemClicked(item.workspace)" />
             </template>
 
             <template v-slot:item.url="{ item }">
@@ -481,14 +309,14 @@ function onWorkspaceTemplatesShortcutClicked() {
             </template>
 
             <template v-slot:item.workspace.name_readable="{ item }">
-                <name-link @click="onShowDeploymentsBtnClicked(item.workspace)">{{ item.workspace.name_readable }}</name-link>
+                <name-link @click="onOpenItemClicked(item.workspace)">{{ item.workspace.name_readable }}</name-link>
                 <div class="namespace">{{ item.workspace.namespace }}</div>
             </template>
 
             <template v-slot:item.actions="{ item }">
                 <div class="d-flex justify-end ga-1">
-                    <!-- Deployments is the name itself, and logs and migration jobs are in the
-                         menu: the two most used, Settings and Deploy, are the ones on the row. -->
+                    <!-- The name opens the workspace's page, and logs and migration jobs are in
+                         the menu: the two most used, Settings and Deploy, are the ones on the row. -->
                     <v-menu v-if="rbacWorkspaceUpdate" min-width="250">
                         <template v-slot:activator="{ props }">
                             <v-btn v-bind="props" variant="plain" color="primary" size="small" density="comfortable" icon>
@@ -503,7 +331,7 @@ function onWorkspaceTemplatesShortcutClicked() {
                         v-if="rbacWorkspaceCreate"
                         variant="plain"
                         color="warning"
-                        @click="onDeployItemBtnClicked(item.workspace)"
+                        @click="deploy(item.workspace)"
                         size="small"
                         density="comfortable"
                         icon
@@ -524,19 +352,19 @@ function onWorkspaceTemplatesShortcutClicked() {
                                 v-if="rbacDeveloper"
                                 prepend-icon="fa fa-rectangle-list"
                                 title="Kubernetes Logs"
-                                @click="onShowLogsBtnClicked(item.workspace)"
+                                @click="showLogs(item.workspace)"
                             />
                             <v-list-item
                                 v-if="rbacDeveloper"
                                 prepend-icon="fa fa-truck-arrow-right"
                                 title="Migration Jobs"
-                                @click="onShowMigrationJobsBtnClicked(item.workspace)"
+                                @click="showMigrationJobs(item.workspace)"
                             />
                             <v-list-item
                                 v-if="rbacDeveloper"
                                 prepend-icon="fa fa-clock-rotate-left"
                                 title="History"
-                                @click="onShowHistoryBtnClicked(item.workspace)"
+                                @click="showHistory(item.workspace)"
                             />
                             <v-divider v-if="rbacDeveloper || rbacWorkspaceUpdate" class="my-1" />
                             <v-list-item
@@ -544,27 +372,27 @@ function onWorkspaceTemplatesShortcutClicked() {
                                 prepend-icon="fa fa-pause"
                                 title="Pause"
                                 base-color="red"
-                                @click="onPauseItemBtnClicked(item.workspace)"
+                                @click="pause(item.workspace)"
                             />
                             <v-list-item
                                 v-if="rbacDeveloper && item.workspace.is_paused"
                                 prepend-icon="fa fa-play"
                                 title="Resume"
-                                @click="onResumeItemBtnClicked(item.workspace)"
+                                @click="resume(item.workspace)"
                             />
                             <v-list-item
                                 v-if="rbacDeveloper"
                                 prepend-icon="fa fa-skull"
                                 title="Terminate"
                                 base-color="red"
-                                @click="onTerminateItemBtnClicked(item.workspace)"
+                                @click="terminate(item.workspace)"
                             />
                             <v-list-item
                                 v-if="rbacWorkspaceUpdate"
                                 prepend-icon="fa fa-trash"
                                 title="Delete"
                                 base-color="red"
-                                @click="onDeleteItemBtnClicked(item)"
+                                @click="remove(item.workspace, { onBusy: busy => (item.isLoadingDeleteBtn = busy) })"
                             />
                         </v-list>
                     </v-menu>

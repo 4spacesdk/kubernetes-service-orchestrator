@@ -133,6 +133,37 @@ class ImageScannerTest extends DatabaseTestCase {
     }
 
     /**
+     * A tag asked for by hand is scanned by the job every minute, like any queued one, though
+     * no deployment runs it.
+     */
+    public function testATagAskedForByHandIsScannedWithoutADeployment(): void {
+        $image = $this->anImage('registry.example.org/tenant/api');
+
+        $this->scanner()->queueTag($image, '2.0.0');
+
+        $this->assertSame(['scanned' => 1, 'failed' => 0], $this->scanner()->scanQueued());
+        $this->assertSame("registry.example.org/tenant/api:2.0.0\tnone\n", file_get_contents($this->log));
+        $this->assertSame(['scanned', '1'], [$this->onlyScan()['status'], $this->onlyScan()['is_manual']]);
+    }
+
+    /**
+     * The nightly scan removes the rows of tags nothing runs - but not one asked for by hand,
+     * until it is older than ManualScansKeptFor. It is not scanned again either.
+     */
+    public function testTheNightlyScanKeepsATagAskedForByHandForAWhile(): void {
+        $image = $this->anImage('registry.example.org/tenant/api');
+        $this->scanner()->queueTag($image, '2.0.0');
+        $this->scanner()->scanQueued();
+        file_put_contents($this->log, '');
+
+        $this->assertSame(['scanned' => 0, 'failed' => 0, 'removed' => 0], $this->scanner()->scanAllRunning());
+        $this->assertSame('', (string) file_get_contents($this->log));
+
+        $this->db->table('container_image_scans')->update(['scanned_at' => date('Y-m-d H:i:s', strtotime('-31 days'))]);
+        $this->assertSame(1, $this->scanner()->scanAllRunning()['removed']);
+    }
+
+    /**
      * "Scan now" queues the image's running tags; the job every minute scans only what is
      * queued, not everything.
      */

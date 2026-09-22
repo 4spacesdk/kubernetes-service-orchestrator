@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ReferenceData } from "@/core/referenceData";
 import { useListState } from "@/composables/useListState";
+import {useDeploymentActions} from "@/composables/useDeploymentActions";
 import NameLink from "@/components/Modules/Common/NameLink.vue";
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
 import type {Ref} from 'vue'
@@ -8,7 +9,6 @@ import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import { DeploymentStatusTypes, HealthStatusTypes } from "@/constants";
 import {Deployment, DeploymentSpecification} from "@/core/services/Deploy/models";
-import DeploymentEditButton from "@/components/Modules/Setup/Deployments/EditButton/DeploymentEditButton.vue";
 import DeploymentStatus from "@/components/Modules/Setup/Deployments/DeploymentStatus/DeploymentStatus.vue";
 import DeploymentHealth from "@/components/Modules/Setup/Deployments/DeploymentHealth/DeploymentHealth.vue";
 import DeploymentLastMigrationStatus
@@ -33,6 +33,7 @@ const emit = defineEmits<{
 }>();
 
 const router = useRouter();
+const {deploy, terminate} = useDeploymentActions();
 
 const itemCount = ref(0);
 const rows = ref<Deployment[]>([]);
@@ -212,6 +213,10 @@ function onShowHistoryBtnClicked(item: Deployment) {
     });
 }
 
+function onOpenItemClicked(item: Deployment) {
+    router.push({name: 'DeploymentById', params: {id: item.id}});
+}
+
 function onDeploymentSpecsShortcutClicked() {
     router.push({name: 'DeploymentSpecifications'}).catch((e: any) => {
     });
@@ -372,13 +377,7 @@ function onBulkUpdateVersionBtnClicked() {
             @update:options="options = $event; getItems()">
 
             <template v-slot:item.name="{ item }">
-                <!-- A deployment has no edit dialog; its settings menu is the nearest thing. -->
-                <v-menu min-width="250">
-                    <template v-slot:activator="{ props }">
-                        <name-link v-bind="props">{{ item.name }}</name-link>
-                    </template>
-                    <deployment-edit-button :deployment="item"/>
-                </v-menu>
+                <name-link @click="onOpenItemClicked(item)">{{ item.name }}</name-link>
                 <div class="namespace">{{ item.namespace }}</div>
             </template>
             <template v-slot:item.status="{ item }">
@@ -438,7 +437,18 @@ function onBulkUpdateVersionBtnClicked() {
                         <v-tooltip activator="parent" location="bottom">Resources</v-tooltip>
                     </v-btn>
 
-                    <!-- Settings is the name itself. Delete belongs in the menu with the rest
+                    <v-btn
+                        variant="plain" color="warning"
+                        @click="deploy(item)"
+                        size="small"
+                        density="comfortable"
+                        icon
+                    >
+                        <v-icon>fa fa-play</v-icon>
+                        <v-tooltip activator="parent" location="bottom">Deploy</v-tooltip>
+                    </v-btn>
+
+                    <!-- Settings are on the page the name opens. Delete belongs in the menu with the rest
                          of what is worth a second thought, not beside Pods. -->
                     <v-menu location="bottom end">
                         <template v-slot:activator="{ props }">
@@ -466,6 +476,12 @@ function onBulkUpdateVersionBtnClicked() {
                                 @click="onShowHistoryBtnClicked(item)"
                             />
                             <v-divider class="my-1"/>
+                            <v-list-item
+                                prepend-icon="fa fa-skull"
+                                title="Terminate"
+                                base-color="red"
+                                @click="terminate(item)"
+                            />
                             <v-list-item
                                 prepend-icon="fa fa-trash"
                                 title="Delete"

@@ -13,10 +13,14 @@ class ContainerImages extends ResourceController {
      * and the cron job that runs every minute scans them. Answers with how many were queued -
      * none when no deployment runs the image.
      *
+     * With a tag, that tag alone, whether anything runs it or not - an image to look at before
+     * it is deployed. See ImageScanner::queueTag().
+     *
      * @route /container-images/{id}/scan
      * @method put
      * @custom true
      * @param int $id
+     * @parameter string $tag parameterType=query
      * @responseSchema ContainerImageScanRequestResponse
      * @return void
      * @audit container_image.scan
@@ -29,8 +33,22 @@ class ContainerImages extends ResourceController {
             return;
         }
 
-        Data::set('resource', ['queued' => (new ImageScanner())->queue($item)]);
-        Audit::Record('container_image.scan', $item);
+        $tag = trim((string) $this->request->getGet('tag'));
+        if ($tag === '') {
+            Data::set('resource', ['queued' => (new ImageScanner())->queue($item)]);
+            Audit::Record('container_image.scan', $item);
+            $this->success();
+            return;
+        }
+
+        // What a registry accepts as a tag: it becomes part of the reference Trivy pulls.
+        if (!preg_match('/^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$/', $tag)) {
+            $this->fail('invalid tag');
+            return;
+        }
+        (new ImageScanner())->queueTag($item, $tag);
+        Data::set('resource', ['queued' => 1]);
+        Audit::Record('container_image.scan', $item, ['tag' => $tag]);
         $this->success();
     }
 

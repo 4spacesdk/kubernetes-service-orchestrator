@@ -28,6 +28,33 @@ class ContainerImageScansApiTest extends ControllerTestCase {
         $this->assertSame(0, $this->decode($this->signedIn()->put("container-images/{$image->id}/scan"))['resource']['queued']);
     }
 
+    /**
+     * A tag asked for by name is queued whether anything runs it or not - an image to look at
+     * before it is deployed.
+     */
+    public function testATagAskedForIsQueuedThoughNothingRunsIt(): void {
+        $image = Fixtures::containerImage(['url' => 'registry.example.org/tenant/api']);
+
+        $body = $this->decode($this->signedIn()->put("container-images/{$image->id}/scan?tag=2.0.0"));
+
+        $this->assertSame(1, $body['resource']['queued']);
+        $row = $this->db->table('container_image_scans')->get()->getRowArray();
+        $this->assertSame(['queued', '2.0.0', 'registry.example.org/tenant/api:2.0.0', '1'],
+            [$row['status'], $row['tag'], $row['image_reference'], $row['is_manual']]);
+    }
+
+    /**
+     * The tag goes into the reference Trivy pulls, so only what a registry accepts as one.
+     */
+    public function testATagThatIsNoTagIsRefused(): void {
+        $image = Fixtures::containerImage();
+
+        $body = $this->decode($this->signedIn()->put("container-images/{$image->id}/scan?tag=" . urlencode('1.0 --debug')));
+
+        $this->assertSame('invalid tag', $body['error'] ?? null);
+        $this->assertSame(0, $this->db->table('container_image_scans')->countAllResults());
+    }
+
     public function testAnUnknownImageIsRefused(): void {
         $response = $this->signedIn()->put('container-images/999999/scan');
 

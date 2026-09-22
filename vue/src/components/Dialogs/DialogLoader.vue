@@ -3,12 +3,15 @@ import {getCurrentInstance, onMounted, onUnmounted, ref} from 'vue'
 import type {Component} from 'vue'
 import bus from "@/plugins/bus";
 import renderComponent from "@/plugins/renderComponent";
+import {useRouter} from "vue-router";
 
 interface StackEntry {
     reference: string;
     unmount?: () => void;
     /** Something was typed or changed in the dialog. Esc asks before throwing it away. */
     dirty?: boolean;
+    /** Stays when the page changes under it - a toast saying what just happened does. */
+    keepOnNavigation?: boolean;
 }
 
 const appContext = getCurrentInstance()?.appContext;
@@ -29,7 +32,7 @@ bus.on('json', async input => {
 });
 
 bus.on('toast', async input => {
-    addComponent((await import('@/components/Dialogs/Common/Toast.vue')).default, input);
+    addComponent((await import('@/components/Dialogs/Common/Toast.vue')).default, input, true);
 });
 
 bus.on('worker', async input => {
@@ -99,36 +102,12 @@ bus.on('deploymentCreate', async input => {
     addComponent((await import('@/components/Dialogs/Setup/Deployments/DeploymentCreateDialog.vue')).default, input);
 });
 
-bus.on('deploymentUpdateVersion', async input => {
-    addComponent((await import('@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateVersionDialog.vue')).default, input);
-});
 
-bus.on('deploymentUpdateImagePullPolicy', async input => {
-    addComponent((await import('@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateImagePullPolicyDialog.vue')).default, input);
-});
-bus.on('deploymentUpdateEnvironment', async input => {
-    addComponent((await import('@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateEnvironmentDialog.vue')).default, input);
-});
 bus.on('deploymentUpdateWorkspace', async input => {
     addComponent((await import('@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateWorkspaceDialog.vue')).default, input);
 });
-bus.on('deploymentUpdateDatabaseService', async input => {
-    addComponent((await import('@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateDatabaseServiceDialog.vue')).default, input);
-});
-bus.on('deploymentUpdateResourceManagement', async input => {
-    addComponent((await import('@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateResourceManagementDialog.vue')).default, input);
-});
-bus.on('deploymentUpdateUpdateManagement', async input => {
-    addComponent((await import('@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateUpdateManagementDialog.vue')).default, input);
-});
-bus.on('deploymentUpdateEnvironmentVariables', async input => {
-    addComponent((await import('@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateEnvironmentVariablesDialog.vue')).default, input);
-});
 bus.on('deploymentUpdateEnvironmentVariable', async input => {
     addComponent((await import('@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateEnvironmentVariableDialog.vue')).default, input);
-});
-bus.on('deploymentUpdateVolumes', async input => {
-    addComponent((await import('@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateVolumesDialog.vue')).default, input);
 });
 bus.on('deploymentUpdateVolume', async input => {
     addComponent((await import('@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateVolumeDialog.vue')).default, input);
@@ -144,15 +123,6 @@ bus.on('deploymentLogs', async input => {
 });
 bus.on('deploymentUpdateLabel', async input => {
     addComponent((await import('@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateLabelDialog.vue')).default, input);
-});
-bus.on('deploymentUpdateLabels', async input => {
-    addComponent((await import('@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateLabelsDialog.vue')).default, input);
-});
-bus.on('deploymentUpdateCronJobs', async input => {
-    addComponent((await import('@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateCronJobsDialog.vue')).default, input);
-});
-bus.on('deploymentUpdateKNativeMinScaleSchedules', async input => {
-    addComponent((await import('@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateKNativeMinScaleSchedulesDialog.vue')).default, input);
 });
 
 
@@ -189,9 +159,6 @@ bus.on('workspaceUpdateDatabaseService', async input => {
 bus.on('workspaceUpdateIngress', async input => {
     addComponent((await import('@/components/Dialogs/Workspaces/UpdateDialogs/WorkspaceUpdateIngressDialog.vue')).default, input);
 });
-bus.on('workspaceDeploymentList', async input => {
-    addComponent((await import('@/components/Dialogs/Workspaces/WorkspaceDeploymentList.vue')).default, input);
-});
 bus.on('workspaceLogs', async input => {
     addComponent((await import('@/components/Dialogs/Workspaces/WorkspaceLogsDialog.vue')).default, input);
 });
@@ -217,29 +184,17 @@ bus.on('containerImageEdit', async input => {
 });
 
 
-bus.on('deploymentSpecificationEdit', async input => {
-    addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/DeploymentSpecificationEditDialog.vue')).default, input);
-});
-bus.on('deploymentSpecificationUpdateEnvironmentVariables', async input => {
-    addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateEnvironmentVariablesDialog.vue')).default, input);
+bus.on('deploymentSpecificationCreate', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/DeploymentSpecificationCreateDialog.vue')).default, input);
 });
 bus.on('deploymentSpecificationUpdateEnvironmentVariable', async input => {
     addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateEnvironmentVariableDialog.vue')).default, input);
 });
-bus.on('deploymentSpecificationUpdatePostCommands', async input => {
-    addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdatePostCommandsDialog.vue')).default, input);
-});
 bus.on('deploymentSpecificationUpdatePostCommand', async input => {
     addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdatePostCommandDialog.vue')).default, input);
 });
-bus.on('deploymentSpecificationUpdateQuickCommands', async input => {
-    addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateQuickCommandsDialog.vue')).default, input);
-});
 bus.on('deploymentSpecificationUpdateQuickCommand', async input => {
     addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateQuickCommandDialog.vue')).default, input);
-});
-bus.on('deploymentSpecificationUpdateServicePorts', async input => {
-    addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateServicePortsDialog.vue')).default, input);
 });
 bus.on('deploymentSpecificationUpdateServicePort', async input => {
     addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateServicePortDialog.vue')).default, input);
@@ -250,32 +205,17 @@ bus.on('deploymentSpecificationUpdateIngressRulePaths', async input => {
 bus.on('deploymentSpecificationUpdateIngressRulePath', async input => {
     addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateIngressRulePathDialog.vue')).default, input);
 });
-bus.on('deploymentSpecificationUpdateIngresses', async input => {
-    addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateIngressesDialog.vue')).default, input);
-});
 bus.on('deploymentSpecificationUpdateIngress', async input => {
     addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateIngressDialog.vue')).default, input);
-});
-bus.on('deploymentSpecificationUpdateClusterRoleRules', async input => {
-    addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateClusterRoleRulesDialog.vue')).default, input);
 });
 bus.on('deploymentSpecificationUpdateClusterRoleRule', async input => {
     addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateClusterRoleRuleDialog.vue')).default, input);
 });
-bus.on('deploymentSpecificationUpdateRoleRules', async input => {
-    addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateRoleRulesDialog.vue')).default, input);
-});
 bus.on('deploymentSpecificationUpdateRoleRule', async input => {
     addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateRoleRuleDialog.vue')).default, input);
 });
-bus.on('deploymentSpecificationUpdateServiceAnnotations', async input => {
-    addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateServiceAnnotationsDialog.vue')).default, input);
-});
 bus.on('deploymentSpecificationUpdateServiceAnnotation', async input => {
     addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateServiceAnnotationDialog.vue')).default, input);
-});
-bus.on('deploymentSpecificationUpdateDeploymentAnnotations', async input => {
-    addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateDeploymentAnnotationsDialog.vue')).default, input);
 });
 bus.on('deploymentSpecificationUpdateDeploymentAnnotation', async input => {
     addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateDeploymentAnnotationDialog.vue')).default, input);
@@ -286,32 +226,14 @@ bus.on('deploymentSpecificationUpdateIngressAnnotations', async input => {
 bus.on('deploymentSpecificationUpdateIngressAnnotation', async input => {
     addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateIngressAnnotationDialog.vue')).default, input);
 });
-bus.on('deploymentSpecificationUpdateInitContainers', async input => {
-    addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateInitContainersDialog.vue')).default, input);
-});
-bus.on('deploymentSpecificationUpdatePostUpdateActions', async input => {
-    addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdatePostUpdateActionsDialog.vue')).default, input);
-});
 bus.on('deploymentSpecificationUpdateLabel', async input => {
     addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateLabelDialog.vue')).default, input);
-});
-bus.on('deploymentSpecificationUpdateLabels', async input => {
-    addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateLabelsDialog.vue')).default, input);
-});
-bus.on('deploymentSpecificationUpdateCronJobs', async input => {
-    addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateCronJobsDialog.vue')).default, input);
 });
 bus.on('deploymentSpecificationUpdateHttpProxyRoute', async input => {
     addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateHttpProxyRouteDialog.vue')).default, input);
 });
-bus.on('deploymentSpecificationUpdateHttpProxyRoutes', async input => {
-    addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateHttpProxyRoutesDialog.vue')).default, input);
-});
 bus.on('deploymentSpecificationUpdateVolume', async input => {
     addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateVolumeDialog.vue')).default, input);
-});
-bus.on('deploymentSpecificationUpdateVolumes', async input => {
-    addComponent((await import('@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateVolumesDialog.vue')).default, input);
 });
 
 
@@ -388,9 +310,10 @@ bus.on('knativeMinScaleScheduleEdit', async input => {
 
 
 
-function addComponent(component: Component, input: any) {
+function addComponent(component: Component, input: any, keepOnNavigation = false) {
     const stackEntry: StackEntry = {
         reference: `component-${dynamicReferenceCounter.value++}`,
+        keepOnNavigation,
     };
     pushStack(stackEntry);
 
@@ -421,6 +344,18 @@ function dismissDynamicComponent(dynamicComponent: StackEntry) {
         1
     );
 }
+
+/**
+ * A dialog belongs to the page it was opened on. A link in one - a name in a list inside a
+ * dialog, going to that thing's page - leaves the page, and the dialogs with it.
+ */
+useRouter().afterEach((to, from) => {
+    if (to.path != from.path) {
+        [...stack.value]
+            .filter(entry => !entry.keepOnNavigation)
+            .forEach(entry => dismissDynamicComponent(entry));
+    }
+});
 
 onMounted(() => {
     document.addEventListener("keydown", onKeyDownEventListener);

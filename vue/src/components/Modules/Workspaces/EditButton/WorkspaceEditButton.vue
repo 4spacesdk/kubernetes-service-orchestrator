@@ -38,7 +38,10 @@ function render() {
     isUpdateEmailServiceEnabled.value = true;
 
     showUpdateDatabaseService.value = true;
-    isUpdateDatabaseServiceEnabled.value = props.workspace.deployments?.find(deployment => deployment.status !== DeploymentStatusTypes.Draft) === null;
+    // Only while nothing of the workspace has been deployed. `find() === null` was never true,
+    // so this stood disabled for every workspace.
+    isUpdateDatabaseServiceEnabled.value = !(props.workspace.deployments ?? [])
+        .some(deployment => deployment.status !== DeploymentStatusTypes.Draft);
 
     showUpdateIngress.value = true;
     isUpdateIngressEnabled.value = true;

@@ -9,6 +9,7 @@ import MigrationJobsRoutes from '@/components/Pages/MigrationJobs/routes';
 import IntegrationRoutes from '@/components/Pages/Integrations/routes';
 import AutoUpdatesRoutes from '@/components/Pages/AutoUpdates/routes';
 import AuditEventRoutes from '@/components/Pages/AuditEvents/routes';
+import OverviewRoutes from '@/components/Pages/Overview/routes';
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
@@ -29,6 +30,7 @@ const router = createRouter({
         ...MigrationJobsRoutes,
         ...AutoUpdatesRoutes,
         ...AuditEventRoutes,
+        ...OverviewRoutes,
 
         {
             path: "/login",

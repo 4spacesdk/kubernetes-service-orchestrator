@@ -15,11 +15,17 @@ use DebugTool\Data;
  * Only what runs: a tag no deployment runs is not scanned, and its row goes at the next
  * nightly scan. The status describes what is in the cluster, the same principle as
  * SECURITY-STATUS.md describing main.
+ *
+ * The exception is a tag asked for by hand - an image to look at before anything deploys it.
+ * It is scanned once, when asked, and its row stays for ManualScansKeptFor.
  */
 class ImageScanner {
 
     /** How long the counts of earlier scans are kept, for the graph over time. */
     public const RecordsKeptFor = '1 year';
+
+    /** How long a scan asked for by hand stays when no deployment runs its tag. */
+    public const ManualScansKeptFor = '30 days';
 
     public function __construct(private Trivy $trivy = new Trivy()) {
     }
@@ -98,6 +104,20 @@ class ImageScanner {
     }
 
     /**
+     * Put one tag of an image in the queue, whether a deployment runs it or not.
+     */
+    public function queueTag(ContainerImage $image, string $tag): ContainerImageScan {
+        $scan = $this->rowFor((int) $image->id, $tag);
+        $scan->status = \ContainerImageScanStatuses::Queued;
+        $scan->image_reference = self::referenceOf($image, $tag);
+        $scan->is_manual = true;
+        $scan->save();
+        $this->announce($scan);
+
+        return $scan;
+    }
+
+    /**
      * Scan what is queued, one image at a time. One that fails is recorded as failed, with
      * Trivy's reason, and the rest are scanned all the same.
      *
@@ -118,8 +138,9 @@ class ImageScanner {
     }
 
     /**
-     * The nightly run: every running tag, and the rows of tags that no longer run removed.
-     * Their records stay, until they are older than RecordsKeptFor.
+     * The nightly run: every running tag, and the rows of tags that no longer run removed -
+     * except one asked for by hand, until it is older than ManualScansKeptFor. Their records
+     * stay, until they are older than RecordsKeptFor.
      *
      * @return array{scanned: int, failed: int, removed: int}
      */
@@ -130,8 +151,10 @@ class ImageScanner {
         $removed = 0;
         /** @var ContainerImageScan $all */
         $all = (new ContainerImageScanModel())->find();
+        $manualSince = date('Y-m-d H:i:s', strtotime('-' . self::ManualScansKeptFor));
         foreach ($all as $scan) {
-            if (!isset($running["{$scan->container_image_id}:{$scan->tag}"])) {
+            $isKeptManual = $scan->is_manual && ($scan->scanned_at === null || $scan->scanned_at >= $manualSince);
+            if (!isset($running["{$scan->container_image_id}:{$scan->tag}"]) && !$isKeptManual) {
                 $scan->delete();
                 $removed++;
             }

@@ -1891,6 +1891,11 @@ export class ContainerImagesScanPutById extends BaseApi<ContainerImageScanReques
         return data;
     }
 
+    public tag(value: string): ContainerImagesScanPutById {
+        this.addQueryParameter('tag', value);
+        return this;
+    }
+
     public save(data: any, next?: (value: ContainerImageScanRequestResponse) => void) {
         return super.executeSave(data, next);
     }
@@ -4034,6 +4039,48 @@ export class DeploymentsRunCronJobPostById extends BaseApi<DeploymentCronJobRunR
     }
 }
 
+export class DeploymentsDeployPutById extends BaseApi<Deployment> {
+
+    public topic = 'Resources.Deployments';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/deployments/${id}/deploy`;
+    }
+
+    protected convertToResource(data: any): Deployment {
+        return new Deployment(data);
+    }
+
+    public save(data: any, next?: (value: Deployment) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class DeploymentsTerminatePutById extends BaseApi<Deployment> {
+
+    public topic = 'Resources.Deployments';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/deployments/${id}/terminate`;
+    }
+
+    protected convertToResource(data: any): Deployment {
+        return new Deployment(data);
+    }
+
+    public save(data: any, next?: (value: Deployment) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
 export class DeploymentsUpdateKNativeMinScaleSchedulesPutById extends BaseApi<Deployment> {
 
     public topic = 'Resources.Deployments';
@@ -4267,6 +4314,14 @@ class Deployments {
 
     public runCronJobPostById(id: number): DeploymentsRunCronJobPostById {
         return new DeploymentsRunCronJobPostById(id);
+    }
+
+    public deployPutById(id: number): DeploymentsDeployPutById {
+        return new DeploymentsDeployPutById(id);
+    }
+
+    public terminatePutById(id: number): DeploymentsTerminatePutById {
+        return new DeploymentsTerminatePutById(id);
     }
 
     public updateKNativeMinScaleSchedulesPutById(id: number): DeploymentsUpdateKNativeMinScaleSchedulesPutById {

@@ -7,13 +7,15 @@ import ScanHistoryChart from "@/components/Modules/Setup/ContainerImages/ScanHis
 import ScanCounts from "@/components/Modules/Setup/ContainerImages/ScanCounts/ScanCounts.vue";
 import type { DialogEventsInterface } from "@/components/Dialogs/DialogEventsInterface";
 import bus from "@/plugins/bus";
+import moment from "moment";
 import PushService from "@/services/Push/PushService";
 import { Events } from "@/services/Push/Events";
 import type { PushSubscription } from "@/services/Push/PushSubscription";
 
 /**
  * What Trivy found in the tags of an image that deployments run - scanned every night, or
- * within the minute after "Scan now".
+ * within the minute after "Scan now" - and in any other tag scanned by hand, such as one
+ * nothing deploys yet.
  */
 export interface ContainerImageScansDialog_Input {
     containerImage: ContainerImage;
@@ -44,6 +46,15 @@ const search = ref("");
 const subscription = ref<PushSubscription>();
 /** Bumped when a scan finishes, so the graph reads its records again. */
 const historyVersion = ref(0);
+
+/**
+ * A tag to scan by hand. The registry's tags are offered, newest first with when each was
+ * pushed; any can be typed.
+ */
+const manualTag = ref<string | null>(null);
+const registryTags = ref<{ name: string; pushed?: string }[]>([]);
+const isLoadingRegistryTags = ref(false);
+const isQueuingTag = ref(false);
 
 const headers = [
     { title: "Severity", key: "severity", sortable: false },
@@ -78,6 +89,7 @@ onMounted(() => {
         (data) => onScanChanged(new ContainerImageScan(data.next)),
     );
     loadScans();
+    loadRegistryTags();
 });
 
 onUnmounted(() => {
@@ -135,6 +147,26 @@ function loadFindings() {
     });
 }
 
+/** A registry that refuses leaves the field to typing; the scan itself says what went wrong. */
+function loadRegistryTags() {
+    isLoadingRegistryTags.value = true;
+    const api = Api.containerImages().getTagsGetById(props.input.containerImage.id!);
+    api.setErrorHandler(() => {
+        isLoadingRegistryTags.value = false;
+        return false;
+    });
+    api.find((responses) => {
+        registryTags.value = [...(responses[0]?.tags ?? [])]
+            .filter((tag) => tag.name)
+            .sort((a, b) => (b.pushed_at ?? "").localeCompare(a.pushed_at ?? ""))
+            .map((tag) => ({
+                name: tag.name!,
+                pushed: tag.pushed_at ? moment(tag.pushed_at).format("D/M-YY HH:mm") : undefined,
+            }));
+        isLoadingRegistryTags.value = false;
+    });
+}
+
 function close() {
     showDialog.value = false;
     props.events.onClose();
@@ -162,6 +194,32 @@ function onScanNowBtnClicked() {
     });
 }
 
+function onScanTagBtnClicked() {
+    const tag = manualTag.value?.trim();
+    if (!tag || isQueuingTag.value) {
+        return;
+    }
+    isQueuingTag.value = true;
+    const api = Api.containerImages().scanPutById(props.input.containerImage.id!).tag(tag);
+    api.setErrorHandler((response) => {
+        isQueuingTag.value = false;
+        bus.emit("toast", { text: response.error ?? "Could not queue the scan", color: "red" });
+        return false;
+    });
+    api.save(null, () => {
+        isQueuingTag.value = false;
+        manualTag.value = null;
+        bus.emit("toast", { text: `${tag} queued - the scan runs within a minute` });
+        Api.containerImageScans().get()
+            .where("container_image_id", props.input.containerImage.id!)
+            .find((items) => {
+                scans.value = items.sort((a, b) => (b.scanned_at ?? "").localeCompare(a.scanned_at ?? ""));
+                selected.value = scans.value.find((scan) => scan.tag === tag)?.id ?? selected.value;
+                loadFindings();
+            });
+    });
+}
+
 function onCloseBtnClicked() {
     close();
 }
@@ -179,11 +237,50 @@ function onCloseBtnClicked() {
             <v-card-text class="px-0">
                 <div class="px-4">
                     <div class="text-caption text-medium-emphasis mb-3">
-                        The tags deployments run, scanned by Trivy every night.
+                        The tags deployments run, scanned by Trivy every night. Any other tag can be
+                        scanned by hand - it is kept for 30 days.
+                    </div>
+                    <div class="d-flex align-center ga-2 mb-4">
+                        <v-combobox
+                            v-model="manualTag"
+                            :items="registryTags"
+                            item-title="name"
+                            item-value="name"
+                            :return-object="false"
+                            :loading="isLoadingRegistryTags"
+                            label="Scan a tag"
+                            placeholder="Choose or type a tag"
+                            density="compact"
+                            variant="outlined"
+                            hide-details
+                            clearable
+                            style="max-width: 320px"
+                            @keydown.enter.stop="onScanTagBtnClicked"
+                        >
+                            <template v-slot:item="{ props: itemProps, item }">
+                                <v-list-item v-bind="itemProps">
+                                    <template v-slot:append>
+                                        <span
+                                            v-if="item.raw.pushed"
+                                            class="text-caption text-medium-emphasis ml-4">{{ item.raw.pushed }}</span>
+                                    </template>
+                                </v-list-item>
+                            </template>
+                        </v-combobox>
+                        <v-btn
+                            variant="tonal"
+                            color="primary"
+                            prepend-icon="fa fa-shield-halved"
+                            :disabled="!manualTag?.trim()"
+                            :loading="isQueuingTag"
+                            @click="onScanTagBtnClicked"
+                        >
+                            Scan
+                        </v-btn>
                     </div>
                     <v-progress-linear v-if="isLoading" indeterminate class="mb-2" />
                     <div v-else-if="!scans.length" class="text-body-2 text-medium-emphasis">
-                        Not scanned yet. Scans cover the tags deployments run; use "Scan now", or wait for the nightly scan.
+                        Not scanned yet. Scans cover the tags deployments run; use "Scan now", wait for the nightly scan, or scan a tag above.
                     </div>
 
                     <template v-if="current">

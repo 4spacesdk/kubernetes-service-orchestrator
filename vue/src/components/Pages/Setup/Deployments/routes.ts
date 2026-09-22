@@ -1,4 +1,5 @@
 import DeploymentListPage from "@/components/Pages/Setup/Deployments/DeploymentListPage.vue";
+import DeploymentPage from "@/components/Pages/Setup/Deployments/DeploymentPage.vue";
 
 export default ([
     {
@@ -10,11 +11,12 @@ export default ([
         }
     },
     {
-        path: '/setup/deployments/:id',
+        // :section is a key from deploymentSections, left out for Overview.
+        path: '/setup/deployments/:id/:section?',
         name: 'DeploymentById',
-        component: DeploymentListPage,
+        component: DeploymentPage,
         meta: {
-            title: 'Deployments',
+            title: 'Deployment',
         }
     },
 ]);

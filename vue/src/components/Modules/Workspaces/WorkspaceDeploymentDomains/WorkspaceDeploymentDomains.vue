@@ -1,20 +1,13 @@
 <script setup lang="ts">
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
-import {Deployment, Domain, Workspace} from "@/core/services/Deploy/models";
-import {Api} from "@/core/services/Deploy/Api";
-import {DeploymentStatusTypes} from "@/constants";
-import {de} from "vuetify/locale";
+import {Workspace} from "@/core/services/Deploy/models";
+import {withoutScheme, workspaceUrls, type WorkspaceUrl} from "./workspaceUrls";
 
 const props = defineProps<{
     workspace: Workspace,
 }>();
 
-interface Row {
-
-    deployment: Deployment,
-    url: string,
-
-}
+type Row = WorkspaceUrl;
 
 const text = ref('');
 const rows = ref<Row[]>([]);
@@ -32,26 +25,11 @@ onUnmounted(() => {
 });
 
 function setup() {
-    rows.value = props.workspace.deployments
-        ?.filter(deployment => deployment.deployment_specification?.enable_external_access ?? false)
-        ?.map(deployment => {
-            return {
-                deployment: deployment,
-                url: deployment.url_external ?? 'missing url',
-                /*url: deployment.deployment_specification?.generateUrl(
-                    props.workspace.subdomain ?? '',
-                    props.workspace.domain ?? new Domain(),
-                    true,
-                    true
-                ) ?? 'missing url',*/
-            };
-        }) ?? [];
+    rows.value = workspaceUrls(props.workspace);
 
-    rows.value.sort((a, b) => a.url.localeCompare(b.url));
-
-    // Without the scheme: every url here is https, and it costs 60px in a column that is
-    // already the widest. The whole url is in the menu, and in the link that opens.
-    text.value = rows.value.length > 0 ? rows.value[0].url.replace(/^https?:\/\//, '') : '';
+    // Without the scheme: it costs 60px in a column that is already the widest. The whole
+    // url is in the menu, and in the link that opens.
+    text.value = rows.value.length > 0 ? withoutScheme(rows.value[0].url) : '';
 
     render();
 }

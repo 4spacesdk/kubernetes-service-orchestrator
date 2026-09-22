@@ -374,13 +374,14 @@ function onCloseBtnClicked() {
                                 density="compact"
                             />
                         </v-col>
-                        <v-col cols="6">
+                        <!-- Artifact Registry's password is a service account key: a whole JSON file,
+                             so it gets the width and height the key above has. -->
+                        <v-col :cols="item.provider == ContainerRegistries.ArtifactContainerRegistry ? 12 : 6">
                             <v-textarea
                                 v-if="item.provider == ContainerRegistries.ArtifactContainerRegistry"
                                 variant="outlined"
-                                rows="1"
                                 v-model="item.pull_password"
-                                label="Pull password"
+                                label="Pull password (service account key JSON)"
                                 :hint="secretHint('pull_password')"
                                 persistent-hint
                                 density="compact"

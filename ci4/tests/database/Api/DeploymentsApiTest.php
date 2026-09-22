@@ -737,6 +737,59 @@ class DeploymentsApiTest extends ControllerTestCase {
 
     // </editor-fold>
 
+    // <editor-fold desc="Deploying and terminating">
+
+    /**
+     * Every step is tried, and without a cluster every one of them refuses. That comes back
+     * as an error naming the steps rather than as a success - and it is still in the audit
+     * trail, because the steps that could go would have gone.
+     */
+    public function testDeployingReportsWhatFailedPerStep(): void {
+        $deployment = Fixtures::deployableDeployment();
+
+        $body = $this->decode($this->signedIn()->put("deployments/{$deployment->id}/deploy"));
+
+        $this->assertSame('ERROR', $body['status']);
+        $this->assertNotEmpty($body['error']);
+        $this->assertSame(1, $this->auditCount($deployment, 'deployment.deploy'));
+    }
+
+    /**
+     * Terminating leaves the deployment Inactive whatever the steps said, as a workspace's
+     * Terminate does for each of its deployments. It stays that way until it is deployed
+     * again - `checkStatus()` does not recompute an Inactive one.
+     */
+    public function testTerminatingLeavesTheDeploymentInactive(): void {
+        $deployment = Fixtures::deployableDeployment(['status' => \DeploymentStatusTypes::Synced]);
+
+        $this->signedIn()->put("deployments/{$deployment->id}/terminate");
+
+        $this->assertSame(\DeploymentStatusTypes::Inactive, $this->reload($deployment)->status);
+        $this->assertSame(1, $this->auditCount($deployment, 'deployment.terminate'));
+    }
+
+    public function testDeployingAnUnknownDeploymentIsRefused(): void {
+        $body = $this->decode($this->signedIn()->put('deployments/999999/deploy'));
+
+        $this->assertSame('unknown deployment', $body['error'] ?? null);
+    }
+
+    public function testTerminatingAnUnknownDeploymentIsRefused(): void {
+        $body = $this->decode($this->signedIn()->put('deployments/999999/terminate'));
+
+        $this->assertSame('unknown deployment', $body['error'] ?? null);
+    }
+
+    private function auditCount(Deployment $deployment, string $action): int {
+        return $this->db->table('audit_events')
+            ->where('resource_type', 'Deployment')
+            ->where('resource_id', $deployment->id)
+            ->where('action', $action)
+            ->countAllResults();
+    }
+
+    // </editor-fold>
+
     // <editor-fold desc="Helpers">
 
     /**

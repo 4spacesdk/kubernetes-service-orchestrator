@@ -484,6 +484,66 @@ class Deployments extends ResourceController {
     }
 
     /**
+     * Deploy every step of the deployment, as Deploy on a workspace does for each of its own.
+     * What failed is handed back per step; the steps that could go, went.
+     *
+     * @route /deployments/{id}/deploy
+     * @method put
+     * @custom true
+     * @param int $id
+     * @return void
+     * @audit deployment.deploy
+     */
+    public function deploy(int $id): void {
+        $item = new Deployment();
+        $item->find($id);
+        if (!$item->exists()) {
+            $this->fail('unknown deployment');
+            return;
+        }
+
+        $errors = $item->deployAllSteps();
+        $item->checkStatus(true);
+        Audit::Record('deployment.deploy', $item);
+        if ($errors) {
+            $this->fail($errors);
+            return;
+        }
+        $this->_setResource($item);
+        $this->success();
+    }
+
+    /**
+     * Terminate every step of the deployment and leave it Inactive, as Terminate on a workspace
+     * does for each of its own. It stays Inactive until it is deployed again.
+     *
+     * @route /deployments/{id}/terminate
+     * @method put
+     * @custom true
+     * @param int $id
+     * @return void
+     * @audit deployment.terminate
+     */
+    public function terminate(int $id): void {
+        $item = new Deployment();
+        $item->find($id);
+        if (!$item->exists()) {
+            $this->fail('unknown deployment');
+            return;
+        }
+
+        $errors = $item->terminateAllSteps();
+        $item->updateStatus(\DeploymentStatusTypes::Inactive, true);
+        Audit::Record('deployment.terminate', $item);
+        if ($errors) {
+            $this->fail($errors);
+            return;
+        }
+        $this->_setResource($item);
+        $this->success();
+    }
+
+    /**
      * @route /deployments/{id}/knative-min-scale-schedules
      * @method put
      * @custom true

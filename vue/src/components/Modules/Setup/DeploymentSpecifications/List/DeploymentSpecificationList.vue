@@ -105,8 +105,9 @@ function getItems(doItems = true, doCount = false) {
 // <editor-fold desc="View functions">
 
 function createItem(type: string) {
-    bus.emit('deploymentSpecificationEdit', {
+    bus.emit('deploymentSpecificationCreate', {
         deploymentSpecification: DeploymentSpecification.Create(type),
+        onCreated: (item: DeploymentSpecification) => emit('onItemEditClicked', item),
     });
 }
 
@@ -125,23 +126,14 @@ function onDeleteItemBtnClicked(item: DeploymentSpecification) {
 }
 
 function onDuplicateItemBtnClicked(item: DeploymentSpecification) {
-    // The copy is made and saved by the server, children and all - they are edited in
-    // dialogs of their own, which need a saved row. It is then read again the way the
-    // list reads it, so the edit dialog gets the relations it shows.
+    // The copy is made and saved by the server, children and all, and opened on its page.
     Api.deploymentSpecifications().duplicatePostById(item.id!).save(null, copy => {
         bus.emit('deploymentSpecificationSaved');
-        Api.deploymentSpecifications().getById(copy.id!).find(items => {
-            bus.emit('deploymentSpecificationEdit', {
-                deploymentSpecification: items[0],
-            });
-        });
+        emit('onItemEditClicked', copy);
     });
 }
 
 function onEditItemBtnClicked(item: DeploymentSpecification) {
-    bus.emit('deploymentSpecificationEdit', {
-        deploymentSpecification: item
-    });
     emit('onItemEditClicked', item);
 }
 

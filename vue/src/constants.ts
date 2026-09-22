@@ -35,16 +35,10 @@ import {
     Workspace,
 } from "@/core/services/Deploy/models";
 import type { ToastDialog_Input } from "@/components/Dialogs/Common/Toast.vue";
-import type { DeploymentUpdateVersionDialog_Input } from "@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateVersionDialog.vue";
-import type { DeploymentUpdateEnvironmentDialog_Input } from "@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateEnvironmentDialog.vue";
-import type { DeploymentUpdateDatabaseServiceDialog_Input } from "@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateDatabaseServiceDialog.vue";
-import type { DeploymentUpdateResourceManagementDialog_Input } from "@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateResourceManagementDialog.vue";
-import type { DeploymentUpdateUpdateManagementDialog_Input } from "@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateUpdateManagementDialog.vue";
 import type { DeploymentResourceListDialog_Input } from "@/components/Dialogs/Setup/Deployments/DeploymentResourceListDialog.vue";
 import type { DeploymentStep } from "@/core/services/Deploy/Api";
 import type { JsonDialog_Input } from "@/components/Dialogs/Common/JsonDialog.vue";
 import type { DeploymentResourcePreviewDialog_Input } from "@/components/Dialogs/Setup/Deployments/DeploymentResourcePreviewDialog.vue";
-import type { DeploymentUpdateEnvirontmentVariablesDialog_Input } from "@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateEnvironmentVariablesDialog.vue";
 import type { DeploymentUpdateEnvirontmentVariableDialog_Input } from "@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateEnvironmentVariableDialog.vue";
 import type { MigrationJobListDialog_Input } from "@/components/Dialogs/MigrationJobs/MigrationJobsListDialog.vue";
 import type { AuditEventListDialog_Input } from "@/components/Dialogs/AuditEvents/AuditEventsListDialog.vue";
@@ -54,22 +48,17 @@ import type { WorkspaceUpdateEmailServiceDialog_Input } from "@/components/Dialo
 import type { WorkspaceUpdateIngressDialog_Input } from "@/components/Dialogs/Workspaces/UpdateDialogs/WorkspaceUpdateIngressDialog.vue";
 import type { WorkspaceUpdateNameDialog_Input } from "@/components/Dialogs/Workspaces/UpdateDialogs/WorkspaceUpdateNameDialog.vue";
 import type { WorkerDialog_Input } from "@/components/Dialogs/Common/WorkerDialog.vue";
-import type { WorkspaceDeploymentListDialog_Input } from "@/components/Dialogs/Workspaces/WorkspaceDeploymentList.vue";
 import type { DeploymentLogsDialog_Input } from "@/components/Dialogs/Setup/Deployments/DeploymentLogsDialog.vue";
 import type { MigrationJobLogsDialog_Input } from "@/components/Dialogs/MigrationJobs/MigrationJobLogsDialog.vue";
 import type { WorkspaceLogsDialog_Input } from "@/components/Dialogs/Workspaces/WorkspaceLogsDialog.vue";
 import type { PodTerminalDialog_Input } from "@/components/Dialogs/Setup/Deployments/Pods/PodTerminalDialog.vue";
 import type { ContainerImageEditDialog_Input } from "@/components/Dialogs/Setup/ContainerImages/ContainerImageEditDialog.vue";
-import type { DeploymentSpecificationEditDialog_Input } from "@/components/Dialogs/Setup/DeploymentSpecifications/DeploymentSpecificationEditDialog.vue";
-import type { DeploymentSpecificationUpdateEnvironmentVariablesDialog_Input } from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateEnvironmentVariablesDialog.vue";
+import type { DeploymentSpecificationCreateDialog_Input } from "@/components/Dialogs/Setup/DeploymentSpecifications/DeploymentSpecificationCreateDialog.vue";
 import type { DeploymentSpecificationUpdateEnvironmentVariableDialog_Input } from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateEnvironmentVariableDialog.vue";
 import type { DeploymentSpecificationUpdatePostCommandDialog_Input } from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdatePostCommandDialog.vue";
-import type { DeploymentSpecificationUpdatePostCommandsDialog_Input } from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdatePostCommandsDialog.vue";
-import type { DeploymentSpecificationUpdateServicePortsDialog_Input } from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateServicePortsDialog.vue";
 import type { DeploymentSpecificationUpdateServicePortDialog_Input } from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateServicePortDialog.vue";
 import type { DeploymentSpecificationUpdateIngressRulePathsDialog_Input } from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateIngressRulePathsDialog.vue";
 import type { DeploymentSpecificationUpdateIngressRulePathDialog_Input } from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateIngressRulePathDialog.vue";
-import type { DeploymentSpecificationUpdateClusterRoleRulesDialog_Input } from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateClusterRoleRulesDialog.vue";
 import type { DeploymentSpecificationUpdateClusterRoleRuleDialog_Input } from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateClusterRoleRuleDialog.vue";
 import type { WorkspaceTemplateCreateDialog_Input } from "@/components/Dialogs/Setup/WorkspaceTemplates/WorkspaceTemplateEditDialog.vue";
 import type { WorkspaceTemplateUpdateDeploymentSpecificationDialog_Input } from "@/components/Dialogs/Setup/WorkspaceTemplates/UpdateDialogs/WorkspaceTemplateUpdateDeploymentSpecificationDialog.vue";
@@ -77,20 +66,15 @@ import type { WorkspaceTemplateUpdateDeploymentSpecificationsDialog_Input } from
 import type { OAuthClientEditDialog_Input } from "@/components/Dialogs/Integrations/OAuthClients/OAuthClientEditDialog.vue";
 import type { WebhookEditDialog_Input } from "@/components/Dialogs/Integrations/Webhooks/WebhookEditDialog.vue";
 import type { WebhookDeliveryListDialog_Input } from "@/components/Dialogs/Integrations/Webhooks/Deliveries/WebhookDeliveryListDialog.vue";
-import type { DeploymentUpdateVolumesDialog_Input } from "@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateVolumesDialog.vue";
 import type { DeploymentUpdateVolumeDialog_Input } from "@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateVolumeDialog.vue";
-import type { DeploymentSpecificationUpdateIngressesDialog_Input } from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateIngressesDialog.vue";
 import type { DeploymentSpecificationUpdateIngressDialog_Input } from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateIngressDialog.vue";
-import type { DeploymentSpecificationUpdateServiceAnnotationsDialog_Input } from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateServiceAnnotationsDialog.vue";
 import type { DeploymentSpecificationUpdateServiceAnnotationDialog_Input } from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateServiceAnnotationDialog.vue";
 import type { WorkspaceUpdateLabelDialog_Input } from "@/components/Dialogs/Workspaces/UpdateDialogs/WorkspaceUpdateLabelDialog.vue";
 import type { WorkspaceUpdateLabelsDialog_Input } from "@/components/Dialogs/Workspaces/UpdateDialogs/WorkspaceUpdateLabelsDialog.vue";
 import type { WorkspaceTemplateUpdateEnvironmentVariablesDialog_Input } from "@/components/Dialogs/Setup/WorkspaceTemplates/UpdateDialogs/WorkspaceTemplateUpdateEnvironmentVariablesDialog.vue";
 import type { WorkspaceTemplateUpdateEnvironmentVariableDialog_Input } from "@/components/Dialogs/Setup/WorkspaceTemplates/UpdateDialogs/WorkspaceTemplateUpdateEnvironmentVariableDialog.vue";
-import type { DeploymentSpecificationUpdateQuickCommandsDialog_Input } from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateQuickCommandsDialog.vue";
 import type { DeploymentSpecificationUpdateQuickCommandDialog_Input } from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateQuickCommandDialog.vue";
 import type { InitContainerEditDialog_Input } from "@/components/Dialogs/Setup/InitContainers/InitContainerEditDialog.vue";
-import type { DeploymentSpecificationUpdateInitContainersDialog_Input } from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateInitContainersDialog.vue";
 import type { InitContainerUpdateEnvironmentVariableDialog_Input } from "@/components/Dialogs/Setup/InitContainers/UpdateDialogs/InitContainerUpdateEnvironmentVariableDialog.vue";
 import type { InitContainerUpdateEnvironmentVariablesDialog_Input } from "@/components/Dialogs/Setup/InitContainers/UpdateDialogs/InitContainerUpdateEnvironmentVariablesDialog.vue";
 import type { WorkspaceTemplateUpdateLabelDialog_Input } from "@/components/Dialogs/Setup/WorkspaceTemplates/UpdateDialogs/WorkspaceTemplateUpdateLabelDialog.vue";
@@ -99,32 +83,21 @@ import type { PodioIntegrationEditDialog_Input } from "@/components/Dialogs/Inte
 import type { PostUpdateActionUpdateConditionDialog_Input } from "@/components/Dialogs/Setup/PostUpdateActions/UpdateDialogs/PostUpdateActionUpdateConditionDialog.vue";
 import type { PostUpdateActionUpdateConditionsDialog_Input } from "@/components/Dialogs/Setup/PostUpdateActions/UpdateDialogs/PostUpdateActionUpdateConditionsDialog.vue";
 import type { PostUpdateActionEditDialog_Input } from "@/components/Dialogs/Setup/PostUpdateActions/PostUpdateActionEditDialog.vue";
-import type { DeploymentSpecificationUpdatePostUpdateActionsDialog_Input } from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdatePostUpdateActionsDialog.vue";
-import type { DeploymentSpecificationUpdateLabelsDialog_Input } from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateLabelsDialog.vue";
 import type { DeploymentSpecificationUpdateLabelDialog_Input } from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateLabelDialog.vue";
-import type { DeploymentUpdateLabelsDialog_Input } from "@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateLabelsDialog.vue";
 import type { DeploymentUpdateLabelDialog_Input } from "@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateLabelDialog.vue";
-import type { DeploymentSpecificationUpdateRoleRulesDialog_Input } from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateRoleRulesDialog.vue";
 import type { DeploymentSpecificationUpdateRoleRuleDialog_Input } from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateRoleRuleDialog.vue";
-import type { DeploymentSpecificationUpdateDeploymentAnnotationsDialog_Input } from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateDeploymentAnnotationsDialog.vue";
 import type { DeploymentSpecificationUpdateIngressAnnotationsDialog_Input } from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateIngressAnnotationsDialog.vue";
 import type { DeploymentSpecificationUpdateIngressAnnotationDialog_Input } from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateIngressAnnotationDialog.vue";
 import type { DeploymentSpecificationUpdateDeploymentAnnotationDialog_Input } from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateDeploymentAnnotationDialog.vue";
-import type { DeploymentSpecificationUpdateCronJobsDialog_Input } from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateCronJobsDialog.vue";
 import type { CronJobEditDialog_Input } from "@/components/Dialogs/Setup/CronJobs/CronJobEditDialog.vue";
 import type { DomainEditDialog_Input } from "@/components/Dialogs/Setup/Domains/DomainEditDialog.vue";
 import type { GatewayEditDialog_Input } from "@/components/Dialogs/Setup/Gateways/GatewayEditDialog.vue";
 import type { GatewayResourcePreviewDialog_Input } from "@/components/Dialogs/Setup/Gateways/GatewayResourcePreviewDialog.vue";
-import type { DeploymentSpecificationUpdateHttpProxyRoutesDialog_Input } from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateHttpProxyRoutesDialog.vue";
 import type { DeploymentSpecificationUpdateHttpProxyRoutePathDialog_Input } from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateHttpProxyRouteDialog.vue";
 import type { DeploymentUpdateWorkspaceDialog_Input } from "@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateWorkspaceDialog.vue";
-import type { DeploymentSpecificationUpdateVolumesDialog_Input } from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateVolumesDialog.vue";
 import type { DeploymentSpecificationUpdateVolumeDialog_Input } from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateVolumeDialog.vue";
-import type { DeploymentUpdateImagePullPolicyDialog_Input } from "@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateImagePullPolicyDialog.vue";
-import type { DeploymentUpdateCronJobsDialog_Input } from "@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateCronJobsDialog.vue";
 import type { WorkspaceTemplateUpdateDeploymentSpecificationKNativeMinScaleSchedulesDialog_Input } from "@/components/Dialogs/Setup/WorkspaceTemplates/UpdateDialogs/WorkspaceTemplateUpdateDeploymentSpecificationKNativeMinScaleSchedulesDialog.vue";
 import type { KNativeMinScaleScheduleEditDialog_Input } from "@/components/Dialogs/Setup/KNativeMinScaleSchedules/KNativeMinScaleScheduleEditDialog.vue";
-import type { DeploymentUpdateKNativeMinScaleSchedulesDialog_Input } from "@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateKNativeMinScaleSchedulesDialog.vue";
 
 export type Events = {
     confirm: ConfirmationDialog_Input;
@@ -139,16 +112,8 @@ export type Events = {
 
     deploymentCreate: DeploymentCreateDialog_Input;
     deploymentSaved: Deployment | undefined;
-    deploymentUpdateVersion: DeploymentUpdateVersionDialog_Input;
-    deploymentUpdateImagePullPolicy: DeploymentUpdateImagePullPolicyDialog_Input;
-    deploymentUpdateEnvironment: DeploymentUpdateEnvironmentDialog_Input;
     deploymentUpdateWorkspace: DeploymentUpdateWorkspaceDialog_Input;
-    deploymentUpdateDatabaseService: DeploymentUpdateDatabaseServiceDialog_Input;
-    deploymentUpdateResourceManagement: DeploymentUpdateResourceManagementDialog_Input;
-    deploymentUpdateUpdateManagement: DeploymentUpdateUpdateManagementDialog_Input;
-    deploymentUpdateEnvironmentVariables: DeploymentUpdateEnvirontmentVariablesDialog_Input;
     deploymentUpdateEnvironmentVariable: DeploymentUpdateEnvirontmentVariableDialog_Input;
-    deploymentUpdateVolumes: DeploymentUpdateVolumesDialog_Input;
     deploymentUpdateVolume: DeploymentUpdateVolumeDialog_Input;
     deploymentResourceList: DeploymentResourceListDialog_Input;
     deploymentResourcePreview: DeploymentResourcePreviewDialog_Input;
@@ -157,10 +122,7 @@ export type Events = {
         step: DeploymentStep;
     };
     deploymentLogs: DeploymentLogsDialog_Input;
-    deploymentUpdateLabels: DeploymentUpdateLabelsDialog_Input;
     deploymentUpdateLabel: DeploymentUpdateLabelDialog_Input;
-    deploymentUpdateCronJobs: DeploymentUpdateCronJobsDialog_Input;
-    deploymentUpdateKNativeMinScaleSchedules: DeploymentUpdateKNativeMinScaleSchedulesDialog_Input;
 
     domainCreate: DomainCreateDialog_Input;
     domainEdit: DomainEditDialog_Input;
@@ -204,7 +166,6 @@ export type Events = {
     workspaceUpdateEmailService: WorkspaceUpdateEmailServiceDialog_Input;
     workspaceUpdateDatabaseService: WorkspaceUpdateDatabaseServiceDialog_Input;
     workspaceUpdateIngress: WorkspaceUpdateIngressDialog_Input;
-    workspaceDeploymentList: WorkspaceDeploymentListDialog_Input;
     workspaceLogs: WorkspaceLogsDialog_Input;
     workspaceUpdateLabels: WorkspaceUpdateLabelsDialog_Input;
     workspaceUpdateLabel: WorkspaceUpdateLabelDialog_Input;
@@ -216,40 +177,22 @@ export type Events = {
     containerImageEditDialog_closed: ContainerImage | undefined;
 
     deploymentSpecificationSaved: DeploymentSpecification | undefined;
-    deploymentSpecificationEdit: DeploymentSpecificationEditDialog_Input;
-    deploymentSpecificationEditDialog_closed:
-        | DeploymentSpecification
-        | undefined;
-    deploymentSpecificationUpdateEnvironmentVariables: DeploymentSpecificationUpdateEnvironmentVariablesDialog_Input;
+    deploymentSpecificationCreate: DeploymentSpecificationCreateDialog_Input;
     deploymentSpecificationUpdateEnvironmentVariable: DeploymentSpecificationUpdateEnvironmentVariableDialog_Input;
-    deploymentSpecificationUpdatePostCommands: DeploymentSpecificationUpdatePostCommandsDialog_Input;
     deploymentSpecificationUpdatePostCommand: DeploymentSpecificationUpdatePostCommandDialog_Input;
-    deploymentSpecificationUpdateQuickCommands: DeploymentSpecificationUpdateQuickCommandsDialog_Input;
     deploymentSpecificationUpdateQuickCommand: DeploymentSpecificationUpdateQuickCommandDialog_Input;
-    deploymentSpecificationUpdateServicePorts: DeploymentSpecificationUpdateServicePortsDialog_Input;
     deploymentSpecificationUpdateServicePort: DeploymentSpecificationUpdateServicePortDialog_Input;
-    deploymentSpecificationUpdateIngresses: DeploymentSpecificationUpdateIngressesDialog_Input;
     deploymentSpecificationUpdateIngress: DeploymentSpecificationUpdateIngressDialog_Input;
     deploymentSpecificationUpdateIngressRulePaths: DeploymentSpecificationUpdateIngressRulePathsDialog_Input;
     deploymentSpecificationUpdateIngressRulePath: DeploymentSpecificationUpdateIngressRulePathDialog_Input;
-    deploymentSpecificationUpdateClusterRoleRules: DeploymentSpecificationUpdateClusterRoleRulesDialog_Input;
     deploymentSpecificationUpdateClusterRoleRule: DeploymentSpecificationUpdateClusterRoleRuleDialog_Input;
-    deploymentSpecificationUpdateRoleRules: DeploymentSpecificationUpdateRoleRulesDialog_Input;
     deploymentSpecificationUpdateRoleRule: DeploymentSpecificationUpdateRoleRuleDialog_Input;
-    deploymentSpecificationUpdateServiceAnnotations: DeploymentSpecificationUpdateServiceAnnotationsDialog_Input;
     deploymentSpecificationUpdateServiceAnnotation: DeploymentSpecificationUpdateServiceAnnotationDialog_Input;
-    deploymentSpecificationUpdateDeploymentAnnotations: DeploymentSpecificationUpdateDeploymentAnnotationsDialog_Input;
     deploymentSpecificationUpdateDeploymentAnnotation: DeploymentSpecificationUpdateDeploymentAnnotationDialog_Input;
     deploymentSpecificationUpdateIngressAnnotations: DeploymentSpecificationUpdateIngressAnnotationsDialog_Input;
     deploymentSpecificationUpdateIngressAnnotation: DeploymentSpecificationUpdateIngressAnnotationDialog_Input;
-    deploymentSpecificationUpdateInitContainers: DeploymentSpecificationUpdateInitContainersDialog_Input;
-    deploymentSpecificationUpdatePostUpdateActions: DeploymentSpecificationUpdatePostUpdateActionsDialog_Input;
-    deploymentSpecificationUpdateLabels: DeploymentSpecificationUpdateLabelsDialog_Input;
     deploymentSpecificationUpdateLabel: DeploymentSpecificationUpdateLabelDialog_Input;
-    deploymentSpecificationUpdateHttpProxyRoutes: DeploymentSpecificationUpdateHttpProxyRoutesDialog_Input;
     deploymentSpecificationUpdateHttpProxyRoute: DeploymentSpecificationUpdateHttpProxyRoutePathDialog_Input;
-    deploymentSpecificationUpdateCronJobs: DeploymentSpecificationUpdateCronJobsDialog_Input;
-    deploymentSpecificationUpdateVolumes: DeploymentSpecificationUpdateVolumesDialog_Input;
     deploymentSpecificationUpdateVolume: DeploymentSpecificationUpdateVolumeDialog_Input;
 
     workspaceTemplateSaved: WorkspaceTemplate | undefined;

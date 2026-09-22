@@ -3,8 +3,8 @@
 use App\Core\Entity;
 
 /**
- * What Trivy found in one tag of a container image that a deployment runs. One row per image
- * and tag, overwritten by the next scan.
+ * What Trivy found in one tag of a container image - one a deployment runs, or one asked for by
+ * hand. One row per image and tag, overwritten by the next scan.
  *
  * @property int $container_image_id
  * @property ContainerImage $container_image
@@ -25,6 +25,9 @@ use App\Core\Entity;
  * @property int $unknown
  * @property string $findings JSON: a list of {id, link, package, installed, fixed, severity, title}
  * @property string $scanned_at
+ * @property bool $is_manual asked for by hand, for a tag that need not run - kept for
+ *                           ImageScanner::ManualScansKeptFor rather than removed at the next
+ *                           nightly scan
  */
 class ContainerImageScan extends Entity {
 

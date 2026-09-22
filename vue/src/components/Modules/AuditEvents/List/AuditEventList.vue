@@ -76,6 +76,7 @@ const sourceOptions = [
 const actionOptions = [
     'created', 'updated', 'deleted', 'relation_added', 'relation_removed',
     'workspace.deploy', 'workspace.terminate', 'workspace.pause', 'workspace.resume',
+    'deployment.deploy', 'deployment.terminate',
     'deployment.deploy_step', 'deployment.terminate_step', 'deployment.run_cron_job',
     'gateway.deploy', 'gateway.terminate',
     'domain.apply_certificate', 'domain.apply_istio_gateway', 'domain.terminate_istio_gateway',
