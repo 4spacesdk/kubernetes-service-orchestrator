@@ -101,6 +101,26 @@ export interface DeploymentLogEntry {
     container?: string;
 }
 
+export interface DeploymentMetricsResponse {
+    available?: boolean;
+    reason?: string;
+    window?: string;
+    cpu_millicores?: number;
+    memory_bytes?: number;
+    cpu_request?: number;
+    cpu_limit?: number;
+    memory_request_bytes?: number;
+    memory_limit_bytes?: number;
+    pods?: DeploymentPodMetrics[];
+}
+
+export interface DeploymentPodMetrics {
+    pod?: string;
+    container?: string;
+    cpu_millicores?: number;
+    memory_bytes?: number;
+}
+
 export interface DeploymentSpecGetResponse {
     identifier?: string;
     name?: string;
@@ -4098,6 +4118,27 @@ export class DeploymentsGetDeploymentSpecificationGetById extends BaseApi<Deploy
     }
 }
 
+export class DeploymentsGetMetricsGetById extends BaseApi<DeploymentMetricsResponse> {
+
+    public topic = 'Resources.DeploymentMetricsResponses';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/deployments/${id}/metrics`;
+    }
+
+    protected convertToResource(data: any): DeploymentMetricsResponse {
+        return data;
+    }
+
+    public find(next?: (value: DeploymentMetricsResponse[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
 export class DeploymentsGetLogsGetById extends BaseApi<DeploymentLogEntry> {
 
     public topic = 'Resources.DeploymentLogEntries';
@@ -4242,6 +4283,10 @@ class Deployments {
 
     public getDeploymentSpecificationGetById(id: number): DeploymentsGetDeploymentSpecificationGetById {
         return new DeploymentsGetDeploymentSpecificationGetById(id);
+    }
+
+    public getMetricsGetById(id: number): DeploymentsGetMetricsGetById {
+        return new DeploymentsGetMetricsGetById(id);
     }
 
     public getLogsGetById(id: number): DeploymentsGetLogsGetById {

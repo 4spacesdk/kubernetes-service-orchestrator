@@ -208,6 +208,17 @@ class CustomResourceStep extends BaseDeploymentStep {
     /**
      * @throws \Exception
      */
+    /**
+     * The custom resource as the cluster has it, or null when it is not there.
+     *
+     * The health check reads the conditions the operator writes on it - kso did not write the
+     * manifest and cannot know what it means, so what the operator says about it is all there is.
+     */
+    public function findInTheCluster(Deployment $deployment): ?array {
+        $resource = $this->getResource($deployment, true);
+        return $resource->exists() ? $resource->get()->toArray() : null;
+    }
+
     protected function getResource(Deployment $deployment, bool $auth = false): K8sResource {
         $resource = $this->build($this->parseManifest($deployment), $deployment);
 

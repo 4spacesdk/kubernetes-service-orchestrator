@@ -12,6 +12,9 @@ readonly class Workload {
      * @param string|null $suspendedBecause Why kso is not to look at the cluster for it -
      *   a paused workspace or a deployment switched off. Null when it should be looked at.
      * @param array{status: string, image: string}|null $lastMigration
+     * @param array|null $customResource The custom resource as the cluster has it, for a workload
+     *   that is one: it is the only thing that can say how it is doing. Null when there is none to
+     *   read - it is not in the cluster, or it could not be fetched.
      */
     public function __construct(
         public string $workloadType,
@@ -20,10 +23,11 @@ readonly class Workload {
         public string $version,
         public ?string $suspendedBecause = null,
         public ?array $lastMigration = null,
+        public ?array $customResource = null,
     ) {
     }
 
-    public static function Of(Deployment $deployment, string $workloadType): Workload {
+    public static function Of(Deployment $deployment, string $workloadType, ?array $customResource = null): Workload {
         $suspendedBecause = null;
         if ($deployment->status === \DeploymentStatusTypes::Inactive) {
             $suspendedBecause = 'Switched off';
@@ -51,6 +55,7 @@ readonly class Workload {
             (string) $deployment->version,
             $suspendedBecause,
             $lastMigration,
+            $customResource,
         );
     }
 

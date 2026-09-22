@@ -17,6 +17,7 @@ use App\Interfaces\LabelList;
 use App\Libraries\Audit\Audit;
 use App\Libraries\DeploymentSteps\BaseDeploymentStep;
 use App\Libraries\Kubernetes\DeploymentLogs;
+use App\Libraries\Kubernetes\DeploymentMetrics;
 use App\Libraries\Kubernetes\KubeAuth;
 use App\Libraries\Kubernetes\KubeHelper;
 use App\Libraries\Kubernetes\LogQuery;
@@ -572,6 +573,35 @@ class Deployments extends ResourceController {
         $result['deploymentSteps'] = array_map(fn(BaseDeploymentStep $step) => $step->toArray(), $spec->getDeploymentSteps($item));
 
         Data::set('resource', $result);
+        $this->success();
+    }
+
+    /**
+     * What the deployment's pods are using right now, against what they were given.
+     *
+     * @route /deployments/{id}/metrics
+     * @method get
+     * @custom true
+     * @param int $id
+     * @return void
+     * @responseSchema DeploymentMetricsResponse
+     */
+    public function getMetrics(int $id): void {
+        $item = new Deployment();
+        $item->find($id);
+        if (!$item->exists()) {
+            $this->fail('unknown deployment');
+            return;
+        }
+
+        try {
+            $metrics = (new DeploymentMetrics((new KubeAuth())->authenticate()))->of($item);
+        } catch (\Throwable $e) {
+            $this->fail(KubeHelper::PrintException($e));
+            return;
+        }
+
+        Data::set('resource', $metrics);
         $this->success();
     }
 

@@ -6,6 +6,8 @@ import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
 import {WorkloadTypes} from "@/constants";
+import type {DeploymentMetricsResponse} from "@/core/services/Deploy/Api";
+import {cpuText, memoryText, shareOfLimit} from "@/helpers/Metrics";
 
 export interface DeploymentUpdateResourceManagementDialog_Input {
     deployment: Deployment;
@@ -26,6 +28,28 @@ const replicas = ref<number>();
 const knativeConcurrencyLimitSoft = ref<number>();
 const knativeConcurrencyLimitHard = ref<number>();
 
+/**
+ * What the pods are using while these numbers are being decided. A limit is a guess until
+ * somebody puts it beside a measurement: 954Mi looks reasonable until the pods turn out to use 64.
+ */
+const metrics = ref<DeploymentMetricsResponse>();
+
+/** Per pod, because that is what a request and a limit are - not the deployment's total. */
+const cpuPerPod = computed(() => (metrics.value?.pods ?? []).map(pod => pod.cpu_millicores ?? 0));
+const memoryPerPod = computed(() => (metrics.value?.pods ?? []).map(pod => pod.memory_bytes ?? 0));
+
+function usageText(values: number[], format: (value: number) => string): string {
+    if (!values.length) {
+        return '';
+    }
+    return values.map(format).join(', ');
+}
+
+/** The pod nearest its limit is the one that decides whether the limit is too low. */
+function highestShare(values: number[], limit?: number): number | null {
+    return values.length ? shareOfLimit(Math.max(...values), limit) : null;
+}
+
 // <editor-fold desc="Functions">
 
 onMounted(() => {
@@ -34,6 +58,10 @@ onMounted(() => {
     }
     used.value = true;
     render();
+
+    Api.deployments().getMetricsGetById(props.input.deployment.id!).find(response => {
+        metrics.value = response[0];
+    });
 });
 
 onUnmounted(() => {
@@ -120,6 +148,14 @@ function onCloseBtnClicked() {
                             label="CPU Limit"/>
                     </v-col>
 
+                    <v-col cols="12" v-if="metrics?.available && cpuPerPod.length" class="measured">
+                        <v-icon size="x-small" class="me-1">fa fa-microchip</v-icon>
+                        Using {{ usageText(cpuPerPod, cpuText) }} per pod right now
+                        <span v-if="highestShare(cpuPerPod, metrics.cpu_limit) !== null">
+                            - the busiest is {{ highestShare(cpuPerPod, metrics.cpu_limit) }}% of the limit
+                        </span>
+                    </v-col>
+
                     <v-col cols="6">
                         <v-text-field
                             v-model.number="memoryRequest"
@@ -137,6 +173,18 @@ function onCloseBtnClicked() {
                             hint="953.67 = 1 GB"
                             persistent-hint
                             label="Memory Limit"/>
+                    </v-col>
+
+                    <v-col cols="12" v-if="metrics?.available && memoryPerPod.length" class="measured">
+                        <v-icon size="x-small" class="me-1">fa fa-memory</v-icon>
+                        Using {{ usageText(memoryPerPod, memoryText) }} per pod right now
+                        <span v-if="highestShare(memoryPerPod, metrics.memory_limit_bytes) !== null">
+                            - the busiest is {{ highestShare(memoryPerPod, metrics.memory_limit_bytes) }}% of the limit
+                        </span>
+                    </v-col>
+
+                    <v-col cols="12" v-else-if="metrics && !metrics.available" class="measured">
+                        No measurement: this cluster has no metrics-server, or kso may not read it
                     </v-col>
 
                     <v-col
@@ -203,5 +251,13 @@ function onCloseBtnClicked() {
 </template>
 
 <style scoped>
+/* Under the fields they are about, in the dialog's own quiet voice - the same as a hint. */
+.measured {
+    font-size: 12px;
+    opacity: 0.75;
+    padding-top: 0;
+    padding-bottom: 12px;
+}
+
 
 </style>

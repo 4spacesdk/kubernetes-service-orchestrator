@@ -2,6 +2,7 @@
 
 use App\Entities\Deployment;
 use App\Entities\Workspace;
+use App\Libraries\DeploymentSteps\CustomResourceStep;
 use App\Libraries\Kubernetes\ClusterIndex;
 use App\Libraries\Kubernetes\IndexedCluster;
 use App\Libraries\Kubernetes\KubeAuth;
@@ -101,7 +102,9 @@ class HealthCheck {
             $workloadType = $deployment->status === \DeploymentStatusTypes::Draft
                 ? null
                 : $deployment->findDeploymentSpecification()->workload_type;
-            $workload = $workloadType ? Workload::Of($deployment, $workloadType) : null;
+            $workload = $workloadType
+                ? Workload::Of($deployment, $workloadType, $workloadType === \WorkloadTypes::CustomResource ? self::CustomResourceOf($deployment) : null)
+                : null;
             $workloads[$deployment->id] = $workload;
 
             if ($workload && $workload->suspendedBecause === null) {
@@ -189,6 +192,23 @@ class HealthCheck {
         Data::debug('status:', $cluster->served, 'answered from the index,', $cluster->passedOn, 'asked of the cluster');
 
         return $changed;
+    }
+
+    /**
+     * A custom resource as the cluster has it - the only thing that can say how it is doing, since
+     * kso did not write it and cannot know what it means.
+     *
+     * One call per custom resource: they are not in the snapshot, because a custom resource can be
+     * any kind at all and there is no list to fetch them all from. Null when it is not there or
+     * could not be read, which the evaluator reports as Missing.
+     */
+    private static function CustomResourceOf(Deployment $deployment): ?array {
+        try {
+            return (new CustomResourceStep())->findInTheCluster($deployment);
+        } catch (\Throwable $e) {
+            Data::debug('Could not read the custom resource of', $deployment->name, ':', $e->getMessage());
+            return null;
+        }
     }
 
     /**

@@ -3,6 +3,8 @@ import {computed, defineComponent, onMounted, reactive, ref, watch} from 'vue'
 import {Deployment} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import type {KubernetesPod} from "@/core/services/Deploy/Api";
+import type {DeploymentMetricsResponse} from "@/core/services/Deploy/Api";
+import {barColor, cpuText, memoryText, shareOfLimit} from "@/helpers/Metrics";
 import DateView from "@/components/Modules/Common/DateView.vue";
 import bus from "@/plugins/bus";
 
@@ -20,7 +22,25 @@ interface PodOption {
 const isLoading = ref(false);
 const pods = ref<PodOption[]>([]);
 
+/**
+ * What the pods are using right now - `kubectl top` in the menu that lists them. Beside what one
+ * pod was given, because a number on its own says nothing: half a core is a lot for a form
+ * handler and nothing for an importer.
+ */
+const metrics = ref<DeploymentMetricsResponse>();
+
+function usageOf(pod: KubernetesPod) {
+    return (metrics.value?.pods ?? []).filter(row => row.pod === pod.pod && row.container === pod.container);
+}
+
+
 onMounted(() => {
+    // Its own request: the pods are what the menu is for, and the numbers are worth waiting a
+    // moment longer for rather than holding the list back.
+    Api.deployments().getMetricsGetById(props.deployment.id!).find(response => {
+        metrics.value = response[0];
+    });
+
     isLoading.value = true;
     Api.kubernetes().getPodsGetByNamespace(props.deployment.namespace!)
         .app(props.app ?? '')
@@ -87,6 +107,27 @@ function onOpenTerminalBtnClicked(item: PodOption) {
             <v-progress-linear v-if="isLoading"
                                color="primary"
                                indeterminate></v-progress-linear>
+            <!-- What the deployment is using altogether, and what one pod was given. The total is
+                 across the pods; the limit is per pod, so they are labelled rather than added. -->
+            <div v-if="!isLoading && metrics?.available" class="d-flex align-center ga-4 px-4 py-2 totals">
+                <span>
+                    <v-icon size="x-small" class="me-1">fa fa-microchip</v-icon>
+                    {{ cpuText(metrics.cpu_millicores) }} cpu
+                    <span class="of-limit" v-if="metrics.cpu_limit">of {{ cpuText(metrics.cpu_limit) }} per pod</span>
+                </span>
+                <span>
+                    <v-icon size="x-small" class="me-1">fa fa-memory</v-icon>
+                    {{ memoryText(metrics.memory_bytes) }}
+                    <span class="of-limit" v-if="metrics.memory_limit_bytes">of {{ memoryText(metrics.memory_limit_bytes) }} per pod</span>
+                </span>
+                <span class="of-limit ms-auto" v-if="metrics.window">measured over {{ metrics.window }}</span>
+            </div>
+
+            <div v-else-if="!isLoading && metrics && !metrics.available" class="px-4 py-2 totals of-limit">
+                No cpu or memory: this cluster has no metrics-server, or kso may not read it
+                <v-tooltip activator="parent" location="bottom" max-width="420">{{ metrics.reason }}</v-tooltip>
+            </div>
+
             <v-list
                 v-if="!isLoading"
                 class="list-items">
@@ -120,8 +161,27 @@ function onOpenTerminalBtnClicked(item: PodOption) {
 
                             <span class="my-auto">{{ pod.pod.pod }}.{{ pod.pod.container }}</span>
 
+                            <div class="d-flex ga-3 ml-auto pl-4 my-auto usage" v-for="usage in usageOf(pod.pod)" :key="usage.pod">
+                                <span class="d-flex align-center ga-1">
+                                    {{ cpuText(usage.cpu_millicores) }}
+                                    <v-progress-linear
+                                        v-if="shareOfLimit(usage.cpu_millicores, metrics?.cpu_limit) !== null"
+                                        :model-value="shareOfLimit(usage.cpu_millicores, metrics?.cpu_limit) ?? 0"
+                                        :color="barColor(shareOfLimit(usage.cpu_millicores, metrics?.cpu_limit))"
+                                        height="4" rounded class="bar"/>
+                                </span>
+                                <span class="d-flex align-center ga-1">
+                                    {{ memoryText(usage.memory_bytes) }}
+                                    <v-progress-linear
+                                        v-if="shareOfLimit(usage.memory_bytes, metrics?.memory_limit_bytes) !== null"
+                                        :model-value="shareOfLimit(usage.memory_bytes, metrics?.memory_limit_bytes) ?? 0"
+                                        :color="barColor(shareOfLimit(usage.memory_bytes, metrics?.memory_limit_bytes))"
+                                        height="4" rounded class="bar"/>
+                                </span>
+                            </div>
+
                             <DateView
-                                class="ml-auto pl-4 my-auto"
+                                class="pl-4 my-auto"
                                 :date-string="pod.pod.created"/>
 
                             <div class="d-flex justify-end gap-1 ml-2">
@@ -148,6 +208,24 @@ function onOpenTerminalBtnClicked(item: PodOption) {
 </template>
 
 <style scoped>
+.totals {
+    font-size: 12px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.of-limit {
+    opacity: 0.6;
+}
+
+.usage {
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+}
+
+.bar {
+    width: 48px;
+}
+
 .list-wrapper {
     min-width: 260px;
 }

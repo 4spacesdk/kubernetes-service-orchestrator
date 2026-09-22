@@ -44,8 +44,34 @@ class HealthEvaluator {
     public const int RestartsThatCount = 3;
 
     /**
-     * Null for a workload kso cannot read the health of: a custom resource is whatever the
-     * operator wrote, and a DaemonSet is not deployed by kso yet.
+     * Conditions whose being true is the bad news. Kubernetes has both polarities, and the name is
+     * the only thing that says which - `Ready: False` is ordinary, `Degraded: True` is not.
+     */
+    private const array FailureConditions = ['Degraded', 'Failed', 'Error', 'ReconcileError', 'Stalled'];
+
+    /** Conditions whose being false is the bad news: the operator says it could not do its work. */
+    private const array MustBeTrueConditions = ['ReconcileSuccess', 'Reconciled', 'Synced'];
+
+    /**
+     * Conditions that say whether it is up yet. False or Unknown is "not yet", not "broken" -
+     * Argo CD's own check for a RabbitmqCluster reads `AllReplicasReady: False` as Progressing,
+     * and so does this.
+     */
+    private const array ReadinessConditions = ['Ready', 'Available', 'ClusterAvailable', 'AllReplicasReady', 'Initialized', 'Established'];
+
+    /**
+     * Seconds a custom resource may be on its way before "not yet" becomes "not going to".
+     *
+     * Argo CD leaves such a resource Progressing for as long as it likes, which is honest and
+     * useless: a RabbitmqCluster that has said `AllReplicasReady: False` since yesterday is not
+     * progressing towards anything. The condition carries the time it last changed, so this costs
+     * nothing to ask.
+     */
+    public const int CustomResourceGrace = 600;
+
+    /**
+     * Null for a workload kso cannot read the health of: a DaemonSet is not deployed by kso yet,
+     * and a custom resource that says nothing about itself says nothing.
      */
     public static function Evaluate(Workload $workload, ClusterSnapshot $snapshot, int $now): ?HealthResult {
         if ($workload->suspendedBecause !== null) {
@@ -55,6 +81,7 @@ class HealthEvaluator {
         return match ($workload->workloadType) {
             \WorkloadTypes::Deployment => self::OfDeployment($workload, $snapshot, $now),
             \WorkloadTypes::KNativeService => self::OfKnativeService($workload, $snapshot, $now),
+            \WorkloadTypes::CustomResource => self::OfCustomResource($workload, $now),
             default => null,
         };
     }
@@ -172,6 +199,70 @@ class HealthEvaluator {
     }
 
     /**
+     * A custom resource is whatever the operator wrote, so the only one who can say how it is
+     * doing is the operator - through the conditions it puts on the resource.
+     *
+     * Argo CD writes a script per CRD; kso reads the conditions by convention instead, which is
+     * the part every operator that reports anything has in common. What it cannot do is know that
+     * `ClusterAvailable` outranks `AllReplicasReady` on a RabbitmqCluster - so it says which
+     * condition decided, and leaves the judgement to the person reading it.
+     *
+     * Null when there is nothing to read: a ConfigMap has no conditions, and no health is a
+     * truer answer than a guess.
+     */
+    private static function OfCustomResource(Workload $workload, int $now): ?HealthResult {
+        $resource = $workload->customResource;
+        if ($resource === null) {
+            return new HealthResult(\HealthStatusTypes::Missing, 'The custom resource is not in the cluster');
+        }
+
+        // The operator's own way of being switched off, and the one Argo CD's RabbitmqCluster
+        // check reads as Suspended.
+        if (($resource['spec']['replicas'] ?? null) === 0) {
+            return new HealthResult(\HealthStatusTypes::Suspended, 'Scaled to zero');
+        }
+
+        $conditions = $resource['status']['conditions'] ?? [];
+        if (!$conditions) {
+            return null;
+        }
+
+        $progressing = [];
+        foreach ($conditions as $condition) {
+            $type = $condition['type'] ?? '';
+            $status = $condition['status'] ?? '';
+
+            if (in_array($type, self::FailureConditions, true) && $status === 'True') {
+                return new HealthResult(\HealthStatusTypes::Degraded, self::Described($condition, $type));
+            }
+            if (in_array($type, self::MustBeTrueConditions, true) && $status === 'False') {
+                return new HealthResult(\HealthStatusTypes::Degraded, self::Described($condition, "{$type} is false"));
+            }
+            if (in_array($type, self::ReadinessConditions, true) && $status !== 'True') {
+                $since = $now - self::Time($condition['lastTransitionTime'] ?? null, $now);
+                $described = self::Described($condition, "{$type}: {$status}");
+                if ($since >= self::CustomResourceGrace) {
+                    return new HealthResult(\HealthStatusTypes::Degraded, $described . ', ' . self::For($since));
+                }
+                $progressing[] = $described;
+            }
+        }
+
+        if ($progressing) {
+            return HealthResult::Because(\HealthStatusTypes::Progressing, $progressing);
+        }
+
+        // Every condition kso knows is true - and if it knew none of them, it has been told
+        // nothing it understands.
+        $known = array_filter(
+            $conditions,
+            fn(array $condition) => in_array($condition['type'] ?? '', [...self::ReadinessConditions, ...self::MustBeTrueConditions], true)
+        );
+
+        return $known ? new HealthResult(\HealthStatusTypes::Healthy) : null;
+    }
+
+    /**
      * What is wrong with a workload's pods, and what is worth knowing without being wrong.
      *
      * @param list<array> $pods
@@ -269,6 +360,16 @@ class HealthEvaluator {
     private static function Ago(int $seconds): string {
         $minutes = intdiv(max(0, $seconds), 60);
         return $minutes < 1 ? 'just now' : "{$minutes} min ago";
+    }
+
+    /** How long it has been that way, rather than when it started. */
+    private static function For(int $seconds): string {
+        $minutes = intdiv(max(0, $seconds), 60);
+        if ($minutes < 90) {
+            return "for {$minutes} minutes";
+        }
+        $hours = intdiv($minutes, 60);
+        return $hours < 48 ? "for {$hours} hours" : 'for ' . intdiv($hours, 24) . ' days';
     }
 
 }

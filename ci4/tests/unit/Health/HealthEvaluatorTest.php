@@ -356,16 +356,128 @@ class HealthEvaluatorTest extends CIUnitTestCase {
 
     // </editor-fold>
 
-    // <editor-fold desc="Workloads kso cannot read">
+    // <editor-fold desc="Custom resources">
 
-    public function testACustomResourceHasNoHealth(): void {
+    /**
+     * kso did not write the manifest and cannot know what it means, so the operator's own
+     * conditions are all there is. These are a RabbitmqCluster's, as the development cluster had
+     * them on 2026-09-22.
+     *
+     * Argo CD reads `AllReplicasReady: False` on one of these as Progressing rather than Degraded,
+     * and so does this: a condition being false is usually "not yet", not "broken".
+     */
+    public function testAResourceOnItsWayUpIsProgressing(): void {
+        $result = $this->evaluateCustomResource([
+            ['type' => 'AllReplicasReady', 'status' => 'False', 'reason' => 'NotAllPodsReady', 'message' => '0/1 Pods ready'],
+            ['type' => 'ClusterAvailable', 'status' => 'True', 'reason' => 'AtLeastOneEndpointAvailable'],
+            ['type' => 'NoWarnings', 'status' => 'True'],
+            ['type' => 'ReconcileSuccess', 'status' => 'Unknown', 'reason' => 'Initialising'],
+        ]);
+
+        $this->assertSame(\HealthStatusTypes::Progressing, $result->health);
+        $this->assertSame('NotAllPodsReady: 0/1 Pods ready', $result->reason);
+    }
+
+    /**
+     * Where kso goes further than Argo CD, which leaves such a resource Progressing for as long as
+     * it likes. A RabbitmqCluster that has said the same thing since this morning is not on its
+     * way anywhere, and the condition carries the time it last changed.
+     */
+    public function testAResourceThatHasBeenOnItsWayForHoursIsDegraded(): void {
+        $result = $this->evaluateCustomResource([
+            [
+                'type' => 'AllReplicasReady',
+                'status' => 'False',
+                'reason' => 'NotAllPodsReady',
+                'message' => '0/1 Pods ready',
+                'lastTransitionTime' => gmdate('Y-m-d\TH:i:s\Z', self::Now - 3 * 3600),
+            ],
+        ]);
+
+        $this->assertSame(\HealthStatusTypes::Degraded, $result->health);
+        $this->assertSame('NotAllPodsReady: 0/1 Pods ready, for 3 hours', $result->reason);
+    }
+
+    /**
+     * The operator saying it could not do its work is the one case that is bad straight away -
+     * Argo CD's check for the same resource reads it the same way.
+     */
+    public function testAnOperatorThatCouldNotReconcileIsDegradedAtOnce(): void {
+        $result = $this->evaluateCustomResource([
+            ['type' => 'ReconcileSuccess', 'status' => 'False', 'reason' => 'Failed', 'message' => 'admission webhook denied the request'],
+            ['type' => 'ClusterAvailable', 'status' => 'True'],
+        ]);
+
+        $this->assertSame(\HealthStatusTypes::Degraded, $result->health);
+        $this->assertSame('Failed: admission webhook denied the request', $result->reason);
+    }
+
+    /** And a condition whose being true is the bad news - the other polarity Kubernetes uses. */
+    public function testAConditionThatReportsTroubleByBeingTrueIsDegraded(): void {
+        foreach (['Degraded', 'Failed', 'Stalled'] as $type) {
+            $result = $this->evaluateCustomResource([
+                ['type' => $type, 'status' => 'True', 'reason' => 'SomethingBroke'],
+                ['type' => 'Ready', 'status' => 'True'],
+            ]);
+
+            $this->assertSame(\HealthStatusTypes::Degraded, $result->health, $type);
+        }
+    }
+
+    public function testEverythingTheOperatorReportsBeingTrueIsHealthy(): void {
+        $result = $this->evaluateCustomResource([
+            ['type' => 'AllReplicasReady', 'status' => 'True'],
+            ['type' => 'ClusterAvailable', 'status' => 'True'],
+            ['type' => 'ReconcileSuccess', 'status' => 'True'],
+        ]);
+
+        $this->assertSame(\HealthStatusTypes::Healthy, $result->health);
+    }
+
+    public function testAResourceScaledToZeroIsSuspended(): void {
+        $result = HealthEvaluator::Evaluate(
+            new Workload(\WorkloadTypes::CustomResource, 'ns', 'api', '', null, null, [
+                'spec' => ['replicas' => 0],
+                'status' => ['conditions' => [['type' => 'AllReplicasReady', 'status' => 'False']]],
+            ]),
+            $this->snapshot([], []),
+            self::Now,
+        );
+
+        $this->assertSame(\HealthStatusTypes::Suspended, $result->health);
+    }
+
+    /**
+     * A ConfigMap deployed as a custom resource has no conditions, and nothing kso can read is a
+     * truer answer than a guess. Conditions it does not know the meaning of are the same case.
+     */
+    public function testAResourceThatSaysNothingAboutItselfHasNoHealth(): void {
+        $this->assertNull($this->evaluateCustomResource([]));
+        $this->assertNull($this->evaluateCustomResource([['type' => 'NoWarnings', 'status' => 'True']]));
+    }
+
+    public function testACustomResourceThatIsNotInTheClusterIsMissing(): void {
         $result = HealthEvaluator::Evaluate(
             new Workload(\WorkloadTypes::CustomResource, 'ns', 'api', ''),
             $this->snapshot([], []),
             self::Now,
         );
 
-        $this->assertNull($result);
+        $this->assertSame(\HealthStatusTypes::Missing, $result->health);
+    }
+
+    /**
+     * @param list<array<string, mixed>> $conditions
+     */
+    private function evaluateCustomResource(array $conditions): ?HealthResult {
+        return HealthEvaluator::Evaluate(
+            new Workload(\WorkloadTypes::CustomResource, 'ns', 'api', '', null, null, [
+                'metadata' => ['name' => 'api', 'namespace' => 'ns'],
+                'status' => ['conditions' => $conditions],
+            ]),
+            $this->snapshot([], []),
+            self::Now,
+        );
     }
 
     // </editor-fold>
