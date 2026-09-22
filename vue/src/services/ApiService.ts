@@ -16,11 +16,17 @@ class ApiService {
 
     /**
      * An access token in the url, as when kso runs in an iframe, is the one to use.
+     *
+     * Taken out of the url once it is read. Left there, it stayed in the browser's history and
+     * went on in the Referer header of every request the page made to another host.
      */
     public useAccessTokenFromUrl() {
-        const accessToken = new URLSearchParams(window.location.search).get('access_token');
+        const url = new URL(window.location.href);
+        const accessToken = url.searchParams.get('access_token');
         if (accessToken) {
             AuthService.setToken(accessToken, false);
+            url.searchParams.delete('access_token');
+            window.history.replaceState(window.history.state, '', url.toString());
         }
         if (AuthService.getToken()) {
             this.setHeader();
@@ -54,14 +60,18 @@ class ApiService {
         this.apiAxios!.defaults.headers.common = {};
     }
 
+    /**
+     * Only the challenge goes to authorize. The verifier is the secret half of PKCE and is sent
+     * once, to exchange the code - it used to go here too, into the history and the server's
+     * logs beside the challenge it is meant to prove.
+     */
     public redirectToLogin(redirectUri: string, grantType: string, clientId: string,
-                           scope: string, codeVerifier: string, codeChallenge: string) {
+                           scope: string, codeChallenge: string) {
         const authUrl = this.apiAxios!.defaults.baseURL + "/authorize";
         window.location.href = `${authUrl}`
             + `?grant_type=${grantType}`
             + `&redirect_uri=${redirectUri}`
             + `&client_id=${clientId}`
-            + `&code_verifier=${codeVerifier}`
             + `&code_challenge=${codeChallenge}`
             + `&code_challenge_method=S256`
             + `&response_type=code`

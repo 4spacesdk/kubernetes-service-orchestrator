@@ -43,7 +43,7 @@ class AuthService {
                     .replace(/\//g, "_")
                     .replace(/=+$/, "");
 
-                ApiService.redirectToLogin(redirectUri, grantType, clientId, scope, codeVerifier, codeChallenge);
+                ApiService.redirectToLogin(redirectUri, grantType, clientId, scope, codeChallenge);
             });
     }
 
@@ -52,6 +52,8 @@ class AuthService {
         const grantType = 'authorization_code';
         const clientId = 'webclient';
         const codeVerifier = localStorage.getItem('last-code-verifier');
+        // Used once, whatever the exchange answers: a code can only be exchanged once anyway.
+        localStorage.removeItem('last-code-verifier');
 
         ApiService.callTokenEndpoint(
             redirectUri,
@@ -77,6 +79,8 @@ class AuthService {
                     this.setToken(accessToken, false);
                 }
             });
+            // Out of the url once read, as in ApiService.useAccessTokenFromUrl().
+            window.history.replaceState(window.history.state, '', window.location.pathname + window.location.search);
         }
     }
 
