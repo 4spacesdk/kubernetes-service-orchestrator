@@ -140,6 +140,33 @@ class SecurityHeadersTest extends ControllerTestCase {
             $this->assertNotFalse(getenv('CENTRIFUGO_EXTERNAL_URL'));
         }
     }
+
+    /**
+     * Apache serves an empty directory at the root, and the application only under /api and
+     * /app. /var/www/html used to be the document root: ci4's vendor and tests, listable, and
+     * every .php in them runnable by url.
+     */
+    public function testOnlyTheApiAndTheAppAreServed(): void {
+        $conf = $this->httpdConf();
+
+        $this->assertSame(1, preg_match('#^DocumentRoot (\S+)$#m', $conf, $m));
+        $this->assertSame('/var/www/docroot', $m[1]);
+        $this->assertStringNotContainsString('<Directory /var/www/html>', $conf);
+        preg_match_all('#^Alias (\S+) /var/www/html/#m', $conf, $aliases);
+        $this->assertSame(['/api', '/app'], $aliases[1]);
+    }
+
+    /**
+     * No directory lists its contents, runs server-side includes or CGI.
+     */
+    public function testNoDirectoryIsListedOrRunsIncludesOrCgi(): void {
+        preg_match_all('#^\s*Options (.+)$#m', $this->httpdConf(), $options);
+
+        foreach ($options[1] as $line) {
+            $this->assertDoesNotMatchRegularExpression('#\b(Indexes|Includes|ExecCGI|All)\b#', $line);
+        }
+    }
+
     // </editor-fold>
 
 }

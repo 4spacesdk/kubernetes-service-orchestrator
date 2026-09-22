@@ -164,6 +164,8 @@ ENV APP_HOME /var/www/html
 # Read by the Content-Security-Policy in docker/apache/httpd.conf; the chart sets the real one.
 ENV CENTRIFUGO_EXTERNAL_URL=""
 RUN mkdir -p $APP_HOME && chown www-data:www-data /var/www $APP_HOME
+# Apache's document root: empty, see docker/apache/httpd.conf.
+RUN mkdir -p /var/www/docroot
 
 # Composer dependencies before the application files, so a change to the code reuses the
 # cached vendor layers - they are only reinstalled when a composer.lock changes.
@@ -176,7 +178,6 @@ RUN cd $APP_HOME/ci4 && \
 # Copy application files
 COPY --chown=www-data ci4 $APP_HOME/ci4
 COPY --chown=www-data --from=build-stage /vue/dist $APP_HOME/vue
-COPY --chown=www-data docker/apache/index.php $APP_HOME
 
 # CodeIgniter opens its file cache on every boot, spark included, and stops if the
 # directory is missing. Its contents are gitignored, so do not rely on the checkout.
