@@ -253,12 +253,13 @@ class DeploymentStepsTest extends ClusterTestCase {
             false
         );
 
-        // Kubernetes hands back several lines in one frame, which the step splits again -
-        // so what comes out is one entry per line rather than one per frame. It splits on
-        // \n alone, and the stream is CRLF, so every line still carries its carriage
-        // return; that is what a caller comparing the output has to know.
-        $this->assertContains("one\r", $log);
-        $this->assertContains("two\r", $log);
+        // Kubernetes cuts the stream into frames wherever it likes - several lines in one, or
+        // a line across two - and the step joins them before splitting, so what comes out is
+        // one entry per line. It splits on \n alone, and the stream is CRLF, so every line
+        // still carries its carriage return; that is what a caller comparing the output has
+        // to know.
+        $this->assertContains("one\r", $log, json_encode($log));
+        $this->assertContains("two\r", $log, json_encode($log));
     }
 
     /**

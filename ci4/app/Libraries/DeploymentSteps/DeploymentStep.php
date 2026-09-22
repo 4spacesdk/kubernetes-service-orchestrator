@@ -272,11 +272,9 @@ class DeploymentStep extends BaseDeploymentStep {
             if ($pod->isRunning()) {
                 $messages = $pod->exec($command, $container);
                 $all = collect($messages)->where('channel', 'stdout')->all();
-                $lines = [];
-                foreach ($all as ['channel' => $channel, 'output' => $output]) {
-                    $lines[] = $output;
-                }
-                $lines = explode("\n", implode("\n", $lines)); // K8s returning multiple vars in single line. This will fix that.
+                // A frame is a chunk of the stream, not a line - it can hold several lines or
+                // end halfway through one - so the frames are joined as they came and split after.
+                $lines = explode("\n", implode('', array_column($all, 'output')));
                 $log = array_merge($log, $lines);
 
                 if (!$forAll) {
