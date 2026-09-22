@@ -62,6 +62,13 @@ function onShowLogsBtnClicked(item: PodOption) {
     });
 }
 
+/** Every pod at once, followed in one request - see `DeploymentLogs` in the backend. */
+function onShowAllLogsBtnClicked() {
+    bus.emit('deploymentLogs', {
+        deployment: props.deployment,
+    });
+}
+
 function onOpenTerminalBtnClicked(item: PodOption) {
     bus.emit('podTerminal', {
         deployment: props.deployment,
@@ -83,6 +90,20 @@ function onOpenTerminalBtnClicked(item: PodOption) {
             <v-list
                 v-if="!isLoading"
                 class="list-items">
+                <v-list-item
+                    v-if="pods.length"
+                    @click="onShowAllLogsBtnClicked"
+                >
+                    <v-list-item-title>
+                        <div class="d-flex">
+                            <v-icon size="small" class="me-2 my-auto">fa fa-layer-group</v-icon>
+                            <span class="my-auto">Logs from all pods, as one</span>
+                        </div>
+                    </v-list-item-title>
+                </v-list-item>
+
+                <v-divider v-if="pods.length" class="my-1"/>
+
                 <v-list-item
                     v-for="pod in pods"
                 >

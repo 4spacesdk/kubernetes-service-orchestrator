@@ -17,15 +17,15 @@ class KubeLog {
     }
 
     /**
+     * @param bool $previous The container that ran before this one - what a crash left behind, and
+     *   gone from the container that replaced it.
+     * @param int|null $sinceSeconds Only what was written in the last so many seconds.
      * @throws KubernetesAPIException
      * @throws KubernetesLogsException
      */
-    public function getLogs(string $namespace, string $podName, string $containerName): array {
+    public function getLogs(string $namespace, string $podName, string $containerName, bool $previous = false, ?int $sinceSeconds = null): array {
         $pod = $this->cluster->getPodByName($podName, $namespace);
-        return KubeHelper::LogLines($pod->containerLogs($containerName, [
-            'tailLines' => 100,
-            'timestamps' => true,
-        ]));
+        return KubeHelper::LogLines($pod->containerLogs($containerName, LogQuery::For($previous, $sinceSeconds)));
     }
 
     /**

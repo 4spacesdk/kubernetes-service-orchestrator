@@ -94,6 +94,13 @@ export interface DeploymentCronJobRunResponse {
     job?: string;
 }
 
+export interface DeploymentLogEntry {
+    date?: string;
+    line?: string;
+    pod?: string;
+    container?: string;
+}
+
 export interface DeploymentSpecGetResponse {
     identifier?: string;
     name?: string;
@@ -4091,6 +4098,58 @@ export class DeploymentsGetDeploymentSpecificationGetById extends BaseApi<Deploy
     }
 }
 
+export class DeploymentsGetLogsGetById extends BaseApi<DeploymentLogEntry> {
+
+    public topic = 'Resources.DeploymentLogEntries';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/deployments/${id}/logs`;
+    }
+
+    protected convertToResource(data: any): DeploymentLogEntry {
+        return data;
+    }
+
+    public previous(value: boolean): DeploymentsGetLogsGetById {
+        this.addQueryParameter('previous', value);
+        return this;
+    }
+
+    public sinceSeconds(value: number): DeploymentsGetLogsGetById {
+        this.addQueryParameter('sinceSeconds', value);
+        return this;
+    }
+
+    public find(next?: (value: DeploymentLogEntry[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class DeploymentsWatchLogsPutById extends BaseApi<Deployment> {
+
+    public topic = 'Resources.Deployments';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/deployments/${id}/logs/watch`;
+    }
+
+    protected convertToResource(data: any): Deployment {
+        return new Deployment(data);
+    }
+
+    public save(data: any, next?: (value: Deployment) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
 class Deployments {
 
     public get(): DeploymentsGet {
@@ -4183,6 +4242,14 @@ class Deployments {
 
     public getDeploymentSpecificationGetById(id: number): DeploymentsGetDeploymentSpecificationGetById {
         return new DeploymentsGetDeploymentSpecificationGetById(id);
+    }
+
+    public getLogsGetById(id: number): DeploymentsGetLogsGetById {
+        return new DeploymentsGetLogsGetById(id);
+    }
+
+    public watchLogsPutById(id: number): DeploymentsWatchLogsPutById {
+        return new DeploymentsWatchLogsPutById(id);
     }
 
 }
@@ -6512,6 +6579,16 @@ export class KubernetesGetLogsGetByNamespaceByPodByContainer extends BaseApi<Kub
 
     protected convertToResource(data: any): KubernetesLogEntry {
         return data;
+    }
+
+    public previous(value: boolean): KubernetesGetLogsGetByNamespaceByPodByContainer {
+        this.addQueryParameter('previous', value);
+        return this;
+    }
+
+    public sinceSeconds(value: number): KubernetesGetLogsGetByNamespaceByPodByContainer {
+        this.addQueryParameter('sinceSeconds', value);
+        return this;
     }
 
     public find(next?: (value: KubernetesLogEntry[]) => void) {

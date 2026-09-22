@@ -77,23 +77,44 @@ class KubeAuth {
     }
 
     /**
+     * The same cluster, connected the same way, that hands out log streams to read from.
+     *
+     * @throws \Exception
+     */
+    public function streaming(): StreamingCluster {
+        /** @var StreamingCluster $cluster */
+        $cluster = $this->buildAs(StreamingCluster::class);
+        return $cluster;
+    }
+
+    /**
      * The same cluster, connected the same way, that answers what the index knows.
      *
      * @throws \Exception
      */
     public function indexed(ClusterIndex $index): IndexedCluster {
+        /** @var IndexedCluster $cluster */
+        $cluster = $this->buildAs(IndexedCluster::class);
+        return $cluster->useIndex($index);
+    }
+
+    /**
+     * Connect as one of `KubernetesCluster`'s own subclasses. The override is put aside while it
+     * happens: this is asked for *because* a plain cluster is not what is wanted.
+     *
+     * @param class-string<KubernetesCluster> $class
+     * @throws \Exception
+     */
+    private function buildAs(string $class): KubernetesCluster {
         $previous = self::$override;
         self::$override = null;
         try {
-            $this->as = IndexedCluster::class;
-            $cluster = $this->authenticate();
+            $this->as = $class;
+            return $this->authenticate();
         } finally {
             $this->as = KubernetesCluster::class;
             self::$override = $previous;
         }
-
-        /** @var IndexedCluster $cluster */
-        return $cluster->useIndex($index);
     }
 
     /**

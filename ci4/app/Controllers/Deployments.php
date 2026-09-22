@@ -16,6 +16,13 @@ use App\Interfaces\IntArrayInterface;
 use App\Interfaces\LabelList;
 use App\Libraries\Audit\Audit;
 use App\Libraries\DeploymentSteps\BaseDeploymentStep;
+use App\Libraries\Kubernetes\DeploymentLogs;
+use App\Libraries\Kubernetes\KubeAuth;
+use App\Libraries\Kubernetes\KubeHelper;
+use App\Libraries\Kubernetes\LogQuery;
+use App\Libraries\Push\ChangeEvent;
+use App\Libraries\Push\Events;
+use App\Libraries\Push\Publisher;
 use App\Libraries\RequestField;
 use App\Libraries\DeploymentSteps\CronjobStep;
 use App\Models\KNativeMinScaleScheduleModel;
@@ -565,6 +572,76 @@ class Deployments extends ResourceController {
         $result['deploymentSteps'] = array_map(fn(BaseDeploymentStep $step) => $step->toArray(), $spec->getDeploymentSteps($item));
 
         Data::set('resource', $result);
+        $this->success();
+    }
+
+    /**
+     * The last lines from every pod of the deployment, as one log.
+     *
+     * @route /deployments/{id}/logs
+     * @method get
+     * @custom true
+     * @param int $id
+     * @parameter bool $previous parameterType=query
+     * @parameter int $sinceSeconds parameterType=query
+     * @return void
+     * @responseSchema DeploymentLogEntry
+     */
+    public function getLogs(int $id): void {
+        $item = new Deployment();
+        $item->find($id);
+        if (!$item->exists()) {
+            $this->fail('unknown deployment');
+            return;
+        }
+
+        $previous = (bool) $this->request->getGet('previous');
+        $sinceSeconds = LogQuery::WindowFrom($this->request->getGet('sinceSeconds'));
+
+        try {
+            $logs = (new DeploymentLogs((new KubeAuth())->streaming()))->recent($item, $previous, $sinceSeconds);
+        } catch (\Throwable $e) {
+            $this->fail(KubeHelper::PrintException($e));
+            return;
+        }
+
+        Data::set('resources', $logs);
+        $this->success();
+    }
+
+    /**
+     * Follow every pod of the deployment in this one request, pushing the lines as they come.
+     *
+     * One process for the whole deployment rather than one per pod, and it ends itself - see
+     * `DeploymentLogs`. The answer comes when it does.
+     *
+     * @route /deployments/{id}/logs/watch
+     * @method put
+     * @custom true
+     * @param int $id
+     * @return void
+     * @audit none reads logs - PUT only for its body
+     */
+    public function watchLogs(int $id): void {
+        $item = new Deployment();
+        $item->find($id);
+        if (!$item->exists()) {
+            $this->fail('unknown deployment');
+            return;
+        }
+
+        try {
+            (new DeploymentLogs((new KubeAuth())->streaming()))->follow($item, function (array $lines) use ($item) {
+                Publisher::getInstance()->send(
+                    Events::Deployment_Logs_Watch($item->id),
+                    (new ChangeEvent(null, $lines))->toArray()
+                );
+            });
+        } catch (\Throwable $e) {
+            $this->fail(KubeHelper::PrintException($e));
+            return;
+        }
+
         $this->success();
     }
 

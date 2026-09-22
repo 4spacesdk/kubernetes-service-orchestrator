@@ -3,6 +3,7 @@
 use App\Libraries\Audit\Audit;
 use App\Libraries\Health\HealthCheck;
 use App\Libraries\Kubernetes\KubeAuth;
+use App\Libraries\Kubernetes\LogQuery;
 use App\Libraries\Kubernetes\KubeHelper;
 use App\Libraries\Kubernetes\KubeLog;
 use DebugTool\Data;
@@ -120,15 +121,20 @@ class Kubernetes extends \App\Core\BaseController {
      * @param string $namespace
      * @param string $pod
      * @param string $container
+     * @parameter bool $previous parameterType=query
+     * @parameter int $sinceSeconds parameterType=query
      * @return void
      * @responseSchema KubernetesLogEntry
      */
     public function getLogs(string $namespace, string $pod, string $container): void {
+        $previous = (bool) $this->request->getGet('previous');
+        $sinceSeconds = LogQuery::WindowFrom($this->request->getGet('sinceSeconds'));
+
         $kubeAuth = new KubeAuth();
         try {
             $kubeLog = new KubeLog($kubeAuth->authenticate());
-            Data::debug($namespace, $pod, $container);
-            $logs = $kubeLog->getLogs($namespace, $pod, $container);
+            Data::debug($namespace, $pod, $container, $previous ? 'previous' : 'current', $sinceSeconds ? "last {$sinceSeconds}s" : 'last lines');
+            $logs = $kubeLog->getLogs($namespace, $pod, $container, $previous, $sinceSeconds);
             Data::set('resources', $logs);
         } catch (\Throwable $e) {
             $this->fail(KubeHelper::PrintException($e));

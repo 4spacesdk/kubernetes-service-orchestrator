@@ -101,6 +101,9 @@
 * TLS to kso's database, with a CA and optionally a client certificate from a Secret: `deployment.database.tls` in the chart. The OAuth tables' own connection uses it too (CI4AuthExtension v1.3.1)
 * Database Services: TLS, with a CA and a client certificate for MySQL, and `Encrypt` against the image's public CAs for MSSQL. The client key is stored encrypted and write-only
 * Added unit, database and integration test suites
+* A deployment's logs from every pod as one, with the pod on each line - "Logs from all pods, as one" in the Pods menu. One request follows them all, picks up a pod that starts while it runs, and gives up by itself after a minute of silence; it was a request per pod before
+* Logs: the previous container's, for what a crash left behind, a window of the last 15 minutes, hour or 6 hours, and a search across the lines in view. Both the pod view and the deployment view
+* Logs follow the newest line until you scroll up, and take hold again when you scroll back to the bottom
 * Runtime health on every deployment and workspace, beside the status: Healthy, Progressing, Degraded, Suspended, Missing or Unknown - Argo CD's words. A deployment whose pods crash, cannot pull their image, run out of memory, cannot be scheduled, or whose rollout or migration has failed is Degraded, with the reason and which pod. Worked out from the cluster once a minute, and every ten seconds while a deploy rolls out; pushed to the lists as it changes. Filter and sort the lists by it, click it for the pods, and the menu counts what is Degraded. The status bar says when the check has stopped
 * Webhooks: `deployment-health-changed`, sent once a new health has held for two minutes
 * The menu follows the screen: open where there is room for it and the lists, and an 80px rail below 1280px, opening over the page on hover. It stood open at 256px on every screen, because it was set up with Vuetify 2's names for it. Counts move onto the icon while it is folded

@@ -65,6 +65,13 @@ class Events {
         return Events::Generate("migration-job.$migrationJobId.changed.status");
     }
 
+    /**
+     * Every pod of one deployment, followed together - see `DeploymentLogs`.
+     */
+    public static function Deployment_Logs_Watch(int $deploymentId): string {
+        return Events::Generate("deployment.$deploymentId.logs.watch");
+    }
+
     public static function KubernetesPod_Logs_Watch(string $pod, string $container): string {
         return Events::Generate("kubernetes.pod.{$pod}.containers.{$container}.logs.watch");
     }

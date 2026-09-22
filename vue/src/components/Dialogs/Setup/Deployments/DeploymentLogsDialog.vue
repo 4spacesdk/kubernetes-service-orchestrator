@@ -80,6 +80,7 @@ function onCloseBtnClicked() {
                     :app="props.input.deployment.name"
                     :preselected-pod-name="props.input.preselectedPodName"
                     :preselected-container-name="props.input.preselectedContainerName"
+                    :deployment-id="props.input.deployment.id"
                     role="app"/>
             </v-card-text>
             <v-divider/>

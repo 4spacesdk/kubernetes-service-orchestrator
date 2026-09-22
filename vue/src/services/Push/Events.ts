@@ -41,6 +41,11 @@ export class Events {
         return Events.Generate(`migration-job.${migrationJobId}.changed.status`);
     }
 
+    /** Every pod of one deployment, followed together. */
+    public static Deployment_Logs_Watch(deploymentId: number): string {
+        return Events.Generate(`deployment.${deploymentId}.logs.watch`);
+    }
+
     public static KubernetesPod_Logs_Watch(pod: string, container: string): string {
         return Events.Generate(`kubernetes.pod.${pod}.containers.${container}.logs.watch`);
     }
