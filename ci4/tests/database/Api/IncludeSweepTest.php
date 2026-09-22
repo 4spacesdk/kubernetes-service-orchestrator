@@ -164,7 +164,6 @@ class IncludeSweepTest extends ControllerTestCase {
 
         sort($empty);
         $this->assertSame([
-            'audit_events?include=user',
             'container_registries?include=deletion',
             'database_services?include=deletion',
             'deployments?include=deletion',
@@ -173,7 +172,6 @@ class IncludeSweepTest extends ControllerTestCase {
             'gateways?include=deletion',
             'github_integrations?include=deletion',
             'podio_integrations?include=deletion',
-            'users?include=audit_event',
             'users?include=deletion',
             'workspaces?include=deletion',
         ], $empty, 'these were swept over an empty table');
@@ -418,7 +416,7 @@ class IncludeSweepTest extends ControllerTestCase {
             $relations += count($this->relationsOf($modelName));
         }
 
-        $this->assertSame(96, $relations, 'the number of includable relations changed');
+        $this->assertSame(94, $relations, 'the number of includable relations changed');
     }
 
     // </editor-fold>
@@ -458,14 +456,14 @@ class IncludeSweepTest extends ControllerTestCase {
 
         $emailService = Fixtures::emailService();
         $databaseService = Fixtures::databaseService();
-        $package = Fixtures::deploymentPackage();
+        $template = Fixtures::workspaceTemplate();
 
         $workspace = Fixtures::workspace([
             'name_readable' => 'sweep-workspace',
             'domain_id' => $domain->id,
             'email_service_id' => $emailService->id,
             'database_service_id' => $databaseService->id,
-            'deployment_package_id' => $package->id,
+            'workspace_template_id' => $template->id,
         ]);
 
         $deployment = Fixtures::deployment([
@@ -488,8 +486,8 @@ class IncludeSweepTest extends ControllerTestCase {
         $this->deploymentId = $deployment->id;
 
         $this->arrangeDeploymentChildren($deployment->id, $image->id);
-        $this->arrangeSpecificationChildren($specification->id, $package->id, $image->id, $deployment->id);
-        $this->arrangeTheRestOfTheResources($image->id, $workspace->id, $package->id);
+        $this->arrangeSpecificationChildren($specification->id, $template->id, $image->id, $deployment->id);
+        $this->arrangeTheRestOfTheResources($image->id, $workspace->id, $template->id);
     }
 
     private bool $arranged = false;
@@ -533,7 +531,7 @@ class IncludeSweepTest extends ControllerTestCase {
     /**
      * The seventeen collections that hang off one deployment specification.
      */
-    private function arrangeSpecificationChildren(int $specificationId, int $packageId, int $imageId, int $deploymentId): void {
+    private function arrangeSpecificationChildren(int $specificationId, int $templateId, int $imageId, int $deploymentId): void {
         Fixtures::servicePort(['deployment_specification_id' => $specificationId]);
         Fixtures::serviceAnnotation(['deployment_specification_id' => $specificationId]);
         Fixtures::deploymentAnnotation(['deployment_specification_id' => $specificationId]);
@@ -567,12 +565,12 @@ class IncludeSweepTest extends ControllerTestCase {
             'command' => 'echo swept',
         ]);
 
-        $packageSpecification = Fixtures::packageSpecification([
-            'deployment_package_id' => $packageId,
+        $templateSpecification = Fixtures::templateSpecification([
+            'workspace_template_id' => $templateId,
             'deployment_specification_id' => $specificationId,
         ]);
-        $this->insert('deployment_package_ds_knative_min_scale_schedules', [
-            'deployment_package_deployment_specification_id' => $packageSpecification->id,
+        $this->insert('workspace_template_ds_knative_min_scale_schedules', [
+            'workspace_template_deployment_specification_id' => $templateSpecification->id,
             'knative_min_scale_schedule_id' => $this->scheduleId,
         ]);
 
@@ -593,11 +591,11 @@ class IncludeSweepTest extends ControllerTestCase {
         ]);
 
         $this->attachLabel('deployment_specifications_labels', 'deployment_specification_id', $specificationId);
-        $this->attachLabel('deployment_packages_labels', 'deployment_package_id', $packageId);
+        $this->attachLabel('labels_workspace_templates', 'workspace_template_id', $templateId);
         $this->attachLabel('labels_workspaces', 'workspace_id', $this->workspaceIdFor($deploymentId));
 
-        $this->insert('deployment_package_environment_variables', [
-            'deployment_package_id' => $packageId,
+        $this->insert('workspace_template_environment_variables', [
+            'workspace_template_id' => $templateId,
             'name' => 'SWEPT',
             'value' => 'yes',
         ]);
@@ -606,7 +604,7 @@ class IncludeSweepTest extends ControllerTestCase {
     /**
      * The resources that hang off nothing built above: podio, rbac, oauth and webhooks.
      */
-    private function arrangeTheRestOfTheResources(int $imageId, int $workspaceId, int $packageId): void {
+    private function arrangeTheRestOfTheResources(int $imageId, int $workspaceId, int $templateId): void {
         Fixtures::containerImageScan(['container_image_id' => $imageId]);
         Fixtures::containerImageScanRecord(['container_image_id' => $imageId]);
 

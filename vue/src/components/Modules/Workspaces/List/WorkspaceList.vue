@@ -4,7 +4,7 @@ import NameLink from "@/components/Modules/Common/NameLink.vue";
 import { computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch } from "vue";
 import { Api } from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
-import { DeploymentPackage, Workspace } from "@/core/services/Deploy/models";
+import { WorkspaceTemplate, Workspace } from "@/core/services/Deploy/models";
 import WorkspaceEditButton from "@/components/Modules/Workspaces/EditButton/WorkspaceEditButton.vue";
 import WorkspaceDeploymentStatus from "@/components/Modules/Workspaces/WorkspaceDeploymentStatus/WorkspaceDeploymentStatus.vue";
 import { EventEmitter } from "@/helpers/EventEmitter";
@@ -34,8 +34,8 @@ const isLoading = ref(true);
 const options = ref({});
 
 const showCreateMenu = ref(false);
-const deploymentPackages = ref<DeploymentPackage[]>([]);
-const showDeploymentPackagesWarning = ref(true);
+const workspaceTemplates = ref<WorkspaceTemplate[]>([]);
+const showWorkspaceTemplatesWarning = ref(true);
 
 const statusOptions = ref([
     {
@@ -86,11 +86,11 @@ onMounted(() => {
 
     getItems(false, true);
 
-    Api.deploymentPackages()
+    Api.workspaceTemplates()
         .get()
         .find((items) => {
-            deploymentPackages.value = items;
-            showDeploymentPackagesWarning.value = deploymentPackages.value.length === 0;
+            workspaceTemplates.value = items;
+            showWorkspaceTemplatesWarning.value = workspaceTemplates.value.length === 0;
         });
 });
 
@@ -159,9 +159,9 @@ function getItems(doItems = true, doCount = false) {
 
 // <editor-fold desc="View function">
 
-function onCreateItemBtnClicked(type: DeploymentPackage) {
+function onCreateItemBtnClicked(type: WorkspaceTemplate) {
     bus.emit("workspaceCreate", {
-        deploymentPackage: type,
+        workspaceTemplate: type,
     });
 }
 
@@ -344,8 +344,8 @@ function onShowLogsBtnClicked(item: Workspace) {
     });
 }
 
-function onDeploymentPackagesShortcutClicked() {
-    router.push({ name: "DeploymentPackages" }).catch((e: any) => {});
+function onWorkspaceTemplatesShortcutClicked() {
+    router.push({ name: "WorkspaceTemplates" }).catch((e: any) => {});
 }
 
 // </editor-fold>
@@ -372,13 +372,13 @@ function onDeploymentPackagesShortcutClicked() {
                             <v-btn data-shortcut="create" v-bind="props" small prepend-icon="fa fa-plus" style="margin-right: -16px"> Create </v-btn>
                         </template>
 
-                        <v-list v-if="showDeploymentPackagesWarning" class="list-items">
+                        <v-list v-if="showWorkspaceTemplatesWarning" class="list-items">
                             <v-list-item dense>
                                 <v-list-item-title>
                                     <span class="font-italic">No Workspace Template found.</span>
                                 </v-list-item-title>
                             </v-list-item>
-                            <v-list-item @click="onDeploymentPackagesShortcutClicked">
+                            <v-list-item @click="onWorkspaceTemplatesShortcutClicked">
                                 <v-list-item-title>
                                     <v-icon size="small" class="my-auto">fa fa-circle-right</v-icon>
                                     <span class="ml-2">Go to Workspace Templates</span>
@@ -387,7 +387,7 @@ function onDeploymentPackagesShortcutClicked() {
                         </v-list>
 
                         <v-list v-else class="list-items">
-                            <v-list-item v-for="(type, i) in deploymentPackages" :key="i" dense @click="onCreateItemBtnClicked(type)">
+                            <v-list-item v-for="(type, i) in workspaceTemplates" :key="i" dense @click="onCreateItemBtnClicked(type)">
                                 <v-list-item-title>
                                     <v-icon size="small" class="my-auto">fa fa-window-maximize fa</v-icon>
                                     <span class="ml-2">{{ type.name }}</span>

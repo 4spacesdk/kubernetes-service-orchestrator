@@ -2,8 +2,8 @@
 
 use OrmExtension\Extensions\Entity;
 use App\Entities\Deployment;
-use App\Entities\DeploymentPackage;
-use App\Entities\DeploymentPackageDeploymentSpecification;
+use App\Entities\WorkspaceTemplate;
+use App\Entities\WorkspaceTemplateDeploymentSpecification;
 use App\Entities\DeploymentSpecification;
 use App\Entities\ContainerImage;
 use App\Entities\ContainerRegistry;
@@ -306,23 +306,23 @@ class Fixtures {
     /**
      * @param array<string, mixed> $overrides
      */
-    public static function deploymentPackage(array $overrides = []): DeploymentPackage {
-        return self::make(DeploymentPackage::class, [
-            'name' => 'test-package',
+    public static function workspaceTemplate(array $overrides = []): WorkspaceTemplate {
+        return self::make(WorkspaceTemplate::class, [
+            'name' => 'test-template',
             'namespace' => 'test',
         ], $overrides);
     }
 
     /**
-     * A specification inside a package, with the defaults a new deployment inherits.
+     * A specification inside a template, with the defaults a new deployment inherits.
      *
-     * `default_version` is always set: without it `createDeploymentFromPackage()` asks the
+     * `default_version` is always set: without it `createDeploymentFromTemplate()` asks the
      * container registry for the newest tag, which is a network call.
      *
      * @param array<string, mixed> $overrides
      */
-    public static function packageSpecification(array $overrides = []): DeploymentPackageDeploymentSpecification {
-        return self::make(DeploymentPackageDeploymentSpecification::class, [
+    public static function templateSpecification(array $overrides = []): WorkspaceTemplateDeploymentSpecification {
+        return self::make(WorkspaceTemplateDeploymentSpecification::class, [
             'default_version' => '1.0.0',
             'default_environment' => 'production',
             'default_image_pull_policy' => \ImagePullPolicies::IfNotPresent,

@@ -1,7 +1,7 @@
 /**
  * Created by ModelParser
  */
-import {DeploymentPackageDeploymentSpecification} from '../DeploymentPackageDeploymentSpecification';
+import {WorkspaceTemplateDeploymentSpecification} from '../WorkspaceTemplateDeploymentSpecification';
 import {Deployment} from '../Deployment';
 import {User} from '../User';
 import {Deletion} from '../Deletion';
@@ -13,7 +13,7 @@ export class KNativeMinScaleScheduleDefinition extends BaseModel {
     timezone?: string;
     description?: string;
     priority?: number;
-    deployment_package_deployment_specifications?: DeploymentPackageDeploymentSpecification[];
+    workspace_template_deployment_specifications?: WorkspaceTemplateDeploymentSpecification[];
     deployments?: Deployment[];
     id?: number;
     created?: string;
@@ -37,7 +37,7 @@ export class KNativeMinScaleScheduleDefinition extends BaseModel {
             delete this.timezone;
             delete this.description;
             delete this.priority;
-            delete this.deployment_package_deployment_specifications;
+            delete this.workspace_template_deployment_specifications;
             delete this.deployments;
             delete this.id;
             delete this.created;
@@ -66,8 +66,8 @@ export class KNativeMinScaleScheduleDefinition extends BaseModel {
         if (data.priority != null) {
             this.priority = data.priority;
         }
-        if (data.deployment_package_deployment_specifications != null) {
-            this.deployment_package_deployment_specifications = data.deployment_package_deployment_specifications.map((i: any) => new DeploymentPackageDeploymentSpecification(i));
+        if (data.workspace_template_deployment_specifications != null) {
+            this.workspace_template_deployment_specifications = data.workspace_template_deployment_specifications.map((i: any) => new WorkspaceTemplateDeploymentSpecification(i));
         }
         if (data.deployments != null) {
             this.deployments = data.deployments.map((i: any) => new Deployment(i));

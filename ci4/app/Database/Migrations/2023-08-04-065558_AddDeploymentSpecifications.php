@@ -1,6 +1,5 @@
 <?php namespace App\Database\Migrations;
 
-use App\Controllers\DeploymentPackages;
 use App\Controllers\DeploymentSpecifications;
 use App\Controllers\Kubernetes;
 use CodeIgniter\Database\Migration;
@@ -115,8 +114,18 @@ class AddDeploymentSpecifications extends Migration {
             ->dropColumn('default_database_service_id')
             ->dropColumn('default_domain_id');
 
-        ApiRoute::addResourceController(DeploymentPackages::class);
-        ApiRoute::quick('/deployment-packages/([0-9]+)/deployment-specifications', DeploymentPackages::class, 'updateDeploymentSpecifications/$1', 'put');
+        // The rows `addResourceController()` wrote, written out: it reflects on the controller,
+        // which has since been renamed. RenameDeploymentPackagesToWorkspaceTemplates moves them.
+        $controller = 'App\Controllers\DeploymentPackages';
+        ApiRoute::quick('deployment_packages', $controller, 'get', 'get');
+        ApiRoute::quick('deployment_packages/([0-9]+)', $controller, 'get/$1', 'get');
+        ApiRoute::quick('deployment_packages', $controller, 'post', 'post');
+        ApiRoute::quick('deployment_packages/([0-9]+)', $controller, 'put/$1', 'put');
+        ApiRoute::quick('deployment_packages', $controller, 'put', 'put');
+        ApiRoute::quick('deployment_packages/([0-9]+)', $controller, 'patch/$1', 'patch');
+        ApiRoute::quick('deployment_packages', $controller, 'patch', 'patch');
+        ApiRoute::quick('deployment_packages/([0-9]+)', $controller, 'delete/$1', 'delete');
+        ApiRoute::quick('/deployment-packages/([0-9]+)/deployment-specifications', $controller, 'updateDeploymentSpecifications/$1', 'put');
 
 
     }

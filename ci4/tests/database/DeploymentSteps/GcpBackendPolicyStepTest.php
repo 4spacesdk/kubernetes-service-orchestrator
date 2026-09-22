@@ -197,7 +197,7 @@ class GcpBackendPolicyStepTest extends ManifestTestCase {
     /**
      * A deployment that belongs to no workspace has no gateway to be behind, and the step
      * has to say so rather than follow a relation that is not there. Deployments inside a
-     * package template are in exactly this state.
+     * workspace template are in exactly this state.
      */
     public function testADeploymentWithoutAWorkspaceGeneratesNoSpec(): void {
         $specification = Fixtures::deploymentSpecification(['gateway_backend_timeout' => 600]);

@@ -69,7 +69,7 @@ class DeploymentsApiTest extends ControllerTestCase {
 
     /**
      * `create` has two halves. With a workspace it delegates to the workspace, which knows
-     * the package and its defaults; without one it prepares the deployment itself, and then
+     * the template and its defaults; without one it prepares the deployment itself, and then
      * the namespace has to come from the request because there is nothing to inherit it
      * from. That is the standalone deployment - one that belongs to no customer.
      */

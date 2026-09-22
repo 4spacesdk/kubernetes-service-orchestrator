@@ -6,7 +6,7 @@ import {ContainerImageScan} from "./models";
 import {ContainerImage} from "./models";
 import {ContainerRegistry} from "./models";
 import {DatabaseService} from "./models";
-import {DeploymentPackage} from "./models";
+import {WorkspaceTemplate} from "./models";
 import {DeploymentSpecification} from "./models";
 import {Deployment} from "./models";
 import {MigrationJob} from "./models";
@@ -94,7 +94,7 @@ export interface DeploymentCronJobRunResponse {
     job?: string;
 }
 
-export interface DeploymentPackageDeploymentSpecification {
+export interface WorkspaceTemplateDeploymentSpecification {
     deploymentSpecification?: DeploymentSpecification;
     defaultEnablePodioNotification?: boolean;
     defaultImagePullPolicy?: string;
@@ -113,8 +113,8 @@ export interface DeploymentPackageDeploymentSpecification {
     defaultKnativeScheduledMinScaleIds?: number[];
 }
 
-export interface DeploymentPackageDeploymentSpecificationList {
-    values?: DeploymentPackageDeploymentSpecification[];
+export interface WorkspaceTemplateDeploymentSpecificationList {
+    values?: WorkspaceTemplateDeploymentSpecification[];
 }
 
 export interface DeploymentSpecGetResponse {
@@ -2398,103 +2398,103 @@ class DatabaseServices {
 }
 
 
-export class DeploymentPackagesGet extends BaseApi<DeploymentPackage> {
+export class WorkspaceTemplatesGet extends BaseApi<WorkspaceTemplate> {
 
-    public topic = 'Resources.DeploymentPackages';
+    public topic = 'Resources.WorkspaceTemplates';
     protected method = 'get';
     protected scope = '';
     protected summary = '';
 
     public constructor() {
         super();
-        this.uri = `/deployment_packages`;
+        this.uri = `/workspace_templates`;
     }
 
-    protected convertToResource(data: any): DeploymentPackage {
-        return new DeploymentPackage(data);
+    protected convertToResource(data: any): WorkspaceTemplate {
+        return new WorkspaceTemplate(data);
     }
 
-    public where(name: string, value: any): DeploymentPackagesGet {
+    public where(name: string, value: any): WorkspaceTemplatesGet {
         this.filter().where(name, value);
         return this;
     }
 
-    public whereEquals(name: string, value: any): DeploymentPackagesGet {
+    public whereEquals(name: string, value: any): WorkspaceTemplatesGet {
         this.filter().whereEquals(name, value);
         return this;
     }
 
-    public whereIn(name: string, value: any[]): DeploymentPackagesGet {
+    public whereIn(name: string, value: any[]): WorkspaceTemplatesGet {
         this.filter().whereIn(name, value);
         return this;
     }
 
-    public whereInArray(name: string, value: any[]): DeploymentPackagesGet {
+    public whereInArray(name: string, value: any[]): WorkspaceTemplatesGet {
         this.filter().whereInArray(name, value);
         return this;
     }
 
-    public whereNot(name: string, value: any): DeploymentPackagesGet {
+    public whereNot(name: string, value: any): WorkspaceTemplatesGet {
         this.filter().whereNot(name, value);
         return this;
     }
 
-    public whereNotIn(name: string, value: any[]): DeploymentPackagesGet {
+    public whereNotIn(name: string, value: any[]): WorkspaceTemplatesGet {
         this.filter().whereNotIn(name, value);
         return this;
     }
 
-    public whereGreaterThan(name: string, value: any): DeploymentPackagesGet {
+    public whereGreaterThan(name: string, value: any): WorkspaceTemplatesGet {
         this.filter().whereGreaterThan(name, value);
         return this;
     }
 
-    public whereGreaterThanOrEqual(name: string, value: any): DeploymentPackagesGet {
+    public whereGreaterThanOrEqual(name: string, value: any): WorkspaceTemplatesGet {
         this.filter().whereGreaterThanOrEqual(name, value);
         return this;
     }
 
-    public whereLessThan(name: string, value: any): DeploymentPackagesGet {
+    public whereLessThan(name: string, value: any): WorkspaceTemplatesGet {
         this.filter().whereLessThan(name, value);
         return this;
     }
 
-    public whereLessThanOrEqual(name: string, value: any): DeploymentPackagesGet {
+    public whereLessThanOrEqual(name: string, value: any): WorkspaceTemplatesGet {
         this.filter().whereLessThanOrEqual(name, value);
         return this;
     }
 
-    public search(name: string, value: any): DeploymentPackagesGet {
+    public search(name: string, value: any): WorkspaceTemplatesGet {
         this.filter().search(name, value);
         return this;
     }
 
-    public include(name: string): DeploymentPackagesGet {
+    public include(name: string): WorkspaceTemplatesGet {
         this.getInclude().include(name);
         return this;
     }
 
-    public orderBy(name: string, direction: string): DeploymentPackagesGet {
+    public orderBy(name: string, direction: string): WorkspaceTemplatesGet {
         this.ordering().orderBy(name, direction);
         return this;
     }
 
-    public orderAsc(name: string): DeploymentPackagesGet {
+    public orderAsc(name: string): WorkspaceTemplatesGet {
         this.ordering().orderAsc(name);
         return this;
     }
 
-    public orderDesc(name: string): DeploymentPackagesGet {
+    public orderDesc(name: string): WorkspaceTemplatesGet {
         this.ordering().orderDesc(name);
         return this;
     }
 
-    public limit(value: number): DeploymentPackagesGet {
+    public limit(value: number): WorkspaceTemplatesGet {
         this.limitValue = value;
         return this;
     }
 
-    public offset(value: number): DeploymentPackagesGet {
+    public offset(value: number): WorkspaceTemplatesGet {
         this.offsetValue = value;
         return this;
     }
@@ -2503,280 +2503,280 @@ export class DeploymentPackagesGet extends BaseApi<DeploymentPackage> {
         return this.executeCount(next);
     }
 
-    public find(next?: (value: DeploymentPackage[]) => void) {
+    public find(next?: (value: WorkspaceTemplate[]) => void) {
         return super.executeFind(next);
     }
 }
 
-export class DeploymentPackagesGetById extends BaseApi<DeploymentPackage> {
+export class WorkspaceTemplatesGetById extends BaseApi<WorkspaceTemplate> {
 
-    public topic = 'Resources.DeploymentPackages';
+    public topic = 'Resources.WorkspaceTemplates';
     protected method = 'get';
     protected scope = '';
     protected summary = '';
 
     public constructor(id: number) {
         super();
-        this.uri = `/deployment_packages/${id}`;
+        this.uri = `/workspace_templates/${id}`;
     }
 
-    protected convertToResource(data: any): DeploymentPackage {
-        return new DeploymentPackage(data);
+    protected convertToResource(data: any): WorkspaceTemplate {
+        return new WorkspaceTemplate(data);
     }
 
-    public include(name: string): DeploymentPackagesGetById {
+    public include(name: string): WorkspaceTemplatesGetById {
         this.getInclude().include(name);
         return this;
     }
 
-    public find(next?: (value: DeploymentPackage[]) => void) {
+    public find(next?: (value: WorkspaceTemplate[]) => void) {
         return super.executeFind(next);
     }
 }
 
-export class DeploymentPackagesPost extends BaseApi<DeploymentPackage> {
+export class WorkspaceTemplatesPost extends BaseApi<WorkspaceTemplate> {
 
-    public topic = 'Resources.DeploymentPackages';
+    public topic = 'Resources.WorkspaceTemplates';
     protected method = 'post';
     protected scope = '';
     protected summary = '';
 
     public constructor() {
         super();
-        this.uri = `/deployment_packages`;
+        this.uri = `/workspace_templates`;
     }
 
-    protected convertToResource(data: any): DeploymentPackage {
-        return new DeploymentPackage(data);
+    protected convertToResource(data: any): WorkspaceTemplate {
+        return new WorkspaceTemplate(data);
     }
 
-    public save(data: DeploymentPackage, next?: (value: DeploymentPackage) => void) {
+    public save(data: WorkspaceTemplate, next?: (value: WorkspaceTemplate) => void) {
         return super.executeSave(data, next);
     }
 }
 
-export class DeploymentPackagesPatchById extends BaseApi<DeploymentPackage> {
+export class WorkspaceTemplatesPatchById extends BaseApi<WorkspaceTemplate> {
 
-    public topic = 'Resources.DeploymentPackages';
+    public topic = 'Resources.WorkspaceTemplates';
     protected method = 'patch';
     protected scope = '';
     protected summary = '';
 
     public constructor(id: number) {
         super();
-        this.uri = `/deployment_packages/${id}`;
+        this.uri = `/workspace_templates/${id}`;
     }
 
-    protected convertToResource(data: any): DeploymentPackage {
-        return new DeploymentPackage(data);
+    protected convertToResource(data: any): WorkspaceTemplate {
+        return new WorkspaceTemplate(data);
     }
 
-    public save(data: DeploymentPackage, next?: (value: DeploymentPackage) => void) {
+    public save(data: WorkspaceTemplate, next?: (value: WorkspaceTemplate) => void) {
         return super.executeSave(data, next);
     }
 }
 
-export class DeploymentPackagesPatch extends BaseApi<DeploymentPackage> {
+export class WorkspaceTemplatesPatch extends BaseApi<WorkspaceTemplate> {
 
-    public topic = 'Resources.DeploymentPackages';
+    public topic = 'Resources.WorkspaceTemplates';
     protected method = 'patch';
     protected scope = '';
     protected summary = '';
 
     public constructor() {
         super();
-        this.uri = `/deployment_packages`;
+        this.uri = `/workspace_templates`;
     }
 
-    protected convertToResource(data: any): DeploymentPackage {
-        return new DeploymentPackage(data);
+    protected convertToResource(data: any): WorkspaceTemplate {
+        return new WorkspaceTemplate(data);
     }
 
-    public save(data: DeploymentPackage, next?: (value: DeploymentPackage) => void) {
+    public save(data: WorkspaceTemplate, next?: (value: WorkspaceTemplate) => void) {
         return super.executeSave(data, next);
     }
 }
 
-export class DeploymentPackagesDeleteById extends BaseApi<DeploymentPackage> {
+export class WorkspaceTemplatesDeleteById extends BaseApi<WorkspaceTemplate> {
 
-    public topic = 'Resources.DeploymentPackages';
+    public topic = 'Resources.WorkspaceTemplates';
     protected method = 'delete';
     protected scope = '';
     protected summary = '';
 
     public constructor(id: number) {
         super();
-        this.uri = `/deployment_packages/${id}`;
+        this.uri = `/workspace_templates/${id}`;
     }
 
-    protected convertToResource(data: any): DeploymentPackage {
-        return new DeploymentPackage(data);
+    protected convertToResource(data: any): WorkspaceTemplate {
+        return new WorkspaceTemplate(data);
     }
 
-    public delete(next?: (value: DeploymentPackage) => void) {
+    public delete(next?: (value: WorkspaceTemplate) => void) {
         return super.executeDelete(next);
     }
 }
 
-export class DeploymentPackagesDuplicatePostById extends BaseApi<DeploymentPackage> {
+export class WorkspaceTemplatesDuplicatePostById extends BaseApi<WorkspaceTemplate> {
 
-    public topic = 'Resources.DeploymentPackages';
+    public topic = 'Resources.WorkspaceTemplates';
     protected method = 'post';
     protected scope = '';
     protected summary = '';
 
     public constructor(id: number) {
         super();
-        this.uri = `/deployment-packages/${id}/duplicate`;
+        this.uri = `/workspace-templates/${id}/duplicate`;
     }
 
-    protected convertToResource(data: any): DeploymentPackage {
-        return new DeploymentPackage(data);
+    protected convertToResource(data: any): WorkspaceTemplate {
+        return new WorkspaceTemplate(data);
     }
 
-    public save(data: any, next?: (value: DeploymentPackage) => void) {
+    public save(data: any, next?: (value: WorkspaceTemplate) => void) {
         return super.executeSave(data, next);
     }
 }
 
-export class DeploymentPackagesUpdateDeploymentSpecificationsPutById extends BaseApi<DeploymentPackage> {
+export class WorkspaceTemplatesUpdateDeploymentSpecificationsPutById extends BaseApi<WorkspaceTemplate> {
 
-    public topic = 'Resources.DeploymentPackages';
+    public topic = 'Resources.WorkspaceTemplates';
     protected method = 'put';
     protected scope = '';
     protected summary = '';
 
     public constructor(id: number) {
         super();
-        this.uri = `/deployment-packages/${id}/deployment-specifications`;
+        this.uri = `/workspace-templates/${id}/deployment-specifications`;
     }
 
-    protected convertToResource(data: any): DeploymentPackage {
-        return new DeploymentPackage(data);
+    protected convertToResource(data: any): WorkspaceTemplate {
+        return new WorkspaceTemplate(data);
     }
 
-    public save(data: DeploymentPackageDeploymentSpecificationList, next?: (value: DeploymentPackage) => void) {
+    public save(data: WorkspaceTemplateDeploymentSpecificationList, next?: (value: WorkspaceTemplate) => void) {
         return super.executeSave(data, next);
     }
 }
 
-export class DeploymentPackagesUpdateEnvironmentVariablesPutById extends BaseApi<DeploymentPackage> {
+export class WorkspaceTemplatesUpdateEnvironmentVariablesPutById extends BaseApi<WorkspaceTemplate> {
 
-    public topic = 'Resources.DeploymentPackages';
+    public topic = 'Resources.WorkspaceTemplates';
     protected method = 'put';
     protected scope = '';
     protected summary = '';
 
     public constructor(id: number) {
         super();
-        this.uri = `/deployment-packages/${id}/environment-variables`;
+        this.uri = `/workspace-templates/${id}/environment-variables`;
     }
 
-    protected convertToResource(data: any): DeploymentPackage {
-        return new DeploymentPackage(data);
+    protected convertToResource(data: any): WorkspaceTemplate {
+        return new WorkspaceTemplate(data);
     }
 
-    public save(data: EnvironmentVariableList, next?: (value: DeploymentPackage) => void) {
+    public save(data: EnvironmentVariableList, next?: (value: WorkspaceTemplate) => void) {
         return super.executeSave(data, next);
     }
 }
 
-export class DeploymentPackagesCopyEnvironmentVariableToDeploymentsPutByDeploymentPackageId extends BaseApi<DeploymentPackage> {
+export class WorkspaceTemplatesCopyEnvironmentVariableToDeploymentsPutByWorkspaceTemplateId extends BaseApi<WorkspaceTemplate> {
 
-    public topic = 'Resources.DeploymentPackages';
+    public topic = 'Resources.WorkspaceTemplates';
     protected method = 'put';
     protected scope = '';
     protected summary = '';
 
-    public constructor(deploymentPackageId: number) {
+    public constructor(workspaceTemplateId: number) {
         super();
-        this.uri = `/deployment-packages/${deploymentPackageId}/environment-variables/copy-to-deployments`;
+        this.uri = `/workspace-templates/${workspaceTemplateId}/environment-variables/copy-to-deployments`;
     }
 
-    protected convertToResource(data: any): DeploymentPackage {
-        return new DeploymentPackage(data);
+    protected convertToResource(data: any): WorkspaceTemplate {
+        return new WorkspaceTemplate(data);
     }
 
-    public name(value: string): DeploymentPackagesCopyEnvironmentVariableToDeploymentsPutByDeploymentPackageId {
+    public name(value: string): WorkspaceTemplatesCopyEnvironmentVariableToDeploymentsPutByWorkspaceTemplateId {
         this.addQueryParameter('name', value);
         return this;
     }
 
-    public override(value: boolean): DeploymentPackagesCopyEnvironmentVariableToDeploymentsPutByDeploymentPackageId {
+    public override(value: boolean): WorkspaceTemplatesCopyEnvironmentVariableToDeploymentsPutByWorkspaceTemplateId {
         this.addQueryParameter('override', value);
         return this;
     }
 
-    public save(data: any, next?: (value: DeploymentPackage) => void) {
+    public save(data: any, next?: (value: WorkspaceTemplate) => void) {
         return super.executeSave(data, next);
     }
 }
 
-export class DeploymentPackagesUpdateLabelsPutByDeploymentPackageId extends BaseApi<DeploymentPackage> {
+export class WorkspaceTemplatesUpdateLabelsPutByWorkspaceTemplateId extends BaseApi<WorkspaceTemplate> {
 
-    public topic = 'Resources.DeploymentPackages';
+    public topic = 'Resources.WorkspaceTemplates';
     protected method = 'put';
     protected scope = '';
     protected summary = '';
 
-    public constructor(deploymentPackageId: number) {
+    public constructor(workspaceTemplateId: number) {
         super();
-        this.uri = `/deployment-packages/${deploymentPackageId}/labels`;
+        this.uri = `/workspace-templates/${workspaceTemplateId}/labels`;
     }
 
-    protected convertToResource(data: any): DeploymentPackage {
-        return new DeploymentPackage(data);
+    protected convertToResource(data: any): WorkspaceTemplate {
+        return new WorkspaceTemplate(data);
     }
 
-    public save(data: LabelList, next?: (value: DeploymentPackage) => void) {
+    public save(data: LabelList, next?: (value: WorkspaceTemplate) => void) {
         return super.executeSave(data, next);
     }
 }
 
-class DeploymentPackages {
+class WorkspaceTemplates {
 
-    public get(): DeploymentPackagesGet {
-        return new DeploymentPackagesGet();
+    public get(): WorkspaceTemplatesGet {
+        return new WorkspaceTemplatesGet();
     }
 
-    public getById(id: number): DeploymentPackagesGetById {
-        return new DeploymentPackagesGetById(id);
+    public getById(id: number): WorkspaceTemplatesGetById {
+        return new WorkspaceTemplatesGetById(id);
     }
 
-    public post(): DeploymentPackagesPost {
-        return new DeploymentPackagesPost();
+    public post(): WorkspaceTemplatesPost {
+        return new WorkspaceTemplatesPost();
     }
 
-    public patchById(id: number): DeploymentPackagesPatchById {
-        return new DeploymentPackagesPatchById(id);
+    public patchById(id: number): WorkspaceTemplatesPatchById {
+        return new WorkspaceTemplatesPatchById(id);
     }
 
-    public patch(): DeploymentPackagesPatch {
-        return new DeploymentPackagesPatch();
+    public patch(): WorkspaceTemplatesPatch {
+        return new WorkspaceTemplatesPatch();
     }
 
-    public deleteById(id: number): DeploymentPackagesDeleteById {
-        return new DeploymentPackagesDeleteById(id);
+    public deleteById(id: number): WorkspaceTemplatesDeleteById {
+        return new WorkspaceTemplatesDeleteById(id);
     }
 
-    public duplicatePostById(id: number): DeploymentPackagesDuplicatePostById {
-        return new DeploymentPackagesDuplicatePostById(id);
+    public duplicatePostById(id: number): WorkspaceTemplatesDuplicatePostById {
+        return new WorkspaceTemplatesDuplicatePostById(id);
     }
 
-    public updateDeploymentSpecificationsPutById(id: number): DeploymentPackagesUpdateDeploymentSpecificationsPutById {
-        return new DeploymentPackagesUpdateDeploymentSpecificationsPutById(id);
+    public updateDeploymentSpecificationsPutById(id: number): WorkspaceTemplatesUpdateDeploymentSpecificationsPutById {
+        return new WorkspaceTemplatesUpdateDeploymentSpecificationsPutById(id);
     }
 
-    public updateEnvironmentVariablesPutById(id: number): DeploymentPackagesUpdateEnvironmentVariablesPutById {
-        return new DeploymentPackagesUpdateEnvironmentVariablesPutById(id);
+    public updateEnvironmentVariablesPutById(id: number): WorkspaceTemplatesUpdateEnvironmentVariablesPutById {
+        return new WorkspaceTemplatesUpdateEnvironmentVariablesPutById(id);
     }
 
-    public copyEnvironmentVariableToDeploymentsPutByDeploymentPackageId(deploymentPackageId: number): DeploymentPackagesCopyEnvironmentVariableToDeploymentsPutByDeploymentPackageId {
-        return new DeploymentPackagesCopyEnvironmentVariableToDeploymentsPutByDeploymentPackageId(deploymentPackageId);
+    public copyEnvironmentVariableToDeploymentsPutByWorkspaceTemplateId(workspaceTemplateId: number): WorkspaceTemplatesCopyEnvironmentVariableToDeploymentsPutByWorkspaceTemplateId {
+        return new WorkspaceTemplatesCopyEnvironmentVariableToDeploymentsPutByWorkspaceTemplateId(workspaceTemplateId);
     }
 
-    public updateLabelsPutByDeploymentPackageId(deploymentPackageId: number): DeploymentPackagesUpdateLabelsPutByDeploymentPackageId {
-        return new DeploymentPackagesUpdateLabelsPutByDeploymentPackageId(deploymentPackageId);
+    public updateLabelsPutByWorkspaceTemplateId(workspaceTemplateId: number): WorkspaceTemplatesUpdateLabelsPutByWorkspaceTemplateId {
+        return new WorkspaceTemplatesUpdateLabelsPutByWorkspaceTemplateId(workspaceTemplateId);
     }
 
 }
@@ -9210,8 +9210,8 @@ export class WorkspacesCreatePost extends BaseApi<Workspace> {
         return new Workspace(data);
     }
 
-    public deploymentPackageId(value: number): WorkspacesCreatePost {
-        this.addQueryParameter('deploymentPackageId', value);
+    public workspaceTemplateId(value: number): WorkspacesCreatePost {
+        this.addQueryParameter('workspaceTemplateId', value);
         return this;
     }
 
@@ -9658,8 +9658,8 @@ export class Api {
         return new DatabaseServices();
     }
 
-    public static deploymentPackages(): DeploymentPackages {
-        return new DeploymentPackages();
+    public static workspaceTemplates(): WorkspaceTemplates {
+        return new WorkspaceTemplates();
     }
 
     public static deploymentSpecifications(): DeploymentSpecifications {

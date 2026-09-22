@@ -137,7 +137,7 @@ const categories = ref<MenuCategory[]>([
             },
             {
                 title: "Workspace Templates",
-                url: "/setup/deployment-packages",
+                url: "/setup/workspace-templates",
                 permissions: [RbacPermissions.Developer],
             },
         ],

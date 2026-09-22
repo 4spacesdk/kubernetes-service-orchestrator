@@ -11,7 +11,7 @@ use App\Models\DeploymentModel;
  * `workspaces/create` is the only endpoint in the API that validates its input properly:
  * six separate rejections before anything is written, including two uniqueness checks. It
  * is also the one that builds the most - a workspace, its labels, and a deployment per
- * specification in the package. Most of this file is about that.
+ * specification in the template. Most of this file is about that.
  *
  * **Deploy and terminate are not tested here.** Both walk every deployment's steps and
  * talk to a cluster. They belong in the integration suite, behind its own switch, against
@@ -23,11 +23,11 @@ class WorkspacesApiTest extends ControllerTestCase {
 
     // <editor-fold desc="Creating a workspace">
 
-    public function testAWorkspaceIsCreatedFromAPackage(): void {
+    public function testAWorkspaceIsCreatedFromATemplate(): void {
         $domain = Fixtures::domain(['name' => 'example.org']);
-        $package = Fixtures::deploymentPackage();
+        $template = Fixtures::workspaceTemplate();
 
-        $body = $this->create($package->id, [
+        $body = $this->create($template->id, [
             'name' => 'Acme Industries',
             'namespace' => 'acme',
             'domainId' => $domain->id,
@@ -46,9 +46,9 @@ class WorkspacesApiTest extends ControllerTestCase {
      */
     public function testTheSystemNameIsDerivedFromTheReadableOne(): void {
         $domain = Fixtures::domain();
-        $package = Fixtures::deploymentPackage();
+        $template = Fixtures::workspaceTemplate();
 
-        $body = $this->create($package->id, [
+        $body = $this->create($template->id, [
             'name' => 'Acme Industries, Inc.',
             'namespace' => 'acme',
             'domainId' => $domain->id,
@@ -64,7 +64,7 @@ class WorkspacesApiTest extends ControllerTestCase {
      * space, and the system name lost the letter: "Øster" became "ster".
      */
     public function testANameWithDanishLettersIsKeptAndSpelledOutInTheSystemName(): void {
-        $body = $this->create(Fixtures::deploymentPackage()->id, [
+        $body = $this->create(Fixtures::workspaceTemplate()->id, [
             'name' => 'Øster Ås',
             'namespace' => 'kb-oester-aas',
             'domainId' => Fixtures::domain()->id,
@@ -83,7 +83,7 @@ class WorkspacesApiTest extends ControllerTestCase {
      */
     #[\PHPUnit\Framework\Attributes\DataProvider('namespacesKubernetesRefuses')]
     public function testANamespaceKubernetesWouldRefuseIsRefused(string $namespace): void {
-        $error = $this->createExpectingFailure(Fixtures::deploymentPackage()->id, [
+        $error = $this->createExpectingFailure(Fixtures::workspaceTemplate()->id, [
             'name' => 'Acme',
             'namespace' => $namespace,
             'domainId' => Fixtures::domain()->id,
@@ -109,7 +109,7 @@ class WorkspacesApiTest extends ControllerTestCase {
      * The rule the dialog had allowed 15 characters. A namespace of 63 is fine.
      */
     public function testANamespaceOf63CharactersIsAccepted(): void {
-        $body = $this->create(Fixtures::deploymentPackage()->id, [
+        $body = $this->create(Fixtures::workspaceTemplate()->id, [
             'name' => 'Acme',
             'namespace' => str_repeat('a', 63),
             'domainId' => Fixtures::domain()->id,
@@ -125,7 +125,7 @@ class WorkspacesApiTest extends ControllerTestCase {
      */
     public function testCreatingIsRejectedWithAReasonForEachMissingPiece(): void {
         $domain = Fixtures::domain();
-        $package = Fixtures::deploymentPackage();
+        $template = Fixtures::workspaceTemplate();
         $complete = [
             'name' => 'Acme',
             'namespace' => 'acme',
@@ -133,10 +133,10 @@ class WorkspacesApiTest extends ControllerTestCase {
             'subdomain' => 'acme',
         ];
 
-        $this->assertSame('Invalid deployment package', $this->createExpectingFailure(999999, $complete));
-        $this->assertSame('Name missing', $this->createExpectingFailure($package->id, ['name' => ''] + $complete));
-        $this->assertSame('Domain not found', $this->createExpectingFailure($package->id, ['domainId' => 999999] + $complete));
-        $this->assertSame('Subdomain missing', $this->createExpectingFailure($package->id, ['subdomain' => ''] + $complete));
+        $this->assertSame('Invalid workspace template', $this->createExpectingFailure(999999, $complete));
+        $this->assertSame('Name missing', $this->createExpectingFailure($template->id, ['name' => ''] + $complete));
+        $this->assertSame('Domain not found', $this->createExpectingFailure($template->id, ['domainId' => 999999] + $complete));
+        $this->assertSame('Subdomain missing', $this->createExpectingFailure($template->id, ['subdomain' => ''] + $complete));
     }
 
     /**
@@ -145,10 +145,10 @@ class WorkspacesApiTest extends ControllerTestCase {
      */
     public function testASubdomainCannotBeUsedTwiceOnTheSameDomain(): void {
         $domain = Fixtures::domain();
-        $package = Fixtures::deploymentPackage();
+        $template = Fixtures::workspaceTemplate();
         Fixtures::workspace(['domain_id' => $domain->id, 'subdomain' => 'taken']);
 
-        $error = $this->createExpectingFailure($package->id, [
+        $error = $this->createExpectingFailure($template->id, [
             'name' => 'Second', 'namespace' => 'second',
             'domainId' => $domain->id, 'subdomain' => 'taken',
         ]);
@@ -158,10 +158,10 @@ class WorkspacesApiTest extends ControllerTestCase {
 
     public function testTheSameNameCannotBeUsedTwiceInOneNamespace(): void {
         $domain = Fixtures::domain();
-        $package = Fixtures::deploymentPackage();
+        $template = Fixtures::workspaceTemplate();
         Fixtures::workspace(['namespace' => 'shared', 'name_system' => 'acme', 'subdomain' => 'first']);
 
-        $error = $this->createExpectingFailure($package->id, [
+        $error = $this->createExpectingFailure($template->id, [
             'name' => 'Acme', 'namespace' => 'shared',
             'domainId' => $domain->id, 'subdomain' => 'second',
         ]);
@@ -170,23 +170,23 @@ class WorkspacesApiTest extends ControllerTestCase {
     }
 
     /**
-     * The package is a template: every specification in it becomes a deployment, carrying
-     * the package's defaults. This is the whole point of onboarding from a package.
+     * Every specification in it becomes a deployment, carrying
+     * the template's defaults. This is the whole point of onboarding from a template.
      */
-    public function testEverySpecificationInThePackageBecomesADeployment(): void {
+    public function testEverySpecificationInTheTemplateBecomesADeployment(): void {
         $domain = Fixtures::domain();
-        $package = Fixtures::deploymentPackage();
+        $template = Fixtures::workspaceTemplate();
         foreach (['api', 'worker'] as $name) {
             $specification = Fixtures::deploymentSpecification(['name' => $name]);
-            Fixtures::packageSpecification([
-                'deployment_package_id' => $package->id,
+            Fixtures::templateSpecification([
+                'workspace_template_id' => $template->id,
                 'deployment_specification_id' => $specification->id,
                 'default_version' => '3.1.4',
                 'default_replicas' => 2,
             ]);
         }
 
-        $body = $this->create($package->id, [
+        $body = $this->create($template->id, [
             'name' => 'Acme', 'namespace' => 'acme',
             'domainId' => $domain->id, 'subdomain' => 'acme',
         ]);
@@ -204,13 +204,13 @@ class WorkspacesApiTest extends ControllerTestCase {
 
     public function testADeploymentCanBeAddedToAnExistingWorkspace(): void {
         $domain = Fixtures::domain();
-        $package = Fixtures::deploymentPackage();
+        $template = Fixtures::workspaceTemplate();
         $specification = Fixtures::deploymentSpecification(['name' => 'extra']);
-        Fixtures::packageSpecification([
-            'deployment_package_id' => $package->id,
+        Fixtures::templateSpecification([
+            'workspace_template_id' => $template->id,
             'deployment_specification_id' => $specification->id,
         ]);
-        $workspace = $this->createWorkspace($package->id, $domain->id);
+        $workspace = $this->createWorkspace($template->id, $domain->id);
 
         $body = $this->decode($this->signedIn()->post(
             "workspaces/{$workspace->id}/deployments?" . http_build_query([
@@ -250,9 +250,9 @@ class WorkspacesApiTest extends ControllerTestCase {
      * an empty string is neither missing nor usable.
      */
     public function testADeploymentTheWorkspaceRefusesIsReportedWithItsReason(): void {
-        $package = Fixtures::deploymentPackage();
+        $template = Fixtures::workspaceTemplate();
         $workspace = Fixtures::workspace([
-            'deployment_package_id' => $package->id,
+            'workspace_template_id' => $template->id,
             'namespace' => 'acme',
         ]);
         $specification = Fixtures::deploymentSpecification(['name' => 'extra']);
@@ -631,25 +631,25 @@ class WorkspacesApiTest extends ControllerTestCase {
      * @param array<string, mixed> $parameters
      * @return array<string, mixed>
      */
-    private function create(int $packageId, array $parameters): array {
+    private function create(int $templateId, array $parameters): array {
         return $this->decode($this->signedIn()->post(
-            'workspaces/create?' . http_build_query(['deploymentPackageId' => $packageId] + $parameters)
+            'workspaces/create?' . http_build_query(['workspaceTemplateId' => $templateId] + $parameters)
         ));
     }
 
     /**
      * @param array<string, mixed> $parameters
      */
-    private function createExpectingFailure(int $packageId, array $parameters): string {
-        $body = $this->create($packageId, $parameters);
+    private function createExpectingFailure(int $templateId, array $parameters): string {
+        $body = $this->create($templateId, $parameters);
 
         $this->assertSame('ERROR', $body['status'], 'expected this to be refused');
 
         return $body['error'];
     }
 
-    private function createWorkspace(int $packageId, int $domainId): Workspace {
-        $body = $this->create($packageId, [
+    private function createWorkspace(int $templateId, int $domainId): Workspace {
+        $body = $this->create($templateId, [
             'name' => 'Acme', 'namespace' => 'acme',
             'domainId' => $domainId, 'subdomain' => 'acme',
         ]);

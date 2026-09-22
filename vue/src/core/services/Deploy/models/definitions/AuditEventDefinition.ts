@@ -1,13 +1,11 @@
 /**
  * Created by ModelParser
  */
-import {User} from '../User';
 import {BaseModel} from '../BaseModel';
 
 export class AuditEventDefinition extends BaseModel {
     created?: string;
     user_id?: number;
-    user?: User;
     client_id?: string;
     ip_address?: string;
     source?: string;
@@ -27,7 +25,6 @@ export class AuditEventDefinition extends BaseModel {
         if (!patch) {
             delete this.created;
             delete this.user_id;
-            delete this.user;
             delete this.client_id;
             delete this.ip_address;
             delete this.source;
@@ -45,9 +42,6 @@ export class AuditEventDefinition extends BaseModel {
         }
         if (data.user_id != null) {
             this.user_id = data.user_id;
-        }
-        if (data.user != null) {
-            this.user = new User(data.user);
         }
         if (data.client_id != null) {
             this.client_id = data.client_id;

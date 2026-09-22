@@ -1,7 +1,7 @@
 /**
  * Created by ModelParser
  */
-import {DeploymentPackage} from '../DeploymentPackage';
+import {WorkspaceTemplate} from '../WorkspaceTemplate';
 import {EmailService} from '../EmailService';
 import {Domain} from '../Domain';
 import {DatabaseService} from '../DatabaseService';
@@ -13,8 +13,8 @@ import {BaseModel} from '../BaseModel';
 
 export class WorkspaceDefinition extends BaseModel {
     type?: string;
-    deployment_package_id?: number;
-    deployment_package?: DeploymentPackage;
+    workspace_template_id?: number;
+    workspace_template?: WorkspaceTemplate;
     name_readable?: string;
     name_system?: string;
     namespace?: string;
@@ -48,8 +48,8 @@ export class WorkspaceDefinition extends BaseModel {
     public populate(data?: any, patch = false) {
         if (!patch) {
             delete this.type;
-            delete this.deployment_package_id;
-            delete this.deployment_package;
+            delete this.workspace_template_id;
+            delete this.workspace_template;
             delete this.name_readable;
             delete this.name_system;
             delete this.namespace;
@@ -80,11 +80,11 @@ export class WorkspaceDefinition extends BaseModel {
         if (data.type != null) {
             this.type = data.type;
         }
-        if (data.deployment_package_id != null) {
-            this.deployment_package_id = data.deployment_package_id;
+        if (data.workspace_template_id != null) {
+            this.workspace_template_id = data.workspace_template_id;
         }
-        if (data.deployment_package != null) {
-            this.deployment_package = new DeploymentPackage(data.deployment_package);
+        if (data.workspace_template != null) {
+            this.workspace_template = new WorkspaceTemplate(data.workspace_template);
         }
         if (data.name_readable != null) {
             this.name_readable = data.name_readable;

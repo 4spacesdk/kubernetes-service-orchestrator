@@ -315,29 +315,29 @@ bus.on('deploymentSpecificationUpdateVolumes', async input => {
 });
 
 
-bus.on('deploymentPackageEdit', async input => {
-    addComponent((await import('@/components/Dialogs/Setup/DeploymentPackages/DeploymentPackageEditDialog.vue')).default, input);
+bus.on('workspaceTemplateEdit', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/WorkspaceTemplates/WorkspaceTemplateEditDialog.vue')).default, input);
 });
-bus.on('deploymentPackageUpdateDeploymentSpecification', async input => {
-    addComponent((await import('@/components/Dialogs/Setup/DeploymentPackages/UpdateDialogs/DeploymentPackageUpdateDeploymentSpecificationDialog.vue')).default, input);
+bus.on('workspaceTemplateUpdateDeploymentSpecification', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/WorkspaceTemplates/UpdateDialogs/WorkspaceTemplateUpdateDeploymentSpecificationDialog.vue')).default, input);
 });
-bus.on('deploymentPackageUpdateDeploymentSpecifications', async input => {
-    addComponent((await import('@/components/Dialogs/Setup/DeploymentPackages/UpdateDialogs/DeploymentPackageUpdateDeploymentSpecificationsDialog.vue')).default, input);
+bus.on('workspaceTemplateUpdateDeploymentSpecifications', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/WorkspaceTemplates/UpdateDialogs/WorkspaceTemplateUpdateDeploymentSpecificationsDialog.vue')).default, input);
 });
-bus.on('deploymentPackageUpdateDeploymentSpecificationKNativeMinScaleSchedules', async input => {
-    addComponent((await import('@/components/Dialogs/Setup/DeploymentPackages/UpdateDialogs/DeploymentPackageUpdateDeploymentSpecificationKNativeMinScaleSchedulesDialog.vue')).default, input);
+bus.on('workspaceTemplateUpdateDeploymentSpecificationKNativeMinScaleSchedules', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/WorkspaceTemplates/UpdateDialogs/WorkspaceTemplateUpdateDeploymentSpecificationKNativeMinScaleSchedulesDialog.vue')).default, input);
 });
-bus.on('deploymentPackageUpdateEnvironmentVariables', async input => {
-    addComponent((await import('@/components/Dialogs/Setup/DeploymentPackages/UpdateDialogs/DeploymentPackageUpdateEnvironmentVariablesDialog.vue')).default, input);
+bus.on('workspaceTemplateUpdateEnvironmentVariables', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/WorkspaceTemplates/UpdateDialogs/WorkspaceTemplateUpdateEnvironmentVariablesDialog.vue')).default, input);
 });
-bus.on('deploymentPackageUpdateEnvironmentVariable', async input => {
-    addComponent((await import('@/components/Dialogs/Setup/DeploymentPackages/UpdateDialogs/DeploymentPackageUpdateEnvironmentVariableDialog.vue')).default, input);
+bus.on('workspaceTemplateUpdateEnvironmentVariable', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/WorkspaceTemplates/UpdateDialogs/WorkspaceTemplateUpdateEnvironmentVariableDialog.vue')).default, input);
 });
-bus.on('deploymentPackageUpdateLabels', async input => {
-    addComponent((await import('@/components/Dialogs/Setup/DeploymentPackages/UpdateDialogs/DeploymentPackageUpdateLabelsDialog.vue')).default, input);
+bus.on('workspaceTemplateUpdateLabels', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/WorkspaceTemplates/UpdateDialogs/WorkspaceTemplateUpdateLabelsDialog.vue')).default, input);
 });
-bus.on('deploymentPackageUpdateLabel', async input => {
-    addComponent((await import('@/components/Dialogs/Setup/DeploymentPackages/UpdateDialogs/DeploymentPackageUpdateLabelDialog.vue')).default, input);
+bus.on('workspaceTemplateUpdateLabel', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/WorkspaceTemplates/UpdateDialogs/WorkspaceTemplateUpdateLabelDialog.vue')).default, input);
 });
 
 

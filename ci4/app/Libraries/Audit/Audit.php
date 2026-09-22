@@ -53,7 +53,20 @@ final class Audit {
     private const int LongestValue = 2000;
 
     public static function Covers(Entity $entity): bool {
-        return !in_array($entity::class, self::NotAudited, true);
+        return !in_array($entity::class, self::NotAudited, true) && self::HasTrail();
+    }
+
+    private static bool $hasTrail = false;
+
+    /**
+     * Whether `audit_events` is there yet. A fresh installation saves its first rows in the
+     * migrations that come before the trail's own, and those are not changes anyone made.
+     * Only a yes is remembered: the table appears partway through a migration run.
+     */
+    private static function HasTrail(): bool {
+        // Uncached: the connection's list of tables would otherwise be taken before the
+        // migrations that follow have made theirs.
+        return self::$hasTrail = self::$hasTrail || Database::connect()->tableExists('audit_events', false);
     }
 
     private static int $savepoints = 0;
@@ -105,6 +118,10 @@ final class Audit {
      * @param int|null $userId who, when the request does not say - a sign-in, before it has one
      */
     public static function Record(string $action, Entity|array|null $resource = null, array $details = [], ?int $userId = null): void {
+        if (!self::HasTrail()) {
+            return;
+        }
+
         $actor = AuditContext::Current();
         if ($userId !== null) {
             $actor['user_id'] = $userId;

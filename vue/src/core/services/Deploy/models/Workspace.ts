@@ -4,7 +4,7 @@
  * Time: 12:33.
  */
 import {WorkspaceDefinition} from './definitions/WorkspaceDefinition';
-import {DeploymentPackage} from "@/core/services/Deploy/models/DeploymentPackage";
+import {WorkspaceTemplate} from "@/core/services/Deploy/models/WorkspaceTemplate";
 
 export class Workspace extends WorkspaceDefinition {
 
@@ -12,9 +12,9 @@ export class Workspace extends WorkspaceDefinition {
         super(json);
     }
 
-    public static CreateDefault(deploymentPackage: DeploymentPackage): Workspace {
+    public static CreateDefault(workspaceTemplate: WorkspaceTemplate): Workspace {
         const item = new Workspace();
-        item.domain_id = deploymentPackage.default_domain_id;
+        item.domain_id = workspaceTemplate.default_domain_id;
         return item;
     }
 

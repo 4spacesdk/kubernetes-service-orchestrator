@@ -116,7 +116,7 @@ class ListSortingApiTest extends ControllerTestCase {
             'migration_jobs' => ['id', 'status', 'deployment.name', 'started', 'ended'],
             'container_images' => ['name', 'url', 'pull_secret', 'container_registry.name', 'version_control_provider'],
             'database_services' => ['name', 'driver'],
-            'deployment_packages' => ['name'],
+            'workspace_templates' => ['name'],
             'deployment_specifications' => ['name', 'workload_type', 'network_type', 'enable_database', 'enable_rbac'],
             'deployments' => ['name', 'namespace', 'status', 'version', 'last_updated'],
             'domains' => ['name'],

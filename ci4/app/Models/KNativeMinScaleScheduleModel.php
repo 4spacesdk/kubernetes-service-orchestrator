@@ -19,10 +19,10 @@ class KNativeMinScaleScheduleModel extends Model implements ResourceModelInterfa
             'joinSelfAs' => 'knative_min_scale_schedule_id',
             'joinOtherAs' => 'deployment_id',
         ],
-        DeploymentPackageDeploymentSpecificationModel::class => [
-            'joinTable' => 'deployment_package_ds_knative_min_scale_schedules',
+        WorkspaceTemplateDeploymentSpecificationModel::class => [
+            'joinTable' => 'workspace_template_ds_knative_min_scale_schedules',
             'joinSelfAs' => 'knative_min_scale_schedule_id',
-            'joinOtherAs' => 'deployment_package_deployment_specification_id',
+            'joinOtherAs' => 'workspace_template_deployment_specification_id',
         ],
     ];
 
@@ -53,7 +53,7 @@ class KNativeMinScaleScheduleModel extends Model implements ResourceModelInterfa
     public function ignoredRestGetOnRelations(): array {
         return [
             DeploymentModel::class,
-            DeploymentPackageDeploymentSpecificationModel::class,
+            WorkspaceTemplateDeploymentSpecificationModel::class,
         ];
     }
 

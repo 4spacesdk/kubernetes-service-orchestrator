@@ -18,7 +18,7 @@ class WorkspaceModel extends Model implements ResourceModelInterface {
         EmailServiceModel::class,
         DomainModel::class,
         DatabaseServiceModel::class,
-        DeploymentPackageModel::class,
+        WorkspaceTemplateModel::class,
     ];
 
     public $hasMany = [

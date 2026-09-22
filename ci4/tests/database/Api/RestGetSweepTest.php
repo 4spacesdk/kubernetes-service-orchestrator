@@ -485,7 +485,7 @@ class RestGetSweepTest extends ControllerTestCase {
                 'webhook_secret' => 'sweep-webhook-secret',
             ])->id,
             'database_services' => Fixtures::databaseService(['pass' => 'sweep-db-password'])->id,
-            'deployment_packages' => Fixtures::deploymentPackage()->id,
+            'workspace_templates' => Fixtures::workspaceTemplate()->id,
             'deployment_specifications' => Fixtures::deploymentSpecification()->id,
             'deployments' => $deployment->id,
             'domains' => Fixtures::domain()->id,

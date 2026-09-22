@@ -18,7 +18,6 @@ class UserModel extends \RestExtension\Models\UserModel implements ResourceModel
             'joinSelfAs' => 'user_id',
         ],
         RbacRoleModel::class,
-        AuditEventModel::class,
     ];
 
     public function preRestGet($queryParser, $id) {

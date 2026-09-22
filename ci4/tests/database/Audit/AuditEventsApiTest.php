@@ -15,12 +15,12 @@ class AuditEventsApiTest extends ControllerTestCase {
         $this->withBodyFormat('json')->signedIn()->patch("database_services/{$service->id}", ['host' => 'new.internal']);
 
         $body = $this->decode($this->signedIn()->get(
-            "audit_events?filter=resource_type:DatabaseService,resource_id:{$service->id}&ordering=id&include=user"
+            "audit_events?filter=resource_type:DatabaseService,resource_id:{$service->id}&ordering=id"
         ));
 
         $this->assertSame('OK', $body['status'], json_encode($body));
         $this->assertSame(['created', 'updated'], array_column($body['resources'], 'action'));
-        $this->assertSame($this->signedInUserId(), (int) $body['resources'][1]['user']['id']);
+        $this->assertSame($this->signedInUserId(), (int) $body['resources'][1]['user_id']);
         $this->assertSame(['old.internal', 'new.internal'], json_decode($body['resources'][1]['details'], true)['changes']['host']);
     }
 

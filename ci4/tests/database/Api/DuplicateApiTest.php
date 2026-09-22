@@ -6,7 +6,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use RestExtension\Exceptions\UnauthorizedException;
 
 /**
- * A copy of a deployment specification or a deployment package, made on the server.
+ * A copy of a deployment specification or a workspace template, made on the server.
  *
  * A specification is mostly child collections, edited in dialogs of their own that need a
  * saved row to write to - which is why this cannot be done in the browser, as the copy
@@ -19,7 +19,7 @@ use RestExtension\Exceptions\UnauthorizedException;
  * which is what copying a gateway in the browser nearly did to its addresses.
  *
  * The last test in each half is a guard: every table that belongs to a specification or a
- * package has to be listed here as copied or as deliberately not, so a new child collection
+ * template has to be listed here as copied or as deliberately not, so a new child collection
  * cannot be left out of a copy by accident.
  */
 class DuplicateApiTest extends ControllerTestCase {
@@ -128,18 +128,18 @@ class DuplicateApiTest extends ControllerTestCase {
 
     /**
      * A copy is a new recipe. The deployments made from the original stay the original's,
-     * and the copy is in no package until someone puts it in one.
+     * and the copy is in no template until someone puts it in one.
      */
-    public function testNeitherTheDeploymentsNorThePackagesComeAlong(): void {
+    public function testNeitherTheDeploymentsNorTheTemplatesComeAlong(): void {
         $original = Fixtures::deploymentSpecification();
         Fixtures::deployment(['deployment_specification_id' => $original->id]);
-        $package = Fixtures::deploymentPackage();
-        Fixtures::packageSpecification(['deployment_package_id' => $package->id, 'deployment_specification_id' => $original->id]);
+        $template = Fixtures::workspaceTemplate();
+        Fixtures::templateSpecification(['workspace_template_id' => $template->id, 'deployment_specification_id' => $original->id]);
 
         $copy = $this->duplicate("deployment-specifications/{$original->id}");
 
         $this->assertSame(0, $this->db->table('deployments')->where('deployment_specification_id', $copy['id'])->countAllResults());
-        $this->assertSame(0, $this->db->table('deployment_package_deployment_specifications')->where('deployment_specification_id', $copy['id'])->countAllResults());
+        $this->assertSame(0, $this->db->table('workspace_template_deployment_specifications')->where('deployment_specification_id', $copy['id'])->countAllResults());
     }
 
     public function testAnUnknownSpecificationIsRefusedAndNothingIsWritten(): void {
@@ -165,7 +165,7 @@ class DuplicateApiTest extends ControllerTestCase {
                 'deployment_specification_ingresses',   // copied, with its children
                 'deployment_specifications_labels',     // copied as new labels
                 'deployments',                          // not copied, see above
-                'deployment_package_deployment_specifications', // not copied, see above
+                'workspace_template_deployment_specifications', // not copied, see above
                 'k8s_cron_jobs',                        // an unused column from before the link table - never written
             ]),
             $this->tablesWithColumn('deployment_specification_id'),
@@ -176,46 +176,46 @@ class DuplicateApiTest extends ControllerTestCase {
 
     // </editor-fold>
 
-    // <editor-fold desc="Packages">
+    // <editor-fold desc="Templates">
 
-    public function testAPackageCopyIsNamedAsACopyWithANamespaceKubernetesAccepts(): void {
-        $original = Fixtures::deploymentPackage(['name' => 'Klartboard', 'namespace' => 'klartboard']);
+    public function testATemplateCopyIsNamedAsACopyWithANamespaceKubernetesAccepts(): void {
+        $original = Fixtures::workspaceTemplate(['name' => 'Klartboard', 'namespace' => 'klartboard']);
 
-        $copy = $this->duplicate("deployment-packages/{$original->id}");
+        $copy = $this->duplicate("workspace-templates/{$original->id}");
 
         $this->assertSame('Klartboard (copy)', $copy['name']);
         $this->assertSame('klartboard-copy', $copy['namespace']);
     }
 
     public function testAnEmptyNamespaceStaysEmpty(): void {
-        $original = Fixtures::deploymentPackage(['namespace' => '']);
+        $original = Fixtures::workspaceTemplate(['namespace' => '']);
 
-        $copy = $this->duplicate("deployment-packages/{$original->id}");
+        $copy = $this->duplicate("workspace-templates/{$original->id}");
 
         $this->assertSame('', $copy['namespace']);
     }
 
-    public function testThePackageKeepsEveryOtherColumn(): void {
-        $original = Fixtures::deploymentPackage();
-        $this->fillEveryColumn('deployment_packages', $original->id, except: ['name', 'namespace']);
+    public function testTheTemplateKeepsEveryOtherColumn(): void {
+        $original = Fixtures::workspaceTemplate();
+        $this->fillEveryColumn('workspace_templates', $original->id, except: ['name', 'namespace']);
 
-        $copy = $this->duplicate("deployment-packages/{$original->id}");
+        $copy = $this->duplicate("workspace-templates/{$original->id}");
 
         $this->assertSame(
-            $this->content('deployment_packages', 'id', $original->id, ['name', 'namespace']),
-            $this->content('deployment_packages', 'id', $copy['id'], ['name', 'namespace']),
+            $this->content('workspace_templates', 'id', $original->id, ['name', 'namespace']),
+            $this->content('workspace_templates', 'id', $copy['id'], ['name', 'namespace']),
         );
     }
 
     public function testEnvironmentVariablesAreCopiedAndTheOriginalKeepsThem(): void {
-        $original = Fixtures::deploymentPackage();
-        $this->insertFilledRow('deployment_package_environment_variables', ['deployment_package_id' => $original->id]);
-        $before = $this->content('deployment_package_environment_variables', 'deployment_package_id', $original->id);
+        $original = Fixtures::workspaceTemplate();
+        $this->insertFilledRow('workspace_template_environment_variables', ['workspace_template_id' => $original->id]);
+        $before = $this->content('workspace_template_environment_variables', 'workspace_template_id', $original->id);
 
-        $copy = $this->duplicate("deployment-packages/{$original->id}");
+        $copy = $this->duplicate("workspace-templates/{$original->id}");
 
-        $this->assertSame($before, $this->content('deployment_package_environment_variables', 'deployment_package_id', $original->id));
-        $this->assertSame($before, $this->content('deployment_package_environment_variables', 'deployment_package_id', $copy['id']));
+        $this->assertSame($before, $this->content('workspace_template_environment_variables', 'workspace_template_id', $original->id));
+        $this->assertSame($before, $this->content('workspace_template_environment_variables', 'workspace_template_id', $copy['id']));
     }
 
     /**
@@ -223,75 +223,75 @@ class DuplicateApiTest extends ControllerTestCase {
      * min scale schedules. None of those three is itself copied.
      */
     public function testTheSpecificationsAreSharedAndTheirDefaultsCopied(): void {
-        $original = Fixtures::deploymentPackage();
+        $original = Fixtures::workspaceTemplate();
         $specification = Fixtures::deploymentSpecification();
-        $this->insertFilledRow('deployment_package_deployment_specifications', [
-            'deployment_package_id' => $original->id,
+        $this->insertFilledRow('workspace_template_deployment_specifications', [
+            'workspace_template_id' => $original->id,
             'deployment_specification_id' => $specification->id,
         ]);
-        $row = $this->db->table('deployment_package_deployment_specifications')->where('deployment_package_id', $original->id)->get()->getRow();
+        $row = $this->db->table('workspace_template_deployment_specifications')->where('workspace_template_id', $original->id)->get()->getRow();
         $schedule = Fixtures::minScaleSchedule();
-        $this->db->table('deployment_package_ds_knative_min_scale_schedules')->insert([
-            'deployment_package_deployment_specification_id' => $row->id,
+        $this->db->table('workspace_template_ds_knative_min_scale_schedules')->insert([
+            'workspace_template_deployment_specification_id' => $row->id,
             'knative_min_scale_schedule_id' => $schedule->id,
         ]);
         $specifications = $this->db->table('deployment_specifications')->countAllResults();
         $schedules = $this->db->table('knative_min_scale_schedules')->countAllResults();
 
-        $copy = $this->duplicate("deployment-packages/{$original->id}");
+        $copy = $this->duplicate("workspace-templates/{$original->id}");
 
         $this->assertSame(
-            $this->content('deployment_package_deployment_specifications', 'deployment_package_id', $original->id),
-            $this->content('deployment_package_deployment_specifications', 'deployment_package_id', $copy['id']),
+            $this->content('workspace_template_deployment_specifications', 'workspace_template_id', $original->id),
+            $this->content('workspace_template_deployment_specifications', 'workspace_template_id', $copy['id']),
         );
-        $copiedRow = $this->db->table('deployment_package_deployment_specifications')->where('deployment_package_id', $copy['id'])->get()->getRow();
+        $copiedRow = $this->db->table('workspace_template_deployment_specifications')->where('workspace_template_id', $copy['id'])->get()->getRow();
         $this->assertSame(
             [(string) $schedule->id],
-            array_column($this->db->table('deployment_package_ds_knative_min_scale_schedules')
-                ->where('deployment_package_deployment_specification_id', $copiedRow->id)->get()->getResultArray(), 'knative_min_scale_schedule_id'),
+            array_column($this->db->table('workspace_template_ds_knative_min_scale_schedules')
+                ->where('workspace_template_deployment_specification_id', $copiedRow->id)->get()->getResultArray(), 'knative_min_scale_schedule_id'),
         );
-        $this->assertSame(1, $this->db->table('deployment_package_ds_knative_min_scale_schedules')
-            ->where('deployment_package_deployment_specification_id', $row->id)->countAllResults(), 'the original lost its schedule');
+        $this->assertSame(1, $this->db->table('workspace_template_ds_knative_min_scale_schedules')
+            ->where('workspace_template_deployment_specification_id', $row->id)->countAllResults(), 'the original lost its schedule');
         $this->assertSame($specifications, $this->db->table('deployment_specifications')->countAllResults(), 'no specification was copied');
         $this->assertSame($schedules, $this->db->table('knative_min_scale_schedules')->countAllResults(), 'no schedule was copied');
     }
 
-    public function testThePackageCopyHasLabelsOfItsOwn(): void {
-        $original = Fixtures::deploymentPackage();
-        $this->putValues("deployment-packages/{$original->id}/labels", [['name' => 'tier', 'value' => 'gold']]);
+    public function testTheTemplateCopyHasLabelsOfItsOwn(): void {
+        $original = Fixtures::workspaceTemplate();
+        $this->putValues("workspace-templates/{$original->id}/labels", [['name' => 'tier', 'value' => 'gold']]);
 
-        $copy = $this->duplicate("deployment-packages/{$original->id}");
-        $this->putValues("deployment-packages/{$copy['id']}/labels", []);
+        $copy = $this->duplicate("workspace-templates/{$original->id}");
+        $this->putValues("workspace-templates/{$copy['id']}/labels", []);
 
-        $this->assertSame([['tier', 'gold']], $this->labels('deployment_packages_labels', 'deployment_package_id', $original->id));
+        $this->assertSame([['tier', 'gold']], $this->labels('labels_workspace_templates', 'workspace_template_id', $original->id));
     }
 
-    public function testTheWorkspacesMadeFromThePackageStayWithTheOriginal(): void {
-        $original = Fixtures::deploymentPackage();
-        Fixtures::workspace(['deployment_package_id' => $original->id]);
+    public function testTheWorkspacesMadeFromTheTemplateStayWithTheOriginal(): void {
+        $original = Fixtures::workspaceTemplate();
+        Fixtures::workspace(['workspace_template_id' => $original->id]);
 
-        $copy = $this->duplicate("deployment-packages/{$original->id}");
+        $copy = $this->duplicate("workspace-templates/{$original->id}");
 
-        $this->assertSame(0, $this->db->table('workspaces')->where('deployment_package_id', $copy['id'])->countAllResults());
+        $this->assertSame(0, $this->db->table('workspaces')->where('workspace_template_id', $copy['id'])->countAllResults());
     }
 
-    public function testAnUnknownPackageIsRefused(): void {
-        $body = $this->decode($this->signedIn()->post('deployment-packages/999999/duplicate'));
+    public function testAnUnknownTemplateIsRefused(): void {
+        $body = $this->decode($this->signedIn()->post('workspace-templates/999999/duplicate'));
 
         $this->assertNotSame('OK', $body['status']);
     }
 
-    public function testEveryTableThatBelongsToAPackageIsAccountedFor(): void {
+    public function testEveryTableThatBelongsToATemplateIsAccountedFor(): void {
         $this->assertSame(
             $this->sorted([
-                'deployment_package_environment_variables',     // copied
-                'deployment_package_deployment_specifications', // copied, pointing at the same specifications
-                'deployment_packages_labels',                   // copied as new labels
+                'workspace_template_environment_variables',     // copied
+                'workspace_template_deployment_specifications', // copied, pointing at the same specifications
+                'labels_workspace_templates',                   // copied as new labels
                 'workspaces',                                   // not copied
             ]),
-            $this->tablesWithColumn('deployment_package_id'),
-            'A table was added or removed. Decide whether a copy of a package should carry it, '
-            . 'then update DeploymentPackage::duplicate() and this list.'
+            $this->tablesWithColumn('workspace_template_id'),
+            'A table was added or removed. Decide whether a copy of a template should carry it, '
+            . 'then update WorkspaceTemplate::duplicate() and this list.'
         );
     }
 

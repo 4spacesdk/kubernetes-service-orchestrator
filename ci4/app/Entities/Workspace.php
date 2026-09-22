@@ -8,8 +8,8 @@ use App\Libraries\Push\ChangeEvent;
 use App\Libraries\Push\Events;
 use App\Libraries\Push\Publisher;
 use App\Models\DeploymentModel;
-use App\Models\DeploymentPackageDeploymentSpecificationModel;
-use App\Models\DeploymentPackageEnvironmentVariableModel;
+use App\Models\WorkspaceTemplateDeploymentSpecificationModel;
+use App\Models\WorkspaceTemplateEnvironmentVariableModel;
 use App\Models\KNativeMinScaleScheduleModel;
 use App\Models\WorkspaceModel;
 use DebugTool\Data;
@@ -20,8 +20,8 @@ use App\Core\Entity;
  * Class Workspace
  * @package App\Entities
  * @property string $type
- * @property int $deployment_package_id
- * @property DeploymentPackage $deployment_package
+ * @property int $workspace_template_id
+ * @property WorkspaceTemplate $workspace_template
  * @property string $name_readable
  * @property string $name_system
  * @property string $namespace
@@ -47,9 +47,9 @@ class Workspace extends Entity {
      * @throws ApiException
      * @throws \Google\ApiCore\ValidationException
      */
-    public static function Create(DeploymentPackage $deploymentPackage, string $name, string $namespace, int $domainId, string $subdomain): ?Workspace {
-        if (!$deploymentPackage->exists()) {
-            throw new ValidationException("Invalid deployment package");
+    public static function Create(WorkspaceTemplate $workspaceTemplate, string $name, string $namespace, int $domainId, string $subdomain): ?Workspace {
+        if (!$workspaceTemplate->exists()) {
+            throw new ValidationException("Invalid workspace template");
         }
         if (strlen($name) == 0) {
             throw new ValidationException("Name missing");
@@ -83,8 +83,8 @@ class Workspace extends Entity {
         }
 
         $item = new Workspace();
-        $item->deployment_package_id = $deploymentPackage->id;
-        $item->deployment_package = $deploymentPackage;
+        $item->workspace_template_id = $workspaceTemplate->id;
+        $item->workspace_template = $workspaceTemplate;
         $item->name_readable = $name;
 
         // "Øster" used to become "ster": strtolower() does not know Ø, and what it left was
@@ -94,8 +94,8 @@ class Workspace extends Entity {
         $item->namespace = $namespace;
         $item->domain_id = $domainId;
         $item->subdomain = $subdomain;
-        $item->email_service_id = $deploymentPackage->default_email_service_id;
-        $item->database_service_id = $deploymentPackage->default_database_service_id;
+        $item->email_service_id = $workspaceTemplate->default_email_service_id;
+        $item->database_service_id = $workspaceTemplate->default_database_service_id;
 
         /** @var Workspace $workspaceNameInUse */
         $workspaceNameInUse = (new WorkspaceModel())
@@ -109,19 +109,19 @@ class Workspace extends Entity {
         $item->save();
 
         // Create labels
-        $deploymentPackage->labels->find();
-        foreach ($deploymentPackage->labels as $label) {
+        $workspaceTemplate->labels->find();
+        foreach ($workspaceTemplate->labels as $label) {
             $newLabel = Label::Create($label->name, $label->value);
             $newLabel->save($item);
         }
 
         // Create deployments
-        /** @var DeploymentPackageDeploymentSpecification $deploymentPackageDeploymentSpecifications */
-        $deploymentPackageDeploymentSpecifications = (new DeploymentPackageDeploymentSpecificationModel())
-            ->where('deployment_package_id', $deploymentPackage->id)
+        /** @var WorkspaceTemplateDeploymentSpecification $workspaceTemplateDeploymentSpecifications */
+        $workspaceTemplateDeploymentSpecifications = (new WorkspaceTemplateDeploymentSpecificationModel())
+            ->where('workspace_template_id', $workspaceTemplate->id)
             ->find();
-        foreach ($deploymentPackageDeploymentSpecifications as $deploymentPackageDeploymentSpecification) {
-            $deployment = $item->createDeploymentFromPackage($deploymentPackageDeploymentSpecification);
+        foreach ($workspaceTemplateDeploymentSpecifications as $workspaceTemplateDeploymentSpecification) {
+            $deployment = $item->createDeploymentFromTemplate($workspaceTemplateDeploymentSpecification);
             $item->deployments->add($deployment);
         }
 
@@ -139,14 +139,14 @@ class Workspace extends Entity {
      * @throws ApiException
      */
     public function addDeployment(DeploymentSpecification $deploymentSpecification, ?string $name, ?string $version): ?Deployment {
-        // Check if this spec is part of the workspace deployment package
-        /** @var DeploymentPackageDeploymentSpecification $deploymentPackageDeploymentSpecification */
-        $deploymentPackageDeploymentSpecification = (new DeploymentPackageDeploymentSpecificationModel())
-            ->where('deployment_package_id', $this->deployment_package_id)
+        // Check if this spec is part of the workspace's template
+        /** @var WorkspaceTemplateDeploymentSpecification $workspaceTemplateDeploymentSpecification */
+        $workspaceTemplateDeploymentSpecification = (new WorkspaceTemplateDeploymentSpecificationModel())
+            ->where('workspace_template_id', $this->workspace_template_id)
             ->where('deployment_specification_id', $deploymentSpecification->id)
             ->find();
-        if ($deploymentPackageDeploymentSpecification->exists()) {
-            return $this->createDeploymentFromPackage($deploymentPackageDeploymentSpecification, $name, $version);
+        if ($workspaceTemplateDeploymentSpecification->exists()) {
+            return $this->createDeploymentFromTemplate($workspaceTemplateDeploymentSpecification, $name, $version);
         } else {
             $deployment = $this->prepareDeploymentFromSpecification($deploymentSpecification, $name, $version);
             $deployment->save();
@@ -155,17 +155,17 @@ class Workspace extends Entity {
     }
 
     /**
-     * @param DeploymentPackageDeploymentSpecification $deploymentPackageDeploymentSpecification
+     * @param WorkspaceTemplateDeploymentSpecification $workspaceTemplateDeploymentSpecification
      * @return Deployment
      * @throws ValidationException
      * @throws ApiException
      * @throws \Google\ApiCore\ValidationException
      */
-    public function createDeploymentFromPackage(DeploymentPackageDeploymentSpecification $deploymentPackageDeploymentSpecification, ?string $name = null, ?string $version = null): Deployment {
-        if (!$deploymentPackageDeploymentSpecification->deployment_specification->exists()) {
-            $deploymentPackageDeploymentSpecification->deployment_specification->find();
+    public function createDeploymentFromTemplate(WorkspaceTemplateDeploymentSpecification $workspaceTemplateDeploymentSpecification, ?string $name = null, ?string $version = null): Deployment {
+        if (!$workspaceTemplateDeploymentSpecification->deployment_specification->exists()) {
+            $workspaceTemplateDeploymentSpecification->deployment_specification->find();
         }
-        $deploymentSpecification = $deploymentPackageDeploymentSpecification->deployment_specification;
+        $deploymentSpecification = $workspaceTemplateDeploymentSpecification->deployment_specification;
 
         $deployment = $this->prepareDeploymentFromSpecification($deploymentSpecification, $name);
 
@@ -173,8 +173,8 @@ class Workspace extends Entity {
             default:
                 if ($version) {
                     $deployment->version = $version;
-                } else if (strlen($deploymentPackageDeploymentSpecification->default_version)) {
-                    $deployment->version = $deploymentPackageDeploymentSpecification->default_version;
+                } else if (strlen($workspaceTemplateDeploymentSpecification->default_version)) {
+                    $deployment->version = $workspaceTemplateDeploymentSpecification->default_version;
                 } else  {
                     // Find newest version
                     if (!$deploymentSpecification->container_image->exists()) {
@@ -190,19 +190,19 @@ class Workspace extends Entity {
                     $tags = array_filter($tags, fn($tag) => !str_contains($tag, 'latest'));
                     $deployment->version = end($tags);
                 }
-                $deployment->auto_update_enabled = $deploymentPackageDeploymentSpecification->default_auto_update_enabled;
-                $deployment->auto_update_tag_regex = $deploymentPackageDeploymentSpecification->default_auto_update_tag_regex;
-                $deployment->auto_update_require_approval = $deploymentPackageDeploymentSpecification->default_auto_update_require_approval;
-                $deployment->environment = $deploymentPackageDeploymentSpecification->default_environment;
+                $deployment->auto_update_enabled = $workspaceTemplateDeploymentSpecification->default_auto_update_enabled;
+                $deployment->auto_update_tag_regex = $workspaceTemplateDeploymentSpecification->default_auto_update_tag_regex;
+                $deployment->auto_update_require_approval = $workspaceTemplateDeploymentSpecification->default_auto_update_require_approval;
+                $deployment->environment = $workspaceTemplateDeploymentSpecification->default_environment;
 
-                $deployment->cpu_request = $deploymentPackageDeploymentSpecification->default_cpu_request;
-                $deployment->cpu_limit = $deploymentPackageDeploymentSpecification->default_cpu_limit;
-                $deployment->memory_request = $deploymentPackageDeploymentSpecification->default_memory_request;
-                $deployment->memory_limit = $deploymentPackageDeploymentSpecification->default_memory_limit;
-                $deployment->replicas = $deploymentPackageDeploymentSpecification->default_replicas;
-                $deployment->knative_concurrency_limit_soft = $deploymentPackageDeploymentSpecification->default_knative_concurrency_limit_soft;
-                $deployment->knative_concurrency_limit_hard = $deploymentPackageDeploymentSpecification->default_knative_concurrency_limit_hard;
-                $deployment->knative_scheduled_minscale_is_enabled = $deploymentPackageDeploymentSpecification->default_knative_scheduled_minscale_is_enabled;
+                $deployment->cpu_request = $workspaceTemplateDeploymentSpecification->default_cpu_request;
+                $deployment->cpu_limit = $workspaceTemplateDeploymentSpecification->default_cpu_limit;
+                $deployment->memory_request = $workspaceTemplateDeploymentSpecification->default_memory_request;
+                $deployment->memory_limit = $workspaceTemplateDeploymentSpecification->default_memory_limit;
+                $deployment->replicas = $workspaceTemplateDeploymentSpecification->default_replicas;
+                $deployment->knative_concurrency_limit_soft = $workspaceTemplateDeploymentSpecification->default_knative_concurrency_limit_soft;
+                $deployment->knative_concurrency_limit_hard = $workspaceTemplateDeploymentSpecification->default_knative_concurrency_limit_hard;
+                $deployment->knative_scheduled_minscale_is_enabled = $workspaceTemplateDeploymentSpecification->default_knative_scheduled_minscale_is_enabled;
                 break;
             case \WorkloadTypes::CustomResource:
                 break;
@@ -210,19 +210,19 @@ class Workspace extends Entity {
 
         $deployment->save();
 
-        // Copy environment variables from deployment package to deployment
-        /** @var DeploymentPackageEnvironmentVariable $deploymentPackageEnvironmentVariables */
-        $deploymentPackageEnvironmentVariables = (new DeploymentPackageEnvironmentVariableModel())
-            ->where('deployment_package_id', $deploymentPackageDeploymentSpecification->deployment_package_id)
+        // Copy environment variables from workspace template to deployment
+        /** @var WorkspaceTemplateEnvironmentVariable $workspaceTemplateEnvironmentVariables */
+        $workspaceTemplateEnvironmentVariables = (new WorkspaceTemplateEnvironmentVariableModel())
+            ->where('workspace_template_id', $workspaceTemplateDeploymentSpecification->workspace_template_id)
             ->find();
         $values = new EnvironmentVariable();
         $values->all = array_map(
-            fn(DeploymentPackageEnvironmentVariable $deploymentPackageEnvironmentVariable) => EnvironmentVariable::Create(
-                $deploymentPackageEnvironmentVariable->name,
-                $deploymentPackageEnvironmentVariable->value,
-                (bool) $deploymentPackageEnvironmentVariable->is_secret
+            fn(WorkspaceTemplateEnvironmentVariable $workspaceTemplateEnvironmentVariable) => EnvironmentVariable::Create(
+                $workspaceTemplateEnvironmentVariable->name,
+                $workspaceTemplateEnvironmentVariable->value,
+                (bool) $workspaceTemplateEnvironmentVariable->is_secret
             ),
-            $deploymentPackageEnvironmentVariables->all ?? []
+            $workspaceTemplateEnvironmentVariables->all ?? []
         );
         $deployment->save($values);
 
@@ -234,10 +234,10 @@ class Workspace extends Entity {
         }
 
         if ($deployment->knative_scheduled_minscale_is_enabled) {
-            if (!$deploymentPackageDeploymentSpecification->k_native_min_scale_schedules->exists()) {
-                $deploymentPackageDeploymentSpecification->k_native_min_scale_schedules->find();
+            if (!$workspaceTemplateDeploymentSpecification->k_native_min_scale_schedules->exists()) {
+                $workspaceTemplateDeploymentSpecification->k_native_min_scale_schedules->find();
             }
-            foreach ($deploymentPackageDeploymentSpecification->k_native_min_scale_schedules as $kNativeMinScaleSchedule) {
+            foreach ($workspaceTemplateDeploymentSpecification->k_native_min_scale_schedules as $kNativeMinScaleSchedule) {
                 $kNativeMinScaleSchedule->id = null;
                 $kNativeMinScaleSchedule->save();
                 $deployment->save($kNativeMinScaleSchedule);

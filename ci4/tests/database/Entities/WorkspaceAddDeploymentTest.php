@@ -10,7 +10,7 @@ use App\Fixtures;
  * Adding a deployment to a workspace that already exists.
  *
  * There are two ways in, and which one is taken is decided silently: if the specification
- * belongs to the workspace's own deployment package, the deployment inherits the package's
+ * belongs to the workspace's own workspace template, the deployment inherits the template's
  * defaults. If it does not, it is built from the specification alone and gets none of them.
  * Both produce a deployment and neither says which path it took, so the difference only
  * shows up later as a workspace running on one replica when it was supposed to have three.
@@ -18,19 +18,19 @@ use App\Fixtures;
 class WorkspaceAddDeploymentTest extends DatabaseTestCase {
 
     /**
-     * In the package: the defaults come with it.
+     * In the template: the defaults come with it.
      */
-    public function testASpecificationFromThePackageBringsThePackageDefaults(): void {
-        $package = Fixtures::deploymentPackage();
+    public function testASpecificationFromTheTemplateBringsTheTemplateDefaults(): void {
+        $template = Fixtures::workspaceTemplate();
         $specification = Fixtures::deploymentSpecification(['name' => 'api']);
-        Fixtures::packageSpecification([
-            'deployment_package_id' => $package->id,
+        Fixtures::templateSpecification([
+            'workspace_template_id' => $template->id,
             'deployment_specification_id' => $specification->id,
             'default_version' => '3.1.4',
             'default_replicas' => 3,
             'default_cpu_limit' => 500,
         ]);
-        $workspace = $this->workspaceOnPackage($package->id);
+        $workspace = $this->workspaceOnTemplate($template->id);
 
         $deployment = $workspace->addDeployment($specification, null, null);
 
@@ -40,13 +40,13 @@ class WorkspaceAddDeploymentTest extends DatabaseTestCase {
     }
 
     /**
-     * Not in the package: the same call gives a bare deployment. No version, and the
+     * Not in the template: the same call gives a bare deployment. No version, and the
      * replica count is the one `Deployment::Prepare()` hardcodes.
      */
-    public function testASpecificationOutsideThePackageGetsNoDefaults(): void {
-        $package = Fixtures::deploymentPackage();
-        $workspace = $this->workspaceOnPackage($package->id);
-        $specification = Fixtures::deploymentSpecification(['name' => 'not-in-the-package']);
+    public function testASpecificationOutsideTheTemplateGetsNoDefaults(): void {
+        $template = Fixtures::workspaceTemplate();
+        $workspace = $this->workspaceOnTemplate($template->id);
+        $specification = Fixtures::deploymentSpecification(['name' => 'not-in-the-template']);
 
         $deployment = $workspace->addDeployment($specification, null, null);
 
@@ -56,18 +56,18 @@ class WorkspaceAddDeploymentTest extends DatabaseTestCase {
     }
 
     /**
-     * An explicit version wins over the package's default, which is how a workspace is
-     * pinned to something other than what the package says.
+     * An explicit version wins over the template's default, which is how a workspace is
+     * pinned to something other than what the template says.
      */
-    public function testAnExplicitVersionOverridesThePackageDefault(): void {
-        $package = Fixtures::deploymentPackage();
+    public function testAnExplicitVersionOverridesTheTemplateDefault(): void {
+        $template = Fixtures::workspaceTemplate();
         $specification = Fixtures::deploymentSpecification(['name' => 'api']);
-        Fixtures::packageSpecification([
-            'deployment_package_id' => $package->id,
+        Fixtures::templateSpecification([
+            'workspace_template_id' => $template->id,
             'deployment_specification_id' => $specification->id,
             'default_version' => '3.1.4',
         ]);
-        $workspace = $this->workspaceOnPackage($package->id);
+        $workspace = $this->workspaceOnTemplate($template->id);
 
         $deployment = $workspace->addDeployment($specification, null, '9.9.9');
 
@@ -75,7 +75,7 @@ class WorkspaceAddDeploymentTest extends DatabaseTestCase {
     }
 
     public function testTheDeploymentTakesItsNamespaceAndWorkspaceFromTheWorkspace(): void {
-        $workspace = $this->workspaceOnPackage(Fixtures::deploymentPackage()->id, ['namespace' => 'acme']);
+        $workspace = $this->workspaceOnTemplate(Fixtures::workspaceTemplate()->id, ['namespace' => 'acme']);
         $specification = Fixtures::deploymentSpecification(['name' => 'api']);
 
         $deployment = $workspace->addDeployment($specification, null, null);
@@ -90,7 +90,7 @@ class WorkspaceAddDeploymentTest extends DatabaseTestCase {
      * most deployments are called the same as the thing they run.
      */
     public function testTheNameFallsBackToTheSpecificationName(): void {
-        $workspace = $this->workspaceOnPackage(Fixtures::deploymentPackage()->id);
+        $workspace = $this->workspaceOnTemplate(Fixtures::workspaceTemplate()->id);
         $specification = Fixtures::deploymentSpecification(['name' => 'from-the-specification']);
 
         $named = $workspace->addDeployment($specification, 'chosen-name', null);
@@ -105,7 +105,7 @@ class WorkspaceAddDeploymentTest extends DatabaseTestCase {
      * deployment knows what to run before anyone picks a version.
      */
     public function testTheImageComesFromTheSpecificationsContainerImage(): void {
-        $workspace = $this->workspaceOnPackage(Fixtures::deploymentPackage()->id);
+        $workspace = $this->workspaceOnTemplate(Fixtures::workspaceTemplate()->id);
         $containerImage = Fixtures::containerImage([
             'url' => 'registry.example.org/team/api',
             'default_image_pull_policy' => \ImagePullPolicies::Always,
@@ -128,8 +128,8 @@ class WorkspaceAddDeploymentTest extends DatabaseTestCase {
      */
     public function testTheDatabaseServiceIsInheritedOnlyWhenTheSpecificationWantsOne(): void {
         $databaseService = Fixtures::databaseService();
-        $workspace = $this->workspaceOnPackage(
-            Fixtures::deploymentPackage()->id,
+        $workspace = $this->workspaceOnTemplate(
+            Fixtures::workspaceTemplate()->id,
             ['database_service_id' => $databaseService->id]
         );
 
@@ -153,7 +153,7 @@ class WorkspaceAddDeploymentTest extends DatabaseTestCase {
      * every Kubernetes object they create.
      */
     public function testANameCannotBeUsedTwiceInTheSameNamespace(): void {
-        $workspace = $this->workspaceOnPackage(Fixtures::deploymentPackage()->id);
+        $workspace = $this->workspaceOnTemplate(Fixtures::workspaceTemplate()->id);
         $specification = Fixtures::deploymentSpecification(['name' => 'api']);
         $workspace->addDeployment($specification, 'taken', null);
 
@@ -164,7 +164,7 @@ class WorkspaceAddDeploymentTest extends DatabaseTestCase {
     }
 
     public function testADeploymentWithoutANameIsRefused(): void {
-        $workspace = $this->workspaceOnPackage(Fixtures::deploymentPackage()->id);
+        $workspace = $this->workspaceOnTemplate(Fixtures::workspaceTemplate()->id);
         $specification = Fixtures::deploymentSpecification(['name' => '']);
 
         $this->expectException(ValidationException::class);
@@ -174,7 +174,7 @@ class WorkspaceAddDeploymentTest extends DatabaseTestCase {
     }
 
     public function testAWorkspaceWithoutANamespaceIsRefused(): void {
-        $workspace = $this->workspaceOnPackage(Fixtures::deploymentPackage()->id, ['namespace' => '']);
+        $workspace = $this->workspaceOnTemplate(Fixtures::workspaceTemplate()->id, ['namespace' => '']);
         $specification = Fixtures::deploymentSpecification(['name' => 'api']);
 
         $this->expectException(ValidationException::class);
@@ -188,7 +188,7 @@ class WorkspaceAddDeploymentTest extends DatabaseTestCase {
      * the caller decides whether to keep it. `addDeployment()` is the one that saves.
      */
     public function testPreparingDoesNotWriteWhileAddingDoes(): void {
-        $workspace = $this->workspaceOnPackage(Fixtures::deploymentPackage()->id);
+        $workspace = $this->workspaceOnTemplate(Fixtures::workspaceTemplate()->id);
         $specification = Fixtures::deploymentSpecification(['name' => 'api']);
 
         $prepared = $workspace->prepareDeploymentFromSpecification($specification, 'not-saved', null);
@@ -201,9 +201,9 @@ class WorkspaceAddDeploymentTest extends DatabaseTestCase {
     /**
      * @param array<string, mixed> $overrides
      */
-    private function workspaceOnPackage(int $packageId, array $overrides = []): Workspace {
+    private function workspaceOnTemplate(int $templateId, array $overrides = []): Workspace {
         return Fixtures::workspace(array_merge([
-            'deployment_package_id' => $packageId,
+            'workspace_template_id' => $templateId,
             'namespace' => 'test',
         ], $overrides));
     }

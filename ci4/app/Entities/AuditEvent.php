@@ -8,7 +8,6 @@ use App\Core\Entity;
  *
  * @property string $created
  * @property int $user_id
- * @property User $user
  * @property string $client_id
  * @property string $ip_address
  * @property string $source ui, api, web, cron, queue or cli - see AuditContext

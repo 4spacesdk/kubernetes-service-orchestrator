@@ -11,7 +11,7 @@ class LabelModel extends Model implements ResourceModelInterface {
 
     public $hasMany = [
         WorkspaceModel::class,
-        DeploymentPackageModel::class,
+        WorkspaceTemplateModel::class,
         DeploymentModel::class,
         DeploymentsLabelModel::class,
         DeploymentSpecificationModel::class,

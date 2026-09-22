@@ -371,7 +371,7 @@ class DeploymentSpecification extends Entity {
      * them are links to shared entities, so the links are copied and the entities are not.
      *
      * Not copied: `deployments`, because a copy is a new recipe, not new running
-     * deployments, and the packages the original is in. The ingresses and the labels are
+     * deployments, and the templates the original is in. The ingresses and the labels are
      * handled on their own below.
      */
     private const DuplicatedCollections = [

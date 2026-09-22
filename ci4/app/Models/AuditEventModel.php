@@ -5,11 +5,15 @@ use RestExtension\ResourceModelInterface;
 
 /**
  * Written by `Audit` only; read through the API.
+ *
+ * No relation to the user, only `user_id`: a relation makes the ORM read `audit_events` whenever
+ * it reads `users`, and the migrations before the trail's own save users - a fresh installation
+ * stopped there. The app names the users from its own list.
  */
 class AuditEventModel extends Model implements ResourceModelInterface {
 
     public $hasOne = [
-        UserModel::class,
+
     ];
 
     public $hasMany = [

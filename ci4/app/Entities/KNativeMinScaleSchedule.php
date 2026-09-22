@@ -18,7 +18,7 @@ use DebugTool\Data;
  * @property int $priority # the lowest first
  *
  * Many
- * @property DeploymentPackageDeploymentSpecification $deployment_package_deployment_specifications
+ * @property WorkspaceTemplateDeploymentSpecification $workspace_template_deployment_specifications
  * @property Deployment $deployments
  */
 class KNativeMinScaleSchedule extends Entity {

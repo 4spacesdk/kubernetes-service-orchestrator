@@ -18,7 +18,7 @@ class SecretEnvironmentVariablesApiTest extends ControllerTestCase {
      */
     private const array Parents = [
         'specification' => ['deployment-specifications', 'deployment_specifications', 'deployment_specification_environment_variable', 'deployment_specification_environment_variables', 'deployment_specification_id'],
-        'template' => ['deployment-packages', 'deployment_packages', 'deployment_package_environment_variable', 'deployment_package_environment_variables', 'deployment_package_id'],
+        'template' => ['workspace-templates', 'workspace_templates', 'workspace_template_environment_variable', 'workspace_template_environment_variables', 'workspace_template_id'],
         'deployment' => ['deployments', 'deployments', 'environment_variable', 'environment_variables', 'deployment_id'],
         'init container' => ['init-containers', 'init_containers', 'init_container_environment_variable', 'init_container_environment_variables', 'init_container_id'],
     ];
@@ -130,7 +130,7 @@ class SecretEnvironmentVariablesApiTest extends ControllerTestCase {
     private function aParent(string $read): int {
         return match ($read) {
             'deployment_specifications' => Fixtures::deploymentSpecification()->id,
-            'deployment_packages' => Fixtures::deploymentPackage()->id,
+            'workspace_templates' => Fixtures::workspaceTemplate()->id,
             'deployments' => Fixtures::deployment()->id,
             'init_containers' => Fixtures::initContainer(['container_image_id' => Fixtures::containerImage()->id])->id,
         };

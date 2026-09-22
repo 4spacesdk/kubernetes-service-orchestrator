@@ -2,13 +2,13 @@
 import { ReferenceData } from "@/core/referenceData";
 import { dnsLabelRule, toDnsLabel } from "@/core/kubernetesNames";
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
-import {DeploymentPackage, Domain, System, Workspace} from "@/core/services/Deploy/models";
+import {WorkspaceTemplate, Domain, System, Workspace} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
 
 export interface WorkspaceCreateDialog_Input {
-    deploymentPackage: DeploymentPackage;
+    workspaceTemplate: WorkspaceTemplate;
 }
 
 const props = defineProps<{ input: WorkspaceCreateDialog_Input, events: DialogEventsInterface }>();
@@ -39,7 +39,7 @@ onUnmounted(() => {
 function render() {
     showDialog.value = true;
 
-    item.value = Workspace.CreateDefault(props.input.deploymentPackage);
+    item.value = Workspace.CreateDefault(props.input.workspaceTemplate);
 
     isLoadingDomains.value = true;
     ReferenceData.domains().then(items => {
@@ -54,11 +54,11 @@ function close() {
 }
 
 /**
- * The package's namespace and the name, as a DNS label. It used to drop only the first
+ * The template's namespace and the name, as a DNS label. It used to drop only the first
  * character Kubernetes does not accept, so "Øster Ås" left an "å" behind.
  */
 function generateNamespace() {
-    item.value!.namespace = toDnsLabel(`${props.input.deploymentPackage.namespace ?? ''}-${item.value!.name_readable ?? ''}`);
+    item.value!.namespace = toDnsLabel(`${props.input.workspaceTemplate.namespace ?? ''}-${item.value!.name_readable ?? ''}`);
 }
 
 // </editor-fold>
@@ -72,7 +72,7 @@ function onNameChanged() {
 function onSaveBtnClicked() {
     isSaving.value = true;
     const api = Api.workspaces().createPost()
-        .deploymentPackageId(props.input.deploymentPackage.id!)
+        .workspaceTemplateId(props.input.workspaceTemplate.id!)
         .name(item.value!.name_readable!)
         .namespace(item.value!.namespace!)
         .domainId(item.value!.domain_id!)
@@ -113,7 +113,7 @@ function onCloseBtnClicked() {
         >
             <v-card
                 class="w-100 h-100">
-                <v-card-title>Workspace: Create {{ props.input.deploymentPackage.name }}</v-card-title>
+                <v-card-title>Workspace: Create {{ props.input.workspaceTemplate.name }}</v-card-title>
                 <v-divider/>
                 <v-card-text>
                     <v-row

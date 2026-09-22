@@ -63,6 +63,7 @@ const {search: searchValue, page, itemsPerPage, sortBy, applyOrdering, applyPagi
 });
 
 const userOptions = ref<{value: string, title: string}[]>([]);
+const userNames = ref<Record<string, string>>({});
 const sourceOptions = [
     {value: 'ui', title: 'The app'},
     {value: 'api', title: 'API client'},
@@ -84,7 +85,7 @@ const actionOptions = [
 ].map(value => ({value, title: actionTitle(value)}));
 /** The ones people look for; any other can be typed. */
 const typeOptions = [
-    'Workspace', 'Deployment', 'DeploymentSpecification', 'DeploymentPackage', 'Domain', 'Gateway',
+    'Workspace', 'Deployment', 'DeploymentSpecification', 'WorkspaceTemplate', 'Domain', 'Gateway',
     'ContainerImage', 'ContainerRegistry', 'DatabaseService', 'EmailService', 'EnvironmentVariable',
     'Webhook', 'User', 'RbacRole', 'OAuthClient', 'GithubIntegration', 'PodioIntegration',
     'CronJob', 'System', 'Pod',
@@ -103,11 +104,12 @@ const SystemSources: Record<string, string> = {
 onMounted(() => {
     getItems(false, true);
 
-    if (!isScoped) {
-        Api.users().get().orderAsc('first_name').find(users => {
-            userOptions.value = users.map(user => ({value: String(user.id), title: user.name}));
-        });
-    }
+    // The trail has only `user_id` - see AuditEventModel - so the names come from here, for
+    // the rows and for the filter.
+    Api.users().get().orderAsc('first_name').find(users => {
+        userOptions.value = users.map(user => ({value: String(user.id), title: user.name}));
+        userNames.value = Object.fromEntries(users.map(user => [String(user.id), user.name]));
+    });
 });
 
 watch(searchValue, debounce(() => {
@@ -121,7 +123,7 @@ watch([selectedUsers, selectedSources, selectedActions, selectedTypes, fromDate,
 function getItems(doItems = true, doCount = false) {
     isLoading.value = true;
 
-    const api = Api.auditEvents().get().include('user');
+    const api = Api.auditEvents().get();
     if (props.filterByResourceType) {
         api.where('resource_type', props.filterByResourceType);
     }
@@ -184,8 +186,8 @@ function toRow(item: AuditEvent): Row {
 }
 
 function who(item: AuditEvent): string {
-    if (item.user) {
-        return item.user.name;
+    if (item.user_id && userNames.value[String(item.user_id)]) {
+        return userNames.value[String(item.user_id)];
     }
     if (item.user_id) {
         return `User #${item.user_id}`;

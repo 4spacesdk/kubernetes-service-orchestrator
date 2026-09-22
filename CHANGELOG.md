@@ -116,6 +116,7 @@
 10. The chart runs Centrifugo as a sidecar and routes `/connection` to it instead of `/socket` to port 9100. If you route to kso yourself, send `/connection` to the Service's `push` port (8000) with WebSockets allowed, and drop `/socket`
 11. The image runs as www-data (uid 82) and Apache listens on 8080. The chart's Service still answers on 80, so routing through it needs nothing. If you run the image outside the chart, map to 8080; if you set `securityContext` or `podSecurityContext` yourself, keep `runAsUser: 82` and `fsGroup: 82`
 12. Take a database backup before migrating: the migration hashes the stored OAuth tokens and client secrets and encrypts the signing key, and cannot be undone. Signed-in sessions survive it. Afterwards run `php spark auth:rotate-signing-key` once - the old key was stored in the clear in every backup until now
+13. Workspace templates are called that in the API too: `/deployment_packages` is `/workspace_templates` and `/deployment-packages/{id}/...` is `/workspace-templates/{id}/...`, and `deployment_package_id` is `workspace_template_id` - in API answers and in the workspace webhooks' JSON. Update anything that calls the API or reads the webhooks. The old names are gone
 
 ### Notes
 * An image built for arm64 has no MSSQL driver

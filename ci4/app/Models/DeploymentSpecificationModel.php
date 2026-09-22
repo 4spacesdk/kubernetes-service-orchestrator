@@ -26,7 +26,7 @@ class DeploymentSpecificationModel extends Model implements ResourceModelInterfa
         DeploymentSpecificationIngressModel::class,
         DeploymentSpecificationClusterRoleRuleModel::class,
         DeploymentSpecificationRoleRuleModel::class,
-        DeploymentPackageDeploymentSpecificationModel::class,
+        WorkspaceTemplateDeploymentSpecificationModel::class,
         DeploymentSpecificationServiceAnnotationModel::class,
         DeploymentSpecificationDeploymentAnnotationModel::class,
         DeploymentSpecificationQuickCommandModel::class,

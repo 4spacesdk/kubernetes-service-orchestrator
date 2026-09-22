@@ -2,8 +2,8 @@
 
 use App\Core\ResourceController;
 use App\Entities\Deployment;
-use App\Entities\DeploymentPackage;
-use App\Entities\DeploymentPackageDeploymentSpecification;
+use App\Entities\WorkspaceTemplate;
+use App\Entities\WorkspaceTemplateDeploymentSpecification;
 use App\Entities\DeploymentSpecification;
 use App\Entities\Label;
 use App\Entities\Workspace;
@@ -11,7 +11,7 @@ use App\Exceptions\ValidationException;
 use App\Interfaces\LabelList;
 use App\Libraries\Audit\Audit;
 use App\Models\DeploymentModel;
-use App\Models\DeploymentPackageDeploymentSpecificationModel;
+use App\Models\WorkspaceTemplateDeploymentSpecificationModel;
 use App\Models\MigrationJobModel;
 use Google\ApiCore\ApiException;
 
@@ -21,7 +21,7 @@ class Workspaces extends ResourceController {
      * @route /workspaces/create
      * @method post
      * @custom true
-     * @parameter int $deploymentPackageId parameterType=query
+     * @parameter int $workspaceTemplateId parameterType=query
      * @parameter string $name parameterType=query
      * @parameter string $namespace parameterType=query
      * @parameter int $domainId parameterType=query
@@ -31,11 +31,11 @@ class Workspaces extends ResourceController {
      */
     public function create(): void {
         try {
-            $deploymentPackage = new DeploymentPackage();
-            $deploymentPackage->find($this->request->getGet('deploymentPackageId'));
+            $workspaceTemplate = new WorkspaceTemplate();
+            $workspaceTemplate->find($this->request->getGet('workspaceTemplateId'));
 
             $item = Workspace::Create(
-                $deploymentPackage,
+                $workspaceTemplate,
                 $this->request->getGet('name') ?? '',
                 $this->request->getGet('namespace') ?? '',
                 $this->request->getGet('domainId') ?? 0,

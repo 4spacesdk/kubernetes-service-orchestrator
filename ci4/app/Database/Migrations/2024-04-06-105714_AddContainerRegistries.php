@@ -3,9 +3,7 @@
 use App\Controllers\AutoUpdates;
 use App\Entities\CronJob;
 use App\Entities\Deployment;
-use App\Entities\DeploymentPackageDeploymentSpecification;
 use App\Models\DeploymentModel;
-use App\Models\DeploymentPackageDeploymentSpecificationModel;
 use CodeIgniter\Database\Migration;
 use Config\Database;
 use OrmExtension\Migration\ColumnTypes;
@@ -61,16 +59,19 @@ class AddContainerRegistries extends Migration {
             ->column('default_auto_update_enabled', ColumnTypes::BOOL_0)
             ->column('default_auto_update_tag_regex', ColumnTypes::VARCHAR_511)
             ->column('default_auto_update_require_approval', ColumnTypes::BOOL_0);
-        /** @var DeploymentPackageDeploymentSpecification $deploymentPackageDeploymentSpecifications */
-        $deploymentPackageDeploymentSpecifications = (new DeploymentPackageDeploymentSpecificationModel())
-            ->find();
-        foreach ($deploymentPackageDeploymentSpecifications as $deploymentPackageDeploymentSpecification) {
-            $deploymentPackageDeploymentSpecification->default_auto_update_enabled = true;
-            if ($deploymentPackageDeploymentSpecification->default_keel_policy) { // Can be removed after release
-                $deploymentPackageDeploymentSpecification->default_auto_update_tag_regex = str_replace('glob:', '', $deploymentPackageDeploymentSpecification->default_keel_policy);
-                $deploymentPackageDeploymentSpecification->default_auto_update_require_approval = !$deploymentPackageDeploymentSpecification->default_keel_auto_update;
+        // Through the query builder: the entity and model this went through were renamed along
+        // with the table, and a fresh install runs this long before that rename.
+        $db = Database::connect();
+        $rows = $db->table('deployment_package_deployment_specifications')
+            ->select(['id', 'default_keel_policy', 'default_keel_auto_update'])
+            ->get()->getResultArray();
+        foreach ($rows as $row) {
+            $values = ['default_auto_update_enabled' => true];
+            if ($row['default_keel_policy']) { // Can be removed after release
+                $values['default_auto_update_tag_regex'] = str_replace('glob:', '', $row['default_keel_policy']);
+                $values['default_auto_update_require_approval'] = !$row['default_keel_auto_update'];
             }
-            $deploymentPackageDeploymentSpecification->save();
+            $db->table('deployment_package_deployment_specifications')->where('id', $row['id'])->update($values);
         }
 
         Table::init('deployment_package_deployment_specifications')
