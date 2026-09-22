@@ -1,6 +1,7 @@
 <?php namespace App\Controllers;
 
 use App\Entities\CronJob;
+use App\Libraries\Audit\AuditContext;
 use Config\Database;
 use Cron\CronExpression;
 use DebugTool\Data;
@@ -143,6 +144,7 @@ class Jobby extends \App\Core\BaseController {
     }
 
     public function run(int $cronJobId) {
+        AuditContext::Restore(null, AuditContext::Cron);
         $_SERVER['argc'] = 0;
         if(!defined('STDOUT')) define('STDOUT', fopen('php://stdout', 'w'));
         if(!defined('STDERR')) define('STDERR', fopen('php://stderr', 'w'));

@@ -1,4 +1,5 @@
 import {BaseApi} from "./BaseApi";
+import {AuditEvent} from "./models";
 import {AutoUpdate} from "./models";
 import {ContainerImageScanRecord} from "./models";
 import {ContainerImageScan} from "./models";
@@ -454,6 +455,154 @@ export interface WebhookTypesGetResponse {
     name?: string;
 }
 
+
+export class AuditEventsGet extends BaseApi<AuditEvent> {
+
+    public topic = 'Resources.AuditEvents';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/audit_events`;
+    }
+
+    protected convertToResource(data: any): AuditEvent {
+        return new AuditEvent(data);
+    }
+
+    public where(name: string, value: any): AuditEventsGet {
+        this.filter().where(name, value);
+        return this;
+    }
+
+    public whereEquals(name: string, value: any): AuditEventsGet {
+        this.filter().whereEquals(name, value);
+        return this;
+    }
+
+    public whereIn(name: string, value: any[]): AuditEventsGet {
+        this.filter().whereIn(name, value);
+        return this;
+    }
+
+    public whereInArray(name: string, value: any[]): AuditEventsGet {
+        this.filter().whereInArray(name, value);
+        return this;
+    }
+
+    public whereNot(name: string, value: any): AuditEventsGet {
+        this.filter().whereNot(name, value);
+        return this;
+    }
+
+    public whereNotIn(name: string, value: any[]): AuditEventsGet {
+        this.filter().whereNotIn(name, value);
+        return this;
+    }
+
+    public whereGreaterThan(name: string, value: any): AuditEventsGet {
+        this.filter().whereGreaterThan(name, value);
+        return this;
+    }
+
+    public whereGreaterThanOrEqual(name: string, value: any): AuditEventsGet {
+        this.filter().whereGreaterThanOrEqual(name, value);
+        return this;
+    }
+
+    public whereLessThan(name: string, value: any): AuditEventsGet {
+        this.filter().whereLessThan(name, value);
+        return this;
+    }
+
+    public whereLessThanOrEqual(name: string, value: any): AuditEventsGet {
+        this.filter().whereLessThanOrEqual(name, value);
+        return this;
+    }
+
+    public search(name: string, value: any): AuditEventsGet {
+        this.filter().search(name, value);
+        return this;
+    }
+
+    public include(name: string): AuditEventsGet {
+        this.getInclude().include(name);
+        return this;
+    }
+
+    public orderBy(name: string, direction: string): AuditEventsGet {
+        this.ordering().orderBy(name, direction);
+        return this;
+    }
+
+    public orderAsc(name: string): AuditEventsGet {
+        this.ordering().orderAsc(name);
+        return this;
+    }
+
+    public orderDesc(name: string): AuditEventsGet {
+        this.ordering().orderDesc(name);
+        return this;
+    }
+
+    public limit(value: number): AuditEventsGet {
+        this.limitValue = value;
+        return this;
+    }
+
+    public offset(value: number): AuditEventsGet {
+        this.offsetValue = value;
+        return this;
+    }
+
+    public count(next?: (value: number) => void) {
+        return this.executeCount(next);
+    }
+
+    public find(next?: (value: AuditEvent[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class AuditEventsGetById extends BaseApi<AuditEvent> {
+
+    public topic = 'Resources.AuditEvents';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/audit_events/${id}`;
+    }
+
+    protected convertToResource(data: any): AuditEvent {
+        return new AuditEvent(data);
+    }
+
+    public include(name: string): AuditEventsGetById {
+        this.getInclude().include(name);
+        return this;
+    }
+
+    public find(next?: (value: AuditEvent[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+class AuditEvents {
+
+    public get(): AuditEventsGet {
+        return new AuditEventsGet();
+    }
+
+    public getById(id: number): AuditEventsGetById {
+        return new AuditEventsGetById(id);
+    }
+
+}
 
 export class AutoUpdatesGet extends BaseApi<AutoUpdate> {
 
@@ -9480,6 +9629,10 @@ class Workspaces {
 }
 
 export class Api {
+
+    public static auditEvents(): AuditEvents {
+        return new AuditEvents();
+    }
 
     public static autoUpdates(): AutoUpdates {
         return new AutoUpdates();

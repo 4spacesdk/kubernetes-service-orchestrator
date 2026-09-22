@@ -14,6 +14,7 @@ class InitContainers extends ResourceController {
      * @param int $id
      * @requestSchema EnvironmentVariableList
      * @return void
+     * @audit entity
      */
     public function updateEnvironmentVariables(int $id): void {
         $item = new InitContainer();

@@ -6,6 +6,7 @@ import { aliases, fa } from 'vuetify/iconsets/fa'
 import {
     VAlert,
     VApp,
+    VAutocomplete,
     VBadge,
     VBtn,
     VCard,
@@ -77,6 +78,7 @@ export default createVuetify({
     components: {
         VAlert,
         VApp,
+        VAutocomplete,
         VBadge,
         VBtn,
         VCard,

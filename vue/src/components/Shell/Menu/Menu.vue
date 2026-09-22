@@ -174,6 +174,18 @@ const categories = ref<MenuCategory[]>([
             },
         ],
     },
+    {
+        identifier: "audit",
+        name: "Audit Trail",
+        icon: "fa fa-clipboard-list",
+        items: [
+            {
+                title: "All",
+                url: "/audit",
+                permissions: [RbacPermissions.Developer],
+            },
+        ],
+    },
 ]);
 
 const autoUpdatesBadgePushSubscription1 = ref<PushSubscription>();

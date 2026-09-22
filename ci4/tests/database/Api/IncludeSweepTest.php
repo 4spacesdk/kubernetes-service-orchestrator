@@ -164,6 +164,7 @@ class IncludeSweepTest extends ControllerTestCase {
 
         sort($empty);
         $this->assertSame([
+            'audit_events?include=user',
             'container_registries?include=deletion',
             'database_services?include=deletion',
             'deployments?include=deletion',
@@ -172,6 +173,7 @@ class IncludeSweepTest extends ControllerTestCase {
             'gateways?include=deletion',
             'github_integrations?include=deletion',
             'podio_integrations?include=deletion',
+            'users?include=audit_event',
             'users?include=deletion',
             'workspaces?include=deletion',
         ], $empty, 'these were swept over an empty table');
@@ -404,7 +406,7 @@ class IncludeSweepTest extends ControllerTestCase {
     public function testTheSweepStillCoversEveryRoutedResourceAndItsRelations(): void {
         $models = $this->resourceModels();
 
-        $this->assertCount(26, $models, 'the number of plain collection reads changed');
+        $this->assertCount(27, $models, 'the number of plain collection reads changed');
         $this->assertSame(
             ['environments'],
             array_keys(array_filter($models, static fn ($model) => $model === null)),
@@ -416,7 +418,7 @@ class IncludeSweepTest extends ControllerTestCase {
             $relations += count($this->relationsOf($modelName));
         }
 
-        $this->assertSame(94, $relations, 'the number of includable relations changed');
+        $this->assertSame(96, $relations, 'the number of includable relations changed');
     }
 
     // </editor-fold>

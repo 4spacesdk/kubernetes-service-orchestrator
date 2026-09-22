@@ -2,6 +2,7 @@
 
 use App\Entities\User;
 use App\Helpers\Client;
+use App\Libraries\Audit\Audit;
 use App\Libraries\MFALib;
 use App\Libraries\LoginThrottle;
 use AuthExtension\AuthExtension;
@@ -40,6 +41,9 @@ class Login extends \App\Core\BaseController {
         return false;
     }
 
+    /**
+     * @audit user.sign_in
+     */
     public function index() {
         $data = [];
 
@@ -100,6 +104,7 @@ class Login extends \App\Core\BaseController {
                         $this->response->redirect(base_url('login/twoFactor'));
                     } else {
                         AuthExtension::saveUserSession($user->id);
+                        Audit::Record('user.sign_in', $user, [], (int) $user->id);
                         $this->response->redirect($data['requestUrl']);
                     }
                     break;
@@ -110,6 +115,7 @@ class Login extends \App\Core\BaseController {
                         $this->response->redirect(base_url('login/twoFactor'));
                     } else {
                         AuthExtension::saveUserSession($user->id);
+                        Audit::Record('user.sign_in', $user, [], (int) $user->id);
                         $this->response->redirect(base_url('login/renewPassword'));
                     }
                     break;
@@ -177,6 +183,9 @@ class Login extends \App\Core\BaseController {
         return $wanted !== null && in_array($wanted, $allowed, true) ? $url : getFrontendUrl();
     }
 
+    /**
+     * @audit user.sign_in
+     */
     public function twoFactor(): string|ResponseInterface {
         $requestUrl = self::SafeDestination(session()->getFlashdata(self::RememberedDestination));
 
@@ -217,6 +226,7 @@ class Login extends \App\Core\BaseController {
                 // own bookkeeping thinking the key is still there.
                 session()->remove('2fa_in_progress');
                 AuthExtension::saveUserSession($user->id);
+                Audit::Record('user.sign_in', $user, ['second_factor' => true], (int) $user->id);
                 if ($user->renew_password) {
                     $this->response->redirect(base_url('login/renewPassword'));
                 } else {
@@ -241,6 +251,9 @@ class Login extends \App\Core\BaseController {
         }
     }
 
+    /**
+     * @audit entity
+     */
     public function renewPassword(): string|ResponseInterface {
         $requestUrl = self::SafeDestination(session()->getFlashdata(self::RememberedDestination));
 
@@ -289,6 +302,9 @@ class Login extends \App\Core\BaseController {
      */
     private const string PasswordResetRequested = 'If the address belongs to an account, a link to choose a new password is on its way.';
 
+    /**
+     * @audit none mails a link; the new password is recorded when it is set
+     */
     public function forgotPassword(): string {
         session()->setFlashdata(self::RememberedDestination, session()->getFlashdata(self::RememberedDestination));
 
@@ -324,6 +340,7 @@ class Login extends \App\Core\BaseController {
      * Where the link in the mail leads: choose a new password, twice, held to the same rules
      * as a renewal. The token is spent when the password is set, and the visitor is sent to
      * sign in with it - through the second factor, if they have one.
+     * @audit entity
      */
     public function resetPassword(): string|ResponseInterface {
         $user = User::FindByPasswordResetToken((string) $this->request->getGet('token'));

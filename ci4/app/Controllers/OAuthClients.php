@@ -36,6 +36,7 @@ class OAuthClients extends ResourceController {
      * @method patch
      * @custom true
      * @param string $id
+     * @audit entity
      */
     public function patch($id = 0) {
         parent::patch($id);
@@ -46,6 +47,7 @@ class OAuthClients extends ResourceController {
      * @method delete
      * @custom true
      * @param string $id
+     * @audit entity
      */
     public function delete($id = 0) {
         parent::delete($id);

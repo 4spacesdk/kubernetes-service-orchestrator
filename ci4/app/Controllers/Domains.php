@@ -3,6 +3,7 @@
 use App\Core\ResourceController;
 use App\Entities\Domain;
 use App\Interfaces\DomainsGetCertificateStatusResponse;
+use App\Libraries\Audit\Audit;
 use App\Libraries\Kubernetes\CustomResourceDefinitions\K8sIstioGateway;
 use App\Libraries\Kubernetes\KubeAuth;
 use App\Libraries\Kubernetes\KubeCertificate;
@@ -19,6 +20,7 @@ class Domains extends ResourceController {
      * @param int $id
      * @return void
      * @throws \Exception
+     * @audit domain.apply_certificate
      */
     public function applyCertificate(int $id = 0): void {
         $item = new Domain();
@@ -32,6 +34,9 @@ class Domains extends ResourceController {
                 $this->fail($applied);
                 return;
             }
+        }
+        if ($item->exists()) {
+            Audit::Record('domain.apply_certificate', $item);
         }
         $this->_setResource($item);
         $this->success();
@@ -115,6 +120,7 @@ class Domains extends ResourceController {
      * @param int $id
      * @return void
      * @throws \Exception
+     * @audit domain.apply_istio_gateway
      */
     public function applyIstioGateway(int $id = 0): void {
         $item = new Domain();
@@ -129,6 +135,9 @@ class Domains extends ResourceController {
                 return;
             }
         }
+        if ($item->exists()) {
+            Audit::Record('domain.apply_istio_gateway', $item);
+        }
         $this->_setResource($item);
         $this->success();
     }
@@ -140,6 +149,7 @@ class Domains extends ResourceController {
      * @param int $id
      * @return void
      * @throws \Exception
+     * @audit domain.terminate_istio_gateway
      */
     public function terminateIstioGateway(int $id = 0): void {
         $item = new Domain();
@@ -153,6 +163,9 @@ class Domains extends ResourceController {
                 $this->fail($success);
                 return;
             }
+        }
+        if ($item->exists()) {
+            Audit::Record('domain.terminate_istio_gateway', $item);
         }
         $this->_setResource($item);
         $this->success();

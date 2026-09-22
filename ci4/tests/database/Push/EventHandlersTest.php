@@ -6,6 +6,7 @@ use App\Entities\Deployment;
 use App\Entities\Webhook;
 use App\Fixtures;
 use App\Jobs\HandleEvent;
+use App\Libraries\Audit\AuditContext;
 use App\Libraries\Push\ChangeEvent;
 use App\Libraries\Push\EventHandlers;
 use App\Libraries\Push\Events;
@@ -48,6 +49,23 @@ class EventHandlersTest extends DatabaseTestCase {
         $this->assertCount(1, $deliveries);
         $this->assertSame(\WebHookTypes::Workspace_Created, $deliveries[0]['webhook_type']);
         $this->assertSame(0, $this->db->table('queue_jobs')->countAllResults(), 'the job is still there after it ran');
+    }
+
+    /**
+     * What the job changes is recorded as the work of whoever raised the event - see
+     * AuditContext - so the job carries them along.
+     */
+    public function testTheJobCarriesWhoRaisedIt(): void {
+        AuditContext::Restore(['user_id' => 4242, 'client_id' => 'webclient', 'ip_address' => '10.0.0.7'], AuditContext::Ui);
+        try {
+            $this->publisher()->send(Events::Workspace_Created(), (new ChangeEvent(null, ['id' => 7]))->toArray());
+        } finally {
+            AuditContext::Forget();
+        }
+
+        $payload = json_decode($this->db->table('queue_jobs')->get()->getRowArray()['payload'], true);
+        $this->assertSame(4242, $payload['data']['actor']['user_id']);
+        $this->assertSame(AuditContext::Ui, $payload['data']['actor']['source']);
     }
 
     /**

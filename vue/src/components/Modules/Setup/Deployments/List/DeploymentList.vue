@@ -188,6 +188,14 @@ function onShowMigrationJobsBtnClicked(item: Deployment) {
     });
 }
 
+function onShowHistoryBtnClicked(item: Deployment) {
+    bus.emit('auditEventList', {
+        resourceType: 'Deployment',
+        resourceId: item.id!,
+        title: item.name,
+    });
+}
+
 function onDeploymentSpecsShortcutClicked() {
     router.push({name: 'DeploymentSpecifications'}).catch((e: any) => {
     });
@@ -401,6 +409,17 @@ function onBulkUpdateVersionBtnClicked() {
                     >
                         <v-icon>fa fa-truck-arrow-right</v-icon>
                         <v-tooltip activator="parent" location="bottom">Migration Jobs</v-tooltip>
+                    </v-btn>
+
+                    <v-btn
+                        variant="plain" color="primary"
+                        @click="onShowHistoryBtnClicked(item)"
+                        size="small"
+                        density="comfortable"
+                        icon
+                    >
+                        <v-icon>fa fa-clock-rotate-left</v-icon>
+                        <v-tooltip activator="parent" location="bottom">History</v-tooltip>
                     </v-btn>
 
                     <v-menu

@@ -27,6 +27,7 @@ class DeploymentPackages extends ResourceController {
      * @custom true
      * @param int $id
      * @return void
+     * @audit entity
      */
     public function duplicate(int $id): void {
         $item = new DeploymentPackage();
@@ -46,6 +47,7 @@ class DeploymentPackages extends ResourceController {
      * @param int $id
      * @requestSchema DeploymentPackageDeploymentSpecificationList
      * @return void
+     * @audit entity
      */
     public function updateDeploymentSpecifications(int $id): void {
         $item = new DeploymentPackage();
@@ -74,6 +76,7 @@ class DeploymentPackages extends ResourceController {
      * @param int $id
      * @requestSchema EnvironmentVariableList
      * @return void
+     * @audit entity
      */
     public function updateEnvironmentVariables(int $id): void {
         $item = new DeploymentPackage();
@@ -106,6 +109,7 @@ class DeploymentPackages extends ResourceController {
      * @parameter string $name parameterType=query
      * @parameter bool $override parameterType=query
      * @return void
+     * @audit entity
      */
     public function copyEnvironmentVariableToDeployments(int $deploymentPackageId): void {
         $item = new DeploymentPackage();
@@ -152,6 +156,7 @@ class DeploymentPackages extends ResourceController {
      * @param int $deploymentPackageId
      * @requestSchema LabelList
      * @return void
+     * @audit entity
      */
     public function updateLabels(int $deploymentPackageId): void {
         $item = new DeploymentPackage();

@@ -92,6 +92,9 @@ class Deployment extends Entity {
 
     public const array EncryptedFields = self::SecretFields;
 
+    /** Kept up to date by kso as it checks on the deployment. */
+    public const array AuditIgnoredFields = ['last_updated', 'last_migration_job_id'];
+
     use EncryptsFields;
     use WriteOnlySecrets;
 

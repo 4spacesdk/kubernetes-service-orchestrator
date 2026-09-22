@@ -2,6 +2,7 @@
 
 use App\Core\ResourceController;
 use App\Entities\WebhookDelivery;
+use App\Libraries\Audit\Audit;
 use App\Models\WebhookDeliveryModel;
 use DebugTool\Data;
 
@@ -49,6 +50,7 @@ class Webhooks extends ResourceController {
      * @param int $webhookDeliveryId
      * @responseSchema WebhookDelivery
      * @return void
+     * @audit webhook.retry_delivery
      */
     public function deliveriesRetry(int $webhookId, int $webhookDeliveryId): void {
         /** @var WebhookDelivery $item */
@@ -62,6 +64,7 @@ class Webhooks extends ResourceController {
             // the delivery carries. It does not go through `service('integrations')`, and
             // there is no other seam in front of it, so a test cannot take its place.
             // @codeCoverageIgnoreStart
+            Audit::Record('webhook.retry_delivery', ['type' => 'WebhookDelivery', 'id' => (int) $item->id], ['webhook_id' => $webhookId]);
             $this->_setResource($item->retry());
             // @codeCoverageIgnoreEnd
         } else {

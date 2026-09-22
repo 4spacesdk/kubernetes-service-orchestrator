@@ -15,6 +15,7 @@ class PostUpdateActions extends ResourceController {
      * @param int $id
      * @requestSchema PostUpdateActionConditionList
      * @return void
+     * @audit entity
      */
     public function updateConditions(int $id): void {
         $item = new PostUpdateAction();

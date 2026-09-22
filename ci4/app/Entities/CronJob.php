@@ -14,6 +14,9 @@ use App\Core\Entity;
  */
 class CronJob extends Entity {
 
+    /** Written by every run - the trail records a changed schedule, not that it ran. */
+    public const array AuditIgnoredFields = ['last_run', 'last_log'];
+
     /**
      * @return \ArrayIterator|Entity[]|\Traversable|CronJob[]
      */

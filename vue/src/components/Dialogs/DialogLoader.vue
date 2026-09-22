@@ -156,6 +156,10 @@ bus.on('deploymentUpdateKNativeMinScaleSchedules', async input => {
 });
 
 
+bus.on('auditEventList', async input => {
+    addComponent((await import('@/components/Dialogs/AuditEvents/AuditEventsListDialog.vue')).default, input);
+});
+
 bus.on('migrationJobList', async input => {
     addComponent((await import('@/components/Dialogs/MigrationJobs/MigrationJobsListDialog.vue')).default, input);
 });

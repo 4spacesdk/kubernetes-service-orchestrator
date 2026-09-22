@@ -25,6 +25,7 @@ class Users extends ResourceController {
 
     /**
      * A password that breaks a rule is refused with the rule, rather than as a server error.
+     * @audit entity
      */
     public function post() {
         try {
@@ -35,6 +36,9 @@ class Users extends ResourceController {
         }
     }
 
+    /**
+     * @audit entity
+     */
     public function patch($id = 0) {
         try {
             parent::patch($id);
@@ -92,6 +96,7 @@ class Users extends ResourceController {
      * @custom true
      * @parameter string $code parameterType=query
      * @responseSchema BoolInterface
+     * @audit entity
      */
     public function mfaSetupVerify(): void {
         $code = (string) $this->request->getGet('code');
@@ -126,6 +131,7 @@ class Users extends ResourceController {
      * @route /users/mfa/setup/remove
      * @method put
      * @custom true
+     * @audit entity
      */
     public function mfaSetupRemove(): void {
         $this->signedInUser()->removeMFASecret();

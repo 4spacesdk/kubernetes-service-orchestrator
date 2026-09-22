@@ -1,5 +1,6 @@
 <?php namespace App\Controllers;
 
+use App\Libraries\Audit\Audit;
 use App\Libraries\Kubernetes\KubeAuth;
 use App\Libraries\Kubernetes\KubeHelper;
 use App\Libraries\Kubernetes\KubeLog;
@@ -74,6 +75,7 @@ class Kubernetes extends \App\Core\BaseController {
      * @parameter string $command parameterType=query
      * @responseSchema KubernetesExecResponse
      * @return void
+     * @audit pod.exec
      */
     public function exec(string $namespace, string $name, string $container): void {
         $command = $this->request->getGet('command');
@@ -106,6 +108,7 @@ class Kubernetes extends \App\Core\BaseController {
             return;
         }
 
+        Audit::Record('pod.exec', ['type' => 'Pod', 'name' => "{$namespace}/{$name}/{$container}"], ['command' => $command]);
         $this->success();
     }
 
@@ -142,6 +145,7 @@ class Kubernetes extends \App\Core\BaseController {
      * @param string $pod
      * @param string $container
      * @return void
+     * @audit none reads logs - PUT only for its body
      */
     public function watchLogs(string $namespace, string $pod, string $container): void {
         $kubeAuth = new KubeAuth();

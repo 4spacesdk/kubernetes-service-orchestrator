@@ -14,6 +14,7 @@ use App\Interfaces\DeploymentVolumeList;
 use App\Interfaces\EnvironmentVariableList;
 use App\Interfaces\IntArrayInterface;
 use App\Interfaces\LabelList;
+use App\Libraries\Audit\Audit;
 use App\Libraries\DeploymentSteps\BaseDeploymentStep;
 use App\Libraries\RequestField;
 use App\Libraries\DeploymentSteps\CronjobStep;
@@ -34,6 +35,7 @@ class Deployments extends ResourceController {
      * @parameter string $namespace parameterType=query
      * @parameter string $version parameterType=query
      * @return void
+     * @audit entity
      */
     public function create(): void {
         $deploymentSpecification = new DeploymentSpecification();
@@ -83,6 +85,7 @@ class Deployments extends ResourceController {
      * @param int $id
      * @parameter string $value parameterType=query
      * @return void
+     * @audit entity
      */
     public function updateVersion(int $id): void {
         $item = new Deployment();
@@ -109,6 +112,7 @@ class Deployments extends ResourceController {
      * @param int $id
      * @parameter string $value parameterType=query
      * @return void
+     * @audit entity
      */
     public function updateImagePullPolicy(int $id): void {
         $item = new Deployment();
@@ -130,6 +134,7 @@ class Deployments extends ResourceController {
      * @param int $id
      * @parameter string $value parameterType=query
      * @return void
+     * @audit entity
      */
     public function updateEnvironment(int $id): void {
         $item = new Deployment();
@@ -151,6 +156,7 @@ class Deployments extends ResourceController {
      * @param int $id
      * @parameter int $value parameterType=query
      * @return void
+     * @audit entity
      */
     public function updateWorkspace(int $id): void {
         $item = new Deployment();
@@ -172,6 +178,7 @@ class Deployments extends ResourceController {
      * @param int $id
      * @parameter int $value parameterType=query
      * @return void
+     * @audit entity
      */
     public function updateDatabaseServiceId(int $id): void {
         $item = new Deployment();
@@ -199,6 +206,7 @@ class Deployments extends ResourceController {
      * @parameter int $knativeConcurrencyLimitSoft parameterType=query
      * @parameter int $knativeConcurrencyLimitHard parameterType=query
      * @return void
+     * @audit entity
      */
     public function updateResourceManagement(int $id): void {
         $item = new Deployment();
@@ -230,6 +238,7 @@ class Deployments extends ResourceController {
      * @parameter string $tagRegex parameterType=query
      * @parameter bool $requireApproval parameterType=query
      * @return void
+     * @audit entity
      */
     public function updateUpdateManagement(int $id): void {
         $item = new Deployment();
@@ -275,6 +284,7 @@ class Deployments extends ResourceController {
      * @param int $id
      * @requestSchema EnvironmentVariableList
      * @return void
+     * @audit entity
      */
     public function updateEnvironmentVariables(int $id): void {
         $item = new Deployment();
@@ -303,6 +313,7 @@ class Deployments extends ResourceController {
      * @param int $id
      * @requestSchema DeploymentVolumeList
      * @return void
+     * @audit entity
      */
     public function updateDeploymentVolumes(int $id): void {
         $item = new Deployment();
@@ -352,6 +363,7 @@ class Deployments extends ResourceController {
      * @param int $id
      * @requestSchema LabelList
      * @return void
+     * @audit entity
      */
     public function updateLabels(int $id): void {
         $item = new Deployment();
@@ -380,6 +392,7 @@ class Deployments extends ResourceController {
      * @param int $id
      * @requestSchema IntArrayInterface
      * @return void
+     * @audit entity
      */
     public function updateCronJobs(int $id): void {
         $item = new Deployment();
@@ -442,6 +455,7 @@ class Deployments extends ResourceController {
      * @parameter string $name parameterType=query
      * @responseSchema DeploymentCronJobRunResponse
      * @return void
+     * @audit deployment.run_cron_job
      */
     public function runCronJob(int $id): void {
         $item = new Deployment();
@@ -457,6 +471,7 @@ class Deployments extends ResourceController {
             $this->fail($e->getMessage());
             return;
         }
+        Audit::Record('deployment.run_cron_job', $item, ['cron_job' => (string) $this->request->getGet('name')]);
         $this->success();
     }
 
@@ -467,6 +482,7 @@ class Deployments extends ResourceController {
      * @param int $id
      * @requestSchema IntArrayInterface
      * @return void
+     * @audit entity
      */
     public function updateKNativeMinScaleSchedules(int $id): void {
         $item = new Deployment();

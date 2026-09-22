@@ -22,7 +22,8 @@ class CronJobIds {
         ScanQueuedContainerImages = 9,
         CleanupQueue = 10,
         CleanupApiLogs = 11,
-        CleanupOAuthTokens = 12
+        CleanupOAuthTokens = 12,
+        CleanupAuditEvents = 13
     ;
 }
 

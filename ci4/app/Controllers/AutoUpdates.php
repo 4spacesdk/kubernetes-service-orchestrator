@@ -3,6 +3,7 @@
 use App\Core\ResourceController;
 use App\Entities\AutoUpdate;
 use App\Entities\ContainerRegistry;
+use App\Libraries\Audit\Audit;
 use App\Libraries\ContainerRegistries\ImageReference;
 use App\Libraries\Push\ChangeEvent;
 use App\Libraries\Push\Events;
@@ -17,6 +18,7 @@ class AutoUpdates extends ResourceController {
      * @custom true
      * @param int $id
      * @return void
+     * @audit auto_update.approve
      */
     public function approve(int $id): void {
         $item = new AutoUpdate();
@@ -28,6 +30,7 @@ class AutoUpdates extends ResourceController {
 
         $item->approve();
         $this->_setResource($item);
+        Audit::Record('auto_update.approve', $item);
         $this->success();
     }
 
@@ -39,6 +42,7 @@ class AutoUpdates extends ResourceController {
      * @custom true
      * @param int $containerRegistryId
      * @return void
+     * @audit entity
      */
     public function webhooksAzureContainerRegistry(int $containerRegistryId): void {
         $registry = $this->registryCalling($containerRegistryId, \ContainerRegistries::AzureContainerRegistry);
@@ -68,6 +72,7 @@ class AutoUpdates extends ResourceController {
      * @custom true
      * @param int $containerRegistryId
      * @return void
+     * @audit entity
      */
     public function webhooksHarbor(int $containerRegistryId): void {
         $registry = $this->registryCalling($containerRegistryId, \ContainerRegistries::Harbor);

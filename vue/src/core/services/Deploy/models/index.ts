@@ -1,3 +1,4 @@
+export {AuditEvent as AuditEvent} from "./AuditEvent";
 export {AutoUpdate as AutoUpdate} from "./AutoUpdate";
 export {ContainerImage as ContainerImage} from "./ContainerImage";
 export {ContainerImageScan as ContainerImageScan} from "./ContainerImageScan";

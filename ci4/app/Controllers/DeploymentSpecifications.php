@@ -45,6 +45,7 @@ class DeploymentSpecifications extends ResourceController {
      * @custom true
      * @param int $id
      * @return void
+     * @audit entity
      */
     public function duplicate(int $id): void {
         $item = new DeploymentSpecification();
@@ -97,6 +98,7 @@ class DeploymentSpecifications extends ResourceController {
      * @param int $id
      * @requestSchema PostCommandList
      * @return void
+     * @audit entity
      */
     public function updatePostCommands(int $id): void {
         $item = new DeploymentSpecification();
@@ -130,6 +132,7 @@ class DeploymentSpecifications extends ResourceController {
      * @param int $id
      * @requestSchema QuickCommandList
      * @return void
+     * @audit entity
      */
     public function updateQuickCommands(int $id): void {
         $item = new DeploymentSpecification();
@@ -161,6 +164,7 @@ class DeploymentSpecifications extends ResourceController {
      * @param int $id
      * @requestSchema EnvironmentVariableList
      * @return void
+     * @audit entity
      */
     public function updateEnvironmentVariables(int $id): void {
         $item = new DeploymentSpecification();
@@ -189,6 +193,7 @@ class DeploymentSpecifications extends ResourceController {
      * @param int $id
      * @requestSchema ServicePortList
      * @return void
+     * @audit entity
      */
     public function updateServicePorts(int $id): void {
         $item = new DeploymentSpecification();
@@ -224,6 +229,7 @@ class DeploymentSpecifications extends ResourceController {
      * @param int $id
      * @requestSchema IngressList
      * @return void
+     * @audit entity
      */
     public function updateIngresses(int $id): void {
         $item = new DeploymentSpecification();
@@ -262,6 +268,7 @@ class DeploymentSpecifications extends ResourceController {
      * @param int $id
      * @requestSchema ClusterRoleRuleList
      * @return void
+     * @audit entity
      */
     public function updateClusterRoleRules(int $id): void {
         $item = new DeploymentSpecification();
@@ -294,6 +301,7 @@ class DeploymentSpecifications extends ResourceController {
      * @param int $id
      * @requestSchema ClusterRoleRuleList
      * @return void
+     * @audit entity
      */
     public function updateRoleRules(int $id): void {
         $item = new DeploymentSpecification();
@@ -326,6 +334,7 @@ class DeploymentSpecifications extends ResourceController {
      * @param int $id
      * @requestSchema ServiceAnnotationList
      * @return void
+     * @audit entity
      */
     public function updateServiceAnnotations(int $id): void {
         $item = new DeploymentSpecification();
@@ -354,6 +363,7 @@ class DeploymentSpecifications extends ResourceController {
      * @param int $id
      * @requestSchema DeploymentAnnotationList
      * @return void
+     * @audit entity
      */
     public function updateDeploymentAnnotations(int $id): void {
         $item = new DeploymentSpecification();
@@ -382,6 +392,7 @@ class DeploymentSpecifications extends ResourceController {
      * @param int $id
      * @requestSchema DeploymentSpecificationInitContainersRequest
      * @return void
+     * @audit entity
      */
     public function updateInitContainers(int $id): void {
         $item = new DeploymentSpecification();
@@ -420,6 +431,7 @@ class DeploymentSpecifications extends ResourceController {
      * @param int $id
      * @requestSchema IntArrayInterface
      * @return void
+     * @audit entity
      */
     public function updatePostUpdateActions(int $id): void {
         $item = new DeploymentSpecification();
@@ -452,6 +464,7 @@ class DeploymentSpecifications extends ResourceController {
      * @param int $id
      * @requestSchema LabelList
      * @return void
+     * @audit entity
      */
     public function updateLabels(int $id): void {
         $item = new DeploymentSpecification();
@@ -480,6 +493,7 @@ class DeploymentSpecifications extends ResourceController {
      * @param int $id
      * @requestSchema IntArrayInterface
      * @return void
+     * @audit entity
      */
     public function updateCronJobs(int $id): void {
         $item = new DeploymentSpecification();
@@ -512,6 +526,7 @@ class DeploymentSpecifications extends ResourceController {
      * @param int $id
      * @requestSchema HttpProxyRouteList
      * @return void
+     * @audit entity
      */
     public function updateDeploymentHttpProxyRoutes(int $id): void {
         $item = new DeploymentSpecification();
@@ -547,6 +562,7 @@ class DeploymentSpecifications extends ResourceController {
      * @param int $id
      * @requestSchema DeploymentSpecificationVolumeList
      * @return void
+     * @audit entity
      */
     public function updateVolumes(int $id): void {
         $item = new DeploymentSpecification();

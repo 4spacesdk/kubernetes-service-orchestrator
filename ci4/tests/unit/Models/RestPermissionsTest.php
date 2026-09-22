@@ -25,6 +25,9 @@ class RestPermissionsTest extends CIUnitTestCase {
      * @var array<string, string[]>
      */
     private const Refuses = [
+        // The audit trail, written by `Audit` alone. Nobody edits history.
+        'AuditEventModel' => ['create', 'update', 'delete'],
+
         // Created by the auto-update machinery when a registry reports a new tag, and
         // approved or rejected through their own endpoints - never posted by a client.
         'AutoUpdateModel' => ['create', 'update'],

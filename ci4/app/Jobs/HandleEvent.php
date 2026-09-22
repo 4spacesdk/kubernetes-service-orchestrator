@@ -1,5 +1,6 @@
 <?php namespace App\Jobs;
 
+use App\Libraries\Audit\AuditContext;
 use App\Libraries\Push\ChangeEvent;
 use App\Libraries\Push\EventHandlers;
 use CodeIgniter\Queue\BaseJob;
@@ -16,7 +17,13 @@ class HandleEvent extends BaseJob {
     protected int $tries = 1;
 
     public function process() {
-        EventHandlers::Handle($this->data['event'], ChangeEvent::Parse($this->data['data']));
+        // Jobs queued before the actor was carried along have none: the system's.
+        AuditContext::Restore($this->data['actor'] ?? null, AuditContext::Queue);
+        try {
+            EventHandlers::Handle($this->data['event'], ChangeEvent::Parse($this->data['data']));
+        } finally {
+            AuditContext::Forget();
+        }
     }
 
 }

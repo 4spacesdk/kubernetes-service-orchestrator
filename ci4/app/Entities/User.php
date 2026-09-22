@@ -176,6 +176,8 @@ class User extends \RestExtension\Entities\User {
 
     use EncryptsFields;
 
+    use \App\Entities\Concerns\Audited;
+
     public $hiddenFields = ['password', 'mfa_secret_hash', 'password_reset_token_hash', 'password_reset_expires'];
 
     public function getScopes(): array {

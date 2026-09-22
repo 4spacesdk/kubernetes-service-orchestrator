@@ -2,6 +2,7 @@
 
 use App\Core\ResourceController;
 use App\Entities\ContainerImage;
+use App\Libraries\Audit\Audit;
 use App\Libraries\ImageScanning\ImageScanner;
 use DebugTool\Data;
 
@@ -18,6 +19,7 @@ class ContainerImages extends ResourceController {
      * @param int $id
      * @responseSchema ContainerImageScanRequestResponse
      * @return void
+     * @audit container_image.scan
      */
     public function scan(int $id): void {
         $item = new ContainerImage();
@@ -28,6 +30,7 @@ class ContainerImages extends ResourceController {
         }
 
         Data::set('resource', ['queued' => (new ImageScanner())->queue($item)]);
+        Audit::Record('container_image.scan', $item);
         $this->success();
     }
 

@@ -1,5 +1,6 @@
 <?php namespace App;
 
+use App\Libraries\Audit\AuditContext;
 use OrmExtension\DataMapper\ModelDefinitionCache;
 
 /**
@@ -63,6 +64,10 @@ abstract class DatabaseTestCase extends TestCase {
 
     public function setUp(): void {
         parent::setUp();
+
+        // A static that lives for the whole process: a test that ran a cron job leaves it
+        // saying "cron" for everything after.
+        AuditContext::Forget();
 
         $this->keepTheClusterOutOfIt();
 

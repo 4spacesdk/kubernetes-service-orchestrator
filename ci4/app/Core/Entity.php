@@ -4,6 +4,8 @@ use RestExtension\ResourceEntityInterface;
 
 class Entity extends \RestExtension\Core\Entity implements ResourceEntityInterface {
 
+    use \App\Entities\Concerns\Audited;
+
     /**
      * The payload of a change event: this row's own columns, detached from this entity, as
      * it is pushed to every open browser. Two things about it are worth

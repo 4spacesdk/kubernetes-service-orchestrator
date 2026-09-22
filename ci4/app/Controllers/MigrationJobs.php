@@ -1,6 +1,7 @@
 <?php namespace App\Controllers;
 
 use App\Entities\MigrationJob;
+use App\Libraries\Audit\Audit;
 use App\Models\MigrationJobModel;
 use DebugTool\Data;
 
@@ -37,6 +38,7 @@ class MigrationJobs extends \App\Core\ResourceController {
      * @param int $id
      * @responseSchema MigrationJob
      * @return void
+     * @audit migration_job.rerun
      */
     public function rerun(int $id): void {
         /** @var MigrationJob $job */
@@ -48,6 +50,9 @@ class MigrationJobs extends \App\Core\ResourceController {
             $job->rerun();
         }
 
+        if ($job->exists()) {
+            Audit::Record('migration_job.rerun', $job);
+        }
         Data::set('resource', $job);
         $this->success();
     }
@@ -59,6 +64,7 @@ class MigrationJobs extends \App\Core\ResourceController {
      * @param int $id
      * @responseSchema MigrationJob
      * @return void
+     * @audit none the migration job's own callback; the job's row is the record
      */
     public function setStarted(int $id): void {
         $job = $this->jobForCallback($id);
@@ -82,6 +88,7 @@ class MigrationJobs extends \App\Core\ResourceController {
      * @param int $id
      * @responseSchema MigrationJob
      * @return void
+     * @audit none the migration job's own callback; the job's row is the record
      */
     public function setEnded(int $id): void {
         $job = $this->jobForCallback($id);

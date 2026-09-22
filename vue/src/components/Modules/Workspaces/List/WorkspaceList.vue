@@ -324,6 +324,14 @@ function onShowMigrationJobsBtnClicked(item: Workspace) {
     });
 }
 
+function onShowHistoryBtnClicked(item: Workspace) {
+    bus.emit("auditEventList", {
+        resourceType: "Workspace",
+        resourceId: item.id!,
+        title: item.name_readable,
+    });
+}
+
 function onShowDeploymentsBtnClicked(item: Workspace) {
     bus.emit("workspaceDeploymentList", {
         workspace: item,
@@ -544,6 +552,12 @@ function onDeploymentPackagesShortcutClicked() {
                                 title="Delete"
                                 base-color="red"
                                 @click="onDeleteItemBtnClicked(item)"
+                            />
+                            <v-list-item
+                                v-if="rbacDeveloper"
+                                prepend-icon="fa fa-clock-rotate-left"
+                                title="History"
+                                @click="onShowHistoryBtnClicked(item.workspace)"
                             />
                         </v-list>
                     </v-menu>

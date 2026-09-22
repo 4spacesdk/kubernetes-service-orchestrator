@@ -1,5 +1,6 @@
 <?php namespace App\Libraries\Push;
 
+use App\Libraries\Audit\AuditContext;
 use DebugTool\Data;
 use phpcent\Client;
 
@@ -92,7 +93,8 @@ class Publisher {
             if ($handler['delay'] > 0) {
                 $queue->setDelay($handler['delay']);
             }
-            $result = $queue->push(EventHandlers::Queue, EventHandlers::Job, ['event' => $event, 'data' => $data]);
+            // Who set it off, so what the job changes is recorded as theirs - see AuditContext.
+            $result = $queue->push(EventHandlers::Queue, EventHandlers::Job, ['event' => $event, 'data' => $data, 'actor' => AuditContext::Current()]);
             if (!$result->getStatus()) {
                 Data::debug('Could not queue', $event, ':', $result->getError());
             }

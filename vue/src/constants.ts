@@ -47,6 +47,7 @@ import type { DeploymentResourcePreviewDialog_Input } from "@/components/Dialogs
 import type { DeploymentUpdateEnvirontmentVariablesDialog_Input } from "@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateEnvironmentVariablesDialog.vue";
 import type { DeploymentUpdateEnvirontmentVariableDialog_Input } from "@/components/Dialogs/Setup/Deployments/UpdateDialogs/DeploymentUpdateEnvironmentVariableDialog.vue";
 import type { MigrationJobListDialog_Input } from "@/components/Dialogs/MigrationJobs/MigrationJobsListDialog.vue";
+import type { AuditEventListDialog_Input } from "@/components/Dialogs/AuditEvents/AuditEventsListDialog.vue";
 import type { WorkspaceCreateDialog_Input } from "@/components/Dialogs/Workspaces/WorkspaceCreateDialog.vue";
 import type { WorkspaceUpdateDatabaseServiceDialog_Input } from "@/components/Dialogs/Workspaces/UpdateDialogs/WorkspaceUpdateDatabaseServiceDialog.vue";
 import type { WorkspaceUpdateEmailServiceDialog_Input } from "@/components/Dialogs/Workspaces/UpdateDialogs/WorkspaceUpdateEmailServiceDialog.vue";
@@ -191,6 +192,8 @@ export type Events = {
     userEdit: UserEditDialog_Input;
     userSaved: User | undefined;
     userEditDialog_closed: User | undefined;
+
+    auditEventList: AuditEventListDialog_Input;
 
     migrationJobList: MigrationJobListDialog_Input;
     migrationJobLogs: MigrationJobLogsDialog_Input;

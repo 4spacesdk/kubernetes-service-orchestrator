@@ -17,6 +17,7 @@ class GithubIntegrations extends ResourceController {
      * @param int $id
      * @responseSchema GithubIntegrationSetupResponse
      * @return void
+     * @audit none builds the url for GitHub; what GitHub sends back is saved through the entity
      */
     public function createApp(int $id): void {
         $item = new GithubIntegration();
@@ -47,6 +48,7 @@ class GithubIntegrations extends ResourceController {
      * @param int $id
      * @responseSchema GithubIntegrationSetupResponse
      * @return void
+     * @audit none builds the url for GitHub; what GitHub sends back is saved through the entity
      */
     public function install(int $id): void {
         $item = new GithubIntegration();

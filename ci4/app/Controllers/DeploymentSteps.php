@@ -1,6 +1,7 @@
 <?php namespace App\Controllers;
 
 use App\Entities\Deployment;
+use App\Libraries\Audit\Audit;
 use App\Libraries\DeploymentSteps\BaseDeploymentStep;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
 use App\Libraries\Kubernetes\KubeHelper;
@@ -107,6 +108,7 @@ class DeploymentSteps extends \App\Core\BaseController {
      * @custom true
      * @param string $identifier
      * @parameter int $deploymentId parameterType=query
+     * @audit deployment.deploy_step
      */
     public function deploy(string $identifier) {
         $valid = $this->validateStep($identifier);
@@ -125,6 +127,7 @@ class DeploymentSteps extends \App\Core\BaseController {
             return;
         }
 
+        Audit::Record('deployment.deploy_step', $deployment, ['step' => $identifier]);
         $deployment->checkStatus(true);
 
         Data::set('resource', $step);
@@ -137,6 +140,7 @@ class DeploymentSteps extends \App\Core\BaseController {
      * @custom true
      * @parameter int $deploymentId parameterType=query
      * @param string $identifier
+     * @audit deployment.terminate_step
      */
     public function terminate(string $identifier) {
         $valid = $this->validateStep($identifier);
@@ -162,6 +166,7 @@ class DeploymentSteps extends \App\Core\BaseController {
             return;
         }
 
+        Audit::Record('deployment.terminate_step', $deployment, ['step' => $identifier]);
         $deployment->checkStatus(true);
 
         Data::set('resource', $step);

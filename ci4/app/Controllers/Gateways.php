@@ -6,6 +6,7 @@ use App\Entities\GatewayAddress;
 use App\Entities\GatewayAnnotation;
 use App\Interfaces\GatewayAddressList;
 use App\Interfaces\GatewayAnnotationList;
+use App\Libraries\Audit\Audit;
 use App\Libraries\GatewaySteps\GatewayStep;
 use App\Libraries\Kubernetes\KubeHelper;
 use App\Models\GatewayModel;
@@ -59,6 +60,7 @@ class Gateways extends ResourceController {
      * @method put
      * @custom true
      * @param int $id
+     * @audit gateway.deploy
      */
     public function deploy(int $id): void {
         /** @var Gateway $gateway */
@@ -77,6 +79,7 @@ class Gateways extends ResourceController {
         }
 
         $this->_setResource($gateway);
+        Audit::Record('gateway.deploy', $gateway);
         $this->success();
     }
 
@@ -85,6 +88,7 @@ class Gateways extends ResourceController {
      * @method put
      * @custom true
      * @param int $id
+     * @audit gateway.terminate
      */
     public function terminate(int $id): void {
         /** @var Gateway $gateway */
@@ -103,6 +107,7 @@ class Gateways extends ResourceController {
         }
 
         $this->_setResource($gateway);
+        Audit::Record('gateway.terminate', $gateway);
         $this->success();
     }
 
@@ -191,6 +196,7 @@ class Gateways extends ResourceController {
      * @param int $id
      * @requestSchema GatewayAddressList
      * @return void
+     * @audit entity
      */
     public function updateGatewayAddresses(int $id): void {
         $item = new Gateway();
@@ -236,6 +242,7 @@ class Gateways extends ResourceController {
      * @param int $id
      * @requestSchema GatewayAnnotationList
      * @return void
+     * @audit entity
      */
     public function updateGatewayAnnotations(int $id): void {
         $item = new Gateway();

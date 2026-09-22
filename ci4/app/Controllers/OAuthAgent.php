@@ -1,5 +1,6 @@
 <?php namespace App\Controllers;
 
+use App\Libraries\Audit\Audit;
 use AuthExtension\OAuth2\ServerLib;
 use CodeIgniter\Cookie\Cookie;
 use CodeIgniter\Cookie\CookieInterface;
@@ -21,6 +22,9 @@ class OAuthAgent extends \App\Core\BaseController {
         return str_replace(':8950', ':8080', base_url($relativePath, $scheme));
     }
 
+    /**
+     * @audit none exchanges tokens; a sign-in is recorded by the sign-in form
+     */
     public function token(): void {
         $grantType = $this->request->getPost('grant_type');
         $code = $this->request->getPost('code');
@@ -79,12 +83,15 @@ class OAuthAgent extends \App\Core\BaseController {
      *
      * Only this browser: the user's other devices keep their sign-ins. A changed password ends
      * those - see `User::EndEverySignIn()`.
+     * @audit user.sign_out
      */
     public function logout(): void {
         $storage = ServerLib::getInstance()->storage;
 
+        $userId = null;
         $refreshToken = $this->getCookieAttribute('refreshToken');
         if ($refreshToken) {
+            $userId = ($storage->getRefreshToken($refreshToken) ?: [])['user_id'] ?? null;
             $storage->unsetRefreshToken($refreshToken);
         }
 
@@ -94,9 +101,15 @@ class OAuthAgent extends \App\Core\BaseController {
         }
 
         $this->response->setCookie($this->getCookie()->withValue('')->withExpired());
+        if ($userId) {
+            Audit::Record('user.sign_out', ['type' => 'User', 'id' => (int) $userId], [], (int) $userId);
+        }
         $this->success();
     }
 
+    /**
+     * @audit none exchanges tokens; a sign-in is recorded by the sign-in form
+     */
     public function refresh(): void {
         $clientId = $this->request->getPost('client_id');
         $grantType = $this->request->getPost('grant_type');

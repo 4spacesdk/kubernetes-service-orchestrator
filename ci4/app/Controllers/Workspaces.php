@@ -9,6 +9,7 @@ use App\Entities\Label;
 use App\Entities\Workspace;
 use App\Exceptions\ValidationException;
 use App\Interfaces\LabelList;
+use App\Libraries\Audit\Audit;
 use App\Models\DeploymentModel;
 use App\Models\DeploymentPackageDeploymentSpecificationModel;
 use App\Models\MigrationJobModel;
@@ -26,6 +27,7 @@ class Workspaces extends ResourceController {
      * @parameter int $domainId parameterType=query
      * @parameter string $subdomain parameterType=query
      * @return void
+     * @audit entity
      */
     public function create(): void {
         try {
@@ -58,6 +60,7 @@ class Workspaces extends ResourceController {
      * @parameter string $version parameterType=query
      * @return void
      * @responseSchema Deployment
+     * @audit entity
      */
     public function createDeployment(int $id = 0): void {
         $item = new Workspace();
@@ -97,6 +100,7 @@ class Workspaces extends ResourceController {
      * @param int $id
      * @parameter string $value parameterType=query
      * @return void
+     * @audit entity
      */
     public function updateName(int $id = 0): void {
         $value = $this->request->getGet('value');
@@ -122,6 +126,7 @@ class Workspaces extends ResourceController {
      * @parameter string $subdomain parameterType=query
      * @parameter string $aliases parameterType=query
      * @return void
+     * @audit entity
      */
     public function updateIngress(int $id): void {
         $item = new Workspace();
@@ -152,6 +157,7 @@ class Workspaces extends ResourceController {
      * @param int $id
      * @parameter int $value parameterType=query
      * @return void
+     * @audit entity
      */
     public function updateEmailServiceId(int $id = 0): void {
         $value = $this->request->getGet('value');
@@ -175,6 +181,7 @@ class Workspaces extends ResourceController {
      * @param int $id
      * @parameter int $value parameterType=query
      * @return void
+     * @audit entity
      */
     public function updateDatabaseServiceId(int $id = 0): void {
         $value = $this->request->getGet('value');
@@ -198,6 +205,7 @@ class Workspaces extends ResourceController {
      * @param int $id
      * @parameter string $value parameterType=query
      * @return void
+     * @audit workspace.deploy
      */
     public function deploy(int $id = 0): void {
         $item = new Workspace();
@@ -213,6 +221,7 @@ class Workspaces extends ResourceController {
             return;
         }
         $this->_setResource($item);
+        Audit::Record('workspace.deploy', $item);
         $this->success();
     }
 
@@ -223,6 +232,7 @@ class Workspaces extends ResourceController {
      * @param int $id
      * @parameter string $value parameterType=query
      * @return void
+     * @audit workspace.terminate
      */
     public function terminate(int $id = 0): void {
         $item = new Workspace();
@@ -238,6 +248,7 @@ class Workspaces extends ResourceController {
             return;
         }
         $this->_setResource($item);
+        Audit::Record('workspace.terminate', $item);
         $this->success();
     }
 
@@ -250,6 +261,7 @@ class Workspaces extends ResourceController {
      * @custom true
      * @param int $id
      * @return void
+     * @audit workspace.pause
      */
     public function pause(int $id = 0): void {
         $item = new Workspace();
@@ -265,6 +277,7 @@ class Workspaces extends ResourceController {
             return;
         }
         $this->_setResource($item);
+        Audit::Record('workspace.pause', $item);
         $this->success();
     }
 
@@ -276,6 +289,7 @@ class Workspaces extends ResourceController {
      * @custom true
      * @param int $id
      * @return void
+     * @audit workspace.resume
      */
     public function resume(int $id = 0): void {
         $item = new Workspace();
@@ -287,6 +301,7 @@ class Workspaces extends ResourceController {
 
         $item->resume();
         $this->_setResource($item);
+        Audit::Record('workspace.resume', $item);
         $this->success();
     }
 
@@ -342,6 +357,7 @@ class Workspaces extends ResourceController {
      * @param int $id
      * @requestSchema LabelList
      * @return void
+     * @audit entity
      */
     public function updateLabels(int $id): void {
         $item = new Workspace();

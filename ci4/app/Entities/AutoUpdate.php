@@ -25,6 +25,9 @@ use DeploymentStatusTypes;
  */
 class AutoUpdate extends Entity {
 
+    /** Appended to as the update runs. */
+    public const array AuditIgnoredFields = ['log'];
+
     public static function CheckForUpdates(string $image, string $tag): void {
         /** @var Deployment $deployments */
         $deployments = (new DeploymentModel())

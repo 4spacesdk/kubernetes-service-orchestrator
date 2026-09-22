@@ -3,6 +3,7 @@
 use App\Core\ResourceController;
 use App\Entities\ContainerRegistry;
 use App\Interfaces\ContainerRegistryImportRequest;
+use App\Libraries\Audit\Audit;
 use DebugTool\Data;
 
 class ContainerRegistries extends ResourceController {
@@ -77,6 +78,7 @@ class ContainerRegistries extends ResourceController {
      * @param int $id
      * @requestSchema ContainerRegistryImportRequest
      * @return void
+     * @audit entity
      */
     public function import(int $id): void {
         $item = new ContainerRegistry();
@@ -113,6 +115,7 @@ class ContainerRegistries extends ResourceController {
      * @param int $id
      * @responseSchema ContainerRegistryTestResponse
      * @return void
+     * @audit container_registry.setup_events
      */
     public function setupEvents(int $id): void {
         $item = new ContainerRegistry();
@@ -128,6 +131,7 @@ class ContainerRegistries extends ResourceController {
             $this->fail($e->getMessage());
             return;
         }
+        Audit::Record('container_registry.setup_events', $item);
         $this->success();
     }
 
