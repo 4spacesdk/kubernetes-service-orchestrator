@@ -318,6 +318,7 @@ use App\Libraries\EmailLib;
                 <div class="card-body">
 
                     <form class="form-signin" method="post">
+                        <?= csrf_field() ?>
 
                         <div class="-form-label-group mb-2">
                             <label for="inputEmail" class="small">E-mail</label>

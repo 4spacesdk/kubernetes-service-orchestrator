@@ -118,5 +118,12 @@ class Filters extends BaseFilters
      *
      * @var array<string, array<string, list<string>>>
      */
-    public array $filters = [];
+    public array $filters = [
+        // The sign-in forms, the only part of kso that rests on a cookie rather than a bearer
+        // token. SameSite=Lax does not stop a cross-site form from signing the visitor in to an
+        // account of the sender's choosing.
+        'csrf' => ['before' => self::FormPaths],
+    ];
+
+    public const array FormPaths = ['login', 'login/*'];
 }

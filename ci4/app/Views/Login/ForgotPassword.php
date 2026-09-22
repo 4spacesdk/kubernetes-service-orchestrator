@@ -292,6 +292,7 @@ use DebugTool\Data; ?>
                 <div class="card-body">
 
                     <form class="form-signin" method="post">
+                        <?= csrf_field() ?>
 
                         <div class="-form-label-group mb-2">
                             <input type="email" id="inputEmail" name="username" class="form-control"

@@ -296,6 +296,7 @@ use DebugTool\Data; ?>
                 <div class="card-body">
 
                     <form class="form-signin" method="post">
+                        <?= csrf_field() ?>
 
                         <?php if (isset($error)) { ?>
                         <div class="alert alert-warning mt-4" role="alert">

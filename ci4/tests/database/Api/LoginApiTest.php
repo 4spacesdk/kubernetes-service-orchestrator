@@ -789,7 +789,7 @@ class LoginApiTest extends ControllerTestCase {
      * come from the browser.
      */
     public function testAMistypedConfirmationChangesNothing(): void {
-        $user = Fixtures::user(['username' => 'renewing', 'password' => 'the-old-one']);
+        $user = Fixtures::user(['username' => 'renewing', 'password' => 'the-old-one', 'renew_password' => true]);
 
         $this->withSession(['user_id' => $user->id]);
         $page = $this->body($this->post('login/renewPassword', [
@@ -800,7 +800,7 @@ class LoginApiTest extends ControllerTestCase {
         $this->assertSame('Must be identical', $this->theWarningShownOn($page));
 
         $stillWorks = $this->post('login', ['username' => 'renewing', 'password' => 'the-old-one']);
-        $this->assertSame(getFrontendUrl(), $this->location($stillWorks));
+        $this->assertSame(base_url('login/renewPassword'), $this->location($stillWorks));
     }
 
     /**
@@ -815,7 +815,7 @@ class LoginApiTest extends ControllerTestCase {
      */
     #[DataProvider('theWaysANewPasswordIsRefused')]
     public function testAWeakPasswordIsRefusedAndTheOldOneKept(string $password, string $expected): void {
-        $user = Fixtures::user(['username' => 'renewing', 'password' => 'the-old-one']);
+        $user = Fixtures::user(['username' => 'renewing', 'password' => 'the-old-one', 'renew_password' => true]);
 
         $this->withSession(['user_id' => $user->id]);
         $page = $this->body($this->post('login/renewPassword', [
@@ -826,7 +826,7 @@ class LoginApiTest extends ControllerTestCase {
         $this->assertSame($expected, $this->theWarningShownOn($page));
 
         $stillWorks = $this->post('login', ['username' => 'renewing', 'password' => 'the-old-one']);
-        $this->assertSame(getFrontendUrl(), $this->location($stillWorks), 'the old password still works');
+        $this->assertSame(base_url('login/renewPassword'), $this->location($stillWorks), 'the old password still works');
     }
 
     /**
@@ -854,7 +854,7 @@ class LoginApiTest extends ControllerTestCase {
      * manager generates one.
      */
     public function testEightCharactersIsEnough(): void {
-        $user = Fixtures::user(['username' => 'renewing', 'password' => 'the-old-one']);
+        $user = Fixtures::user(['username' => 'renewing', 'password' => 'the-old-one', 'renew_password' => true]);
 
         $this->withSession(['user_id' => $user->id]);
         $renewal = $this->post('login/renewPassword', [
@@ -870,7 +870,7 @@ class LoginApiTest extends ControllerTestCase {
      * here remembered a destination.
      */
     public function testARenewedPasswordLandsOnTheRememberedDestination(): void {
-        $user = Fixtures::user(['username' => 'renewing', 'password' => 'the-old-one']);
+        $user = Fixtures::user(['username' => 'renewing', 'password' => 'the-old-one', 'renew_password' => true]);
 
         $this->withSession(array_merge(
             ['user_id' => $user->id],
@@ -889,6 +889,66 @@ class LoginApiTest extends ControllerTestCase {
 
         $this->assertStringContainsString('name="password"', $page);
         $this->assertStringContainsString('name="password_confirm"', $page);
+    }
+
+    /**
+     * Only a user an administrator has asked to renew gets the form. Anyone else is sent on,
+     * so a session left open is no way to change the password.
+     */
+    public function testAUserNotAskedToRenewCannotChangeThePassword(): void {
+        $user = Fixtures::user(['username' => 'settled', 'password' => 'the-old-one']);
+
+        $this->withSession(['user_id' => $user->id]);
+        $this->assertSame(getFrontendUrl(), $this->location($this->get('login/renewPassword')));
+        $renewal = $this->post('login/renewPassword', [
+            'password' => 'A-brand-new-1',
+            'password_confirm' => 'A-brand-new-1',
+        ]);
+        $this->assertSame(getFrontendUrl(), $this->location($renewal));
+
+        $stillWorks = $this->post('login', ['username' => 'settled', 'password' => 'the-old-one']);
+        $this->assertSame(getFrontendUrl(), $this->location($stillWorks));
+    }
+
+    // </editor-fold>
+
+    // <editor-fold desc="Cross-site forms">
+
+    /**
+     * Every form carries a token from the visitor's session. A form posted from another
+     * site has none, and could otherwise sign the visitor in to an account of its choosing.
+     */
+    #[DataProvider('theForms')]
+    public function testEveryFormCarriesAToken(string $path): void {
+        $this->withSession(['2fa_in_progress' => 'operator']);
+        Fixtures::user(['username' => 'operator']);
+
+        $this->assertStringContainsString('name="' . config('Security')->tokenName . '"', $this->body($this->get($path)));
+    }
+
+    /**
+     * @return array<string, array{0: string}>
+     */
+    public static function theForms(): array {
+        return [
+            'sign-in' => ['login'],
+            'second factor' => ['login/twoFactor'],
+            'renewal' => ['login/renewPassword'],
+            'forgotten password' => ['login/forgotPassword'],
+        ];
+    }
+
+    public function testASignInWithoutTheTokenIsRefused(): void {
+        Fixtures::user(['username' => 'operator', 'password' => 'the-right-one']);
+        $this->sendsCsrfToken = false;
+
+        try {
+            $this->post('login', ['username' => 'operator', 'password' => 'the-right-one']);
+            $this->fail('The sign-in was accepted without a token.');
+        } catch (\CodeIgniter\Security\Exceptions\SecurityException) {
+        }
+
+        $this->assertNull($this->whoTheSessionSaysIsSignedIn());
     }
 
     // </editor-fold>

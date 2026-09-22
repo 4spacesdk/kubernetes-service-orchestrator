@@ -308,8 +308,9 @@
                     </div>
 
                     <form class="form-signin" method="post">
+                        <?= csrf_field() ?>
                         <div class="form-label-group">
-                            <input type="password" id="password" name="password" class="form-control" placeholder="Password" required autofocus>
+                            <input type="password" id="password" name="password" class="form-control" placeholder="Password" required autofocus autocomplete="new-password">
                             <label for="password">Password</label>
                         </div>
 

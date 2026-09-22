@@ -151,6 +151,8 @@ abstract class ControllerTestCase extends DatabaseTestCase {
 
         Services::resetSingle('response');
         Services::resetSingle('router');
+        // It reads the CSRF token from the session once, when it is made.
+        Services::resetSingle('security');
 
         // Nothing leaves a test process: a controller that sends its own response - the OAuth
         // agent does - would otherwise emit real headers and cookies and then empty the cookie
@@ -162,6 +164,8 @@ abstract class ControllerTestCase extends DatabaseTestCase {
         // a POST takes the sign-in branch with no credentials in it.
         $_POST = [];
         $_GET = [];
+        // The request reads its copy, which a request that ended in an exception left filled.
+        service('superglobals')->setPostArray([])->setGetArray([]);
     }
 
     /**
@@ -170,7 +174,37 @@ abstract class ControllerTestCase extends DatabaseTestCase {
     public function call(string $method, string $path, ?array $params = null) {
         $this->forgetTheLastRequest();
 
+        if (strtolower($method) === 'post' && $this->sendsCsrfToken && self::IsAForm($path)) {
+            [$this->session, $params] = self::WithCsrfToken($this->session ?? [], $params ?? []);
+        }
+
         return $this->sendRequest($method, $path, $params);
+    }
+
+    /**
+     * Posts to the sign-in forms carry the token the form would have, unless a test says
+     * otherwise to see one refused.
+     */
+    protected bool $sendsCsrfToken = true;
+
+    private static function IsAForm(string $path): bool {
+        $path = trim(strtok($path, '?'), '/');
+        foreach (config('Filters')::FormPaths as $pattern) {
+            if (fnmatch($pattern, $path)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @return array{0: array<string, mixed>, 1: array<string, mixed>}
+     */
+    private static function WithCsrfToken(array $session, array $params): array {
+        $name = config('Security')->tokenName;
+        $token = bin2hex(random_bytes(16));
+
+        return [[$name => $token] + $session, [$name => $token] + $params];
     }
 
     public function tearDown(): void {

@@ -58,6 +58,11 @@ class Login extends \App\Core\BaseController {
             $data['loginResponse'] = $this->request->getPostGet('error_message');
         }
 
+        // Where the CSRF filter sends a form it refused - one kept open past its session.
+        if (session()->getFlashdata('error') !== null) {
+            $data['loginResponse'] = 'The form expired. Try again.';
+        }
+
         if ($_POST) {
 
             // Check credentials
@@ -239,41 +244,37 @@ class Login extends \App\Core\BaseController {
     public function renewPassword(): string|ResponseInterface {
         $requestUrl = self::SafeDestination(session()->getFlashdata(self::RememberedDestination));
 
+        // Only for a user an administrator has asked to renew. Anyone else has signed in with
+        // the password moments ago or not at all, and a session left open or taken would
+        // otherwise be a way to take over the account.
+        $user = AuthExtension::checkSession();
+        if ($user && !$user->renew_password) {
+            return $this->response->redirect($requestUrl);
+        }
+
         if ($_POST) {
 
-            $password = $this->request->getPost('password');
-            $passwordConfirm = $this->request->getPost('password_confirm');
+            $password = (string) $this->request->getPost('password');
 
-            if ($password == $passwordConfirm) {
-
-                $passError = User::FirstUnsatisfiedPasswordRule((string) $password);
-
-                if ($passError === null) {
-
-                    $user = AuthExtension::checkSession();
-                    if ($user) {
-                        $user->password = User::encryptPassword($password);
-                        $user->renew_password = false;
-                        $user->save();
-                        User::EndEverySignIn((int) $user->id, User::CurrentSessionRow());
-
-                        // See the note in `twoFactor()`: returned rather than sent and
-                        // `exit`ed, so the framework shuts down and the response is logged.
-                        return $this->response->redirect($requestUrl);
-                    }
-
-                    // Nobody to change the password of. The form used to come back with no
-                    // message at all, which is indistinguishable from a password that was
-                    // accepted - so a session that had quietly expired looked like a
-                    // renewal that had quietly worked.
-                    Data::set('description', 'Your sign-in has expired. Sign in again.');
-
-                } else {
-                    Data::set('description', $passError);
-                }
-
-            } else {
+            if (!$user) {
+                // Nobody to change the password of. The form used to come back with no
+                // message at all, which is indistinguishable from a password that was
+                // accepted - so a session that had quietly expired looked like a
+                // renewal that had quietly worked.
+                Data::set('description', 'Your sign-in has expired. Sign in again.');
+            } else if ($password !== (string) $this->request->getPost('password_confirm')) {
                 Data::set('description', 'Must be identical');
+            } else if (($passError = User::FirstUnsatisfiedPasswordRule($password)) !== null) {
+                Data::set('description', $passError);
+            } else {
+                $user->password = User::encryptPassword($password);
+                $user->renew_password = false;
+                $user->save();
+                User::EndEverySignIn((int) $user->id, User::CurrentSessionRow());
+
+                // See the note in `twoFactor()`: returned rather than sent and
+                // `exit`ed, so the framework shuts down and the response is logged.
+                return $this->response->redirect($requestUrl);
             }
         }
 

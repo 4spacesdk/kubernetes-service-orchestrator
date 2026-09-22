@@ -57,6 +57,15 @@ class Cookie extends BaseConfig
     public bool $secure = false;
 
     /**
+     * Secure whenever kso is reached over https - read from its base url, like every other
+     * address it writes, rather than from the request.
+     */
+    public function __construct() {
+        parent::__construct();
+        $this->secure = str_starts_with(strtolower(config('App')->baseURL), 'https://');
+    }
+
+    /**
      * --------------------------------------------------------------------------
      * Cookie HTTPOnly
      * --------------------------------------------------------------------------
