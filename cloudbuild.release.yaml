@@ -191,7 +191,7 @@ steps:
           $$USERNAME/$_DOCKER_HUB_REPOSITORY:$TAG_NAME
 
         for i in $$(seq 1 30); do
-          if docker exec kso-smoke curl -sf -o /dev/null http://localhost/api/settings 2>/dev/null; then
+          if docker exec kso-smoke curl -sf -o /dev/null http://localhost:8080/api/settings 2>/dev/null; then
             break
           fi
           sleep 2
@@ -199,7 +199,7 @@ steps:
 
         smoke_failed=0
         for endpoint in /api/settings /api/login; do
-          code=$$(docker exec kso-smoke curl -s -o /tmp/smoke-body -w '%{http_code}' "http://localhost$$endpoint" || echo 000)
+          code=$$(docker exec kso-smoke curl -s -o /tmp/smoke-body -w '%{http_code}' "http://localhost:8080$$endpoint" || echo 000)
           if [ "$$code" = "200" ]; then
             echo "  $$endpoint $$code"
           else

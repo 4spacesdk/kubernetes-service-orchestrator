@@ -55,6 +55,8 @@
 * Environment variables can be marked secret: the value is never sent back to the UI, and saving the list without it keeps it. Every variable's value is encrypted in the database. "Copy to deployments" on a workspace template takes the template's value instead of one in the url
 * Secret environment variables reach the pods through a Secret per workload - the Deployment or KService, each CronJob, each Job - owned by it, instead of in the pod spec. So do variables that take `${database.pass}` or `${emailService.pass}`, marked or not. A changed value rolls the pods. The preview shows the Secret with its values hidden and marks the ones that change, and hides them in a workload deployed before. A custom resource's preview hides what `${database.pass}` and `${emailService.pass}` fill in
 * Stored credentials are no longer handed to anyone signed in: a database or email service's password, a Podio client secret and app token, a webhook's bearer token - in the delivery log too - and an OAuth client secret are write-only now. A form says whether one is stored and keeps it when left empty, and the OAuth clients list no longer prints the secret in a column
+* The container runs as www-data instead of root, with Apache on port 8080. The chart sets `runAsNonRoot`, drops every capability and forbids privilege escalation by default
+* Chart: the cron job runs as non-root from a pinned curl image, without the service account token, and a NetworkPolicy that admits only kso's two ports can be turned on with `networkPolicy.enabled`. A pod that cannot reach its database is taken out of the Service
 * Apache serves only `/api` and `/app`. The rest of the application's files - the PHP dependencies and the tests among them - could be listed and run by url
 * A migration job reports that it started and ended with a token of its own, given to its pod through the job's Secret. Without it the report is refused, so nobody else can end a job and set off its post-update commands. A job started before the upgrade cannot report back - rerun it
 * Live updates go through Centrifugo: a browser connects with its sign-in token, checked against kso's published keys, and can only listen. The WAMP router, its shared secret and the ZeroMQ extension are gone
@@ -91,6 +93,7 @@
 9. kso needs `create`, `get`, `update`, `patch`, `delete` and `list` on `secrets`, and `update` on the `finalizers` of deployments, jobs, cronjobs and Knative services. The chart's ClusterRole has them now; if you grant kso's rights yourself, add them. Knative's rights come with `knative.enabled: true` - if you gave kso Knative Services through `clusterrole.additionalRules`, set that instead
 
 10. The chart runs Centrifugo as a sidecar and routes `/connection` to it instead of `/socket` to port 9100. If you route to kso yourself, send `/connection` to the Service's `push` port (8000) with WebSockets allowed, and drop `/socket`
+11. The image runs as www-data (uid 82) and Apache listens on 8080. The chart's Service still answers on 80, so routing through it needs nothing. If you run the image outside the chart, map to 8080; if you set `securityContext` or `podSecurityContext` yourself, keep `runAsUser: 82` and `fsGroup: 82`
 
 ### Notes
 * An image built for arm64 has no MSSQL driver

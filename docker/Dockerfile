@@ -156,9 +156,6 @@ RUN { \
 # Configure apache
 COPY docker/apache/httpd.conf /etc/apache2/httpd.conf
 
-# Forward request and error logs to docker log collector
-RUN ln -sf /dev/stdout /var/log/apache2/access.log \
-    && ln -sf /dev/stderr /var/log/apache2/error.log
 
 ENV APP_HOME /var/www/html
 # Read by the Content-Security-Policy in docker/apache/httpd.conf; the chart sets the real one.
@@ -183,6 +180,10 @@ COPY --chown=www-data --from=build-stage /vue/dist $APP_HOME/vue
 # directory is missing. Its contents are gitignored, so do not rely on the checkout.
 RUN mkdir -p $APP_HOME/ci4/writable/cache && chown www-data:www-data $APP_HOME/ci4/writable/cache
 
+# The directory itself too, whatever COPY made of it: the test suites run in this image, as
+# www-data, and PHPUnit writes its cache there and its logs to build/.
+RUN mkdir -p $APP_HOME/ci4/build && chown www-data:www-data $APP_HOME/ci4 $APP_HOME/ci4/build
+
 # Set TAG_NAME as Environment Variable
 ARG BUILD_TAG_NAME=latest
 ENV TAG_NAME ${BUILD_TAG_NAME}
@@ -191,11 +192,17 @@ ENV TAG_NAME ${BUILD_TAG_NAME}
 ARG BUILD_SHORT_SHA
 ENV SHORT_SHA ${BUILD_SHORT_SHA}
 
-# Launch the httpd in foreground
-CMD rm -rf /run/apache2/*
-
 # Starts the job queue's worker beside Apache.
 COPY docker/entrypoint-wrapper /usr/local/bin/entrypoint-wrapper
 RUN chmod 775 /usr/local/bin/entrypoint-wrapper
+
+# Not root. What the processes write at runtime is theirs: Apache's pid and lock files, and
+# Trivy's databases where the chart does not mount a volume over them. Everything else is read,
+# or written under ci4/writable and /tmp. Numeric, so Kubernetes can tell it is not root
+# (runAsNonRoot) without looking the name up.
+RUN mkdir -p /run/apache2 /var/cache/kso-trivy \
+ && chown www-data:www-data /run/apache2 /var/cache/kso-trivy
+USER 82:82
+
 ENTRYPOINT [ "entrypoint-wrapper" ]
 

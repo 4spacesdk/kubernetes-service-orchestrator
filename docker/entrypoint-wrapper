@@ -1,15 +1,26 @@
 #!/bin/sh
 
-# The job queue's worker, as www-data - the events kso acts on itself, see
+# The image runs as www-data. Started as root anyway - `docker run --user 0` - the worker still
+# drops to www-data, so what it writes stays writable for Apache.
+if [ "$(id -u)" = "0" ]; then
+  as_www_data="runuser -u www-data --"
+else
+  as_www_data=""
+fi
+
+# The job queue's worker - the events kso acts on itself, see
 # Libraries/Push/EventHandlers.php. It stops by itself after an hour or a thousand jobs, so a
 # leak cannot grow for ever, and the loop starts it again; the same after a crash. The jobs wait
 # in the database in the meantime.
 (
   while true; do
-    runuser -u www-data -- php /var/www/html/ci4/spark queue:work events -sleep 2 -max-jobs 1000 -max-time 3600
+    $as_www_data php /var/www/html/ci4/spark queue:work events -sleep 2 -max-jobs 1000 -max-time 3600
     sleep 5
   done
 ) &
+
+# A container that is restarted keeps its filesystem, and with it the last Apache's pid file.
+rm -f /run/apache2/httpd.pid
 
 # Start apache
 exec /usr/sbin/httpd -DFOREGROUND

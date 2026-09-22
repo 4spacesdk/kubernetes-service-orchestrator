@@ -14,7 +14,7 @@ services:
     working_dir: /var/www/html
 
     ports:
-      - "${KSO_CI4_PORT}:80"
+      - "${KSO_CI4_PORT}:8080"
 
     environment:
       - ENVIRONMENT=development
@@ -79,7 +79,7 @@ services:
       - "${KSO_CENTRIFUGO_PORT}:8000"
 
     environment:
-      - CENTRIFUGO_CLIENT_TOKEN_JWKS_PUBLIC_ENDPOINT=http://deploy/api/openidconfiguration/jwks
+      - CENTRIFUGO_CLIENT_TOKEN_JWKS_PUBLIC_ENDPOINT=http://deploy:8080/api/openidconfiguration/jwks
       - CENTRIFUGO_CLIENT_TOKEN_AUDIENCE=webclient
       - CENTRIFUGO_HTTP_API_KEY=${KSO_CENTRIFUGO_API_KEY}
       - CENTRIFUGO_CLIENT_ALLOWED_ORIGINS=http://localhost:${KSO_VUE_PORT} http://localhost:${KSO_CI4_PORT}
