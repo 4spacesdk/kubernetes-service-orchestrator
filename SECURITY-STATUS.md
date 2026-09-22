@@ -5,48 +5,21 @@ found by `composer audit`, `npm audit` and [Trivy](https://trivy.dev). A release
 this file as it was when it was tagged. Written every week by
 [a scheduled workflow](.github/workflows/security-status.yml) - do not edit by hand.
 
-Updated: 2026-09-21 16:12 UTC
+Updated: 2026-09-22 16:20 UTC
 
-Main at: `d1486a3`
+Main at: `65899d9`
 
 | Source | Critical | High | Medium | Low | Unknown |
 |--------|---------:|-----:|-------:|----:|--------:|
 | PHP · ci4/composer.lock | 0 | 0 | 0 | 0 | 0 |
-| PHP · zmq-client/composer.lock | 0 | 1 | 6 | 0 | 0 |
-| PHP · zmq-server/composer.lock | 0 | 1 | 7 | 0 | 0 |
 | JavaScript · vue/package-lock.json | 1 | 50 | 43 | 6 | 0 |
-| Image · 4spaces/kubernetes-service-orchestrator:dev | 1 | 2 | 12 | 0 | 0 |
+| Image · 4spaces/kubernetes-service-orchestrator:dev | 0 | 2 | 4 | 3 | 1 |
 
 ## PHP · ci4/composer.lock
 
 *abandoned: swiftmailer/swiftmailer, vierbergenlars/php-semver*
 
 Nothing known.
-
-## PHP · zmq-client/composer.lock
-
-| Severity | Id | Package | Installed | Fix | Title |
-|----------|----|---------|-----------|-----|-------|
-| high | [CVE-2024-51736](https://symfony.com/cve-2024-51736) | symfony/process | v5.4.26 | not >=5.4.0,<5.4.46 | CVE-2024-51736: Command execution hijack on Windows with Process class |
-| medium | [CVE-2026-48998](https://github.com/guzzle/psr7/security/advisories/GHSA-34xg-wgjx-8xph) | guzzlehttp/psr7 | 2.6.0 | not <2.10.2 | Host confusion via authority reinterpretation |
-| medium | [CVE-2026-49214](https://github.com/guzzle/psr7/security/advisories/GHSA-hq7v-mx3g-29hw) | guzzlehttp/psr7 | 2.6.0 | not <2.10.2 | CRLF injection via URI host component |
-| medium | [CVE-2026-55766](https://github.com/guzzle/psr7/security/advisories/GHSA-vm85-hxw5-5432) | guzzlehttp/psr7 | 2.6.0 | not <2.12.1 | CRLF injection in HTTP start-line serialization |
-| medium | [CVE-2026-59882](https://github.com/advisories/GHSA-c2w2-prh8-qm98) | guzzlehttp/psr7 | 2.6.0 | not <2.12.3 | guzzlehttp/psr7: Host Confusion via Weak URI Host Validation |
-| medium | [CVE-2025-22145](https://github.com/advisories/GHSA-j3f9-p6hm-5w6q) | nesbot/carbon | 2.69.0 | not <2.72.6 | Carbon has an arbitrary file include via unvalidated input passed to Carbon::setLocale |
-| medium | [CVE-2026-24739](https://github.com/advisories/GHSA-r39x-jcww-82v6) | symfony/process | v5.4.26 | not <5.4.51 | Symfony's incorrect argument escaping under MSYS2/Git Bash can lead to destructive file operations on Windows |
-
-## PHP · zmq-server/composer.lock
-
-| Severity | Id | Package | Installed | Fix | Title |
-|----------|----|---------|-----------|-----|-------|
-| high | [CVE-2025-64500](https://symfony.com/blog/cve-2025-64500-incorrect-parsing-of-path-info-can-lead-to-limited-authorizati… | symfony/http-foundation | v6.4.18 | not >=6.4.0,<6.4.29 | CVE-2025-64500: Incorrect parsing of PATH_INFO can lead to limited authorization bypass |
-| medium | [CVE-2026-48998](https://github.com/guzzle/psr7/security/advisories/GHSA-34xg-wgjx-8xph) | guzzlehttp/psr7 | 1.9.1 | not <2.10.2 | Host confusion via authority reinterpretation |
-| medium | [CVE-2026-49214](https://github.com/guzzle/psr7/security/advisories/GHSA-hq7v-mx3g-29hw) | guzzlehttp/psr7 | 1.9.1 | not <2.10.2 | CRLF injection via URI host component |
-| medium | [CVE-2026-55766](https://github.com/guzzle/psr7/security/advisories/GHSA-vm85-hxw5-5432) | guzzlehttp/psr7 | 1.9.1 | not <2.12.1 | CRLF injection in HTTP start-line serialization |
-| medium | [CVE-2026-59882](https://github.com/advisories/GHSA-c2w2-prh8-qm98) | guzzlehttp/psr7 | 1.9.1 | not <2.12.3 | guzzlehttp/psr7: Host Confusion via Weak URI Host Validation |
-| medium | [CVE-2026-48736](https://symfony.com/cve-2026-48736) | symfony/http-foundation | v6.4.18 | not >=6.4.0,<6.4.41 | CVE-2026-48736: IpUtils::PRIVATE_SUBNETS Omits IPv6 Transition Forms (6to4, NAT64, Teredo, IPv4-compatible): SSRF Bypas… |
-| medium | [CVE-2026-45065](https://symfony.com/cve-2026-45065) | symfony/routing | v6.4.18 | not >=6.4.0,<6.4.40 | CVE-2026-45065: UrlGenerator Route-Requirement Bypass via Unanchored Regex Alternation → Off-Site //host URL Injection |
-| medium | [CVE-2026-48784](https://symfony.com/cve-2026-48784) | symfony/routing | v6.4.18 | not >=6.4.0,<6.4.41 | CVE-2026-48784: UrlGenerator Dot-Segment Encoding Skips Every Other Chained `../` or `./` → Generated URL Collapses Off… |
 
 ## JavaScript · vue/package-lock.json
 
@@ -162,22 +135,24 @@ Nothing known.
 
 ## Image · 4spaces/kubernetes-service-orchestrator:dev
 
-*built from e39a395 - behind main, whose latest push is not built yet · alpine 3.24.2 · 4spaces/kubernetes-service-orchestrator@sha256:fa854112ecd98fe250851e195c81c3ae11ebfb184ace3637d5db2c2a5eeb16d4*
+*built from 65899d9, the commit above · alpine 3.24.2 · 4spaces/kubernetes-service-orchestrator@sha256:8f5fc3591689ae1f9232b047f3173fc877d3118dc96bb4a16cee782d23a4fe2a*
 
 | Severity | Id | Package | Installed | Fix | Title |
 |----------|----|---------|-----------|-----|-------|
-| critical | [CVE-2024-51736](https://avd.aquasec.com/nvd/cve-2024-51736) | symfony/process | v5.4.26 | 3.0.0, 6.3.0, 6.4.14, 7.1.0, 7.1.7, 5.0.0, 5.3.0, 5.4.0, 6.2.0, 6.4.0, 4.0.0, 5.4.46, 6.1.0, 5.1.0, 5.2.0 | CVE-2024-51736: Command execution hijack on Windows with Process class |
-| high | [CVE-2025-64500](https://avd.aquasec.com/nvd/cve-2025-64500) | symfony/http-foundation | v6.4.18 | 6.4.0, 7.1.0, 5.0.0, 5.2.0, 5.3.0, 6.3.0, 7.3.7, 6.1.0, 6.4.29, 3.0.0, 4.0.0, 5.1.0, 6.2.0, 7.2.0, 7.3.0, 5.4.0, 5.4.50 | Symfony is a PHP framework for web and console applications and a set  ... |
-| high | [CVE-2026-48736](https://avd.aquasec.com/nvd/cve-2026-48736) | symfony/http-foundation | v6.4.18 | 7.2.0, 7.3.0, 7.4.0, 7.4.13, 8.0.13, 6.4.41, 7.1.0 | Symfony is a PHP framework for web and console applications and a set  ... |
-| medium | [CVE-2026-48998](https://avd.aquasec.com/nvd/cve-2026-48998) | guzzlehttp/psr7 | 2.6.0 | 2.10.2 | guzzlehttp/psr7: guzzlehttp/psr7: Information disclosure via improper Host header validation |
-| medium | [CVE-2026-48998](https://avd.aquasec.com/nvd/cve-2026-48998) | guzzlehttp/psr7 | 1.9.1 | 2.10.2 | guzzlehttp/psr7: guzzlehttp/psr7: Information disclosure via improper Host header validation |
-| medium | [CVE-2026-49214](https://avd.aquasec.com/nvd/cve-2026-49214) | guzzlehttp/psr7 | 2.6.0 | 2.10.2 | guzzlehttp/psr7 is a PSR-7 HTTP message library implementation in PHP. ... |
-| medium | [CVE-2026-49214](https://avd.aquasec.com/nvd/cve-2026-49214) | guzzlehttp/psr7 | 1.9.1 | 2.10.2 | guzzlehttp/psr7 is a PSR-7 HTTP message library implementation in PHP. ... |
-| medium | [CVE-2026-55766](https://avd.aquasec.com/nvd/cve-2026-55766) | guzzlehttp/psr7 | 2.6.0 | 2.12.1 | guzzlehttp/psr7 is a PSR-7 HTTP message library implementation in PHP. ... |
-| medium | [CVE-2026-55766](https://avd.aquasec.com/nvd/cve-2026-55766) | guzzlehttp/psr7 | 1.9.1 | 2.12.1 | guzzlehttp/psr7 is a PSR-7 HTTP message library implementation in PHP. ... |
-| medium | [CVE-2026-59882](https://avd.aquasec.com/nvd/cve-2026-59882) | guzzlehttp/psr7 | 2.6.0 | 2.12.3 | guzzlehttp/psr7 is a PSR-7 HTTP message library implementation in PHP. ... |
-| medium | [CVE-2026-59882](https://avd.aquasec.com/nvd/cve-2026-59882) | guzzlehttp/psr7 | 1.9.1 | 2.12.3 | guzzlehttp/psr7 is a PSR-7 HTTP message library implementation in PHP. ... |
-| medium | [CVE-2025-22145](https://avd.aquasec.com/nvd/cve-2025-22145) | nesbot/carbon | 2.69.0 | 3.8.4, 2.72.6 | Carbon is an international PHP extension for DateTime. Application pas ... |
-| medium | [CVE-2026-24739](https://avd.aquasec.com/nvd/cve-2026-24739) | symfony/process | v5.4.26 | 5.4.51, 6.4.33, 7.3.11, 7.4.5, 8.0.5 | Symfony's incorrect argument escaping under MSYS2/Git Bash can lead to destructive file operations on Windows |
-| medium | [CVE-2026-45065](https://avd.aquasec.com/nvd/cve-2026-45065) | symfony/routing | v6.4.18 | 6.2.0, 6.3.0, 7.3.0, 7.4.0, 4.0.0, 5.1.0, 5.2.0, 5.3.0, 7.2.0, 7.4.12, 7.1.0, 8.0.12, 6.4.40, 5.4.0, 5.4.52, 6.1.0, 6.4… | Symfony is a PHP framework for web and console applications and a set  ... |
-| medium | [CVE-2026-48784](https://avd.aquasec.com/nvd/cve-2026-48784) | symfony/routing | v6.4.18 | 5.0.0, 6.4.41, 7.3.0, 8.0.13, 3.0.0, 4.0.0, 5.3.0, 5.4.0, 7.1.0, 5.1.0, 5.2.0, 5.4.53, 6.3.0, 7.2.0, 7.4.0, 7.4.13, 6.1… | Symfony is a PHP framework for web and console applications and a set  ... |
+| high | [CVE-2026-84304](https://avd.aquasec.com/nvd/cve-2026-84304) | google.golang.org/grpc | v1.82.1 | 1.83.1 | gRPC-Go is the Go language implementation of gRPC. Prior to 1.83.1, in ... |
+| high | [CVE-2026-84445](https://avd.aquasec.com/nvd/cve-2026-84445) | google.golang.org/grpc | v1.82.1 | 1.82.2, 1.83.2, 1.85.0-dev.0.20260825072537-93e31b48545e | google.golang.org/grpc: gRPC-Go: Denial of Service via malformed RPC requests |
+| medium | [CVE-2026-53495](https://avd.aquasec.com/nvd/cve-2026-53495) | github.com/containerd/containerd/v2 | v2.3.3 | 2.0.12, 2.2.8, 2.3.5 | github.com/containerd/containerd: containerd: Denial of Service via CRI ExecSync goroutine leak |
+| medium | [CVE-2026-56855](https://avd.aquasec.com/nvd/cve-2026-56855) | golang.org/x/crypto | v0.55.0 | 0.56.0 | golang.org/x/crypto/ssh: golang.org/x/crypto/ssh: Denial of Service via crafted messages |
+| medium | [CVE-2026-78662](https://avd.aquasec.com/nvd/cve-2026-78662) | golang.org/x/crypto | v0.55.0 | 0.56.0 | golang.org/x/crypto/ssh: golang.org/x/crypto/ssh: Denial of Service via channel request flooding |
+| medium | [CVE-2026-84303](https://avd.aquasec.com/nvd/cve-2026-84303) | google.golang.org/grpc | v1.82.1 | 1.83.1 | gRPC-Go is the Go language implementation of gRPC. Prior to 1.83.1, th ... |
+
+<details><summary>4 low or unknown</summary>
+
+| Severity | Id | Package | Installed | Fix | Title |
+|----------|----|---------|-----------|-----|-------|
+| low | [CVE-2026-81870](https://avd.aquasec.com/nvd/cve-2026-81870) | go.opentelemetry.io/otel/exporters/otlp/otlptrace | v1.44.0 | 1.45.0 | OpenTelemetry-Go is the Go implementation of OpenTelemetry. From versi ... |
+| low | [CVE-2026-81870](https://avd.aquasec.com/nvd/cve-2026-81870) | go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc | v1.44.0 | 1.45.0 | OpenTelemetry-Go is the Go implementation of OpenTelemetry. From versi ... |
+| low | [CVE-2026-81870](https://avd.aquasec.com/nvd/cve-2026-81870) | go.opentelemetry.io/otel/sdk | v1.44.0 | 1.45.0 | OpenTelemetry-Go is the Go implementation of OpenTelemetry. From versi ... |
+| unknown | GO-2026-5932 | golang.org/x/crypto | v0.55.0 |  | The golang.org/x/crypto/openpgp package is unmaintained, unsafe by design, and has known security issues |
+
+</details>
