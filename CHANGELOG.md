@@ -59,6 +59,7 @@
 * The sign-in sends a random state and exchanges only a code that comes back with it. It used to be the same word every time, so a code started elsewhere could be handed to the login page
 * An access token in the url - kso in an iframe - is taken out of the url once read, and the sign-in no longer sends its PKCE verifier to authorize, only when it exchanges the code
 * Webhooks, Harbor and Azure registries are only called over http and https, and not on kso's own pod or the cloud's metadata service. A webhook url to a local file used to put the file's contents in the delivery log. A delivery that is refused says why in the log
+* The image no longer carries PHPUnit and the other development dependencies. The test suites run in an image built from it with only those added
 * The image checks what it downloads: Microsoft's SQL Server packages against pinned checksums, fetched with the certificate checked, and Composer and gke-auth at pinned versions instead of whatever an installer script or `@latest` gave that day
 * The container runs as www-data instead of root, with Apache on port 8080. The chart sets `runAsNonRoot`, drops every capability and forbids privilege escalation by default
 * Chart: the cron job runs as non-root from a pinned curl image, without the service account token, and a NetworkPolicy that admits only kso's two ports can be turned on with `networkPolicy.enabled`. A pod that cannot reach its database is taken out of the Service

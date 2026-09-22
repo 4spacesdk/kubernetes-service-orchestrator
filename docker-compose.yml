@@ -4,6 +4,8 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile
+      # The shipped image with the dev dependencies, so the test suites run here.
+      target: test
       args:
         GKE_AUTH_ENABLED: "${KSO_GKE_AUTH_ENABLED}"
 

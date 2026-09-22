@@ -22,6 +22,19 @@ steps:
           -t $$USERNAME/$_DOCKER_HUB_REPOSITORY:$TAG_NAME \
           -t $$USERNAME/$_DOCKER_HUB_REPOSITORY:latest \
           --cache-from type=registry,ref=$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPOSITORY/$_DOCKER_HUB_REPOSITORY-cache:buildcache \
+          --load \
+          --build-arg BUILD_TAG_NAME=$TAG_NAME \
+          --build-arg BUILD_SHORT_SHA=$SHORT_SHA \
+          -f docker/Dockerfile \
+          .
+
+        # The same image with the dev dependencies, for the test suites (the `test` stage). It
+        # shares every layer with the build above and adds one, cached until composer.lock
+        # changes. The cache is written from here, where it covers both.
+        docker buildx build \
+          -t kso-test:local \
+          --target test \
+          --cache-from type=registry,ref=$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPOSITORY/$_DOCKER_HUB_REPOSITORY-cache:buildcache \
           --cache-to type=registry,ref=$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPOSITORY/$_DOCKER_HUB_REPOSITORY-cache:buildcache,mode=max \
           --load \
           --build-arg BUILD_TAG_NAME=$TAG_NAME \
@@ -30,7 +43,8 @@ steps:
           .
     secretEnv: ['USERNAME']
 
-  # Tests run against the image that was just built, so what is verified is what ships.
+  # The suites run in the `test` image: the image that was just built, with only the dev
+  # dependencies added, so what is verified is what ships. The smoke test runs the shipped image itself.
   # A failure here stops the build before anything is pushed.
   - id: Test
     name: gcr.io/cloud-builders/docker
@@ -94,7 +108,7 @@ steps:
           -e database.tests.hostname=kso-test-db \
           -e DB_HOST=kso-test-db -e DB_NAME=deploy_tests -e DB_USER=root -e DB_PASS=root -e DB_PORT=3306 \
           -e ENCRYPTION_KEY="$$TEST_ENCRYPTION_KEY" \
-          $$USERNAME/$_DOCKER_HUB_REPOSITORY:$TAG_NAME \
+          kso-test:local \
           -c 'cd /var/www/html/ci4 && php spark migrate &&
               started=$$(date +%s) &&
               vendor/bin/phpunit --testsuite unit,database &&
@@ -156,7 +170,7 @@ steps:
           -e KUBERNETES_AUTH=kube-config \
           -e KUBERNETES_TEST_CLUSTER=disposable \
           -e KUBERNETES_KUBECONFIG="$$KUBECONFIG_B64" \
-          $$USERNAME/$_DOCKER_HUB_REPOSITORY:$TAG_NAME \
+          kso-test:local \
           -c 'cd /var/www/html/ci4 && vendor/bin/phpunit --testsuite integration'
 
         echo "Cluster suite, cluster boot included: $$(( $$(date +%s) - cluster_started ))s"

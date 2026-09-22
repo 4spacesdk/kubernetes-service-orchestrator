@@ -21,7 +21,11 @@ RUN npm run build
 
 
 # PHP DeploymentSpecs can be found at https://hub.docker.com/_/php/
-FROM php:8.5.10-alpine3.24
+#
+# `app` is what ships. `test`, at the bottom, is the same image with the dev dependencies added,
+# for the test suites; and the last stage is `app` again, so a build without --target is the
+# image that ships.
+FROM php:8.5.10-alpine3.24 AS app
 
 # Install OS dependencies
 RUN apk add --update  \
@@ -176,10 +180,11 @@ RUN mkdir -p /var/www/docroot
 # Composer dependencies before the application files, so a change to the code reuses the
 # cached vendor layers - they are only reinstalled when a composer.lock changes.
 # ext-sqlsrv is required in composer.json but absent on arm64, see the SQLSRV layer above.
+# Without the dev dependencies: PHPUnit and the rest are added in the `test` stage only.
 COPY --chown=www-data ci4/composer.json ci4/composer.lock $APP_HOME/ci4/
 RUN cd $APP_HOME/ci4 && \
-  if [ "$TARGETARCH" = "amd64" ] || [ -z "$TARGETARCH" ]; then composer install; \
-  else composer install --ignore-platform-req=ext-sqlsrv; fi
+  if [ "$TARGETARCH" = "amd64" ] || [ -z "$TARGETARCH" ]; then composer install --no-dev; \
+  else composer install --no-dev --ignore-platform-req=ext-sqlsrv; fi
 
 # Copy application files
 COPY --chown=www-data ci4 $APP_HOME/ci4
@@ -189,8 +194,8 @@ COPY --chown=www-data --from=build-stage /vue/dist $APP_HOME/vue
 # directory is missing. Its contents are gitignored, so do not rely on the checkout.
 RUN mkdir -p $APP_HOME/ci4/writable/cache && chown www-data:www-data $APP_HOME/ci4/writable/cache
 
-# The directory itself too, whatever COPY made of it: the test suites run in this image, as
-# www-data, and PHPUnit writes its cache there and its logs to build/.
+# The directory itself too, whatever COPY made of it: the test suites run in the `test` image
+# built from this one, as www-data, and PHPUnit writes its cache there and its logs to build/.
 RUN mkdir -p $APP_HOME/ci4/build && chown www-data:www-data $APP_HOME/ci4 $APP_HOME/ci4/build
 
 # Set TAG_NAME as Environment Variable
@@ -214,4 +219,20 @@ RUN mkdir -p /run/apache2 /var/cache/kso-trivy \
 USER 82:82
 
 ENTRYPOINT [ "entrypoint-wrapper" ]
+
+
+# The image that ships, with the dev dependencies added - and nothing else - so the suites run
+# against what ships rather than against an image of their own. One layer on top of `app`,
+# cached until composer.lock changes. docker-compose builds this one for development.
+FROM app AS test
+ARG TARGETARCH
+USER root
+RUN cd $APP_HOME/ci4 && \
+  if [ "$TARGETARCH" = "amd64" ] || [ -z "$TARGETARCH" ]; then composer install; \
+  else composer install --ignore-platform-req=ext-sqlsrv; fi
+USER 82:82
+
+
+# Last, so a build without --target is the image that ships.
+FROM app
 
