@@ -12,6 +12,7 @@
 * Certificates: a refused certificate was reported as applied, deleting one did nothing, and the nightly expiry check died on the first certificate cert-manager had not finished
 * Volumes: a second volume, and a change to one that already has its disk, are refused when saved instead of failing every later deploy; redeploying no longer unbinds a volume from its claim; a volume with a storage class is reserved for its own claim; and the endpoints read camelCase like every other collection
 * Migration jobs: a job did not migrate when it could not reach kso at the start ([#42](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/42)), tag policy "Default" failed the whole deploy, one verified by a pattern ended in a server error and no status at all, and the preview no longer shows differences the cluster filled in itself
+* Cron jobs: a job still running is not started again, on any pod - the lock is in the database now, not a file in the pod
 * Cron jobs: one bad schedule no longer stops every other job, and a command that does not exist says so in its log instead of looking like it ran
 * Auto update: pushes from a registry with a port in its host were missed over Pub/Sub, a tag found early was announced to nobody, an approved update whose deployment is gone no longer deploys an empty one, a tag pattern that cannot compile is refused, and Harbor listed no tags beyond the first ten artifacts
 * When kso cannot reach the cluster, or makes a mistake talking to it, the status panels, the shell, the node list and the connection test say what went wrong instead of a server error - which routing step could not be asked, and the cluster's own reason for refusing a manifest. The status panel also died on a resource that has no status yet, or none at all
@@ -85,6 +86,7 @@
 * Terminate and Delete moved into a menu on workspaces and gateways
 * The sign-in form keeps the e-mail after a wrong password, with the cursor in the password field
 * Upgraded to PHP 8.5, Alpine 3.24 and CodeIgniter 4.7. The image also builds on arm64
+* jobby is gone - it had not been released since 2020 - and with it the abandoned SwiftMailer and the cap on symfony/process, now 6.4. kso decides itself which cron jobs are due
 * The access log records the sign-in redirects
 * Added unit, database and integration test suites
 

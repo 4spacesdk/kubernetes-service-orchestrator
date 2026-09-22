@@ -11,8 +11,6 @@
     "ext-openssl": "*",
     "ext-sockets": "*",
     "ext-pcntl": "*",
-
-    "hellogerard/jobby": "v3.5.0",
     "codeigniter4/framework": "v4.7.4",
     "4spacesdk/ci4debugtool": "1.0.8",
     "4spacesdk/ci4ormextension": "v1.1.5",
@@ -28,7 +26,8 @@
     "vlucas/phpdotenv": "^5.7",
     "bacon/bacon-qr-code": "^3.0",
     "codeigniter4/queue": "^1.0",
-    "centrifugal/phpcent": "^6.0"
+    "centrifugal/phpcent": "^6.0",
+    "dragonmantank/cron-expression": "^3.4"
   },
   "require-dev": {
     "phpunit/phpunit": "^11.5"

@@ -1,6 +1,7 @@
 <?php namespace App\Controllers;
 
 use App\Entities\CronJob;
+use Config\Database;
 use Cron\CronExpression;
 use DebugTool\Data;
 
@@ -56,7 +57,7 @@ class Jobby extends \App\Core\BaseController {
             return;
         }
 
-        $jobby = new \Jobby\Jobby();
+        $now = new \DateTimeImmutable();
 
         $jobs = new CronJob();
         $jobs->find();
@@ -64,6 +65,7 @@ class Jobby extends \App\Core\BaseController {
             if (!$this->canBeScheduled($job)) {
                 continue;
             }
+            $due = (new CronExpression($job->schedule))->isDue($now);
 
             // One file per job, overwritten each run, rather than one per run appended to
             // for ever: this used to be `cronjob_<id>_<time>.txt` and nothing ever removed
@@ -77,19 +79,35 @@ class Jobby extends \App\Core\BaseController {
             for ($i = 0 ; $i < $job->duplicates ; $i++) {
                 $sleep = round($i * $timePerDuplicate);
                 $cmd = "sleep {$sleep} && {$command}";
-                $jobby->add("{$job->name} x {$i}", [
-                    'command' => $cmd,
-                    'schedule' => $job->schedule,
-                    'debug' => true,
-                ]);
 
                 Data::debug(get_class($this), "Added", $job->schedule, $output, $cmd);
+                if ($due) {
+                    (self::$start ?? self::startInTheBackground(...))($cmd);
+                }
             }
         }
 
-        $jobby->run();
-
         $this->success();
+    }
+
+    /**
+     * How a due job is started. The test suite puts a recorder here: a real start would run the
+     * job outside the test, under the development environment, against the development
+     * database.
+     *
+     * @var null|\Closure(string): void
+     */
+    public static ?\Closure $start = null;
+
+    /**
+     * Started and left: the request answers at once, and the job reports on its own row.
+     *
+     * This is what jobby did, and all of what kso used it for - it read the table, asked the
+     * cron parser whether each row was due, and started the due ones. It is gone: it had not
+     * been released since 2020 and brought an abandoned mailer and an old symfony/process with it.
+     */
+    private static function startInTheBackground(string $command): void {
+        exec('nohup sh -c ' . escapeshellarg($command) . ' > /dev/null 2>&1 &');
     }
 
     /**
@@ -132,6 +150,15 @@ class Jobby extends \App\Core\BaseController {
         $cronJob = new CronJob();
         $cronJob->find($cronJobId);
         if($cronJob->exists()) {
+            // One run of a job at a time, in the database rather than in a file: the scheduler
+            // may call a different pod each minute, and a long run on one would not stop the
+            // next from starting on another. Held until this process ends.
+            if (!$this->takeTheLock($cronJobId)) {
+                Data::debug(get_class($this), 'Still running from before - not started again:', $cronJob->name);
+                $this->success();
+                return;
+            }
+
             $cronJob->last_run = date('Y-m-d H:i:s');
 
             // Asked before it is run, because a name that is not in the registry raises
@@ -157,8 +184,22 @@ class Jobby extends \App\Core\BaseController {
 
             $cronJob->last_log = json_encode(Data::getStore(), JSON_PRETTY_PRINT);
             $cronJob->save();
+            $this->releaseTheLock($cronJobId);
         }
 
         $this->success();
+    }
+
+    public static function LockName(int $cronJobId): string {
+        return "kso-cron-{$cronJobId}";
+    }
+
+    private function takeTheLock(int $cronJobId): bool {
+        $row = Database::connect()->query('SELECT GET_LOCK(?, 0) AS taken', [self::LockName($cronJobId)])->getRow();
+        return (int) ($row->taken ?? 0) === 1;
+    }
+
+    private function releaseTheLock(int $cronJobId): void {
+        Database::connect()->query('SELECT RELEASE_LOCK(?)', [self::LockName($cronJobId)]);
     }
 }

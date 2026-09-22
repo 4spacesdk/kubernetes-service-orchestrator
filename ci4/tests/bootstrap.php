@@ -22,6 +22,10 @@ include_once __DIR__ . '/../vendor/codeigniter4/framework/system/Test/bootstrap.
 // Before anything can emit one: see the class.
 \App\SilentPush::install();
 
+// Nor may a test start a cron job: it would run outside the test, against the development
+// database. `JobbyApiTest` puts a recorder here instead.
+\App\Controllers\Jobby::$start = static function (string $command): void {};
+
 // Function files, which psr-4 cannot autoload - a file with no class in it is never looked
 // for. `NoSleepInCommands.php` was written and never included, so the five two-second
 // sleeps in `PullContainerRegistries::run()` were still being waited out.

@@ -10,8 +10,8 @@ use PHPUnit\Framework\Attributes\DataProvider;
 /**
  * The cron endpoint: one half lays out the plan, the other runs a single job.
  *
- * `index()` reads `cron_jobs`, turns each row into as many jobby entries as the row has
- * `duplicates`, and calls `run()`, which starts the due ones as background processes.
+ * `index()` reads `cron_jobs`, turns each row into as many entries as the row has
+ * `duplicates`, and starts the ones whose schedule is due now as background processes.
  * `run($id)` is what those processes call back on: it executes the row's spark command and
  * writes what happened into `last_log`.
  *
@@ -21,10 +21,10 @@ use PHPUnit\Framework\Attributes\DataProvider;
  * because nothing called it over HTTP - the background processes reach `run()` through the
  * CLI route in `Config/Routes.php`.
  *
- * Neither the plan nor the command may start anything during a test run. The plan is kept
- * still with a schedule that never falls due (the 30th of February), so `Jobby::run()`
- * walks the list without calling `exec` once. The command is kept still with two fakes
- * written into the command registry for the duration of the test.
+ * Neither the plan nor the command may start anything during a test run. The plan's starter
+ * is a recorder here - `tests/bootstrap.php` makes it a no-op for every other test - and the
+ * command is kept still with two fakes written into the command registry for the duration of
+ * the test.
  */
 class JobbyApiTest extends ControllerTestCase {
 
@@ -34,6 +34,9 @@ class JobbyApiTest extends ControllerTestCase {
     private const NEVER = '0 0 30 2 *';
 
     private string|false $cronTokenAsFound;
+
+    /** @var list<string> what the plan started */
+    private array $started = [];
 
     /**
      * A token of the test's own, so the suite does not depend on the environment it runs in:
@@ -46,9 +49,15 @@ class JobbyApiTest extends ControllerTestCase {
         putenv('CRON_TOKEN=token-of-the-test');
 
         $this->registerTheFakeCommands();
+
+        $this->started = [];
+        \App\Controllers\Jobby::$start = function (string $command): void {
+            $this->started[] = $command;
+        };
     }
 
     public function tearDown(): void {
+        \App\Controllers\Jobby::$start = static function (string $command): void {};
         $this->forgetTheFakeCommands();
 
         $this->cronTokenAsFound === false ? putenv('CRON_TOKEN') : putenv('CRON_TOKEN=' . $this->cronTokenAsFound);
@@ -173,8 +182,25 @@ class JobbyApiTest extends ControllerTestCase {
     }
 
     /**
-     * The answer is a success once the plan is laid out - and that is where `$jobby->run()`
-     * sits. None of the jobs is due, so the list is walked without starting anything.
+     * Only a job that is due now is started - every duplicate of it - and one that is not is
+     * laid out and left.
+     */
+    public function testOnlyADueJobIsStartedWithEachOfItsDuplicates(): void {
+        $this->db->table('cron_jobs')->emptyTable();
+        $due = $this->aCronJob(['name' => 'due', 'schedule' => '* * * * *', 'duplicates' => 2]);
+        $this->aCronJob(['name' => 'not due', 'schedule' => self::NEVER]);
+
+        $this->decode($this->asTheScheduler()->get('jobby'));
+
+        $this->assertCount(2, $this->started);
+        foreach ($this->started as $command) {
+            $this->assertStringContainsString("jobby run {$due->id} >", $command);
+        }
+    }
+
+    /**
+     * The answer is a success once the plan is laid out. None of the jobs is due, so the
+     * list is walked without starting anything.
      */
     public function testAPlanThatNothingIsDueInIsStillASuccess(): void {
         $this->onlyCronJob(['duplicates' => 1, 'schedule' => self::NEVER]);
@@ -182,6 +208,42 @@ class JobbyApiTest extends ControllerTestCase {
         $body = $this->decode($this->asTheScheduler()->get('jobby'));
 
         $this->assertSame('OK', $body['status']);
+        $this->assertSame([], $this->started);
+    }
+
+    /**
+     * A job still running is not started again - wherever it runs. The lock is in the
+     * database, so a run on another pod holds it too; here another connection plays that pod.
+     */
+    public function testAJobStillRunningIsNotRunAgain(): void {
+        $job = $this->onlyCronJob(['command' => HarmlessCommand::NAME, 'last_run' => null]);
+        $elsewhere = \Config\Database::connect(null, false);
+        $elsewhere->query('SELECT GET_LOCK(?, 0)', [\App\Controllers\Jobby::LockName($job->id)]);
+
+        try {
+            $this->runTheJob($job->id);
+        } finally {
+            $elsewhere->query('SELECT RELEASE_LOCK(?)', [\App\Controllers\Jobby::LockName($job->id)]);
+            $elsewhere->close();
+        }
+
+        $this->assertNull($this->cronJobRow($job->id)['last_run']);
+    }
+
+    /**
+     * And the lock is let go when the run ends, so the next one is not refused.
+     */
+    public function testTheLockIsLetGoWhenTheRunEnds(): void {
+        $job = $this->onlyCronJob(['command' => HarmlessCommand::NAME]);
+
+        $this->runTheJob($job->id);
+
+        $elsewhere = \Config\Database::connect(null, false);
+        $taken = (int) $elsewhere->query('SELECT GET_LOCK(?, 0) AS taken', [\App\Controllers\Jobby::LockName($job->id)])->getRow()->taken;
+        $elsewhere->query('SELECT RELEASE_LOCK(?)', [\App\Controllers\Jobby::LockName($job->id)]);
+        $elsewhere->close();
+
+        $this->assertSame(1, $taken);
     }
 
     /**
@@ -217,11 +279,10 @@ class JobbyApiTest extends ControllerTestCase {
      */
     public static function theSchedulesThatCannotBeUsed(): array {
         return [
-            // Refused by jobby itself, with a `\Jobby\Exception`.
             'no schedule at all' => [''],
 
-            // Accepted by jobby and refused by the cron parser underneath it, with a plain
-            // `InvalidArgumentException`. This is the one that used to take the run down.
+            // Refused by the cron parser with a plain `InvalidArgumentException`. This is the
+            // one that used to take the run down.
             'not a cron expression' => ['not a cron'],
             'too few fields' => ['* * *'],
             'a field out of range' => ['0 0 32 * *'],
@@ -368,7 +429,7 @@ class JobbyApiTest extends ControllerTestCase {
     /**
      * One cron job run, through the controller rather than a route.
      *
-     * There is no HTTP route to `Jobby::run()` any more - jobby reaches it with
+     * There is no HTTP route to `Jobby::run()` any more - the plan starts it with
      * `php public/index.php jobby run <id>`, through the CLI route in `Config/Routes.php` -
      * so the method is called the way CodeIgniter's own controller tests call one. What is
      * under test is what the method does to the row, which is the same either way.
