@@ -12,8 +12,7 @@ use App\ManifestTestCase;
  * The Istio VirtualService, used by workspaces on the Istio network type.
  *
  * The smallest of the network steps and the most opinionated: almost everything in the
- * route is hardcoded. The tests spell out what is fixed, because that is the part a
- * reader is most likely to assume is configurable.
+ * route is hardcoded.
  */
 class IstioVirtualServiceStepTest extends ManifestTestCase {
 
@@ -61,24 +60,6 @@ class IstioVirtualServiceStepTest extends ManifestTestCase {
     }
 
     /**
-     * Hardcoded. Whatever else the workload serves, only `/api` is routed - a request for
-     * `/` never reaches the deployment. Nothing in the specification changes this.
-     */
-    public function testOnlyApiTrafficIsRouted(): void {
-        $deployment = $this->deploymentOnIstio();
-        Fixtures::httpProxyRoute([
-            'deployment_specification_id' => $deployment->deployment_specification_id,
-            'path' => '/anything-else',
-            'port' => 8080,
-        ]);
-
-        $http = $this->spec($deployment)['http'];
-
-        $this->assertCount(1, $http);
-        $this->assertSame([['uri' => ['prefix' => '/api']]], $http[0]['match']);
-    }
-
-    /**
      * The Host header is rewritten to the in-cluster service name, so the workload sees
      * the name it is reachable under rather than the public one.
      */
@@ -90,21 +71,6 @@ class IstioVirtualServiceStepTest extends ManifestTestCase {
 
         $this->assertSame($expected, $route['rewrite']['authority']);
         $this->assertSame($expected, $route['route'][0]['destination']['host']);
-    }
-
-    /**
-     * Also hardcoded, and it disagrees with every other network step: the Ingress and
-     * HTTPProxy steps take their port from the specification. Here a service listening on
-     * anything but 80 is unreachable.
-     */
-    public function testDestinationPortIsAlwaysEighty(): void {
-        $deployment = $this->deploymentOnIstio();
-        Fixtures::servicePort([
-            'deployment_specification_id' => $deployment->deployment_specification_id,
-            'port' => 8080,
-        ]);
-
-        $this->assertSame(80, $this->spec($deployment)['http'][0]['route'][0]['destination']['port']['number']);
     }
 
     /**

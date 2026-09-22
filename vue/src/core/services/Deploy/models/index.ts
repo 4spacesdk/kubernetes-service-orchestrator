@@ -56,4 +56,3 @@ export {User as User} from "./User";
 export {Webhook as Webhook} from "./Webhook";
 export {WebhookDelivery as WebhookDelivery} from "./WebhookDelivery";
 export {Workspace as Workspace} from "./Workspace";
-export {ZMQEvent as ZMQEvent} from "./ZMQEvent";

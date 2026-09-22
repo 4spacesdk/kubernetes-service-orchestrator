@@ -5,9 +5,9 @@ use App\Entities\ContainerRegistry;
 use App\Entities\CronJob;
 use App\Libraries\ContainerRegistries\ImageReference;
 use App\Libraries\GoogleCloud\GcrSubscription;
-use App\Libraries\ZMQ\ChangeEvent;
-use App\Libraries\ZMQ\Events;
-use App\Libraries\ZMQ\ZMQProxy;
+use App\Libraries\Push\ChangeEvent;
+use App\Libraries\Push\Events;
+use App\Libraries\Push\Publisher;
 use App\Models\ContainerRegistryModel;
 use CodeIgniter\CLI\BaseCommand;
 use DebugTool\Data;
@@ -125,7 +125,7 @@ class PullContainerRegistries extends BaseCommand {
      * log says nothing about it, and the socket records nothing either.
      */
     protected function announceAutoUpdates(): void {
-        ZMQProxy::getInstance()->send(
+        Publisher::getInstance()->send(
             Events::AutoUpdate_Created(),
             (new ChangeEvent(null, []))->toArray()
         );

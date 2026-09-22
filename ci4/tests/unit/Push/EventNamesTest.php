@@ -1,13 +1,13 @@
-<?php namespace App\Tests\Unit\ZMQ;
+<?php namespace App\Tests\Unit\Push;
 
-use App\Libraries\ZMQ\Events;
+use App\Libraries\Push\Events;
 use CodeIgniter\Test\CIUnitTestCase;
 
 /**
  * The topic strings the push events are published under.
  *
  * Every name goes through one private `Generate()`, which lowercases and turns hyphens into
- * underscores, and the result is what the zmq client subscribes to. The two halves have to
+ * underscores, and the result is the Centrifugo channel the browser subscribes to. The two halves have to
  * agree on the exact string and nothing checks that they do - a renamed topic is a
  * notification that silently stops arriving, with no error anywhere.
  *

@@ -44,7 +44,9 @@ class CleanupSignInAttempts extends BaseCommand {
     }
 
     /**
-     * Straight through the builder, for the same reason as `CleanupZmqEvents`.
+     * Straight through the builder rather than row by row through the ORM: the first run on an
+     * old installation has every attempt ever made to get through, and loading them into
+     * entities to delete them one at a time is how a cleanup job becomes slow.
      *
      * @return int how many rows went
      */

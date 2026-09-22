@@ -7,9 +7,9 @@ import ScanHistoryChart from "@/components/Modules/Setup/ContainerImages/ScanHis
 import ScanCounts from "@/components/Modules/Setup/ContainerImages/ScanCounts/ScanCounts.vue";
 import type { DialogEventsInterface } from "@/components/Dialogs/DialogEventsInterface";
 import bus from "@/plugins/bus";
-import WampService from "@/services/Wamp/WampService";
-import { Events } from "@/services/Wamp/Events";
-import type { WampSubscription } from "@/services/Wamp/WampSubscription";
+import PushService from "@/services/Push/PushService";
+import { Events } from "@/services/Push/Events";
+import type { PushSubscription } from "@/services/Push/PushSubscription";
 
 /**
  * What Trivy found in the tags of an image that deployments run - scanned every night, or
@@ -41,7 +41,7 @@ const isLoading = ref(false);
 const isLoadingFindings = ref(false);
 const isQueuing = ref(false);
 const search = ref("");
-const subscription = ref<WampSubscription>();
+const subscription = ref<PushSubscription>();
 /** Bumped when a scan finishes, so the graph reads its records again. */
 const historyVersion = ref(0);
 
@@ -73,7 +73,7 @@ onMounted(() => {
     used.value = true;
     showDialog.value = true;
 
-    subscription.value = WampService.subscribe(
+    subscription.value = PushService.subscribe(
         Events.ContainerImage_Scans_Changed(props.input.containerImage.id!),
         (data) => onScanChanged(new ContainerImageScan(data.next)),
     );

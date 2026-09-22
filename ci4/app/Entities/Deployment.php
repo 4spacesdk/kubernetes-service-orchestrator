@@ -9,9 +9,9 @@ use App\Libraries\Kubernetes\VolumeFingerprint;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepTriggers;
-use App\Libraries\ZMQ\ChangeEvent;
-use App\Libraries\ZMQ\Events;
-use App\Libraries\ZMQ\ZMQProxy;
+use App\Libraries\Push\ChangeEvent;
+use App\Libraries\Push\Events;
+use App\Libraries\Push\Publisher;
 use App\Models\DeploymentModel;
 use App\Models\DeploymentVolumeModel;
 use App\Models\DomainModel;
@@ -337,7 +337,7 @@ class Deployment extends Entity {
             $this->status = $value;
             $this->save();
 
-            ZMQProxy::getInstance()->send(
+            Publisher::getInstance()->send(
                 Events::Deployment_Changed_Status($this->id),
                 (new ChangeEvent(null, $this->toArray()))->toArray()
             );
@@ -446,7 +446,7 @@ class Deployment extends Entity {
         }
         $this->checkStatus(false);
 
-        ZMQProxy::getInstance()->send(
+        Publisher::getInstance()->send(
             Events::Deployment_Deployed(),
             (new ChangeEvent(null, $this->getClone()->toArray()))->toArray()
         );
@@ -465,7 +465,7 @@ class Deployment extends Entity {
         }
         $this->checkStatus(false);
 
-        ZMQProxy::getInstance()->send(
+        Publisher::getInstance()->send(
             Events::Deployment_Terminated(),
             (new ChangeEvent(null, $this->getClone()->toArray()))->toArray()
         );

@@ -4,9 +4,9 @@ use App\Exceptions\ValidationException;
 use App\Libraries\Kubernetes\DnsLabel;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
-use App\Libraries\ZMQ\ChangeEvent;
-use App\Libraries\ZMQ\Events;
-use App\Libraries\ZMQ\ZMQProxy;
+use App\Libraries\Push\ChangeEvent;
+use App\Libraries\Push\Events;
+use App\Libraries\Push\Publisher;
 use App\Models\DeploymentModel;
 use App\Models\DeploymentPackageDeploymentSpecificationModel;
 use App\Models\DeploymentPackageEnvironmentVariableModel;
@@ -125,7 +125,7 @@ class Workspace extends Entity {
             $item->deployments->add($deployment);
         }
 
-        ZMQProxy::getInstance()->send(
+        Publisher::getInstance()->send(
             Events::Workspace_Created(),
             (new ChangeEvent(null, $item->toArray()))->toArray()
         );
@@ -469,7 +469,7 @@ class Workspace extends Entity {
             ->find();
         $next['deployments'] = $deployments->allToArray();
 
-        ZMQProxy::getInstance()->send(
+        Publisher::getInstance()->send(
             Events::Workspace_Changed_Status($this->id),
             (new ChangeEvent(null, $next))->toArray()
         );
@@ -492,7 +492,7 @@ class Workspace extends Entity {
         }
         $this->deployments = $deployments;
 
-        ZMQProxy::getInstance()->send(
+        Publisher::getInstance()->send(
             Events::Workspace_Deployed(),
             (new ChangeEvent(null, $this->getClone()->toArray()))->toArray()
         );
@@ -556,7 +556,7 @@ class Workspace extends Entity {
         }
         $this->deployments = $deployments;
 
-        ZMQProxy::getInstance()->send(
+        Publisher::getInstance()->send(
             Events::Workspace_Terminated(),
             (new ChangeEvent(null, $this->getClone()->toArray()))->toArray()
         );
@@ -586,7 +586,7 @@ class Workspace extends Entity {
 
         if (is_null($related)) {
             if ($isChanged) {
-                ZMQProxy::getInstance()->send(
+                Publisher::getInstance()->send(
                     Events::Workspace_Updated(),
                     (new ChangeEvent($original, $this->toArray()))->toArray()
                 );
@@ -598,7 +598,7 @@ class Workspace extends Entity {
         parent::delete($related);
 
         if ($related === null) {
-            ZMQProxy::getInstance()->send(
+            Publisher::getInstance()->send(
                 Events::Workspace_Deleted(),
                 (new ChangeEvent(null, $this->toArray()))->toArray()
             );

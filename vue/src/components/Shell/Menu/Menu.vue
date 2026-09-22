@@ -12,9 +12,9 @@ import { RbacPermissions } from "@/constants";
 import AuthService from "@/services/AuthService";
 import { Api } from "@/core/services/Deploy/Api";
 import { System } from "@/core/services/Deploy/models";
-import { WampSubscription } from "@/services/Wamp/WampSubscription";
-import WampService from "@/services/Wamp/WampService";
-import { Events } from "@/services/Wamp/Events";
+import { PushSubscription } from "@/services/Push/PushSubscription";
+import PushService from "@/services/Push/PushService";
+import { Events } from "@/services/Push/Events";
 
 interface MenuCategory {
     identifier: string;
@@ -176,9 +176,9 @@ const categories = ref<MenuCategory[]>([
     },
 ]);
 
-const autoUpdatesBadgeWampSubscription1 = ref<WampSubscription>();
-const autoUpdatesBadgeWampSubscription2 = ref<WampSubscription>();
-const autoUpdatesBadgeWampSubscription3 = ref<WampSubscription>();
+const autoUpdatesBadgePushSubscription1 = ref<PushSubscription>();
+const autoUpdatesBadgePushSubscription2 = ref<PushSubscription>();
+const autoUpdatesBadgePushSubscription3 = ref<PushSubscription>();
 
 function onLogoClicked(event: Event) {
     router
@@ -213,15 +213,15 @@ onMounted(() => {
         return category.items.length > 0;
     });
 
-    autoUpdatesBadgeWampSubscription1.value = WampService.subscribe(
+    autoUpdatesBadgePushSubscription1.value = PushService.subscribe(
         Events.AutoUpdate_Created(),
         (data) => countAutoUpdates()
     );
-    autoUpdatesBadgeWampSubscription2.value = WampService.subscribe(
+    autoUpdatesBadgePushSubscription2.value = PushService.subscribe(
         Events.AutoUpdate_Approved(),
         (data) => countAutoUpdates()
     );
-    autoUpdatesBadgeWampSubscription3.value = WampService.subscribe(
+    autoUpdatesBadgePushSubscription3.value = PushService.subscribe(
         Events.AutoUpdate_Deleted(),
         (data) => countAutoUpdates()
     );
@@ -229,8 +229,9 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-    autoUpdatesBadgeWampSubscription1.value?.unsubscribe();
-    autoUpdatesBadgeWampSubscription2.value?.unsubscribe();
+    autoUpdatesBadgePushSubscription1.value?.unsubscribe();
+    autoUpdatesBadgePushSubscription2.value?.unsubscribe();
+    autoUpdatesBadgePushSubscription3.value?.unsubscribe();
 });
 
 function countAutoUpdates() {

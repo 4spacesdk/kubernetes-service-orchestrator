@@ -1,39 +1,30 @@
-<?php namespace App\Tests\Database\Controllers;
+<?php namespace App\Tests\Database\Push;
 
 use App\DatabaseTestCase;
 use App\Entities\AutoUpdate;
 use App\Entities\Deployment;
 use App\Entities\Webhook;
-use App\Entities\ZMQEvent;
 use App\Fixtures;
-use CodeIgniter\Config\Services;
-use CodeIgniter\HTTP\CLIRequest;
+use App\Jobs\HandleEvent;
+use App\Libraries\Push\ChangeEvent;
+use App\Libraries\Push\EventHandlers;
+use App\Libraries\Push\Events;
+use App\Libraries\Push\Publisher;
 use DebugTool\Data;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
- * The controller the zmq client calls into when something happened elsewhere in kso.
+ * The events kso acts on itself, from the moment one is raised to the moment it is handled.
  *
- * It has two halves, and each one is reached a different way.
+ * The first part goes the whole way: `Publisher::send()` puts the event on the queue, the
+ * worker's side takes it off again, and `HandleEvent` runs it.
  *
- * `initController()` is the half that takes the event in: it reads the event off the
- * command line and stores it in `zmq_events`. It used to decide something as well - whether
- * *this* container was the one to handle the event - and that decision could not fire; see
- * the note on the controller.
- *
- * The nine handler methods are the other half. The private `$event` is set by reflection
- * and the method called directly, rather than going through `initController()` and argv,
- * which is a fair imitation of what the zmq client ends up doing.
- *
- * What is worth pinning down in a handler is **which decision it makes**: seven of them
- * pick a webhook type, one waits for a migration job, and the last rolls an update out. The
- * name of the method and the type it delivers is the only thing telling the seven apart,
- * and a swap between two of them is not something anyone notices.
+ * The rest pins **which decision each handler makes**: seven of them pick a webhook type, one
+ * looks at a deployment after its migration job, and the last rolls an update out. The event
+ * name and the type it delivers is the only thing telling the seven apart, and a swap between
+ * two of them is not something anyone notices.
  */
-class ZMQTest extends DatabaseTestCase {
-
-    /** @var array<int, string> */
-    private array $realArgv = [];
+class EventHandlersTest extends DatabaseTestCase {
 
     public function setUp(): void {
         parent::setUp();
@@ -41,86 +32,82 @@ class ZMQTest extends DatabaseTestCase {
         // The debug store is a static that lives for the whole process, so without this an
         // assertion about what *this* handler wrote reads the previous test's lines.
         $this->forgetTheDebugStore();
-
-        $this->realArgv = service('superglobals')->server('argv');
     }
 
-    public function tearDown(): void {
-        // `superglobals` is shared and outlives the test. Without this the rest of the
-        // process runs with the phpunit arguments this test made up.
-        service('superglobals')->setServer('argv', $this->realArgv);
+    // <editor-fold desc="Through the queue">
 
-        parent::tearDown();
-    }
+    public function testAnEventKsoActsOnGoesThroughTheQueueToItsHandler(): void {
+        $this->aWebhookForEveryType();
 
-    // <editor-fold desc="The event coming in">
+        $this->publisher()->send(Events::Workspace_Created(), (new ChangeEvent(null, ['id' => 7]))->toArray());
+        $this->assertSame([], $this->deliveries(), 'handled when raised instead of by the worker');
 
-    /**
-     * The event is read off the command line and written down as it arrived.
-     *
-     * The row is a log rather than a lock now - nothing in kso reads it back, and
-     * `CleanupZmqEvents` is what keeps the table to a window. What it has to get right is
-     * that `$this->event` and the row are the same thing, because every handler works from
-     * the entity and anybody looking for what went wrong works from the row.
-     */
-    public function testTheEventOnTheCommandLineIsStoredAndKept(): void {
-        $controller = $this->initControllerWith('id-4711', 'workspace-created', '{"next":{"id":9}}');
+        $this->runTheQueue();
 
-        $rows = $this->db->table('zmq_events')->where('identifier', 'id-4711')->get()->getResultArray();
-
-        $this->assertCount(1, $rows);
-        $this->assertSame('workspace-created', $rows[0]['event']);
-        $this->assertSame((int) $rows[0]['id'], $this->eventOf($controller)->id, '$this->event points somewhere other than the row');
+        $deliveries = $this->deliveries();
+        $this->assertCount(1, $deliveries);
+        $this->assertSame(\WebHookTypes::Workspace_Created, $deliveries[0]['webhook_type']);
+        $this->assertSame(0, $this->db->table('queue_jobs')->countAllResults(), 'the job is still there after it ran');
     }
 
     /**
-     * The data is stored pretty-printed rather than as it arrived. It is read by a person
-     * looking for what went wrong, and a single line of json is not readable.
-     *
-     * The trip through `json_decode`/`json_encode` is at the same time the only thing that
-     * objects to something that is not json: it ends up as `null` rather than as raw text
-     * in the column.
+     * Every event in the map has a handler that can be called. A method name that does not
+     * exist would be an Error in the worker - for exactly the events nobody tests by hand.
      */
-    public function testTheDataIsStoredPrettyPrinted(): void {
-        $this->initControllerWith('id-pretty', 'workspace-created', '{"next":{"id":9,"name":"a"}}');
+    #[DataProvider('everyEventKsoActsOn')]
+    public function testEveryEventInTheMapReachesAHandler(string $event): void {
+        EventHandlers::Handle($event, new ChangeEvent(null, ['id' => 0, 'status' => '']));
 
-        $stored = $this->db->table('zmq_events')->where('identifier', 'id-pretty')->get()->getRowArray();
-
-        $this->assertSame(
-            json_encode(json_decode('{"next":{"id":9,"name":"a"}}'), JSON_PRETTY_PRINT),
-            $stored['data']
-        );
-        $this->assertStringContainsString("\n", $stored['data'], 'the data was stored on one line');
+        $this->assertStringNotContainsString('No handler for', $this->debugLog());
     }
 
     /**
-     * The data arrives base64 encoded, because it would otherwise have to survive a shell
-     * with quotes and braces in it. The decoding is not decoration.
+     * @return array<string, array{0: string}>
      */
-    public function testTheDataArrivesBase64Encoded(): void {
-        $this->initControllerWith('id-b64', 'workspace-created', '{"next":{"id":1}}');
-
-        $stored = $this->db->table('zmq_events')->where('identifier', 'id-b64')->get()->getRowArray();
-
-        $this->assertStringContainsString('"id": 1', $stored['data']);
+    public static function everyEventKsoActsOn(): array {
+        $events = [
+            Events::MigrationJob_Changed_Status(0),
+            Events::Workspace_Created(),
+            Events::Workspace_Updated(),
+            Events::Workspace_Deleted(),
+            Events::Workspace_Deployed(),
+            Events::Workspace_Terminated(),
+            Events::Deployment_Deployed(),
+            Events::Deployment_Terminated(),
+            Events::AutoUpdate_Approved(),
+        ];
+        return array_combine($events, array_map(fn ($event) => [$event], $events));
     }
 
     /**
-     * The same identifier twice is two events, and both are kept.
-     *
-     * This is where the deduplication used to stand: the second arrival deleted its own row
-     * and stood the container down. It could not happen - an identifier is minted per
-     * router, by the one that took the publish - and the one case it *could* catch was two
-     * routers landing on the same `uniqid()`, which is two unrelated events, one of them
-     * then dropped.
+     * Only pushed to the browsers. A status change happens on every step of a deploy, and
+     * nothing on the server acts on it.
      */
-    public function testAnEventIsKeptWhateverElseCarriesTheSameIdentifier(): void {
-        $this->initControllerWith('id-repeated', 'workspace-created', '{"next":{"id":9}}');
-        $this->initControllerWith('id-repeated', 'workspace-deployed', '{"next":{"id":9}}');
+    public function testAnEventNothingActsOnIsNotQueued(): void {
+        $this->publisher()->send(Events::Workspace_Changed_Status(7), (new ChangeEvent(null, ['id' => 7]))->toArray());
 
-        $rows = $this->db->table('zmq_events')->where('identifier', 'id-repeated')->get()->getResultArray();
+        $this->assertSame(0, $this->db->table('queue_jobs')->countAllResults());
+    }
 
-        $this->assertSame(['workspace-created', 'workspace-deployed'], array_column($rows, 'event'));
+    /**
+     * The job's pod is still shutting down when it reports that it is done, so the deployment
+     * is looked at a few seconds later rather than straight away.
+     */
+    public function testAFinishedMigrationJobIsHandledAfterADelay(): void {
+        $this->publisher()->send(Events::MigrationJob_Changed_Status(0), (new ChangeEvent(null, ['status' => 'x']))->toArray());
+
+        $job = $this->db->table('queue_jobs')->get()->getRowArray();
+        $this->assertGreaterThan(time(), (int) $job['available_at']);
+    }
+
+    /**
+     * The id-scoped channel is for the browser watching that one job; only the shared one is
+     * acted on, or every job would be handled twice.
+     */
+    public function testTheMigrationJobsOwnChannelIsNotQueued(): void {
+        $this->publisher()->send(Events::MigrationJob_Changed_Status(12), (new ChangeEvent(null, ['status' => 'x']))->toArray());
+
+        $this->assertSame(0, $this->db->table('queue_jobs')->countAllResults());
     }
 
     // </editor-fold>
@@ -140,10 +127,10 @@ class ZMQTest extends DatabaseTestCase {
      * it is the imprint this reads.
      */
     #[DataProvider('theHandlersThatDeliverAWebhook')]
-    public function testAHandlerDeliversItsOwnWebhookTypeAndNobodyElses(string $method, string $type): void {
+    public function testAHandlerDeliversItsOwnWebhookTypeAndNobodyElses(string $event, string $type): void {
         $this->aWebhookForEveryType();
 
-        $this->handle($method, ['id' => 7, 'name' => 'the-workspace']);
+        $this->handle($event, ['id' => 7, 'name' => 'the-workspace']);
 
         $deliveries = $this->deliveries();
         $this->assertCount(1, $deliveries, 'something other than one webhook was delivered to');
@@ -154,7 +141,7 @@ class ZMQTest extends DatabaseTestCase {
     }
 
     /**
-     * What the subscriber is told is `next` - the state after the change - and not the
+     * What the webhook is told is `next` - the state after the change - and not the
      * whole event envelope. A webhook carrying `previous` would tell a foreign recipient
      * what the fields used to be, and that is not what was agreed.
      */
@@ -162,7 +149,7 @@ class ZMQTest extends DatabaseTestCase {
         $this->aWebhookForEveryType();
 
         $this->handle(
-            'workspaceUpdated',
+            Events::Workspace_Updated(),
             ['id' => 7, 'name' => 'after'],
             ['id' => 7, 'name' => 'before']
         );
@@ -179,7 +166,7 @@ class ZMQTest extends DatabaseTestCase {
      * not use webhooks, and every single change in kso goes through this line.
      */
     public function testAHandlerWithNobodyListeningIsQuietAndSaysSo(): void {
-        $this->handle('workspaceCreated', ['id' => 7]);
+        $this->handle(Events::Workspace_Created(), ['id' => 7]);
 
         $this->assertSame([], $this->deliveries());
         $this->assertStringContainsString('delivered workspace-created to 0 webhooks', $this->debugLog());
@@ -190,13 +177,13 @@ class ZMQTest extends DatabaseTestCase {
      */
     public static function theHandlersThatDeliverAWebhook(): array {
         return [
-            'workspaceCreated' => ['workspaceCreated', \WebHookTypes::Workspace_Created],
-            'workspaceUpdated' => ['workspaceUpdated', \WebHookTypes::Workspace_Updated],
-            'workspaceDeleted' => ['workspaceDeleted', \WebHookTypes::Workspace_Deleted],
-            'workspaceDeployed' => ['workspaceDeployed', \WebHookTypes::Workspace_Deployed],
-            'workspaceTerminated' => ['workspaceTerminated', \WebHookTypes::Workspace_Terminated],
-            'deploymentDeployed' => ['deploymentDeployed', \WebHookTypes::Deployment_Deployed],
-            'deploymentTerminated' => ['deploymentTerminated', \WebHookTypes::Deployment_Terminated],
+            'workspaceCreated' => [Events::Workspace_Created(), \WebHookTypes::Workspace_Created],
+            'workspaceUpdated' => [Events::Workspace_Updated(), \WebHookTypes::Workspace_Updated],
+            'workspaceDeleted' => [Events::Workspace_Deleted(), \WebHookTypes::Workspace_Deleted],
+            'workspaceDeployed' => [Events::Workspace_Deployed(), \WebHookTypes::Workspace_Deployed],
+            'workspaceTerminated' => [Events::Workspace_Terminated(), \WebHookTypes::Workspace_Terminated],
+            'deploymentDeployed' => [Events::Deployment_Deployed(), \WebHookTypes::Deployment_Deployed],
+            'deploymentTerminated' => [Events::Deployment_Terminated(), \WebHookTypes::Deployment_Terminated],
         ];
     }
 
@@ -214,7 +201,7 @@ class ZMQTest extends DatabaseTestCase {
     public function testAFinishedMigrationJobMakesTheDeploymentLookAtItself(string $status): void {
         $deployment = Fixtures::deployment(['status' => \DeploymentStatusTypes::Active]);
 
-        $this->handle('migrationJobChangedStatus', [
+        $this->handle(Events::MigrationJob_Changed_Status(0), [
             'status' => $status,
             'deployment_id' => $deployment->id,
         ]);
@@ -242,7 +229,7 @@ class ZMQTest extends DatabaseTestCase {
     public function testAMigrationJobThatIsStillRunningIsLeftAlone(string $status): void {
         $deployment = Fixtures::deployment(['status' => \DeploymentStatusTypes::Active]);
 
-        $this->handle('migrationJobChangedStatus', [
+        $this->handle(Events::MigrationJob_Changed_Status(0), [
             'status' => $status,
             'deployment_id' => $deployment->id,
         ]);
@@ -276,7 +263,7 @@ class ZMQTest extends DatabaseTestCase {
         $other = $this->anApprovedAutoUpdate('other/image', '9.9.9');
         $named = $this->anApprovedAutoUpdate('named/image', '2.0.0');
 
-        $this->handle('autoUpdateApproved', ['id' => $named->id]);
+        $this->handle(Events::AutoUpdate_Approved(), ['id' => $named->id]);
 
         $this->assertSame('2.0.0', $this->versionOf($named->deployment_id));
         $this->assertSame('old', $this->versionOf($other->deployment_id), 'the other auto update was rolled out');
@@ -294,7 +281,7 @@ class ZMQTest extends DatabaseTestCase {
             'workspace_status' => \WorkspaceStatusTypes::Inactive,
         ]);
 
-        $this->handle('autoUpdateApproved', ['id' => $autoUpdate->id]);
+        $this->handle(Events::AutoUpdate_Approved(), ['id' => $autoUpdate->id]);
 
         $this->assertStringContainsString('Skip rollout because the workspace is paused or inactive', $this->debugLog());
         $this->assertSame('old', $this->versionOf($autoUpdate->deployment_id));
@@ -310,7 +297,7 @@ class ZMQTest extends DatabaseTestCase {
             'workspace_paused' => true,
         ]);
 
-        $this->handle('autoUpdateApproved', ['id' => $autoUpdate->id]);
+        $this->handle(Events::AutoUpdate_Approved(), ['id' => $autoUpdate->id]);
 
         $this->assertSame('old', $this->versionOf($autoUpdate->deployment_id));
     }
@@ -329,7 +316,7 @@ class ZMQTest extends DatabaseTestCase {
         $before = $this->db->table('deployments')->countAllResults();
         $this->db->table('deployments')->where('id', $autoUpdate->deployment_id)->delete();
 
-        $this->handle('autoUpdateApproved', ['id' => $autoUpdate->id]);
+        $this->handle(Events::AutoUpdate_Approved(), ['id' => $autoUpdate->id]);
 
         $this->assertSame($before - 1, $this->db->table('deployments')->countAllResults(), 'a deployment was created');
         $this->assertStringContainsString('Skip rollout because the deployment is gone', $this->debugLog());
@@ -351,7 +338,7 @@ class ZMQTest extends DatabaseTestCase {
         $autoUpdate->is_approved = true;
         $autoUpdate->save();
 
-        $this->handle('autoUpdateApproved', ['id' => $autoUpdate->id]);
+        $this->handle(Events::AutoUpdate_Approved(), ['id' => $autoUpdate->id]);
 
         $this->assertSame('old', $this->versionOf($bystander->id));
     }
@@ -363,7 +350,7 @@ class ZMQTest extends DatabaseTestCase {
      * `updateVersion(null)` is a `TypeError`.
      */
     public function testAnEventNamingAnUpdateThatIsGoneIsALineInTheLog(): void {
-        $this->handle('autoUpdateApproved', ['id' => 424242]);
+        $this->handle(Events::AutoUpdate_Approved(), ['id' => 424242]);
 
         $this->assertStringContainsString('No auto update with id', $this->debugLog());
     }
@@ -372,7 +359,7 @@ class ZMQTest extends DatabaseTestCase {
      * And an event with no id on it at all, which is the same question one step earlier.
      */
     public function testAnEventWithNoIdOnItRollsOutNothing(): void {
-        $this->handle('autoUpdateApproved', []);
+        $this->handle(Events::AutoUpdate_Approved(), []);
 
         $this->assertStringContainsString('No auto update with id', $this->debugLog());
     }
@@ -382,56 +369,29 @@ class ZMQTest extends DatabaseTestCase {
     // <editor-fold desc="Fixtures">
 
     /**
-     * Run `initController()` with an event on the command line.
-     *
-     * `Services::clirequest()` is what the controller reads its options from, and a
-     * CLIRequest parses argv in its constructor - so argv is written first and the finished
-     * request is installed as the shared instance afterwards.
-     *
-     * Argv has to be written through the `superglobals` service and not into `$_SERVER`:
-     * since 4.7 a request reads its globals from that service, which took its copy long
-     * before the test got here. A write straight into `$_SERVER` is silently ignored, and
-     * the controller sees phpunit's own arguments instead - whereupon it `die`s on the
-     * duplicate path and takes phpunit with it, without a line in the output.
-     */
-    private function initControllerWith(string $identifier, string $event, string $data): \App\Controllers\ZMQ {
-        service('superglobals')->setServer('argv', [
-            'index.php',
-            'zmq',
-            '--identifier', $identifier,
-            '--event', $event,
-            '--data', base64_encode($data),
-        ]);
-        Services::injectMock('clirequest', new CLIRequest(config('App')));
-
-        $controller = new \App\Controllers\ZMQ();
-        $controller->initController(Services::request(), Services::response(), service('logger'));
-
-        return $controller;
-    }
-
-    /**
-     * Call a handler with an event already in place, without going through
-     * `initController()`.
+     * Hand a handler an event, the way `HandleEvent` does.
      *
      * @param array<string, mixed> $next
      * @param array<string, mixed>|null $previous
      */
-    private function handle(string $method, array $next, ?array $previous = null): void {
-        $event = new ZMQEvent();
-        $event->data = json_encode(['previous' => $previous, 'next' => $next]);
-
-        $controller = new \App\Controllers\ZMQ();
-        $property = (new \ReflectionClass(\App\Controllers\ZMQ::class))->getProperty('event');
-        $property->setValue($controller, $event);
-
-        $controller->{$method}();
+    private function handle(string $event, array $next, ?array $previous = null): void {
+        EventHandlers::Handle($event, new ChangeEvent($previous, $next));
     }
 
-    private function eventOf(\App\Controllers\ZMQ $controller): ZMQEvent {
-        $property = (new \ReflectionClass(\App\Controllers\ZMQ::class))->getProperty('event');
+    private function publisher(): Publisher {
+        return new Publisher(null, true);
+    }
 
-        return $property->getValue($controller);
+    /**
+     * What `spark queue:work events` does, one job at a time, until there are none it may
+     * take yet.
+     */
+    private function runTheQueue(): void {
+        $queue = service('queue');
+        while ($work = $queue->pop(EventHandlers::Queue, ['default'])) {
+            (new HandleEvent($work->payload['data']))->process();
+            $queue->done($work);
+        }
     }
 
     /**

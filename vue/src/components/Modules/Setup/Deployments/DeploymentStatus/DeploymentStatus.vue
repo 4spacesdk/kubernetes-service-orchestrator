@@ -3,10 +3,10 @@ import { computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch
 import { Deployment } from "@/core/services/Deploy/models";
 import { Api } from "@/core/services/Deploy/Api";
 import { DeploymentStatusTypes } from "@/constants";
-import { WampSubscription } from "@/services/Wamp/WampSubscription";
-import WampService from "@/services/Wamp/WampService";
-import { Events } from "@/services/Wamp/Events";
-import { ChangeEvent } from "@/services/Wamp/ChangeEvent";
+import { PushSubscription } from "@/services/Push/PushSubscription";
+import PushService from "@/services/Push/PushService";
+import { Events } from "@/services/Push/Events";
+import { ChangeEvent } from "@/services/Push/ChangeEvent";
 
 const props = defineProps<{
     deployment: Deployment;
@@ -17,19 +17,19 @@ const icon = ref("fa-circle-info");
 const color = ref("grey");
 const isLoading = ref(false);
 const isHovering = ref(false);
-const wampSubscription = ref<WampSubscription>();
+const pushSubscription = ref<PushSubscription>();
 
 onMounted(() => {
     render(props.deployment.status!);
 
-    wampSubscription.value = WampService.subscribe(Events.Deployment_Changed_Status(props.deployment.id!), (data) => {
+    pushSubscription.value = PushService.subscribe(Events.Deployment_Changed_Status(props.deployment.id!), (data) => {
         const changeEvent = new ChangeEvent<Deployment>(data.previous, new Deployment(data.next));
         render(changeEvent.next.status!);
     });
 });
 
 onUnmounted(() => {
-    wampSubscription.value?.unsubscribe();
+    pushSubscription.value?.unsubscribe();
 });
 
 function reload() {

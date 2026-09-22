@@ -15,13 +15,13 @@ use App\Models\AutoUpdateModel;
  *
  * What approval does here is narrow, and worth being precise about: it sets a flag, stamps
  * a date and emits `AutoUpdate_Approved`. **The rollout is not part of the request.** The
- * version only changes when the zmq client picks that event up and calls back into
- * `ZMQ::autoUpdateApproved()`, which is where `rollout()` lives - a different process, out
- * of band, after the response has gone out.
+ * event goes on the job queue, and the version only changes when a worker takes it off and
+ * `EventHandlers` calls `rollout()` - a different process, out of band, after the response
+ * has gone out.
  *
  * That also makes this the file where a test emitting real events would do most harm:
- * without the silenced ZMQProxy that `tests/bootstrap.php` installs, every test below would
- * publish a real approval and a live client would deploy a tag into whatever cluster the
+ * without the silenced publisher that `tests/bootstrap.php` installs, every test below would
+ * queue a real approval and a running worker would deploy a tag into whatever cluster the
  * development environment is pointed at. Nothing here may be made to emit for real.
  */
 class AutoUpdatesApiTest extends ControllerTestCase {

@@ -1,9 +1,9 @@
 <?php namespace App\Entities;
 
 use App\Libraries\DeploymentSteps\MigrationJobStep;
-use App\Libraries\ZMQ\ChangeEvent;
-use App\Libraries\ZMQ\Events;
-use App\Libraries\ZMQ\ZMQProxy;
+use App\Libraries\Push\ChangeEvent;
+use App\Libraries\Push\Events;
+use App\Libraries\Push\Publisher;
 use DebugTool\Data;
 use App\Core\Entity;
 use \App\Libraries\DeploymentSteps\DeploymentStep;
@@ -42,7 +42,7 @@ class MigrationJob extends Entity {
                 // Attach to deployment
                 $deployment->last_migration_job_id = $this->id;
                 $deployment->save();
-                ZMQProxy::getInstance()->send(
+                Publisher::getInstance()->send(
                     Events::MigrationJob_Created(),
                     (new ChangeEvent(null, $this->toArray()))->toArray()
                 );
@@ -54,11 +54,11 @@ class MigrationJob extends Entity {
                 break;
         }
 
-        ZMQProxy::getInstance()->send(
+        Publisher::getInstance()->send(
             Events::MigrationJob_Changed_Status($this->id),
             (new ChangeEvent(null, $this->toArray()))->toArray()
         );
-        ZMQProxy::getInstance()->send(
+        Publisher::getInstance()->send(
             Events::MigrationJob_Changed_Status(0),
             (new ChangeEvent(null, $this->toArray()))->toArray()
         );

@@ -247,7 +247,7 @@ class KubernetesApiTest extends ClusterControllerTestCase {
      * push service rather than answering with it. A container that has finished is what
      * makes that testable at all: the stream ends by itself, so the request returns.
      *
-     * The push events go nowhere here - see `SilentZmq`.
+     * The push events go nowhere here - see `SilentPush`.
      */
     public function testWatchingTheLogOfAFinishedContainerRunsToTheEndOfTheStream(): void {
         $this->namespaceExists();

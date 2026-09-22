@@ -1,8 +1,8 @@
 <?php namespace App\Libraries\Kubernetes;
 
-use App\Libraries\ZMQ\ChangeEvent;
-use App\Libraries\ZMQ\Events;
-use App\Libraries\ZMQ\ZMQProxy;
+use App\Libraries\Push\ChangeEvent;
+use App\Libraries\Push\Events;
+use App\Libraries\Push\Publisher;
 use RenokiCo\PhpK8s\Exceptions\KubernetesAPIException;
 use RenokiCo\PhpK8s\Exceptions\KubernetesLogsException;
 use RenokiCo\PhpK8s\Exceptions\KubernetesWatchException;
@@ -38,7 +38,7 @@ class KubeLog {
             // The same split as `getLogs()`, which it used to differ from by one character.
             $lines = KubeHelper::LogLines($logs);
 
-            ZMQProxy::getInstance()->send(
+            Publisher::getInstance()->send(
                 Events::KubernetesPod_Logs_Watch($podName, $containerName),
                 (new ChangeEvent(null, $lines))->toArray()
             );

@@ -3,10 +3,10 @@ import { computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch
 import { Deployment, Workspace } from "@/core/services/Deploy/models";
 import { Api } from "@/core/services/Deploy/Api";
 import { DeploymentStatusTypes } from "@/constants";
-import { WampSubscription } from "@/services/Wamp/WampSubscription";
-import WampService from "@/services/Wamp/WampService";
-import { Events } from "@/services/Wamp/Events";
-import { ChangeEvent } from "@/services/Wamp/ChangeEvent";
+import { PushSubscription } from "@/services/Push/PushSubscription";
+import PushService from "@/services/Push/PushService";
+import { Events } from "@/services/Push/Events";
+import { ChangeEvent } from "@/services/Push/ChangeEvent";
 
 const props = defineProps<{
     workspace: Workspace;
@@ -23,7 +23,7 @@ const deploymentsInDeploymentStatus = ref<Deployment[]>([]);
 const deploymentsInActiveStatus = ref<Deployment[]>([]);
 const deploymentsInInactiveStatus = ref<Deployment[]>([]);
 const deploymentsInErrorStatus = ref<Deployment[]>([]);
-const wampSubscription = ref<WampSubscription>();
+const pushSubscription = ref<PushSubscription>();
 
 onMounted(() => {
     deployments.value = props.workspace.deployments ?? [];
@@ -39,12 +39,12 @@ watch(
 );
 
 onUnmounted(() => {
-    wampSubscription.value?.unsubscribe();
+    pushSubscription.value?.unsubscribe();
 });
 
 function setup() {
-    wampSubscription.value?.unsubscribe();
-    wampSubscription.value = WampService.subscribe(Events.Workspace_Changed_Status(props.workspace.id!), (data) => {
+    pushSubscription.value?.unsubscribe();
+    pushSubscription.value = PushService.subscribe(Events.Workspace_Changed_Status(props.workspace.id!), (data) => {
         const changeEvent = new ChangeEvent<Workspace>(data.previous, new Workspace(data.next));
         deployments.value = changeEvent.next.deployments ?? [];
         render();

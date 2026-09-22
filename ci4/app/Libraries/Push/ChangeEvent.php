@@ -1,4 +1,4 @@
-<?php namespace App\Libraries\ZMQ;
+<?php namespace App\Libraries\Push;
 
 class ChangeEvent {
 

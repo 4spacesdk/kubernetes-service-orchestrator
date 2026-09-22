@@ -4,9 +4,9 @@ use App\Core\ResourceController;
 use App\Entities\AutoUpdate;
 use App\Entities\ContainerRegistry;
 use App\Libraries\ContainerRegistries\ImageReference;
-use App\Libraries\ZMQ\ChangeEvent;
-use App\Libraries\ZMQ\Events;
-use App\Libraries\ZMQ\ZMQProxy;
+use App\Libraries\Push\ChangeEvent;
+use App\Libraries\Push\Events;
+use App\Libraries\Push\Publisher;
 use DebugTool\Data;
 
 class AutoUpdates extends ResourceController {
@@ -119,7 +119,7 @@ class AutoUpdates extends ResourceController {
 
         AutoUpdate::CheckForUpdates($image, $tag);
 
-        ZMQProxy::getInstance()->send(
+        Publisher::getInstance()->send(
             Events::AutoUpdate_Created(),
             (new ChangeEvent(null, []))->toArray()
         );

@@ -3,10 +3,6 @@ import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch}
 import {Deployment, Domain, Workspace} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import {DeploymentStatusTypes} from "@/constants";
-import {WampSubscription} from "@/services/Wamp/WampSubscription";
-import WampService from "@/services/Wamp/WampService";
-import {Events} from "@/services/Wamp/Events";
-import {ChangeEvent} from "@/services/Wamp/ChangeEvent";
 import {de} from "vuetify/locale";
 
 const props = defineProps<{

@@ -6,9 +6,9 @@ import {Api} from "@/core/services/Deploy/Api";
 import DateView from "@/components/Modules/Common/DateView.vue";
 import bus from "@/plugins/bus";
 import MigrationJobStatus from "@/components/Modules/MigrationJobs/MigrationJobStatus/MigrationJobStatus.vue";
-import {WampSubscription} from "@/services/Wamp/WampSubscription";
-import WampService from "@/services/Wamp/WampService";
-import {Events} from "@/services/Wamp/Events";
+import {PushSubscription} from "@/services/Push/PushSubscription";
+import PushService from "@/services/Push/PushService";
+import {Events} from "@/services/Push/Events";
 import debounce from "lodash.debounce";
 
 interface Row {
@@ -42,7 +42,7 @@ const headers = ref<{
 ]);
 const isLoading = ref(false);
 const options = ref({});
-const wampSubscription = ref<WampSubscription>();
+const pushSubscription = ref<PushSubscription>();
 
 const {search: searchValue, page, itemsPerPage, sortBy, applyOrdering, applyPaging} = useListState({
     sortable: {"created": "id", "status": "status", "deployment": "deployment.name", "started": "started", "ended": "ended"},
@@ -60,14 +60,14 @@ onMounted(() => {
 
     getItems(false, true);
 
-    wampSubscription.value = WampService.subscribe(
+    pushSubscription.value = PushService.subscribe(
         Events.MigrationJob_Created(),
         data => getItems(true, true)
     );
 });
 
 onUnmounted(() => {
-    wampSubscription.value?.unsubscribe();
+    pushSubscription.value?.unsubscribe();
 });
 
 watch(searchValue, debounce(() => {

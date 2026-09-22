@@ -1,8 +1,6 @@
 /.env
 /.idea/
 ci4/vendor
-zmq-client/vendor
-zmq-server/vendor
 ci4/.env
 
 #-------------------------

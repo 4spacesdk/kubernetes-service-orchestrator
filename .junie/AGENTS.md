@@ -10,7 +10,7 @@ The system allows for the configuration of complex deployments via a user-friend
 - **Backend**: CodeIgniter 4 (PHP 8.1+)
 - **Frontend**: Vue.js 3 (TypeScript, Vite, Tailwind CSS)
 - **Database**: MySQL / MariaDB
-- **Messaging**: ZeroMQ (ZMQ) for event-driven communication
+- **Messaging**: Centrifugo pushes events to the browser; a job queue in MySQL (codeigniter4/queue) runs the work kso does on events
 - **Infrastructure**: Docker, Kubernetes, Helm, Google Cloud Build
 
 ## 3. Project Structure
@@ -28,7 +28,7 @@ The system allows for the configuration of complex deployments via a user-friend
 - `src/core`: Core logic and state management.
 
 ### Other Components
-- `zmq-server` & `zmq-client`: PHP-based ZeroMQ implementations for handling asynchronous jobs or messages between components.
+- `ci4/app/Libraries/Push`: publishes events to Centrifugo and queues the ones kso acts on itself (`EventHandlers`).
 - `docker/`: Docker configurations for local development environment.
 
 ## 4. Development Guidelines

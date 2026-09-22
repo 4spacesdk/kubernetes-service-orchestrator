@@ -4,10 +4,10 @@ import {Api} from "@/core/services/Deploy/Api";
 import type {KubernetesPod} from "@/core/services/Deploy/Api";
 import type {KubernetesLogEntry} from "@/core/services/Deploy/Api";
 import DateView from "@/components/Modules/Common/DateView.vue";
-import {WampSubscription} from "@/services/Wamp/WampSubscription";
-import WampService from "@/services/Wamp/WampService";
-import {Events} from "@/services/Wamp/Events";
-import {ChangeEvent} from "@/services/Wamp/ChangeEvent";
+import {PushSubscription} from "@/services/Push/PushSubscription";
+import PushService from "@/services/Push/PushService";
+import {Events} from "@/services/Push/Events";
+import {ChangeEvent} from "@/services/Push/ChangeEvent";
 import {ApiRequest} from "@/core/services/ApiHelpers/ApiRequest";
 import bus from "@/plugins/bus";
 
@@ -54,7 +54,7 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-    watchWampSubscription.value?.unsubscribe();
+    watchPushSubscription.value?.unsubscribe();
     watchApiRequest.value?.cancel();
 });
 
@@ -67,7 +67,7 @@ function reload() {
     isPodsLoading.value = true;
     showWatcherFinishedMessage.value = false;
     watchApiRequest.value?.cancel();
-    watchWampSubscription.value?.unsubscribe();
+    watchPushSubscription.value?.unsubscribe();
 
     Api.kubernetes().getPodsGetByNamespace(props.namespace!)
         .app(props.app ?? '')
@@ -118,7 +118,7 @@ function reload() {
         });
 }
 
-const watchWampSubscription = ref<WampSubscription>();
+const watchPushSubscription = ref<PushSubscription>();
 const watchApiRequest = ref<ApiRequest>();
 
 function getLogs() {
@@ -150,9 +150,9 @@ function getLogs() {
         setTimeout(() => container?.value?.scrollIntoView(false));
 
         // Cancel previous watchers
-        watchWampSubscription.value?.unsubscribe();
+        watchPushSubscription.value?.unsubscribe();
 
-        watchWampSubscription.value = WampService.subscribe(
+        watchPushSubscription.value = PushService.subscribe(
             Events.KubernetesPod_Logs_Watch(activePod.value!.pod!, activePod.value!.container!),
             data => {
                 const changeEvent = new ChangeEvent<KubernetesLogEntry[]>(data.previous, data.next);

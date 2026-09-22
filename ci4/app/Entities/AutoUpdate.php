@@ -1,9 +1,9 @@
 <?php namespace App\Entities;
 
 use App\Libraries\PostUpdateActions\PostUpdateActionHelper;
-use App\Libraries\ZMQ\ChangeEvent;
-use App\Libraries\ZMQ\Events;
-use App\Libraries\ZMQ\ZMQProxy;
+use App\Libraries\Push\ChangeEvent;
+use App\Libraries\Push\Events;
+use App\Libraries\Push\Publisher;
 use App\Models\AutoUpdateModel;
 use App\Models\DeploymentModel;
 use App\Models\WorkspaceModel;
@@ -69,7 +69,7 @@ class AutoUpdate extends Entity {
         $this->approved_date = date('Y-m-d H:i:s');
         $this->save();
 
-        ZMQProxy::getInstance()->send(
+        Publisher::getInstance()->send(
             Events::AutoUpdate_Approved(),
             (new ChangeEvent(null, $this->toArray()))->toArray()
         );
@@ -116,7 +116,7 @@ class AutoUpdate extends Entity {
             }
         }
 
-        ZMQProxy::getInstance()->send(
+        Publisher::getInstance()->send(
             Events::AutoUpdate_RolledOut(),
             (new ChangeEvent(null, $this->toArray()))->toArray()
         );
@@ -131,7 +131,7 @@ class AutoUpdate extends Entity {
     public function delete($related = null) {
         parent::delete($related);
 
-        ZMQProxy::getInstance()->send(
+        Publisher::getInstance()->send(
             Events::AutoUpdate_Deleted(),
             (new ChangeEvent(null, $this->toArray()))->toArray()
         );

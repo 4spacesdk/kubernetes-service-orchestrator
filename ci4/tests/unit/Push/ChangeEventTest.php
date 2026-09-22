@@ -1,16 +1,15 @@
-<?php namespace App\Tests\Unit\ZMQ;
+<?php namespace App\Tests\Unit\Push;
 
-use App\Libraries\ZMQ\ChangeEvent;
+use App\Libraries\Push\ChangeEvent;
 use CodeIgniter\Test\CIUnitTestCase;
 
 /**
  * The payload every push event carries: what a row looked like, and what it looks like now.
  *
- * `Parse()` and `toArray()` are the two ends of the wire - the application builds one, the
- * zmq client reads it back - so they are tested as a round trip rather than separately.
+ * `Parse()` and `toArray()` are the two ends of the queue - the application builds one, the
+ * worker reads it back - so they are tested as a round trip rather than separately.
  *
- * `getDiff()` is the interesting one and has **no call sites at all** in the application,
- * the zmq server or the zmq client. It is tested here for what it would answer if anything
+ * `getDiff()` is the interesting one and has **no call sites at all**. It is tested here for what it would answer if anything
  * asked, because its answer is surprising: see the test.
  */
 class ChangeEventTest extends CIUnitTestCase {

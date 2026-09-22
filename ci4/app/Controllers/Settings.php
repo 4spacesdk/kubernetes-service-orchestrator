@@ -17,7 +17,7 @@ class Settings extends \App\Core\BaseController {
             // Never return the whole System entity here. This endpoint is served without
             // authentication.
             'system' => System::Get()->toPublicArray(),
-            'pushServiceUrl' => env('ZMQ_EXTERNAL_URL'),
+            'pushServiceUrl' => env('CENTRIFUGO_EXTERNAL_URL'),
             'certManagerIssuerDefaultName' => env('CERT_MANAGER_ISSUER_DEFAULT_NAME'),
             'imagePullSecretDefaultName' => env('IMAGE_PULL_SECRET_DEFAULT_NAME'),
         ];

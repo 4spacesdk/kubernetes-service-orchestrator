@@ -130,14 +130,14 @@ class SecurityHeadersTest extends ControllerTestCase {
         $this->assertStringNotContainsString("'unsafe-eval'", $policy);
         $this->assertDoesNotMatchRegularExpression("#script-src[^;]*'unsafe-inline'#", $policy);
         $this->assertStringContainsString("object-src 'none'", $policy);
-        $this->assertStringContainsString('${ZMQ_EXTERNAL_URL}', $policy, 'the push socket, by name');
+        $this->assertStringContainsString('${CENTRIFUGO_EXTERNAL_URL}', $policy, 'the push connection, by name');
         $this->assertStringContainsString('(app|api/login)', $scope);
 
         // The variable always expands: an unset one leaves the literal in the header.
         if (is_file(self::DOCKERFILE)) {
-            $this->assertStringContainsString('ENV ZMQ_EXTERNAL_URL=""', (string) file_get_contents(self::DOCKERFILE));
+            $this->assertStringContainsString('ENV CENTRIFUGO_EXTERNAL_URL=""', (string) file_get_contents(self::DOCKERFILE));
         } else {
-            $this->assertNotFalse(getenv('ZMQ_EXTERNAL_URL'));
+            $this->assertNotFalse(getenv('CENTRIFUGO_EXTERNAL_URL'));
         }
     }
     // </editor-fold>

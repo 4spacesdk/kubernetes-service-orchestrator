@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "231b73cd0658f865da0deb48fdcd1cc1",
+    "content-hash": "5fb054ab223a5bb011a49a7650928a71",
     "packages": [
         {
             "name": "4spacesdk/ci4authextension",
-            "version": "v1.2.5",
+            "version": "v1.2.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/4spacesdk/CI4AuthExtension.git",
-                "reference": "978a53b72d6a5003e20363e636edbaa8d84dd2d9"
+                "reference": "cf548d2fc69d3d4bd62ebdc32793d91642268aee"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/4spacesdk/CI4AuthExtension/zipball/978a53b72d6a5003e20363e636edbaa8d84dd2d9",
-                "reference": "978a53b72d6a5003e20363e636edbaa8d84dd2d9",
+                "url": "https://api.github.com/repos/4spacesdk/CI4AuthExtension/zipball/cf548d2fc69d3d4bd62ebdc32793d91642268aee",
+                "reference": "cf548d2fc69d3d4bd62ebdc32793d91642268aee",
                 "shasum": ""
             },
             "require": {
@@ -46,9 +46,9 @@
             "description": "Easy OAuth2 integration with CodeIgniter 4",
             "support": {
                 "issues": "https://github.com/4spacesdk/CI4AuthExtension/issues",
-                "source": "https://github.com/4spacesdk/CI4AuthExtension/tree/v1.2.5"
+                "source": "https://github.com/4spacesdk/CI4AuthExtension/tree/v1.2.6"
             },
-            "time": "2026-08-25T15:15:11+00:00"
+            "time": "2026-09-22T07:09:06+00:00"
         },
         {
             "name": "4spacesdk/ci4debugtool",
@@ -427,6 +427,58 @@
             "time": "2026-09-06T14:11:38+00:00"
         },
         {
+            "name": "centrifugal/phpcent",
+            "version": "6.0.3",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/centrifugal/phpcent.git",
+                "reference": "8112fa4cf9c87c6eb07461da4d4555f6d0dcbb89"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/centrifugal/phpcent/zipball/8112fa4cf9c87c6eb07461da4d4555f6d0dcbb89",
+                "reference": "8112fa4cf9c87c6eb07461da4d4555f6d0dcbb89",
+                "shasum": ""
+            },
+            "require": {
+                "ext-curl": "*",
+                "ext-json": "*",
+                "php": ">=7.0.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "9.*"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "phpcent\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "PHP library to communicate with Centrifugo HTTP API",
+            "homepage": "https://github.com/centrifugal/phpcent",
+            "keywords": [
+                "centrifugo",
+                "messaging",
+                "realtime",
+                "websocket"
+            ],
+            "support": {
+                "issues": "https://github.com/centrifugal/phpcent/issues",
+                "source": "https://github.com/centrifugal/phpcent/tree/v6.0.3"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/centrifugal",
+                    "type": "github"
+                }
+            ],
+            "time": "2026-05-07T20:23:37+00:00"
+        },
+        {
             "name": "clue/stream-filter",
             "version": "v1.7.0",
             "source": {
@@ -568,6 +620,71 @@
                 "source": "https://github.com/codeigniter4/CodeIgniter4"
             },
             "time": "2026-07-07T09:23:35+00:00"
+        },
+        {
+            "name": "codeigniter4/queue",
+            "version": "v1.0.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/codeigniter4/queue.git",
+                "reference": "87f736a69a0d64bce0c40bcb1a3f966250f70f03"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/codeigniter4/queue/zipball/87f736a69a0d64bce0c40bcb1a3f966250f70f03",
+                "reference": "87f736a69a0d64bce0c40bcb1a3f966250f70f03",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^8.2"
+            },
+            "require-dev": {
+                "codeigniter4/devkit": "^1.3",
+                "codeigniter4/framework": "^4.3",
+                "php-amqplib/php-amqplib": "^3.7",
+                "phpstan/phpstan-strict-rules": "^2.0",
+                "predis/predis": "^2.0 || ^3.0"
+            },
+            "suggest": {
+                "ext-redis": "If you want to use RedisHandler",
+                "php-amqplib/php-amqplib": "If you want to use RabbitMQHandler",
+                "predis/predis": "If you want to use PredisHandler"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "CodeIgniter\\Queue\\": "src"
+                },
+                "exclude-from-classmap": [
+                    "**/Database/Migrations/**"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "michalsn",
+                    "homepage": "https://github.com/michalsn",
+                    "role": "Developer"
+                }
+            ],
+            "description": "Queues for CodeIgniter 4 framework",
+            "homepage": "https://github.com/codeigniter4/queue",
+            "keywords": [
+                "codeigniter",
+                "codeigniter4",
+                "database",
+                "predis",
+                "queue",
+                "redis"
+            ],
+            "support": {
+                "issues": "https://github.com/codeigniter4/queue/issues",
+                "source": "https://github.com/codeigniter4/queue/tree/v1.0.1"
+            },
+            "time": "2026-07-23T17:03:38+00:00"
         },
         {
             "name": "dasprid/enum",
@@ -7756,7 +7873,6 @@
         "ext-curl": "*",
         "ext-intl": "*",
         "ext-yaml": "*",
-        "ext-zmq": "*",
         "ext-sqlsrv": "*",
         "ext-openssl": "*",
         "ext-sockets": "*",

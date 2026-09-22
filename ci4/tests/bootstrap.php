@@ -19,12 +19,10 @@ include_once __DIR__ . '/../vendor/codeigniter4/framework/system/Test/bootstrap.
 // A promise nobody handled is otherwise a line on stderr that no assertion can see.
 \App\UnhandledRejections::listen();
 
-// Before anything can emit one: a push event from a test reaches a real listener, and the
-// listener calls back into the application against the production database.
-\App\SilentZmq::install();
+// Before anything can emit one: see the class.
+\App\SilentPush::install();
 
 // Function files, which psr-4 cannot autoload - a file with no class in it is never looked
 // for. `NoSleepInCommands.php` was written and never included, so the five two-second
 // sleeps in `PullContainerRegistries::run()` were still being waited out.
 require_once __DIR__ . '/_fakes/NoSleepInCommands.php';
-require_once __DIR__ . '/_fakes/NoSleepInControllers.php';

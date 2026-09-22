@@ -3,9 +3,9 @@
 use App\Entities\ContainerImage;
 use App\Entities\ContainerImageScan;
 use App\Entities\ContainerImageScanRecord;
-use App\Libraries\ZMQ\ChangeEvent;
-use App\Libraries\ZMQ\Events;
-use App\Libraries\ZMQ\ZMQProxy;
+use App\Libraries\Push\ChangeEvent;
+use App\Libraries\Push\Events;
+use App\Libraries\Push\Publisher;
 use App\Models\ContainerImageScanModel;
 use DebugTool\Data;
 
@@ -193,7 +193,7 @@ class ImageScanner {
     protected function announce(ContainerImageScan $scan): void {
         $row = $scan->toArray();
         unset($row['findings']);
-        ZMQProxy::getInstance()->send(
+        Publisher::getInstance()->send(
             Events::ContainerImage_Scans_Changed((int) $scan->container_image_id),
             (new ChangeEvent(null, $row))->toArray()
         );

@@ -6,9 +6,9 @@ import {Api} from "@/core/services/Deploy/Api";
 import DateView from "@/components/Modules/Common/DateView.vue";
 import debounce from "lodash.debounce";
 import bus from "@/plugins/bus";
-import {WampSubscription} from "@/services/Wamp/WampSubscription";
-import WampService from "@/services/Wamp/WampService";
-import {Events} from "@/services/Wamp/Events";
+import {PushSubscription} from "@/services/Push/PushSubscription";
+import PushService from "@/services/Push/PushService";
+import {Events} from "@/services/Push/Events";
 
 const props = defineProps<{
     showHeader: boolean;
@@ -33,8 +33,8 @@ const headers = ref([
 ]);
 const isLoading = ref(false);
 const options = ref({});
-const wampSubscription1 = ref<WampSubscription>();
-const wampSubscription2 = ref<WampSubscription>();
+const pushSubscription1 = ref<PushSubscription>();
+const pushSubscription2 = ref<PushSubscription>();
 const selectedRows = ref<Row[]>([]);
 const isLoadingBatchApprove = ref(false);
 
@@ -53,19 +53,19 @@ onMounted(() => {
 
     getItems(false, true);
 
-    wampSubscription1.value = WampService.subscribe(
+    pushSubscription1.value = PushService.subscribe(
         Events.AutoUpdate_Created(),
         data => getItems(true, true)
     );
-    wampSubscription2.value = WampService.subscribe(
+    pushSubscription2.value = PushService.subscribe(
         Events.AutoUpdate_RolledOut(),
         data => getItems(true, true)
     );
 });
 
 onUnmounted(() => {
-    wampSubscription1.value?.unsubscribe();
-    wampSubscription2.value?.unsubscribe();
+    pushSubscription1.value?.unsubscribe();
+    pushSubscription2.value?.unsubscribe();
 });
 
 watch(searchValue, debounce(() => {

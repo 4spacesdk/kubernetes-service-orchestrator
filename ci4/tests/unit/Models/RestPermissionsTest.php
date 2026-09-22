@@ -56,7 +56,7 @@ class RestPermissionsTest extends CIUnitTestCase {
      * Three models are not exposed at all. Named here so that exposing one is a deliberate
      * act rather than something that happens by adding an interface.
      */
-    private const NotExposed = ['CronJobModel', 'DeletionModel', 'ZMQEventModel'];
+    private const NotExposed = ['CronJobModel', 'DeletionModel'];
 
     public function testThePermissionTableIsWhatWeThinkItIs(): void {
         $refused = [];

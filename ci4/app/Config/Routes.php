@@ -9,9 +9,6 @@ use DebugTool\Data;
 $routes->get('/', 'Home::index');
 
 $routes->cli('jobby/run/(:segment)', 'Jobby::run/$1');
-$routes->cli('ZMQ/migrationJobChangedStatus', 'ZMQ::migrationJobChangedStatus');
-$routes->cli('ZMQ/workspaceCreated', 'ZMQ::workspaceCreated');
-$routes->cli('ZMQ/workspaceDeleted', 'ZMQ::workspaceDeleted');
 
 $routes->get('connect/check', function() {
     \AuthExtension\OAuth2\Check::handle(Services::response());

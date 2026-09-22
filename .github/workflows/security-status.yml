@@ -46,7 +46,7 @@ jobs:
       - name: composer audit
         run: |
           mkdir -p build/security
-          for dir in ci4 zmq-client zmq-server; do
+          for dir in ci4; do
             composer audit --locked --format=json --no-interaction --working-dir="$dir" \
               > "build/security/composer-$dir.json" || true
           done

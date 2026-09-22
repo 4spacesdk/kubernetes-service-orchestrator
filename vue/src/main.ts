@@ -16,7 +16,7 @@ import AuthService from "@/services/AuthService";
 import { registerSW } from 'virtual:pwa-register'
 import vuetify from "@/plugins/vuetify";
 
-import WampService from "@/services/Wamp/WampService";
+import PushService from "@/services/Push/PushService";
 
 const setupVue = (app: App<Element>) => {
 
@@ -69,5 +69,5 @@ Promise.all([
 
     app.mount('#app');
 
-    WampService.init();
+    PushService.init();
 });

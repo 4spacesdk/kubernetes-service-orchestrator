@@ -7,8 +7,8 @@ use App\Fixtures;
 /**
  * The snapshot of an entity that is pushed to every connected browser.
  *
- * When a deployment or a workspace finishes deploying, kso sends the entity over the ZMQ
- * socket as a change event, and every open browser writes what arrives straight into the
+ * When a deployment or a workspace finishes deploying, kso pushes the entity as a
+ * change event, and every open browser writes what arrives straight into the
  * row the user is looking at. `getClone()` is what decides the contents of that message,
  * so this is not an internal helper - it is the payload a user's screen is updated with.
  *

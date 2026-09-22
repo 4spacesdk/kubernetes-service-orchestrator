@@ -48,15 +48,13 @@ RUN apk add --update  \
     linux-headers \
     php85-apache2 php85-mbstring php85-session php85-json php85-tokenizer php85-mysqli php85-pdo php85-pdo_mysql php85-intl \
     php85-curl php85-pecl-yaml php85-calendar php85-posix php85-zip php85-xml php85-simplexml php85-xmlwriter php85-ctype \
-    php85-pecl-imagick php85-gd php85-bcmath \
+    php85-pecl-imagick php85-gd php85-bcmath php85-gmp \
     # Alpine
     autoconf \
     gcc make g++ \
     gcompat \
     # gcloud installer
     python3 \
-    # ZMQ
-    libzmq zeromq-dev zeromq \
     # runuser
     runuser \
     # gke-auth
@@ -111,39 +109,6 @@ RUN if [ "$TARGETARCH" = "amd64" ] || [ -z "$TARGETARCH" ]; then \
     echo "Skipping the MSSQL driver: Microsoft ships no arm64 Alpine package." ; \
   fi
 
-# ZMQ Server
-RUN wget https://github.com/zeromq/zeromq4-1/releases/download/v4.1.8/zeromq-4.1.8.tar.gz \
-     && tar -xvzf zeromq-4.1.8.tar.gz \
-     && cd zeromq-4.1.8 \
-     && ./configure \
-     && make -j$(nproc) \
-     && make install \
-     && ldconfig / \
-     && cd .. \
-     && rm -fr zeromq-4.1.4.tar.gz zeromq-4.1.8/
-
-# ZMQ PHP Extension
-#
-# Built from remicollet's fork rather than zeromq/php-zmq, because upstream does not
-# compile on PHP 8.5: zend_exception_get_default was removed, and XtOffsetOf no longer
-# resolves. The fix is zeromq/php-zmq#240, four files and sixteen lines, open since
-# July 2025 and unmerged - upstream's last commit is from January 2025 and it has an
-# open "Project Status" issue.
-#
-# Pinned to a commit so a rebuild produces the same extension. Move back to upstream
-# when the pull request lands.
-RUN git clone https://github.com/remicollet/php-zmq.git \
- && cd php-zmq \
- && git checkout 4f7780d8 \
- && phpize && ./configure \
- && make \
- && make install \
- && cd .. \
- && rm -fr php-zmq
-RUN docker-php-ext-enable zmq
-RUN cp /usr/local/etc/php/conf.d/docker-php-ext-zmq.ini /etc/php85/conf.d/50_zmq.ini
-RUN cp /usr/local/lib/php/extensions/no-debug-non-zts-20250925/zmq.so /usr/lib/php85/modules/zmq.so
-
 # yaml_parse
 RUN pear config-set php_ini /etc/php7/php.ini
 RUN pecl channel-update pecl.php.net
@@ -197,7 +162,7 @@ RUN ln -sf /dev/stdout /var/log/apache2/access.log \
 
 ENV APP_HOME /var/www/html
 # Read by the Content-Security-Policy in docker/apache/httpd.conf; the chart sets the real one.
-ENV ZMQ_EXTERNAL_URL=""
+ENV CENTRIFUGO_EXTERNAL_URL=""
 RUN mkdir -p $APP_HOME && chown www-data:www-data /var/www $APP_HOME
 
 # Composer dependencies before the application files, so a change to the code reuses the
@@ -207,15 +172,9 @@ COPY --chown=www-data ci4/composer.json ci4/composer.lock $APP_HOME/ci4/
 RUN cd $APP_HOME/ci4 && \
   if [ "$TARGETARCH" = "amd64" ] || [ -z "$TARGETARCH" ]; then composer install; \
   else composer install --ignore-platform-req=ext-sqlsrv; fi
-COPY --chown=www-data zmq-client/composer.json zmq-client/composer.lock $APP_HOME/zmq-client/
-RUN cd $APP_HOME/zmq-client && composer install
-COPY --chown=www-data zmq-server/composer.json zmq-server/composer.lock $APP_HOME/zmq-server/
-RUN cd $APP_HOME/zmq-server && composer install
 
 # Copy application files
 COPY --chown=www-data ci4 $APP_HOME/ci4
-COPY --chown=www-data zmq-client $APP_HOME/zmq-client
-COPY --chown=www-data zmq-server $APP_HOME/zmq-server
 COPY --chown=www-data --from=build-stage /vue/dist $APP_HOME/vue
 COPY --chown=www-data docker/apache/index.php $APP_HOME
 
@@ -234,7 +193,7 @@ ENV SHORT_SHA ${BUILD_SHORT_SHA}
 # Launch the httpd in foreground
 CMD rm -rf /run/apache2/*
 
-# Start message broker subscriber. By extending entrypoint
+# Starts the job queue's worker beside Apache.
 COPY docker/entrypoint-wrapper /usr/local/bin/entrypoint-wrapper
 RUN chmod 775 /usr/local/bin/entrypoint-wrapper
 ENTRYPOINT [ "entrypoint-wrapper" ]

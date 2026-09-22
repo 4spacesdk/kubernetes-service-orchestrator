@@ -28,6 +28,7 @@
 * Changing a user role's permissions replaces them: one taken away is taken away, and the same set twice stays the same set
 * A record whose related record has been deleted no longer picks up an unrelated one when read a second time
 * Post-update actions are skipped rather than crashing on an image without commit identification or version control, and on a commit message with no Podio task link
+* Webhooks, the rollout of an approved auto update and the status check after a migration job run from a job queue in the database: they survive a restart instead of being lost, and no longer wait five seconds on each other
 * Retrying a webhook delivery adds an attempt to the log instead of rewriting the one it retries, stamped with its own time and no leftover response
 * A failed save in a dialog was silent, a double click saved twice, and the min scale job logged the wrong schedule's value
 * `?app_version=` with nothing after it counted as a version, and a timestamp written with a space between date and time came back a day earlier with the time dropped
@@ -54,6 +55,7 @@
 * Environment variables can be marked secret: the value is never sent back to the UI, and saving the list without it keeps it. Every variable's value is encrypted in the database. "Copy to deployments" on a workspace template takes the template's value instead of one in the url
 * Secret environment variables reach the pods through a Secret per workload - the Deployment or KService, each CronJob, each Job - owned by it, instead of in the pod spec. So do variables that take `${database.pass}` or `${emailService.pass}`, marked or not. A changed value rolls the pods. The preview shows the Secret with its values hidden and marks the ones that change, and hides them in a workload deployed before. A custom resource's preview hides what `${database.pass}` and `${emailService.pass}` fill in
 * Stored credentials are no longer handed to anyone signed in: a database or email service's password, a Podio client secret and app token, a webhook's bearer token - in the delivery log too - and an OAuth client secret are write-only now. A form says whether one is stored and keeps it when left empty, and the OAuth clients list no longer prints the secret in a column
+* Live updates go through Centrifugo: a browser connects with its sign-in token, checked against kso's published keys, and can only listen. The WAMP router, its shared secret and the ZeroMQ extension are gone
 * Security-related improvements
 
 ### Enhancements
@@ -72,7 +74,7 @@
 * Faster start: the app loads half as much before it shows, and dialogs reuse the lists they pick from
 * Terminate and Delete moved into a menu on workspaces and gateways
 * Upgraded to PHP 8.5, Alpine 3.24 and CodeIgniter 4.7. The image also builds on arm64
-* Push events are no longer kept for ever - a nightly job removes those older than a month - and the access log records the sign-in redirects and the events a container skips
+* The access log records the sign-in redirects
 * Added unit, database and integration test suites
 
 ### Upgrade guide
@@ -84,7 +86,9 @@
 6. Swagger is off. To keep it, set `deployment.config.swaggerEnabled: true` in the chart
 7. If kso is also reached on a hostname the chart's routing does not list, add it to `deployment.config.extraHostnames`
 8. Image scanning keeps Trivy's databases on a 4Gi volume (`deployment.imageScanning.cacheSizeLimit`), fetched again when the pod starts - 1.3 GB, and 1.4 GB more once an image with Java in it is scanned. The chart now sets `resources` by default: 256Mi requested and a 1Gi memory limit, measured at about 90Mi idle and 110-180Mi more during a scan. Helm merges them with your own `resources`; set `resources: null` to go without
-9. kso needs `create`, `get`, `update`, `patch`, `delete` and `list` on `secrets`, and `update` on the `finalizers` of deployments, jobs, cronjobs and Knative services. The chart's ClusterRole has them now; if you grant kso's rights yourself, add them
+9. kso needs `create`, `get`, `update`, `patch`, `delete` and `list` on `secrets`, and `update` on the `finalizers` of deployments, jobs, cronjobs and Knative services. The chart's ClusterRole has them now; if you grant kso's rights yourself, add them. Knative's rights come with `knative.enabled: true` - if you gave kso Knative Services through `clusterrole.additionalRules`, set that instead
+
+10. The chart runs Centrifugo as a sidecar and routes `/connection` to it instead of `/socket` to port 9100. If you route to kso yourself, send `/connection` to the Service's `push` port (8000) with WebSockets allowed, and drop `/socket`
 
 ### Notes
 * An image built for arm64 has no MSSQL driver

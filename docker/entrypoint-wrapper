@@ -1,10 +1,15 @@
 #!/bin/sh
 
-# Run ZMQ Client as www-data
-(runuser -u www-data -- php /var/www/html/zmq-client/app/start.php 2>&1 | tee /tmp/zmq-client.log) &
-
-# Run ZMW Server
-(php /var/www/html/zmq-server/ServeRouter.php | tee /tmp/zmq-server.log) &
+# The job queue's worker, as www-data - the events kso acts on itself, see
+# Libraries/Push/EventHandlers.php. It stops by itself after an hour or a thousand jobs, so a
+# leak cannot grow for ever, and the loop starts it again; the same after a crash. The jobs wait
+# in the database in the meantime.
+(
+  while true; do
+    runuser -u www-data -- php /var/www/html/ci4/spark queue:work events -sleep 2 -max-jobs 1000 -max-time 3600
+    sleep 5
+  done
+) &
 
 # Start apache
 exec /usr/sbin/httpd -DFOREGROUND
