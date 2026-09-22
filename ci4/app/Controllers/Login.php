@@ -255,6 +255,7 @@ class Login extends \App\Core\BaseController {
                         $user->password = User::encryptPassword($password);
                         $user->renew_password = false;
                         $user->save();
+                        User::EndEverySignIn((int) $user->id, User::CurrentSessionRow());
 
                         // See the note in `twoFactor()`: returned rather than sent and
                         // `exit`ed, so the framework shuts down and the response is logged.

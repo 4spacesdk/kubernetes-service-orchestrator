@@ -123,13 +123,18 @@ class AuthService {
         }
     }
 
+    /**
+     * The refresh token and the access token revoked, and the cookie that holds the refresh token
+     * cleared, before the sign-out page ends the session - it only ends the session. Then on to
+     * sign-out whatever kso answered: the browser is signed out either way.
+     */
     public handleLogout() {
-        // Remove token
+        const token = this.getToken();
         localStorage.removeItem('access_token');
         ApiService.removeHeader();
 
         const redirectUri = `${location.origin}/app/login`;
-        ApiService.redirectToLogout(redirectUri);
+        ApiService.callLogoutEndpoint(token, () => ApiService.redirectToLogout(redirectUri));
     }
 
     public getToken(): string {

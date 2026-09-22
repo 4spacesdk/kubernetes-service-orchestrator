@@ -79,6 +79,17 @@ class ApiService {
             + `&scope=${scope}`;
     }
 
+    public callLogoutEndpoint(accessToken: string | null, onDone: () => void) {
+        const xhr = new XMLHttpRequest();
+        xhr.withCredentials = true;
+        xhr.open('POST', this.apiAxios!.defaults.baseURL + "/oauth-agent/logout");
+        if (accessToken) {
+            xhr.setRequestHeader("Authorization", `Bearer ${accessToken}`);
+        }
+        xhr.onloadend = () => onDone();
+        xhr.send();
+    }
+
     public redirectToLogout(redirectUri: string) {
         const authUrl = this.apiAxios!.defaults.baseURL + "/endsession";
         window.location.href = `${authUrl}?post_logout_redirect_uri=${redirectUri}`;

@@ -104,7 +104,7 @@ class OAuthAgentApiTest extends ControllerTestCase {
             ->getResultArray();
 
         $this->assertSame(
-            ['oauth-agent/token' => '1', 'oauth-agent/refresh' => '1'],
+            ['oauth-agent/token' => '1', 'oauth-agent/refresh' => '1', 'oauth-agent/logout' => '1'],
             array_column($rows, 'is_public', 'from')
         );
     }
@@ -340,6 +340,39 @@ class OAuthAgentApiTest extends ControllerTestCase {
         }
 
         $this->assertSame('issued-access-token', $body['access_token']);
+    }
+
+    // </editor-fold>
+
+    // <editor-fold desc="logout()">
+
+    /**
+     * Signing out revokes the browser's refresh token and access token, and clears the cookie.
+     * The sign-out page only ended the session, and the next person at the machine could renew.
+     *
+     * The tokens are written through the OAuth storage - its own connection, outside this
+     * test's transaction - so they are removed again at the end whatever happens.
+     */
+    public function testSigningOutRevokesTheBrowsersTokensAndClearsTheCookie(): void {
+        $storage = \AuthExtension\OAuth2\ServerLib::getInstance()->storage;
+        $refresh = 'refresh-' . bin2hex(random_bytes(8));
+        $access = 'access-' . bin2hex(random_bytes(8));
+        $storage->setRefreshToken($refresh, 'webclient', '424242', time() + 3600);
+        $storage->setAccessToken($access, 'webclient', '424242', time() + 3600);
+
+        try {
+            $this->aBrowserHoldingARefreshToken($refresh);
+            $response = $this->withHeaders(['Authorization' => "Bearer {$access}"])->post('oauth-agent/logout');
+
+            $this->assertFalse($storage->getRefreshToken($refresh), 'the refresh token still works');
+            $this->assertFalse($storage->getAccessToken($access), 'the access token still works');
+            $cookie = $this->cookieOf($response);
+            $this->assertNotNull($cookie);
+            $this->assertTrue($cookie->isExpired(), 'the cookie is still there');
+        } finally {
+            $storage->unsetRefreshToken($refresh);
+            $storage->unsetAccessToken($access);
+        }
     }
 
     // </editor-fold>

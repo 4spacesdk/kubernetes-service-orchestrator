@@ -4,6 +4,8 @@ use App\Entities\Concerns\EncryptsFields;
 use App\Exceptions\ValidationException;
 use App\Libraries\EmailLib;
 use App\Models\UserModel;
+use AuthExtension\AuthExtension;
+use Config\Database;
 
 /**
  * Class User
@@ -45,11 +47,58 @@ class User extends \RestExtension\Entities\User {
     }
 
     public static function patch($id, $data) {
-        return parent::patch($id, self::withThePasswordHashed($data));
+        $result = parent::patch($id, self::withThePasswordHashed($data));
+        self::EndEverySignInIfThePasswordChanged($id, $data);
+        return $result;
     }
 
     public static function put($id, $data) {
-        return parent::put($id, self::withThePasswordHashed($data));
+        $result = parent::put($id, self::withThePasswordHashed($data));
+        self::EndEverySignInIfThePasswordChanged($id, $data);
+        return $result;
+    }
+
+    private static function EndEverySignInIfThePasswordChanged($id, mixed $data): void {
+        if (is_array($data) && (string) ($data['password'] ?? '') !== '') {
+            self::EndEverySignIn((int) $id, self::CurrentSessionRow());
+        }
+    }
+
+    /**
+     * Every way a user is signed in, ended: their access and refresh tokens and authorization
+     * codes revoked, and their sessions - the ones `/authorize` mints new tokens from without a
+     * password - removed. For a password that changed: whoever knew the old one, and signed in
+     * with it, is out.
+     *
+     * A reset or a renewal used to leave all of it in place, so a stolen session or refresh
+     * token outlived the password it was got with.
+     *
+     * @param string|null $keepSessionRow the session that changed the password, which stays
+     */
+    public static function EndEverySignIn(int $userId, ?string $keepSessionRow = null): void {
+        AuthExtension::revokeUserTokens($userId);
+
+        // The session handler stores PHP's own serialisation: `user_id|s:1:"7";`, or `|i:7;`.
+        $builder = Database::connect()->table(config('Session')->savePath)
+            ->groupStart()
+                ->like('data', 'user_id|s:' . strlen((string) $userId) . ':"' . $userId . '";')
+                ->orLike('data', 'user_id|i:' . $userId . ';')
+            ->groupEnd();
+        if ($keepSessionRow !== null) {
+            $builder->where('id !=', $keepSessionRow);
+        }
+        $builder->delete();
+    }
+
+    /**
+     * The row of the session this request runs in, if it has one - what `EndEverySignIn()` is
+     * told to keep.
+     */
+    public static function CurrentSessionRow(): ?string {
+        if (session_status() !== PHP_SESSION_ACTIVE || session_id() === '') {
+            return null;
+        }
+        return config('Session')->cookieName . ':' . session_id();
     }
 
     /**
@@ -192,6 +241,9 @@ class User extends \RestExtension\Entities\User {
         $this->password_reset_token_hash = null;
         $this->password_reset_expires = null;
         $this->save();
+
+        // Through the link, so nobody is signed in on this browser: every sign-in ends.
+        self::EndEverySignIn((int) $this->id);
     }
 
     /**

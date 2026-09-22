@@ -1,5 +1,6 @@
 <?php namespace App\Controllers;
 
+use AuthExtension\OAuth2\ServerLib;
 use CodeIgniter\Cookie\Cookie;
 use CodeIgniter\Cookie\CookieInterface;
 use DateTime;
@@ -66,6 +67,34 @@ class OAuthAgent extends \App\Core\BaseController {
             'token_type' => $response['token_type'] ?? null,
         ]);
         $this->response->send();
+    }
+
+    /**
+     * Signing out of this browser: its refresh token and access token revoked, and the cookie
+     * that holds the refresh token gone.
+     *
+     * The sign-out page only ended the session. The cookie stayed for a year and the refresh
+     * token in it for a week, so the next person at the same machine could post to `refresh`
+     * and be signed in. The app calls this before it sends the browser to sign-out.
+     *
+     * Only this browser: the user's other devices keep their sign-ins. A changed password ends
+     * those - see `User::EndEverySignIn()`.
+     */
+    public function logout(): void {
+        $storage = ServerLib::getInstance()->storage;
+
+        $refreshToken = $this->getCookieAttribute('refreshToken');
+        if ($refreshToken) {
+            $storage->unsetRefreshToken($refreshToken);
+        }
+
+        $authorization = $this->request->getHeaderLine('Authorization');
+        if (str_starts_with($authorization, 'Bearer ')) {
+            $storage->unsetAccessToken(substr($authorization, strlen('Bearer ')));
+        }
+
+        $this->response->setCookie($this->getCookie()->withValue('')->withExpired());
+        $this->success();
     }
 
     public function refresh(): void {

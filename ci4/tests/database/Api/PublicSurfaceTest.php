@@ -59,11 +59,13 @@ class PublicSurfaceTest extends ControllerTestCase {
         'get login/twoFactor',
         'post login/twoFactor',
 
-        // A migration job reports its own progress from inside the cluster, and it has no
-        // token to do it with. The job id is the only thing standing in for one.
+        // A migration job reports its own progress from inside the cluster, with no sign-in -
+        // it sends a token of its own, issued for that job (MigrationJobs::TokenHeader).
         'put migration-jobs/([0-9]+)/ended',
         'put migration-jobs/([0-9]+)/started',
 
+        // Acts on the refresh token cookie the browser sends, not on a sign-in.
+        'post oauth-agent/logout',
         'post oauth-agent/refresh',
         'post oauth-agent/token',
 
