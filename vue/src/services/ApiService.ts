@@ -66,7 +66,7 @@ class ApiService {
      * logs beside the challenge it is meant to prove.
      */
     public redirectToLogin(redirectUri: string, grantType: string, clientId: string,
-                           scope: string, codeChallenge: string) {
+                           scope: string, codeChallenge: string, state: string) {
         const authUrl = this.apiAxios!.defaults.baseURL + "/authorize";
         window.location.href = `${authUrl}`
             + `?grant_type=${grantType}`
@@ -75,7 +75,7 @@ class ApiService {
             + `&code_challenge=${codeChallenge}`
             + `&code_challenge_method=S256`
             + `&response_type=code`
-            + `&state=nonce`
+            + `&state=${state}`
             + `&scope=${scope}`;
     }
 

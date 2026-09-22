@@ -24,6 +24,12 @@ onMounted(() => {
 
     // Check for code
     if (route.query.code) {
+        // Only a code this tab asked for. One that arrives with another state - or none - was
+        // not started here, and is not exchanged.
+        if (!AuthService.isOwnLoginState(route.query.state)) {
+            exchangeFailed.value = true;
+            return;
+        }
         AuthService.exchangeCodeForAccessToken(route.query.code as string, succeeded => {
             if (succeeded) {
                 checkLoggedIn();

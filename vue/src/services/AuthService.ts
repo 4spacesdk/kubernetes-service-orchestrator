@@ -27,6 +27,8 @@ class AuthService {
         }).join('');
         localStorage.setItem('last-code-verifier', codeVerifier);
 
+        const state = this.newLoginState();
+
         // Create Code Challenge
         const encoder = new TextEncoder();
         const data = encoder.encode(codeVerifier);
@@ -43,9 +45,46 @@ class AuthService {
                     .replace(/\//g, "_")
                     .replace(/=+$/, "");
 
-                ApiService.redirectToLogin(redirectUri, grantType, clientId, scope, codeChallenge);
+                ApiService.redirectToLogin(redirectUri, grantType, clientId, scope, codeChallenge, state);
             });
     }
+
+    /**
+     * A random `state` for the sign-in, kept in this tab until the code comes back with it.
+     *
+     * It used to be the word `nonce` every time, so the login page could not tell a code it asked
+     * for from one somebody else handed it - a link that signs the visitor in as someone else.
+     * PKCE already stops such a code from being exchanged here; this stops it one step earlier,
+     * and does not depend on PKCE being enforced.
+     */
+    private newLoginState(): string {
+        const bytes = new Uint8Array(16);
+        window.crypto.getRandomValues(bytes);
+        const state = Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
+        try {
+            sessionStorage.setItem(AuthService.LoginStateKey, state);
+        } catch {
+            // Without storage the check on the way back refuses, and the sign-in says so.
+        }
+        return state;
+    }
+
+    /**
+     * Whether a code that came back with this state is the answer to the sign-in this tab
+     * started. The stored state is used once, whatever the answer.
+     */
+    public isOwnLoginState(state: unknown): boolean {
+        let expected: string | null = null;
+        try {
+            expected = sessionStorage.getItem(AuthService.LoginStateKey);
+            sessionStorage.removeItem(AuthService.LoginStateKey);
+        } catch {
+            return false;
+        }
+        return typeof state === 'string' && !!expected && state === expected;
+    }
+
+    private static readonly LoginStateKey = 'login-state';
 
     public exchangeCodeForAccessToken(code: string, onFinish: (succeeded: boolean) => void) {
         const redirectUri = `${location.origin}/app/login`;
