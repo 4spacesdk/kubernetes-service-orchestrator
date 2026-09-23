@@ -8,6 +8,8 @@ import {
     VApp,
     VAutocomplete,
     VBadge,
+    VBottomNavigation,
+    VBottomSheet,
     VBtn,
     VCard,
     VCardActions,
@@ -80,6 +82,8 @@ export default createVuetify({
         VApp,
         VAutocomplete,
         VBadge,
+    VBottomNavigation,
+    VBottomSheet,
         VBtn,
         VCard,
         VCardActions,
@@ -129,6 +133,16 @@ export default createVuetify({
         VWindowItem,
     },
     directives,
+    // On a phone every table is a list of cards, a row each, its columns as lines: five to eight
+    // columns do not fit beside each other in 375px, and a row's buttons ended off the edge.
+    // The rows and headers decide for themselves, so each part is told - and `mobile` must be
+    // null, not its default false, or the breakpoint is never looked at.
+    defaults: {
+        VDataTable: {mobile: null, mobileBreakpoint: 'sm'},
+        VDataTableServer: {mobile: null, mobileBreakpoint: 'sm'},
+        VDataTableRows: {mobile: null, mobileBreakpoint: 'sm'},
+        VDataTableHeaders: {mobile: null, mobileBreakpoint: 'sm'},
+    },
     theme: {
         defaultTheme: 'customLightTheme',
         themes: {

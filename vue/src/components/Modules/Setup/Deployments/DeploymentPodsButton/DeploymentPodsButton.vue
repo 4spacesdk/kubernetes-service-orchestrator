@@ -109,7 +109,7 @@ function onOpenTerminalBtnClicked(item: PodOption) {
                                indeterminate></v-progress-linear>
             <!-- What the deployment is using altogether, and what one pod was given. The total is
                  across the pods; the limit is per pod, so they are labelled rather than added. -->
-            <div v-if="!isLoading && metrics?.available" class="d-flex align-center ga-4 px-4 py-2 totals">
+            <div v-if="!isLoading && metrics?.available" class="d-flex flex-wrap align-center ga-4 px-4 py-2 totals">
                 <span>
                     <v-icon size="x-small" class="me-1">fa fa-microchip</v-icon>
                     {{ cpuText(metrics.cpu_millicores) }} cpu
@@ -149,7 +149,9 @@ function onOpenTerminalBtnClicked(item: PodOption) {
                     v-for="pod in pods"
                 >
                     <v-list-item-title>
-                        <div class="d-flex">
+                        <!-- Wraps where it has to - a phone - rather than pushing the buttons
+                             off the edge. -->
+                        <div class="d-flex flex-wrap pod-row">
                             <div
                                 class="my-auto"
                                 style="width: 100px;">
@@ -159,7 +161,7 @@ function onOpenTerminalBtnClicked(item: PodOption) {
                                 </v-chip>
                             </div>
 
-                            <span class="my-auto">{{ pod.pod.pod }}.{{ pod.pod.container }}</span>
+                            <span class="my-auto pod-name">{{ pod.pod.pod }}.{{ pod.pod.container }}</span>
 
                             <div class="d-flex ga-3 ml-auto pl-4 my-auto usage" v-for="usage in usageOf(pod.pod)" :key="usage.pod">
                                 <span class="d-flex align-center ga-1">
@@ -224,6 +226,17 @@ function onOpenTerminalBtnClicked(item: PodOption) {
 
 .bar {
     width: 48px;
+}
+
+.pod-row {
+    row-gap: 4px;
+}
+
+.pod-name {
+    flex: 1 1 160px;
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
 }
 
 .list-wrapper {

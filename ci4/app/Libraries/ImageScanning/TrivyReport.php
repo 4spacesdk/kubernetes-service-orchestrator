@@ -34,7 +34,7 @@ class TrivyReport {
             foreach ($result['Vulnerabilities'] ?? [] as $vulnerability) {
                 $finding = [
                     'id' => (string) ($vulnerability['VulnerabilityID'] ?? ''),
-                    'link' => (string) ($vulnerability['PrimaryURL'] ?? ''),
+                    'link' => self::linkOf($vulnerability),
                     'package' => (string) ($vulnerability['PkgName'] ?? ''),
                     'installed' => (string) ($vulnerability['InstalledVersion'] ?? ''),
                     'fixed' => (string) ($vulnerability['FixedVersion'] ?? ''),
@@ -61,6 +61,37 @@ class TrivyReport {
         $this->operatingSystem = $os !== '' ? $os : null;
         $this->targets = count($report['Results'] ?? []);
     }
+
+    /**
+     * Where to read about a finding. Trivy's own link goes to Aqua's database, which has no
+     * page for a CVE that is only reserved yet - and a distribution often ships the fix before
+     * the CVE is published. The tracker of the distribution Trivy found it through has a page
+     * for every entry it knows, with the versions that fix it. An advisory from GitHub goes to
+     * GitHub. Anything else keeps Trivy's link.
+     *
+     * @param array<string, mixed> $vulnerability
+     */
+    public static function linkOf(array $vulnerability): string {
+        $id = (string) ($vulnerability['VulnerabilityID'] ?? '');
+        $source = (string) ($vulnerability['DataSource']['ID'] ?? '');
+
+        if (str_starts_with($id, 'GHSA-')) {
+            return "https://github.com/advisories/{$id}";
+        }
+        if (str_starts_with($id, 'CVE-') && isset(self::Trackers[$source])) {
+            return sprintf(self::Trackers[$source], $id);
+        }
+
+        return (string) ($vulnerability['PrimaryURL'] ?? '');
+    }
+
+    /** A distribution's tracker page for a CVE, by Trivy's DataSource ID. */
+    private const array Trackers = [
+        'alpine' => 'https://security.alpinelinux.org/vuln/%s',
+        'debian' => 'https://security-tracker.debian.org/tracker/%s',
+        'ubuntu' => 'https://ubuntu.com/security/%s',
+        'redhat' => 'https://access.redhat.com/security/cve/%s',
+    ];
 
     private static function severity(?string $value): string {
         $value = strtolower((string) $value);

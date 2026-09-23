@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useListState } from "@/composables/useListState";
 import NameLink from "@/components/Modules/Common/NameLink.vue";
+import ListFilters from "@/components/Modules/Common/List/ListFilters.vue";
 import { computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch } from "vue";
 import { Api } from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
@@ -13,6 +14,7 @@ import { WorkspaceStatusTypes, HealthStatusTypes } from "@/constants";
 import { useWorkspaceActions } from "@/composables/useWorkspaceActions";
 import WorkspaceHealth from "@/components/Modules/Workspaces/WorkspaceHealth/WorkspaceHealth.vue";
 import { useRouter } from "vue-router";
+import { useDisplay } from "vuetify";
 
 interface Row {
     workspace: Workspace;
@@ -20,6 +22,9 @@ interface Row {
 }
 
 const router = useRouter();
+
+/** A phone: the search takes the width, and the filters go behind a button. */
+const { xs: isPhone } = useDisplay();
 
 const itemCount = ref(0);
 const rows = ref<Row[]>([]);
@@ -195,7 +200,7 @@ function onWorkspaceTemplatesShortcutClicked() {
 
 <template>
     <div class="h-100 content-wrapper">
-        <v-toolbar density="compact" flat color="blue-grey lighten-5" dark height="120">
+        <v-toolbar density="compact" flat color="blue-grey lighten-5" dark :height="isPhone ? 104 : 120">
             <div class="d-flex flex-column w-100 py-2 px-4 gap-1">
                 <div class="d-flex">
                     <v-toolbar-title class="my-auto">Workspaces</v-toolbar-title>
@@ -246,37 +251,39 @@ function onWorkspaceTemplatesShortcutClicked() {
                         hide-details
                         placeholder="Search"
                         clearable
-                        width="250"
-                        max-width="250"
+                        :width="isPhone ? undefined : 250"
+                        :max-width="isPhone ? undefined : 250"
                     />
 
-                    <v-select
-                        v-model="selectedStatus"
-                        :items="statusOptions"
-                        label="Status"
-                        variant="outlined"
-                        multiple
-                        item-value="value"
-                        item-title="title"
-                        hide-details
-                        chips
-                        closable-chips
-                        clearable
-                    />
+                    <list-filters :active-count="(selectedStatus.length ? 1 : 0) + (selectedHealth.length ? 1 : 0)">
+                        <v-select
+                            v-model="selectedStatus"
+                            :items="statusOptions"
+                            label="Status"
+                            variant="outlined"
+                            multiple
+                            item-value="value"
+                            item-title="title"
+                            hide-details
+                            chips
+                            closable-chips
+                            clearable
+                        />
 
-                    <v-select
-                        v-model="selectedHealth"
-                        :items="healthOptions"
-                        label="Health"
-                        variant="outlined"
-                        multiple
-                        item-value="value"
-                        item-title="title"
-                        hide-details
-                        chips
-                        closable-chips
-                        clearable
-                    />
+                        <v-select
+                            v-model="selectedHealth"
+                            :items="healthOptions"
+                            label="Health"
+                            variant="outlined"
+                            multiple
+                            item-value="value"
+                            item-title="title"
+                            hide-details
+                            chips
+                            closable-chips
+                            clearable
+                        />
+                    </list-filters>
                 </div>
             </div>
         </v-toolbar>

@@ -1,6 +1,7 @@
 <script setup lang="ts" generic="T">
-import {computed} from 'vue'
+import {computed, ref} from 'vue'
 import {useRoute} from "vue-router";
+import {useDisplay} from "vuetify";
 import {
     groupSections,
     isSectionEnabled,
@@ -31,6 +32,10 @@ const emit = defineEmits<{
 }>();
 
 const route = useRoute();
+
+/** A phone: the side menu would take the whole width, so it is a menu under the toolbar instead. */
+const {xs: isPhone} = useDisplay();
+const showSectionMenu = ref(false);
 
 const sectionKey = computed(() => (route.params.section as string) ?? '');
 const section = computed(() => props.sections.find(section => section.key == sectionKey.value));
@@ -83,9 +88,49 @@ function titleOf(group: string) {
 
         <div
             v-else-if="props.item"
-            class="d-flex flex-grow-1 page-body">
+            class="d-flex flex-grow-1 page-body"
+            :class="{'flex-column': isPhone}">
 
-            <nav class="section-menu">
+            <v-menu
+                v-if="isPhone"
+                v-model="showSectionMenu"
+                location="bottom start">
+                <template v-slot:activator="{ props: menuProps }">
+                    <button
+                        v-bind="menuProps"
+                        class="section-picker">
+                        <v-icon size="x-small">{{ section?.icon }}</v-icon>
+                        <span>{{ section?.title ?? 'Sections' }}</span>
+                        <v-icon size="x-small" class="ml-auto">fa fa-chevron-down</v-icon>
+                    </button>
+                </template>
+                <v-card class="section-picker-menu">
+                    <v-list
+                        density="compact"
+                        nav>
+                        <template
+                            v-for="group in groups"
+                            :key="group.group">
+                            <v-list-subheader v-if="group.group">{{ titleOf(group.group) }}</v-list-subheader>
+                            <v-list-item
+                                v-for="entry in group.sections"
+                                :key="entry.key"
+                                :to="sectionRoute(entry.key)"
+                                replace
+                                :active="entry.key == sectionKey"
+                                :disabled="!isSectionEnabled(entry, props.item)"
+                                :prepend-icon="entry.icon"
+                                :title="entry.title"
+                                color="secondary"
+                                exact/>
+                        </template>
+                    </v-list>
+                </v-card>
+            </v-menu>
+
+            <nav
+                v-else
+                class="section-menu">
                 <v-list
                     density="compact"
                     bg-color="transparent"
@@ -190,6 +235,29 @@ function titleOf(group: string) {
 
 .section-content {
     min-width: 0;
+    min-height: 0;
     overflow-y: auto;
+}
+
+.section-picker {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    background: rgb(var(--v-theme-surface));
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.section-picker-menu {
+    width: calc(100vw - 16px);
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.section-picker-menu .v-list-item:not(:last-of-type) {
+    border-bottom: none;
 }
 </style>

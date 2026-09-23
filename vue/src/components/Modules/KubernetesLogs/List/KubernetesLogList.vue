@@ -11,6 +11,7 @@ import {Events} from "@/services/Push/Events";
 import {ChangeEvent} from "@/services/Push/ChangeEvent";
 import {ApiRequest} from "@/core/services/ApiHelpers/ApiRequest";
 import bus from "@/plugins/bus";
+import {useDisplay} from "vuetify";
 
 const props = defineProps<{
     namespace?: string;
@@ -24,6 +25,9 @@ const props = defineProps<{
 
     showHeader: boolean;
 }>();
+
+/** A phone: the toolbar's two rows wrap into more, so it is as tall as they are. */
+const {xs: isPhone} = useDisplay();
 
 defineExpose({
     reload
@@ -418,11 +422,12 @@ function onAllPodsClicked() {
                    flat
                    color="blue-grey lighten-5"
                    :height="110"
+                   :class="{'toolbar-wraps': isPhone}"
         >
             <div class="d-flex flex-column w-100 px-5 py-2 ga-2">
             <!-- Reading every pod at once, one pod's name, age and status is not the answer to
                  any question the header can be asked - so it says what is being read instead. -->
-            <div v-if="allPods" class="d-flex ga-6 info">
+            <div v-if="allPods" class="d-flex flex-wrap ga-6 info">
                 <div class="d-flex flex-column">
                     <span>Deployment</span>
                     <strong>{{ props.app }}</strong>
@@ -437,7 +442,7 @@ function onAllPodsClicked() {
                 </div>
             </div>
 
-            <div v-else class="d-flex ga-6 info">
+            <div v-else class="d-flex flex-wrap ga-6 info">
                 <div class="d-flex flex-column">
                     <span>Pod name</span>
                     <strong>{{ activePod?.pod || 'Loading...' }}</strong>
@@ -456,7 +461,7 @@ function onAllPodsClicked() {
                 </div>
             </div>
 
-            <div class="d-flex ga-3 align-center controls">
+            <div class="d-flex flex-wrap ga-3 align-center controls">
             <v-text-field
                 v-model="search"
                 density="compact"
@@ -617,6 +622,11 @@ function onAllPodsClicked() {
 </template>
 
 <style scoped>
+.toolbar-wraps,
+.toolbar-wraps :deep(.v-toolbar__content) {
+    height: auto !important;
+}
+
 /* The toolbar is two rows: what is being read, and how. */
 .info {
     font-size: 12px;
@@ -632,7 +642,9 @@ function onAllPodsClicked() {
     height: auto;
 }
 
+/* On a phone the row wraps: search on a line of its own, the buttons under it. */
 .search {
+    flex: 1 1 200px;
     max-width: 280px;
 }
 

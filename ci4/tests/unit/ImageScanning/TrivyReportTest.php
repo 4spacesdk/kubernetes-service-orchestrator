@@ -47,6 +47,38 @@ class TrivyReportTest extends CIUnitTestCase {
         ], $this->report()->findings[0]);
     }
 
+    /**
+     * Aqua has no page for a CVE that is only reserved yet; the distribution's tracker has one
+     * for every entry it knows.
+     */
+    public function testAFindingFromADistributionLinksToItsTracker(): void {
+        $this->assertSame('https://security.alpinelinux.org/vuln/CVE-2026-53612', TrivyReport::linkOf([
+            'VulnerabilityID' => 'CVE-2026-53612',
+            'DataSource' => ['ID' => 'alpine', 'Name' => 'Alpine Secdb', 'URL' => 'https://secdb.alpinelinux.org/'],
+            'PrimaryURL' => 'https://avd.aquasec.com/nvd/cve-2026-53612',
+        ]));
+    }
+
+    public function testAnAdvisoryFromGithubLinksToGithub(): void {
+        $this->assertSame('https://github.com/advisories/GHSA-abcd-efgh-ijkl', TrivyReport::linkOf([
+            'VulnerabilityID' => 'GHSA-abcd-efgh-ijkl',
+            'DataSource' => ['ID' => 'ghsa'],
+            'PrimaryURL' => 'https://github.com/advisories/GHSA-abcd-efgh-ijkl',
+        ]));
+    }
+
+    /**
+     * A source without a tracker kso knows - a language's advisory database, say - keeps
+     * Trivy's own link.
+     */
+    public function testAnyOtherSourceKeepsTrivysLink(): void {
+        $this->assertSame('https://avd.aquasec.com/nvd/cve-2026-0003', TrivyReport::linkOf([
+            'VulnerabilityID' => 'CVE-2026-0003',
+            'DataSource' => ['ID' => 'php-security-advisories'],
+            'PrimaryURL' => 'https://avd.aquasec.com/nvd/cve-2026-0003',
+        ]));
+    }
+
     public function testTheDigestIsWhatWasScanned(): void {
         $this->assertStringContainsString('@sha256:1111', (string) $this->report()->digest);
     }

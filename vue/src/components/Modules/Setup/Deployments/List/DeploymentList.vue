@@ -3,6 +3,8 @@ import { ReferenceData } from "@/core/referenceData";
 import { useListState } from "@/composables/useListState";
 import {useDeploymentActions} from "@/composables/useDeploymentActions";
 import NameLink from "@/components/Modules/Common/NameLink.vue";
+import ListFilters from "@/components/Modules/Common/List/ListFilters.vue";
+import {useDisplay} from "vuetify";
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
 import type {Ref} from 'vue'
 import {Api} from "@/core/services/Deploy/Api";
@@ -34,6 +36,16 @@ const emit = defineEmits<{
 
 const router = useRouter();
 const {deploy, terminate} = useDeploymentActions();
+
+/**
+ * A phone: the filters behind a button, and what is not acted on from a phone left out of
+ * each row's card, so a card is not a page long - and so is choosing rows for the bulk update.
+ */
+const {xs: isPhone} = useDisplay();
+const phoneHidden = ['last-migration', 'last_updated'];
+const shownHeaders = computed(() => isPhone.value
+    ? headers.value.filter(header => !phoneHidden.includes(header.key))
+    : headers.value);
 
 const itemCount = ref(0);
 const rows = ref<Deployment[]>([]);
@@ -241,7 +253,7 @@ function onBulkUpdateVersionBtnClicked() {
             flat
             color="blue-grey lighten-5"
             dark
-            :height="props.filterByWorkspaceId ? undefined : 120"
+            :height="props.filterByWorkspaceId ? undefined : (isPhone ? 104 : 120)"
         >
             <!-- Two rows, as on the workspaces list: the status chips need a line of their
                  own, and squeezing them in beside the title cuts it off. -->
@@ -310,45 +322,47 @@ function onBulkUpdateVersionBtnClicked() {
                         hide-details
                         placeholder="Search"
                         clearable
-                        width="250"
-                        max-width="250"
+                        :width="isPhone ? undefined : 250"
+                        :max-width="isPhone ? undefined : 250"
                     />
 
-                    <v-select
+                    <list-filters
                         v-if="!props.filterByWorkspaceId"
-                        v-model="selectedStatus"
-                        :items="statusOptions"
-                        label="Status"
-                        density="compact"
-                        variant="outlined"
-                        multiple
-                        item-value="value"
-                        item-title="title"
-                        hide-details
-                        chips
-                        closable-chips
-                        clearable
-                        width="420"
-                        max-width="420"
-                    />
+                        :active-count="(selectedStatus.length ? 1 : 0) + (selectedHealth.length ? 1 : 0)">
+                        <v-select
+                            v-model="selectedStatus"
+                            :items="statusOptions"
+                            label="Status"
+                            density="compact"
+                            variant="outlined"
+                            multiple
+                            item-value="value"
+                            item-title="title"
+                            hide-details
+                            chips
+                            closable-chips
+                            clearable
+                            :width="isPhone ? undefined : 420"
+                            :max-width="isPhone ? undefined : 420"
+                        />
 
-                    <v-select
-                        v-if="!props.filterByWorkspaceId"
-                        v-model="selectedHealth"
-                        :items="healthOptions"
-                        label="Health"
-                        density="compact"
-                        variant="outlined"
-                        multiple
-                        item-value="value"
-                        item-title="title"
-                        hide-details
-                        chips
-                        closable-chips
-                        clearable
-                        width="320"
-                        max-width="320"
-                    />
+                        <v-select
+                            v-model="selectedHealth"
+                            :items="healthOptions"
+                            label="Health"
+                            density="compact"
+                            variant="outlined"
+                            multiple
+                            item-value="value"
+                            item-title="title"
+                            hide-details
+                            chips
+                            closable-chips
+                            clearable
+                            :width="isPhone ? undefined : 320"
+                            :max-width="isPhone ? undefined : 320"
+                        />
+                    </list-filters>
                 </div>
             </div>
         </v-toolbar>
@@ -363,9 +377,9 @@ function onBulkUpdateVersionBtnClicked() {
 
         <v-data-table-server
             v-model="selected"
-            show-select
+            :show-select="!isPhone"
             item-value="id"
-            :headers="headers"
+            :headers="shownHeaders"
             :items-length="itemCount"
             :items="rows"
             :loading="isLoading"
