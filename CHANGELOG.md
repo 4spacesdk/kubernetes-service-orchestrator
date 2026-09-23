@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.9.1 (2026-09-23)
+
+### Fixed bugs
+* An installation on https answered with a fatal error - "Attempted to send a secure cookie over a non-secure connection" - to every request that set a cookie and did not reach PHP as https: through a proxy that terminates TLS, and plain-http calls inside the cluster such as the scheduler's. A request through the proxy counts as https again, and the cookie is Secure only when the request is
+
+### Upgrade guide
+1. Deploy new image
+
+
+
 ## v1.9.0 (2026-09-23)
 
 ### Fixed bugs

@@ -57,12 +57,20 @@ class Cookie extends BaseConfig
     public bool $secure = false;
 
     /**
-     * Secure whenever kso is reached over https - read from its base url, like every other
-     * address it writes, rather than from the request.
+     * Secure when kso is reached over https *and* this request arrived over TLS.
+     *
+     * The base url alone is not enough: CodeIgniter refuses to send a Secure cookie on a request
+     * it does not think is secure, and throws. A call from inside the cluster - the scheduler's
+     * `curl kso.kso/api/jobby`, a probe - comes over plain HTTP to an installation whose base url
+     * is https, and every one of them ended in a fatal error. The test is CodeIgniter's own
+     * (`IncomingRequest::isSecure()`), so the two cannot disagree; behind a proxy, Apache sets
+     * `HTTPS=on` from X-Forwarded-Proto - see `docker/apache/httpd.conf`.
      */
     public function __construct() {
         parent::__construct();
-        $this->secure = str_starts_with(strtolower(config('App')->baseURL), 'https://');
+        $https = $_SERVER['HTTPS'] ?? '';
+        $overTls = $https !== '' && strtolower((string) $https) !== 'off';
+        $this->secure = $overTls && str_starts_with(strtolower(config('App')->baseURL), 'https://');
     }
 
     /**
