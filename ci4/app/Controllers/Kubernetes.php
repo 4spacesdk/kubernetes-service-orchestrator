@@ -219,7 +219,9 @@ class Kubernetes extends \App\Core\BaseController {
                 'nodes' => array_map(fn(K8sNode $node) => $node->getInfo(), $nodes->all()),
                 'nodes_ready' => count($ready),
                 'nodes_total' => count($nodes->all()),
-                'kubernetes_version' => $nodes->first()?->getInfo()['kubeletVersion'] ?? null,
+                // Only when every node agrees: during an upgrade they do not, and the first one's
+                // would say the cluster is on a version half of it is not.
+                'kubernetes_version' => count($versions = array_unique(array_map(fn(K8sNode $node) => $node->getInfo()['kubeletVersion'] ?? '', $nodes->all()))) === 1 ? (reset($versions) ?: null) : null,
                 'health_checked_at' => HealthCheck::LastCheckedAt(),
             ]);
         } catch (KubernetesAPIException $e) {

@@ -28,6 +28,19 @@ const healthIsStale = computed(() =>
     !!healthCheckedAt.value && moment().diff(moment(healthCheckedAt.value), "minutes") >= HealthStaleAfterMinutes
 );
 
+/** Every version the nodes run - more than one while the cluster is being upgraded. */
+const nodeVersions = computed(() => [...new Set(nodes.value.map(node => node.kubeletVersion).filter(Boolean))]);
+
+/**
+ * The version in the dot, when every node runs it and all is well. A cluster half-way through an
+ * upgrade has no one version to show, and a dot that is saying something is wrong says only that.
+ */
+const versionInDot = computed(() => !isLoading.value && status.value == 'success' && !healthIsStale.value
+    ? kubernetesVersion.value
+    : undefined);
+
+const dotColor = computed(() => isLoading.value ? 'warning' : (status.value != 'success' ? 'error' : (healthIsStale.value ? 'warning' : 'success')));
+
 const statusInternal = ref<number>();
 
 onMounted(() => {
@@ -86,14 +99,14 @@ function onVersionBtnClicked() {
         </v-btn>
 
         <div
-            class="ml-auto d-flex"
+            class="ml-auto d-flex align-center"
         >
-            <v-badge
-                style="margin-bottom: 4px;"
-                :color="isLoading ? 'warning' : (status != 'success' ? 'error' : (healthIsStale ? 'warning' : 'success'))"
+            <span
                 class="status-dot"
+                :class="[`bg-${dotColor}`, {'with-version': versionInDot}]"
                 @click="onStatusClicked"
             >
+                {{ versionInDot }}
                 <v-tooltip activator="parent" location="top">
                     <template v-if="isLoading">Loading...</template>
                     <template v-else-if="status != 'success'">{{ message }}</template>
@@ -102,17 +115,33 @@ function onVersionBtnClicked() {
                     </template>
                     <template v-else>
                         <div>Connected<template v-if="kubernetesVersion"> - Kubernetes {{ kubernetesVersion }}</template></div>
+                        <div v-if="nodeVersions.length > 1">The nodes run {{ nodeVersions.join(', ') }}</div>
                         <div v-if="nodesTotal !== undefined">{{ nodesReady }}/{{ nodesTotal }} nodes ready</div>
                         <div v-if="healthCheckedAt">Health checked {{ moment(healthCheckedAt).fromNow() }}</div>
                     </template>
                 </v-tooltip>
-            </v-badge>
+            </span>
         </div>
     </v-footer>
 </template>
 
 <style scoped>
 .status-dot {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    /* The same height with a version in it or without: without, it is a round dot. */
+    height: 14px;
+    min-width: 14px;
+    border-radius: 7px;
     cursor: pointer;
+}
+
+.status-dot.with-version {
+    padding: 0 6px;
+    font-size: 9px;
+    font-weight: 600;
+    line-height: 1;
 }
 </style>

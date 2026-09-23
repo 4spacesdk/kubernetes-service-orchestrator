@@ -304,6 +304,9 @@ class KubernetesApiTest extends ClusterControllerTestCase {
 
         $this->assertSame('success', $body['resource']['status']);
         $this->assertCount(1, $body['resource']['nodes'], 'k3s is a single node');
+        // One node agrees with itself, so the status bar's dot has a version to show.
+        $this->assertSame($body['resource']['nodes'][0]['kubeletVersion'], $body['resource']['kubernetes_version']);
+        $this->assertSame(1, $body['resource']['nodes_ready']);
     }
 
     /**
