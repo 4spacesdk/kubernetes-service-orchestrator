@@ -61,7 +61,7 @@ onUnmounted(() => {
                 <HealthChip :health="health" :reason="reason" :changed-at="changedAt" :checked-at="checkedAt" :hide-tooltip="showPods" />
             </span>
         </template>
-        <DeploymentPodsButton :deployment="props.deployment" :app="props.deployment.name!" role="app" />
+        <DeploymentPodsButton :deployment="props.deployment" />
     </v-menu>
     <HealthChip v-else />
 </template>

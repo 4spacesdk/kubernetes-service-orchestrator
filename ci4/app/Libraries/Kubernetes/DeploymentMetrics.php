@@ -96,20 +96,30 @@ class DeploymentMetrics {
     }
 
     /**
-     * The deployment's pods, by the labels kso puts on the pod template.
+     * The deployment's pods - see `WorkloadPods`. kso's own are narrowed by their labels; a custom
+     * resource's are asked for by namespace and picked out by name.
      *
      * @return list<array>
      */
     protected function fetch(Deployment $deployment): array {
+        $isOurs = $deployment->findDeploymentSpecification()->workload_type !== \WorkloadTypes::CustomResource;
+        $names = $isOurs ? null : array_flip(array_map(
+            fn(array $pod) => $pod['metadata']['name'] ?? '',
+            (new WorkloadPods($this->cluster))->of($deployment),
+        ));
+
         $metrics = [];
         $resources = (new K8sPodMetrics($this->cluster))
             ->setNamespace($deployment->namespace)
-            ->all([
+            ->all($isOurs ? [
                 'labelSelector' => urldecode(http_build_query(['app' => "{$deployment->name},role=app"])),
-            ]);
+            ] : []);
 
         foreach ($resources as $resource) {
-            $metrics[] = $resource->toArray();
+            $resource = $resource->toArray();
+            if ($names === null || isset($names[$resource['metadata']['name'] ?? ''])) {
+                $metrics[] = $resource;
+            }
         }
 
         return $metrics;

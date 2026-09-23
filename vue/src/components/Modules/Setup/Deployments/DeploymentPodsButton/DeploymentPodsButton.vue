@@ -10,8 +10,6 @@ import bus from "@/plugins/bus";
 
 const props = defineProps<{
     deployment: Deployment;
-    app?: string;
-    role?: string;
 }>();
 
 interface PodOption {
@@ -42,9 +40,9 @@ onMounted(() => {
     });
 
     isLoading.value = true;
-    Api.kubernetes().getPodsGetByNamespace(props.deployment.namespace!)
-        .app(props.app ?? '')
-        .role(props.role ?? '')
+    // By the deployment rather than by labels: a custom resource's pods are its operator's, and
+    // carry none of kso's - see `WorkloadPods` in the backend.
+    Api.deployments().getPodsGetById(props.deployment.id!)
         .find(response => {
             pods.value = response
                 .sort((a, b) => new Date(b.created!).getTime() - new Date(a.created!).getTime())

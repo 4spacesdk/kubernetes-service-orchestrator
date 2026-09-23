@@ -32,12 +32,28 @@ export const deploymentSections: DeploymentSection[] = [
         component: section(() => import('./DeploymentResourcesSection.vue')),
     },
     {
+        key: 'logs',
+        title: 'Kubernetes Logs',
+        icon: 'fa fa-rectangle-list',
+        group: '',
+        isShown: () => true,
+        component: section(() => import('./DeploymentLogsSection.vue')),
+    },
+    {
         key: 'migration-jobs',
         title: 'Migration Jobs',
         icon: 'fa fa-truck-arrow-right',
         group: '',
         isShown: deployment => deployment.canMigrate,
         component: section(() => import('./DeploymentMigrationJobsSection.vue')),
+    },
+    {
+        key: 'migration-logs',
+        title: 'Migration Logs',
+        icon: 'fa fa-scroll',
+        group: '',
+        isShown: deployment => deployment.canMigrate,
+        component: section(() => import('./DeploymentMigrationLogsSection.vue')),
     },
     {
         key: 'history',

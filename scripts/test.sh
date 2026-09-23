@@ -26,9 +26,13 @@ trap '[ "$started_it" = "1" ] && cluster_down' EXIT INT TERM
 # PCOV is switched off in the ini so an ordinary request pays nothing for it; a coverage
 # run turns it on for itself. Asking for coverage without it produces an empty report and
 # a warning, rather than a failure, so it is worth doing here and not in the caller.
+#
+# The report needs more memory than the tests: the HTML one holds every test's lines for a
+# file while it renders it, and ran out at 128 MB with 2296 tests. Only here, so an ordinary
+# run still fails on a test that eats memory.
 php_flags=''
 case "$*" in
-    *--coverage*) php_flags='-d pcov.enabled=1' ;;
+    *--coverage*) php_flags='-d pcov.enabled=1 -d memory_limit=1G' ;;
 esac
 
 # KUBERNETES_TEST_CLUSTER=disposable is what unlocks the tests that write to a cluster.

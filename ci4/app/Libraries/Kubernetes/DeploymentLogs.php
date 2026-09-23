@@ -224,25 +224,17 @@ class DeploymentLogs {
     }
 
     /**
-     * The deployment's pods and their containers, by the labels kso puts on the pod template.
+     * The deployment's pods and their containers - see `WorkloadPods`.
      *
      * @return list<array{0: string, 1: string}>
      */
     protected function containersOf(Deployment $deployment): array {
         $containers = [];
-        $pods = $this->cluster->getAllPods($deployment->namespace, [
-            'labelSelector' => urldecode(http_build_query(['app' => "{$deployment->name},role=app"])),
-        ]);
-
-        foreach ($pods as $pod) {
-            if (($pod->getAttribute('metadata.deletionTimestamp') ?? null) !== null) {
-                continue;
-            }
-            foreach ($pod->getContainers() as $container) {
-                $containers[] = [$pod->getName(), $container->getName()];
+        foreach ((new WorkloadPods($this->cluster))->of($deployment) as $pod) {
+            foreach ($pod['spec']['containers'] ?? [] as $container) {
+                $containers[] = [$pod['metadata']['name'] ?? '', $container['name'] ?? ''];
             }
         }
-
         return $containers;
     }
 

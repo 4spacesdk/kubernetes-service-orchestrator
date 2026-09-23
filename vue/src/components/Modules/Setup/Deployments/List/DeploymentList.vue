@@ -440,8 +440,6 @@ function onBulkUpdateVersionBtnClicked() {
                         </template>
                         <deployment-pods-button
                             :deployment="item"
-                            :app="item.name"
-                            role="app"
                         />
                     </v-menu>
 

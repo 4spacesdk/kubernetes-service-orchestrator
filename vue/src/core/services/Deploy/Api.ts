@@ -4209,6 +4209,27 @@ export class DeploymentsGetMetricsGetById extends BaseApi<DeploymentMetricsRespo
     }
 }
 
+export class DeploymentsGetPodsGetById extends BaseApi<KubernetesPod> {
+
+    public topic = 'Resources.KubernetesPods';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/deployments/${id}/pods`;
+    }
+
+    protected convertToResource(data: any): KubernetesPod {
+        return data;
+    }
+
+    public find(next?: (value: KubernetesPod[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
 export class DeploymentsGetDiagnosisGetById extends BaseApi<DeploymentDiagnosisResponse> {
 
     public topic = 'Resources.DeploymentDiagnosisResponses';
@@ -4386,6 +4407,10 @@ class Deployments {
 
     public getMetricsGetById(id: number): DeploymentsGetMetricsGetById {
         return new DeploymentsGetMetricsGetById(id);
+    }
+
+    public getPodsGetById(id: number): DeploymentsGetPodsGetById {
+        return new DeploymentsGetPodsGetById(id);
     }
 
     public getDiagnosisGetById(id: number): DeploymentsGetDiagnosisGetById {

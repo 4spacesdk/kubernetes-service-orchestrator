@@ -106,9 +106,7 @@ const worthDiagnosing = [HealthStatusTypes.Degraded, HealthStatusTypes.Progressi
         <h3 class="pods-title">Pods</h3>
         <deployment-pods-button
             class="pods"
-            :deployment="props.deployment"
-            :app="props.deployment.name"
-            role="app"/>
+            :deployment="props.deployment"/>
     </page-section>
 </template>
 

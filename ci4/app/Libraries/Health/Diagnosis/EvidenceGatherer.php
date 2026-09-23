@@ -6,6 +6,7 @@ use App\Libraries\Kubernetes\DeploymentLogs;
 use App\Libraries\Kubernetes\DeploymentMetrics;
 use App\Libraries\Kubernetes\KubeAuth;
 use App\Libraries\Kubernetes\KubeHelper;
+use App\Libraries\Kubernetes\WorkloadPods;
 use Config\Database;
 use DebugTool\Data;
 use RenokiCo\PhpK8s\Exceptions\KubernetesAPIException;
@@ -36,15 +37,8 @@ class EvidenceGatherer {
      */
     public function gather(Deployment $deployment): Evidence {
         $cluster = $this->cluster ?? (new KubeAuth())->authenticate();
-        $namespace = (string) $deployment->namespace;
 
-        $pods = [];
-        foreach ($cluster->getAllPods($namespace, ['labelSelector' => urldecode(http_build_query(['app' => "{$deployment->name},role=app"]))]) as $pod) {
-            $pod = $pod->toArray();
-            if (!isset($pod['metadata']['deletionTimestamp'])) {
-                $pods[] = $pod;
-            }
-        }
+        $pods = (new WorkloadPods($cluster))->of($deployment);
 
         $containers = [];
         foreach ($pods as $pod) {

@@ -24,6 +24,7 @@ use App\Libraries\Kubernetes\DeploymentMetrics;
 use App\Libraries\Kubernetes\KubeAuth;
 use App\Libraries\Kubernetes\KubeHelper;
 use App\Libraries\Kubernetes\LogQuery;
+use App\Libraries\Kubernetes\WorkloadPods;
 use App\Libraries\Push\ChangeEvent;
 use App\Libraries\Push\Events;
 use App\Libraries\Push\Publisher;
@@ -665,6 +666,50 @@ class Deployments extends ResourceController {
         }
 
         Data::set('resource', $metrics);
+        $this->success();
+    }
+
+    /**
+     * The deployment's pods, one row per container - for a custom resource, the ones its operator
+     * made. See `WorkloadPods`.
+     *
+     * @route /deployments/{id}/pods
+     * @method get
+     * @custom true
+     * @param int $id
+     * @return void
+     * @responseSchema KubernetesPod
+     */
+    public function getPods(int $id): void {
+        $item = new Deployment();
+        $item->find($id);
+        if (!$item->exists()) {
+            $this->fail('unknown deployment');
+            return;
+        }
+
+        try {
+            $pods = (new WorkloadPods((new KubeAuth())->authenticate()))->of($item);
+        } catch (\Throwable $e) {
+            $this->fail(KubeHelper::PrintException($e));
+            return;
+        }
+
+        $items = [];
+        foreach ($pods as $pod) {
+            foreach ($pod['spec']['containers'] ?? [] as $container) {
+                $items[] = [
+                    'namespace' => $pod['metadata']['namespace'] ?? '',
+                    'pod' => $pod['metadata']['name'] ?? '',
+                    'container' => $container['name'] ?? '',
+                    // A pod the scheduler has not placed yet has no startTime.
+                    'created' => date('Y-m-d H:i:s', strtotime_($pod['status']['startTime'] ?? $pod['metadata']['creationTimestamp'] ?? 'now')),
+                    'status' => $pod['status']['phase'] ?? null,
+                ];
+            }
+        }
+
+        Data::set('resources', $items);
         $this->success();
     }
 

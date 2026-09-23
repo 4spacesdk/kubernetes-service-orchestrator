@@ -136,9 +136,14 @@ function reload() {
     watchApiRequest.value?.cancel();
     watchPushSubscription.value?.unsubscribe();
 
-    Api.kubernetes().getPodsGetByNamespace(props.namespace!)
-        .app(props.app ?? '')
-        .role(props.role ?? '')
+    // A deployment's pods by the deployment: a custom resource's are its operator's and carry
+    // none of kso's labels - see `WorkloadPods` in the backend.
+    const podsApi = props.deploymentId
+        ? Api.deployments().getPodsGetById(props.deploymentId)
+        : Api.kubernetes().getPodsGetByNamespace(props.namespace!)
+            .app(props.app ?? '')
+            .role(props.role ?? '');
+    podsApi
         .find(response => {
             pods.value = response
                 .sort((a, b) => new Date(b.created!).getTime() - new Date(a.created!).getTime())
@@ -568,15 +573,19 @@ function onAllPodsClicked() {
         <code
             ref="container"
             @scroll.passive="onLogScrolled">
-            <span
-                class="d-flex flex-nowrap"
-                v-for="(line, i) in shownLogs" :key="i">
-                <DateView
-                    class="date-view"
-                    text-format="DD/MM-YY HH:mm:ss"
-                    :date="line.date"/>
-                <span v-if="line.pod" class="pod-name" :title="line.pod">{{ shortPodName(line.pod) }}</span>
-                <span class="code-line">{{ line.line }}</span>
+            <span class="log-lines">
+                <span
+                    class="d-flex flex-nowrap log-row"
+                    v-for="(line, i) in shownLogs" :key="i">
+                    <span class="gutter">
+                        <DateView
+                            class="date-view"
+                            text-format="DD/MM-YY HH:mm:ss"
+                            :date="line.date"/>
+                        <span v-if="line.pod" class="pod-name" :title="line.pod">{{ shortPodName(line.pod) }}</span>
+                    </span>
+                    <span class="code-line">{{ line.line }}</span>
+                </span>
             </span>
         </code>
 
@@ -659,15 +668,15 @@ function onAllPodsClicked() {
 }
 
 /* Wide enough for `<replicaset hash>-<pod>`, which is what a rollout's two pods differ by - the
-   hash is the half that says old or new, so neither end can be cut. */
+   hash is the half that says old or new, so neither end can be cut. 16 characters, as
+   Kubernetes makes them. */
 .pod-name {
     flex: 0 0 auto;
-    width: 19ch;
+    width: 16ch;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     opacity: 0.6;
-    padding-right: 1ch;
 }
 
 .overlay {
@@ -680,17 +689,34 @@ function onAllPodsClicked() {
 }
 
 .date-view {
-    width: 148px;
+    /* `DD/MM-YY HH:mm:ss`, and not a character more. */
+    width: 17ch;
     overflow: hidden;
-    color: rgba(var(--v-theme-on-surface-muted), 0.22);
+    color: rgba(var(--v-theme-on-surface-muted), 0.55);
     flex-shrink: 0;
-    background: rgba(var(--v-theme-surface-muted), .8);
-    filter: dropShadow(0px 2px 8px rgba(0, 0, 0, 0.8));
-    border-right: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
-    margin-right: .5rem;
+}
+
+/* Every row as wide as the widest line, not the view: a sticky column only sticks within its
+   row, and a shorter row scrolled out from under it. */
+.log-lines {
+    display: inline-flex;
+    flex-direction: column;
+    min-width: 100%;
+}
+
+/* The time and the pod stay put while the lines scroll sideways under them - opaque, or the
+   lines showed through. */
+.gutter {
+    display: flex;
+    flex-shrink: 0;
+    gap: 1.5ch;
+    padding: 0 1ch;
+    margin-right: 1ch;
     position: sticky;
-    left: -16px;
-    padding-left: 10px;
+    left: 0;
+    background: rgb(var(--v-theme-surface-muted));
+    box-shadow: 4px 0 6px -4px rgba(0, 0, 0, 0.6);
+    border-right: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
 }
 
 code {
