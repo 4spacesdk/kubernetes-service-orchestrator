@@ -66,8 +66,7 @@ function onSave() {
         :is-saving="isSaving"
         @save="onSave">
         <div class="section-form">
-            <v-row
-                dense>
+            <v-row density="compact">
                 <v-col cols="6">
                     <v-checkbox
                         v-model="enabled"

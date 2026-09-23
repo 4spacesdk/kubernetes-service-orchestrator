@@ -236,7 +236,7 @@ function onCloseBtnClicked() {
                             clearable
                             @update:modelValue="onWorkspaceChanged"
                         >
-                            <template v-slot:item="{ props, item }">
+                            <template v-slot:item="{ props, internalItem: item }">
                                 <v-list-item
                                     v-bind="props"
                                     :subtitle="`Namespace: ${item.raw.namespace}`"

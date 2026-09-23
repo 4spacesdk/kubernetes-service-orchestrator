@@ -246,7 +246,7 @@ function deleteItem(item: ContainerImage) {
             <template v-slot:item.vulnerabilities="{ item }">
                 <div class="d-flex flex-column ga-1 py-2 cursor-pointer" @click="onScansItemBtnClicked(item)">
                     <div v-for="scan in scansByImage[item.id!] ?? []" :key="scan.id" class="d-flex align-center ga-2 text-no-wrap">
-                        <span class="text-caption text-medium-emphasis">{{ scan.tag }}</span>
+                        <span class="text-body-small text-medium-emphasis">{{ scan.tag }}</span>
                         <ScanCounts :scan="scan" />
                     </div>
                 </div>

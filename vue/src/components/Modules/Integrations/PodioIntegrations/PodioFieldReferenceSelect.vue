@@ -48,7 +48,7 @@ function loadFields() {
     <v-card
         class="pa-2"
     >
-        <v-row dense>
+        <v-row density="compact">
             <v-col cols="12">
                 <h3>{{ props.label ?? 'Podio Field Reference ' }}</h3>
             </v-col>
@@ -77,7 +77,7 @@ function loadFields() {
                     hide-details
                     variant="outlined"
                 >
-                    <template v-slot:item="{ props, item }">
+                    <template v-slot:item="{ props, internalItem: item }">
                         <v-list-item v-bind="props"
                                      :subtitle="item.raw.type"></v-list-item>
                     </template>

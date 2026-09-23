@@ -196,8 +196,7 @@ function onCloseBtnClicked() {
                                 <div
                                     class="px-2 pb-2"
                                 >
-                                    <v-row
-                                        dense
+                                    <v-row density="compact"
                                     >
                                         <v-col
                                             v-if="specifyDefaultVersion" cols="12"

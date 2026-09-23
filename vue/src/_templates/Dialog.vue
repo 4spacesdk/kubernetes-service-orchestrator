@@ -63,8 +63,7 @@ function onCloseBtnClicked() {
             <v-card-title>Template</v-card-title>
             <v-divider/>
             <v-card-text>
-                <v-row
-                    dense>
+                <v-row density="compact">
 <!--                    <v-col cols="6">-->
 <!--                        <v-text-field-->
 <!--                            variant="outlined"-->

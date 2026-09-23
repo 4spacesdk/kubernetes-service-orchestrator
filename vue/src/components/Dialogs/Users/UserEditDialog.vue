@@ -205,8 +205,7 @@ function onMFARemoveBtnClicked() {
             <v-card-title>User</v-card-title>
             <v-divider/>
             <v-card-text>
-                <v-row
-                    dense>
+                <v-row density="compact">
                     <v-col cols="6">
                         <v-text-field
                             variant="outlined"
@@ -268,7 +267,7 @@ function onMFARemoveBtnClicked() {
                             item-value="id"
                             variant="outlined"
                             :multiple="true">
-                            <template v-slot:item="{ props, item }">
+                            <template v-slot:item="{ props, internalItem: item }">
                                 <v-list-item
                                     v-bind="props"
                                     :subtitle="item.raw.description"

@@ -102,8 +102,7 @@ function onCloseBtnClicked() {
             <v-divider/>
             <v-card-text>
                 <v-form ref="form" @submit.prevent>
-                    <v-row
-                        dense>
+                    <v-row density="compact">
                         <v-col cols="12">
                             <v-text-field
                                 variant="outlined"
@@ -138,7 +137,7 @@ function onCloseBtnClicked() {
                             />
                         </v-col>
                         <v-col cols="12">
-                            <v-row dense>
+                            <v-row density="compact">
                                 <v-col
                                     cols="6"
                                 >

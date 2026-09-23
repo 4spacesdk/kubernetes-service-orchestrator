@@ -140,7 +140,7 @@ function onCloseBtnClicked() {
             <v-card-title>GitHub Integration</v-card-title>
             <v-divider />
             <v-card-text>
-                <v-row dense>
+                <v-row density="compact">
                     <v-col cols="12">
                         <div class="border pa-2 mb-2">
                             KSO reads commit messages through a private GitHub App, one per organisation. The App asks

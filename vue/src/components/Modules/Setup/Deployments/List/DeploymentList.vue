@@ -369,7 +369,7 @@ function onBulkUpdateVersionBtnClicked() {
         </v-toolbar>
 
         <div v-if="selected.length" class="d-flex align-center ga-2 px-4 py-1 bulk-bar">
-            <span class="text-body-2">{{ selected.length }} selected</span>
+            <span class="text-body-medium">{{ selected.length }} selected</span>
             <v-btn size="small" variant="tonal" color="primary" prepend-icon="fa fa-code-branch" @click="onBulkUpdateVersionBtnClicked">
                 Update version
             </v-btn>

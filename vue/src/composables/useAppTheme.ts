@@ -52,7 +52,7 @@ export function useAppTheme() {
     const theme = useTheme();
 
     function apply() {
-        theme.global.name.value = themeName(mode.value);
+        theme.change(themeName(mode.value));
     }
 
     watch(mode, () => {

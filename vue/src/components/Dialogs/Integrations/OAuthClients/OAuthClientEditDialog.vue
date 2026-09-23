@@ -136,8 +136,7 @@ function onCloseBtnClicked() {
             <v-divider/>
             <v-card-text>
                 <v-row
-                    v-if="item.user"
-                    dense>
+                    v-if="item.user" density="compact">
                     <v-col cols="12">
                         <v-text-field
                             variant="outlined"

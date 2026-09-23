@@ -112,7 +112,7 @@ function onTagClicked(tag: string) {
                     @click="onTagClicked(tag)">
                     <v-list-item-title>{{ tag }}</v-list-item-title>
                     <template v-if="pushedAt[tag]" v-slot:append>
-                        <DateView :date-string="pushedAt[tag]" text-format="DD/MM-YY HH:mm" class="text-body-2 text-medium-emphasis ml-4 pushed-at"/>
+                        <DateView :date-string="pushedAt[tag]" text-format="DD/MM-YY HH:mm" class="text-body-medium text-medium-emphasis ml-4 pushed-at"/>
                     </template>
                 </v-list-item>
                 <v-list-item

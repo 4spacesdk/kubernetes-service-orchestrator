@@ -236,7 +236,7 @@ function onCloseBtnClicked() {
                  is): the table goes edge to edge, and what is above it keeps a margin. -->
             <v-card-text class="px-0">
                 <div class="px-4">
-                    <div class="text-caption text-medium-emphasis mb-3">
+                    <div class="text-body-small text-medium-emphasis mb-3">
                         The tags deployments run, scanned by Trivy every night. Any other tag can be
                         scanned by hand - it is kept for 30 days.
                     </div>
@@ -257,12 +257,12 @@ function onCloseBtnClicked() {
                             style="max-width: 320px"
                             @keydown.enter.stop="onScanTagBtnClicked"
                         >
-                            <template v-slot:item="{ props: itemProps, item }">
+                            <template v-slot:item="{ props: itemProps, internalItem: item }">
                                 <v-list-item v-bind="itemProps">
                                     <template v-slot:append>
                                         <span
                                             v-if="item.raw.pushed"
-                                            class="text-caption text-medium-emphasis ml-4">{{ item.raw.pushed }}</span>
+                                            class="text-body-small text-medium-emphasis ml-4">{{ item.raw.pushed }}</span>
                                     </template>
                                 </v-list-item>
                             </template>
@@ -279,7 +279,7 @@ function onCloseBtnClicked() {
                         </v-btn>
                     </div>
                     <v-progress-linear v-if="isLoading" indeterminate class="mb-2" />
-                    <div v-else-if="!scans.length" class="text-body-2 text-medium-emphasis">
+                    <div v-else-if="!scans.length" class="text-body-medium text-medium-emphasis">
                         Not scanned yet. Scans cover the tags deployments run; use "Scan now", wait for the nightly scan, or scan a tag above.
                     </div>
 
@@ -298,11 +298,11 @@ function onCloseBtnClicked() {
                                 @update:model-value="onTagChanged"
                             />
                             <ScanCounts :scan="current" />
-                            <span v-if="current.scanned_at" class="text-body-2 text-medium-emphasis">
+                            <span v-if="current.scanned_at" class="text-body-medium text-medium-emphasis">
                                 scanned <DateView :date-string="current.scanned_at" text-format="DD/MM-YY HH:mm" />
                             </span>
                         </div>
-                        <div class="text-caption text-medium-emphasis mb-2">
+                        <div class="text-body-small text-medium-emphasis mb-2">
                             <code>{{ current.image_reference }}</code>
                             <span v-if="current.operating_system"> · {{ current.operating_system }}</span>
                         </div>

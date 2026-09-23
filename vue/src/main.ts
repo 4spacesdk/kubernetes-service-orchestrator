@@ -10,6 +10,7 @@ import AppComponent from './App.vue'
 
 // Vuetify
 import 'vuetify/styles'
+import './scss/reset.scss'
 import './scss/main.scss'
 import ApiService from "@/services/ApiService";
 import AuthService from "@/services/AuthService";

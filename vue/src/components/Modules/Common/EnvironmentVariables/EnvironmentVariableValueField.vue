@@ -61,7 +61,7 @@ const hidden = computed(() => secret.value && !showValue.value);
             hide-details
             class="mt-2"
         />
-        <div class="text-caption text-medium-emphasis">
+        <div class="text-body-small text-medium-emphasis">
             <template v-if="isSecretEitherWay">
                 Takes a password from kso, so it is secret either way.
             </template>

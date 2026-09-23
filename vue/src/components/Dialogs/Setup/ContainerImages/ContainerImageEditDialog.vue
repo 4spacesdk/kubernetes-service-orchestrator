@@ -225,7 +225,7 @@ function onCloseBtnClicked() {
                 <v-form ref="form" @submit.prevent>
                     <v-tabs-window v-model="tab" class="pt-1">
                         <v-tabs-window-item value="basic">
-                            <v-row dense class="pb-4 px-4 pt-2">
+                            <v-row density="compact" class="pb-4 px-4 pt-2">
                                 <v-col cols="12">
                                     <v-text-field variant="outlined" v-model="item.name" label="Name" density="compact" :rules="[v => !!(v ?? '').toString().trim() || 'Required']" />
                                 </v-col>
@@ -283,7 +283,7 @@ function onCloseBtnClicked() {
                         </v-tabs-window-item>
 
                         <v-tabs-window-item value="security">
-                            <v-row dense class="pb-4 px-4 pt-2">
+                            <v-row density="compact" class="pb-4 px-4 pt-2">
                                 <v-col cols="4">
                                     <v-text-field
                                         variant="outlined"
@@ -333,7 +333,7 @@ function onCloseBtnClicked() {
                         </v-tabs-window-item>
 
                         <v-tabs-window-item value="registry">
-                            <v-row dense class="pb-4 px-4 pt-2">
+                            <v-row density="compact" class="pb-4 px-4 pt-2">
                                 <v-col cols="12">
                                     <v-select
                                         v-model="item.container_registry_id"
@@ -358,7 +358,7 @@ function onCloseBtnClicked() {
                         </v-tabs-window-item>
 
                         <v-tabs-window-item value="version-control">
-                            <v-row dense class="pb-4 px-4 pt-2">
+                            <v-row density="compact" class="pb-4 px-4 pt-2">
                                 <v-col cols="12">
                                     <v-card class="pa-4 mb-4">
                                         <v-switch

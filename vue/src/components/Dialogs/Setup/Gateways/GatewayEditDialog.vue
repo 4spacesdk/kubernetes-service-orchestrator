@@ -137,8 +137,7 @@ function onCloseBtnClicked() {
             <v-card-title>Gateway</v-card-title>
             <v-divider/>
             <v-card-text>
-                <v-row
-                    dense>
+                <v-row density="compact">
                     <v-col cols="12">
                         <v-text-field
                             variant="outlined"
@@ -171,7 +170,7 @@ function onCloseBtnClicked() {
                     </v-col>
                     <v-col cols="12" class="mt-4">
                         <div class="d-flex align-center">
-                            <div class="text-subtitle-1">Addresses</div>
+                            <div class="text-body-large">Addresses</div>
                             <v-spacer/>
                             <v-btn
                                 variant="tonal"
@@ -182,7 +181,7 @@ function onCloseBtnClicked() {
                             </v-btn>
                         </div>
                         <v-divider class="my-2"/>
-                        <v-row v-for="(address, index) in item.gateway_addresses" :key="index" dense>
+                        <v-row v-for="(address, index) in item.gateway_addresses" :key="index" density="compact">
                             <v-col cols="5">
                                 <v-combobox
                                     variant="outlined"
@@ -215,13 +214,13 @@ function onCloseBtnClicked() {
                                     @click="removeAddress(index)"/>
                             </v-col>
                         </v-row>
-                        <div v-if="!item.gateway_addresses || item.gateway_addresses.length === 0" class="text-center text-grey text-caption py-4">
+                        <div v-if="!item.gateway_addresses || item.gateway_addresses.length === 0" class="text-center text-grey text-body-small py-4">
                             No addresses defined.
                         </div>
                     </v-col>
                     <v-col cols="12" class="mt-4">
                         <div class="d-flex align-center">
-                            <div class="text-subtitle-1">Annotations</div>
+                            <div class="text-body-large">Annotations</div>
                             <v-spacer/>
                             <v-btn
                                 variant="tonal"
@@ -232,7 +231,7 @@ function onCloseBtnClicked() {
                             </v-btn>
                         </div>
                         <v-divider class="my-2"/>
-                        <v-row v-for="(annotation, index) in item.gateway_annotations" :key="index" dense>
+                        <v-row v-for="(annotation, index) in item.gateway_annotations" :key="index" density="compact">
                             <v-col cols="5">
                                 <v-text-field
                                     variant="outlined"
@@ -260,7 +259,7 @@ function onCloseBtnClicked() {
                                     @click="removeAnnotation(index)"/>
                             </v-col>
                         </v-row>
-                        <div v-if="!item.gateway_annotations || item.gateway_annotations.length === 0" class="text-center text-grey text-caption py-4">
+                        <div v-if="!item.gateway_annotations || item.gateway_annotations.length === 0" class="text-center text-grey text-body-small py-4">
                             No annotations defined.
                         </div>
                     </v-col>

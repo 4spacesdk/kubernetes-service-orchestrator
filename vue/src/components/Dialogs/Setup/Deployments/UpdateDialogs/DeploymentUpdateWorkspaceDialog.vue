@@ -92,8 +92,7 @@ function onCloseBtnClicked() {
             <v-card-title>Deployment</v-card-title>
             <v-divider/>
             <v-card-text>
-                <v-row
-                    dense>
+                <v-row density="compact">
                     <v-col cols="12">
                         <v-select
                             v-model="value"
@@ -104,7 +103,7 @@ function onCloseBtnClicked() {
                             variant="outlined"
                             label="Workspace"
                         >
-                            <template v-slot:item="{ props, item }">
+                            <template v-slot:item="{ props, internalItem: item }">
                                 <v-list-item
                                     v-bind="props"
                                     :subtitle="`Namespace: ${item.raw.namespace}`"

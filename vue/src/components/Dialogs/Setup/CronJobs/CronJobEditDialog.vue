@@ -207,8 +207,7 @@ function onArgVariableAdded(index: number, value: string) {
             <v-card-title>Cron Job</v-card-title>
             <v-divider/>
             <v-card-text>
-                <v-row
-                    dense>
+                <v-row density="compact">
                     <v-col cols="12">
                         <v-text-field
                             variant="outlined"
@@ -314,7 +313,7 @@ function onArgVariableAdded(index: number, value: string) {
                             class="px-4 py-2"
                         >
                             <h2>Container Image</h2>
-                            <v-row dense
+                            <v-row density="compact"
                                    class="mt-2"
                             >
                                 <v-col cols="6">
@@ -374,7 +373,7 @@ function onArgVariableAdded(index: number, value: string) {
                             class="px-4 py-2"
                         >
                             <h2>Settings</h2>
-                            <v-row dense
+                            <v-row density="compact"
                                    class="mt-2"
                             >
                                 <v-col cols="6">
@@ -426,7 +425,7 @@ function onArgVariableAdded(index: number, value: string) {
                             class="px-4 py-2"
                         >
                             <h2>Resource Management</h2>
-                            <v-row dense
+                            <v-row density="compact"
                                    class="mt-2"
                             >
                                 <v-col cols="6">

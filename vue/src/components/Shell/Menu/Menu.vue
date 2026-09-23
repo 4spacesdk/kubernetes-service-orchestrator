@@ -87,7 +87,7 @@ function flyoutOffset(category: MenuCategory): number[] {
                     </v-btn>
                 </template>
 
-                <v-card class="rail-flyout" elevation="6">
+                <v-card class="rail-flyout" elevation="5">
                     <component
                         :is="categoryUrl(category) ? 'router-link' : 'div'"
                         :to="categoryUrl(category)"

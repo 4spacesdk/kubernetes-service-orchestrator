@@ -174,7 +174,7 @@ function onBulkEditBtnClicked() {
 
         <div
             v-if="showBulkEdit && rows.some(row => row.is_secret)"
-            class="text-caption text-medium-emphasis mb-2">
+            class="text-body-small text-medium-emphasis mb-2">
             Secret variables are left out here, and kept as they are.
         </div>
         <v-textarea

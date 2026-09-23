@@ -126,12 +126,11 @@ function onCloseBtnClicked() {
                 <v-card-text>
                     <div
                         v-if="projectName"
-                        class="text-body-2 text-medium-emphasis mb-3">
+                        class="text-body-medium text-medium-emphasis mb-3">
                         <v-icon size="12" class="mr-1">fa fa-folder</v-icon>
                         Lands in the project {{ projectName }}
                     </div>
-                    <v-row
-                        dense>
+                    <v-row density="compact">
                         <v-col cols="12">
                             <v-text-field
                                 v-model="item!.name_readable"
@@ -169,8 +168,7 @@ function onCloseBtnClicked() {
                         </v-col>
                     </v-row>
                     <v-row
-                        class="mt-4"
-                        dense
+                        class="mt-4" density="compact"
                     >
                         <v-col cols="12">
                             <v-btn
@@ -203,8 +201,7 @@ function onCloseBtnClicked() {
                     </v-row>
                     <v-expand-transition>
                         <v-row
-                            v-if="showAdvanced"
-                            dense>
+                            v-if="showAdvanced" density="compact">
                             <v-col cols="6">
                                 <v-text-field
                                     v-model="item!.namespace"

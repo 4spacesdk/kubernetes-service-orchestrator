@@ -157,11 +157,11 @@ function onCloseBtnClicked() {
                             hide-details
                             clearable
                         />
-                        <div class="text-body-2 text-medium-emphasis text-no-wrap">
+                        <div class="text-body-medium text-medium-emphasis text-no-wrap">
                             {{ repositories.length - importedCount }} to import · {{ importedCount }} already imported
                         </div>
                     </div>
-                    <div v-if="host" class="text-caption text-medium-emphasis mb-2">
+                    <div v-if="host" class="text-body-small text-medium-emphasis mb-2">
                         From <code>{{ host }}</code>
                     </div>
                 </div>

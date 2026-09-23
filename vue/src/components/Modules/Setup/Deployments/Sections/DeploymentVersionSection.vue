@@ -101,10 +101,10 @@ function onSave() {
                 :items="tags"
                 variant="outlined"
                 label="Version">
-                <template v-slot:item="{ props: itemProps, item }">
+                <template v-slot:item="{ props: itemProps, internalItem: item }">
                     <v-list-item v-bind="itemProps">
                         <template v-if="pushedAt[item.raw]" v-slot:append>
-                            <DateView :date-string="pushedAt[item.raw]" text-format="DD/MM-YY HH:mm" class="text-body-2 text-medium-emphasis ml-4 pushed-at"/>
+                            <DateView :date-string="pushedAt[item.raw]" text-format="DD/MM-YY HH:mm" class="text-body-medium text-medium-emphasis ml-4 pushed-at"/>
                         </template>
                     </v-list-item>
                 </template>

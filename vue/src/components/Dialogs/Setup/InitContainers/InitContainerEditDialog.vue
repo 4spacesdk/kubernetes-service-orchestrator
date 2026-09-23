@@ -164,8 +164,7 @@ function onArgVariableAdded(index: number, value: string) {
             <v-card-title>Init Container</v-card-title>
             <v-divider/>
             <v-card-text>
-                <v-row
-                    dense>
+                <v-row density="compact">
                     <v-col cols="12">
                         <v-text-field
                             variant="outlined"

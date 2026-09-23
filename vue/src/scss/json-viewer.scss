@@ -1,0 +1,85 @@
+// The JSON and diff viewers in kso's colours, light and dark alike. `vue-json-viewer` ships only a
+// light theme on a white panel, and `vue-diff`'s dark one is Monokai's own brown-black - both stood
+// out of a dark page. Everything here is a theme token, so it follows the theme as it changes.
+
+.jv-container.jv-kso {
+  background: rgb(var(--v-theme-surface-muted));
+  border-radius: 6px;
+  color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
+  font-size: 13px;
+  font-family: Consolas, Menlo, Courier, monospace;
+  white-space: nowrap;
+
+  .jv-key,
+  .jv-item.jv-object,
+  .jv-item.jv-array {
+    color: rgba(var(--v-theme-on-surface), var(--v-high-emphasis-opacity));
+  }
+
+  .jv-key {
+    margin-right: 4px;
+  }
+
+  .jv-item.jv-string {
+    color: rgb(var(--v-theme-success));
+    word-break: break-word;
+    white-space: normal;
+  }
+
+  .jv-item.jv-string .jv-link {
+    color: rgb(var(--v-theme-secondary));
+  }
+
+  .jv-item.jv-number {
+    color: rgb(var(--v-theme-warning));
+  }
+
+  .jv-item.jv-boolean,
+  .jv-item.jv-function {
+    color: rgb(var(--v-theme-secondary));
+  }
+
+  .jv-item.jv-undefined {
+    color: rgba(var(--v-theme-on-surface), var(--v-disabled-opacity));
+  }
+
+  .jv-button {
+    color: rgb(var(--v-theme-secondary));
+  }
+
+  .jv-ellipsis {
+    display: inline-block;
+    margin: 0 4px;
+    padding: 0 4px 2px;
+    border-radius: 3px;
+    vertical-align: 2px;
+    font-size: 0.9em;
+    line-height: 0.9;
+    cursor: pointer;
+    user-select: none;
+    color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
+    background-color: rgba(var(--v-theme-on-surface), 0.08);
+  }
+
+  // The arrow is a grey image; drawn as a mask instead, it takes the text's colour.
+  .jv-toggle {
+    background-image: none;
+    background-color: currentColor;
+    color: rgba(var(--v-theme-on-surface), var(--v-medium-emphasis-opacity));
+    mask: url("data:image/svg+xml,%3Csvg height='16' width='8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0l8 8-8 8z'/%3E%3C/svg%3E") center / contain no-repeat;
+  }
+
+  .jv-more::after {
+    background: linear-gradient(180deg, transparent 20%, rgb(var(--v-theme-surface-muted)));
+  }
+}
+
+.vue-diff-wrapper.vue-diff-theme-dark,
+.vue-diff-wrapper.vue-diff-theme-dark .hljs {
+  background-color: rgb(var(--v-theme-surface-muted));
+}
+
+// 16px from the package, on two columns of JSON side by side - a line of it wrapped every few words.
+.vue-diff-wrapper .vue-diff-viewer {
+  font-size: 12px;
+}

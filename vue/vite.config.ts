@@ -22,7 +22,13 @@ export default defineConfig(({ command, mode }) => {
         ],
         optimizeDeps: {
             include: [
-                'highlight.js'
+                'highlight.js',
+                // Vuetify 4's upgrade guide: bundled apart, its entries each get their own overlay
+                // stack in development, and a menu inside a dialog opens behind it.
+                'vuetify',
+                'vuetify/components',
+                'vuetify/directives',
+                'vuetify/iconsets/fa',
             ]
         },
         resolve: {

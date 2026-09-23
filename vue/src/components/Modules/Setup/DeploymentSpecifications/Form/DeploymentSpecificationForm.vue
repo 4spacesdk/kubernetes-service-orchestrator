@@ -119,8 +119,7 @@ defineExpose({validate, prepareForSave});
 
 <template>
     <v-form ref="formRef" @submit.prevent>
-        <v-row
-            dense
+        <v-row density="compact"
         >
             <v-col cols="12">
                 <v-text-field

@@ -1,0 +1,55 @@
+// What Vuetify 3's reset did and Vuetify 4's no longer does. kso was written against it - headings,
+// paragraphs and lists with no margin of their own, native buttons with no border or background - so
+// it goes back into the same layer, where anything of kso's or Vuetify's components still wins.
+@layer vuetify-core.reset {
+  html {
+    overflow-y: scroll;
+    word-break: normal;
+  }
+
+  * {
+    padding: 0;
+    margin: 0;
+  }
+
+  small {
+    font-size: 80%;
+  }
+
+  code,
+  kbd,
+  pre,
+  samp {
+    font-family: monospace, monospace;
+  }
+
+  pre {
+    font-size: 1em;
+  }
+
+  b,
+  strong {
+    font-weight: bolder;
+  }
+
+  button,
+  select {
+    text-transform: none;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    background-color: transparent;
+    border-style: none;
+  }
+
+  select {
+    appearance: none;
+  }
+
+  img {
+    border-style: none;
+  }
+}

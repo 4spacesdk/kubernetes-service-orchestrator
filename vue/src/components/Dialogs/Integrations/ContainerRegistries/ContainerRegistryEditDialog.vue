@@ -185,7 +185,7 @@ function onCloseBtnClicked() {
             <v-card-title>Container Registry</v-card-title>
             <v-divider />
             <v-card-text>
-                <v-row dense>
+                <v-row density="compact">
                     <v-col cols="12">
                         <v-text-field variant="outlined" v-model="item.name" label="Name" density="compact" />
                     </v-col>

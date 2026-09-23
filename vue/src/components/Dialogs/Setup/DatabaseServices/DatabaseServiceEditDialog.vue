@@ -100,8 +100,7 @@ function onCloseBtnClicked() {
             <v-card-title>Database Service</v-card-title>
             <v-divider/>
             <v-card-text>
-                <v-row
-                    dense>
+                <v-row density="compact">
                     <v-col cols="12">
                         <v-text-field
                             variant="outlined"
@@ -163,7 +162,7 @@ function onCloseBtnClicked() {
                             label="TLS"/>
                     </v-col>
                     <template v-if="item.tls && item.driver == 'mssql'">
-                        <v-col cols="12" class="text-body-2 text-medium-emphasis">
+                        <v-col cols="12" class="text-body-medium text-medium-emphasis">
                             The server's certificate is checked against the public CAs kso's image trusts, as for Azure SQL.
                         </v-col>
                     </template>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import type { DialogEventsInterface } from "@/components/Dialogs/DialogEventsInterface";
 import { Gateway } from "@/core/services/Deploy/models";
 import { Api } from "@/core/services/Deploy/Api";
@@ -8,6 +8,11 @@ import JsonViewer from '@/plugins/JsonViewer';
 // Only these two dialogs use it, so it loads with them rather than with the app.
 import { Diff } from 'vue-diff';
 import 'vue-diff/dist/index.css';
+import {useTheme} from "vuetify";
+
+/** The diff in the page's own light or dark, where it was always dark. */
+const vuetifyTheme = useTheme();
+const diffTheme = computed(() => vuetifyTheme.current.value.dark ? 'dark' : 'light');
 
 export interface GatewayResourcePreviewDialog_Input {
     gateway: Gateway,
@@ -113,7 +118,7 @@ function onCloseBtnClicked() {
                     <v-col cols="12">
                         <v-tabs
                             v-model="tab"
-                            bg-color="primary"
+                            color="secondary"
                         >
                             <v-tab value="diff">Diff</v-tab>
                             <v-tab value="local">Local</v-tab>
@@ -125,7 +130,7 @@ function onCloseBtnClicked() {
                             <v-window-item value="diff">
                                 <Diff
                                     mode="split"
-                                    theme="dark"
+                                    :theme="diffTheme"
                                     :prev="remoteString"
                                     :current="localString"
                                     language="json"

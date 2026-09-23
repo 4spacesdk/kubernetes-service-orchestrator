@@ -275,9 +275,9 @@ function show(value: any): string {
                 hide-details
                 style="flex: 1 1 200px; min-width: 200px; max-width: 280px"
             >
-                <template v-slot:selection="{ item, index }">
+                <template v-slot:selection="{ internalItem: item, index }">
                     <span v-if="index === 0" class="text-truncate">{{ item.title }}</span>
-                    <span v-if="index === 1" class="text-medium-emphasis text-caption ml-1 text-no-wrap">+{{ selectedUsers.length - 1 }}</span>
+                    <span v-if="index === 1" class="text-medium-emphasis text-body-small ml-1 text-no-wrap">+{{ selectedUsers.length - 1 }}</span>
                 </template>
             </v-autocomplete>
             <v-select
@@ -291,9 +291,9 @@ function show(value: any): string {
                 hide-details
                 style="flex: 1 1 160px; min-width: 160px; max-width: 280px"
             >
-                <template v-slot:selection="{ item, index }">
+                <template v-slot:selection="{ internalItem: item, index }">
                     <span v-if="index === 0" class="text-truncate">{{ item.title }}</span>
-                    <span v-if="index === 1" class="text-medium-emphasis text-caption ml-1 text-no-wrap">+{{ selectedSources.length - 1 }}</span>
+                    <span v-if="index === 1" class="text-medium-emphasis text-body-small ml-1 text-no-wrap">+{{ selectedSources.length - 1 }}</span>
                 </template>
             </v-select>
             <v-autocomplete
@@ -307,9 +307,9 @@ function show(value: any): string {
                 hide-details
                 style="flex: 1 1 200px; min-width: 200px; max-width: 320px"
             >
-                <template v-slot:selection="{ item, index }">
+                <template v-slot:selection="{ internalItem: item, index }">
                     <span v-if="index === 0" class="text-truncate">{{ item.title }}</span>
-                    <span v-if="index === 1" class="text-medium-emphasis text-caption ml-1 text-no-wrap">+{{ selectedActions.length - 1 }}</span>
+                    <span v-if="index === 1" class="text-medium-emphasis text-body-small ml-1 text-no-wrap">+{{ selectedActions.length - 1 }}</span>
                 </template>
             </v-autocomplete>
             <v-combobox
@@ -323,9 +323,9 @@ function show(value: any): string {
                 hide-details
                 style="flex: 1 1 200px; min-width: 200px; max-width: 320px"
             >
-                <template v-slot:selection="{ item, index }">
+                <template v-slot:selection="{ internalItem: item, index }">
                     <span v-if="index === 0" class="text-truncate">{{ item.title }}</span>
-                    <span v-if="index === 1" class="text-medium-emphasis text-caption ml-1 text-no-wrap">+{{ selectedTypes.length - 1 }}</span>
+                    <span v-if="index === 1" class="text-medium-emphasis text-body-small ml-1 text-no-wrap">+{{ selectedTypes.length - 1 }}</span>
                 </template>
             </v-combobox>
             <v-text-field
@@ -373,7 +373,7 @@ function show(value: any): string {
                 <span>{{ who(item.item) }}</span>
                 <span
                     v-if="item.item.user_id && item.item.source"
-                    class="text-medium-emphasis text-caption ml-1">
+                    class="text-medium-emphasis text-body-small ml-1">
                     {{ item.item.source }}
                 </span>
                 <v-tooltip
@@ -398,7 +398,7 @@ function show(value: any): string {
                 {{ item.item.resource_name ?? (item.item.resource_id ? `#${item.item.resource_id}` : '') }}
                 <span
                     v-if="item.changes.length"
-                    class="text-medium-emphasis text-caption ml-1">
+                    class="text-medium-emphasis text-body-small ml-1">
                     {{ item.changes.map(change => change.field).join(', ') }}
                 </span>
             </template>

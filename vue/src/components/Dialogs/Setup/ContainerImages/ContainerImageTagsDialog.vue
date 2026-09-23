@@ -94,7 +94,7 @@ function onCloseBtnClicked() {
             <v-card-title>Tags · {{ props.input.containerImage.name }}</v-card-title>
             <v-divider />
             <v-card-text>
-                <div class="text-caption text-medium-emphasis mb-2">
+                <div class="text-body-small text-medium-emphasis mb-2">
                     From <code>{{ props.input.containerImage.url }}</code>
                 </div>
                 <v-alert v-if="error" density="compact" variant="tonal" type="error" class="mb-4">
@@ -110,18 +110,18 @@ function onCloseBtnClicked() {
                         hide-details
                         clearable
                     />
-                    <div class="text-body-2 text-medium-emphasis text-no-wrap">
+                    <div class="text-body-medium text-medium-emphasis text-no-wrap">
                         {{ tags.length }} tag{{ tags.length === 1 ? "" : "s" }}
                     </div>
                 </div>
                 <v-progress-linear v-if="isLoading" indeterminate class="mb-2" />
-                <div v-else-if="!error && !tags.length" class="text-body-2 text-medium-emphasis">
+                <div v-else-if="!error && !tags.length" class="text-body-medium text-medium-emphasis">
                     The registry answered, and has no tags for this image.
                 </div>
                 <v-list v-if="rows.length" density="compact" class="py-0">
                     <v-list-item v-for="tag in rows" :key="tag.name" :title="tag.name" class="px-0">
                         <template v-if="tag.pushed_at" v-slot:append>
-                            <DateView :date-string="tag.pushed_at" text-format="DD/MM-YY HH:mm" class="text-body-2 text-medium-emphasis pushed-at" />
+                            <DateView :date-string="tag.pushed_at" text-format="DD/MM-YY HH:mm" class="text-body-medium text-medium-emphasis pushed-at" />
                         </template>
                     </v-list-item>
                 </v-list>

@@ -94,7 +94,8 @@ function withOpacity(hex: string | undefined, opacity: number): string {
 const options = computed<ChartOptions<"line">>(() => {
     // Chart.js draws its text and grid in its own light-page greys; these are the theme's.
     const { colors, variables } = theme.current.value;
-    const text = withOpacity(colors["on-surface"], Number(variables["medium-emphasis-opacity"]));
+    const onSurface = colors["on-surface"];
+    const text = withOpacity(typeof onSurface === "string" ? onSurface : undefined, Number(variables["medium-emphasis-opacity"]));
     const grid = withOpacity(String(variables["border-color"]), Number(variables["border-opacity"]));
 
     return {
@@ -122,7 +123,7 @@ const options = computed<ChartOptions<"line">>(() => {
 <template>
     <div>
         <v-progress-linear v-if="isLoading" indeterminate />
-        <div v-else-if="records.length < 2" class="text-caption text-medium-emphasis">
+        <div v-else-if="records.length < 2" class="text-body-small text-medium-emphasis">
             A graph over time once the tag has been scanned more than once.
         </div>
         <div v-else class="scan-history-chart">

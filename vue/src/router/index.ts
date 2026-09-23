@@ -44,7 +44,8 @@ const router = createRouter({
     ]
 })
 
-router.beforeEach((to, from, next) => {
+// Returns where to go instead, or nothing to go on - `next()` is deprecated in vue-router 5.
+router.beforeEach((to) => {
     const isPublic = to.matched.some(record => record.meta.public);
     const onlyWhenLoggedOut = to.matched.some(
         record => record.meta.onlyWhenLoggedOut
@@ -52,21 +53,19 @@ router.beforeEach((to, from, next) => {
     const loggedIn = AuthService.isLoggedIn();
 
     if (!isPublic && !loggedIn) {
-        return next({
+        return {
             path: "/login",
             query: {redirect: to.fullPath} // Store the full path to redirect the user to after login
-        });
+        };
     }
 
     // Do not allow user to visit login page or register page if they are logged in
     if (loggedIn && onlyWhenLoggedOut) {
-        return next("/");
+        return "/";
     }
 
     // Set page title
     document.title = (to.meta as any)?.title ?? 'Deploy';
-
-    next();
 });
 
 export default router
