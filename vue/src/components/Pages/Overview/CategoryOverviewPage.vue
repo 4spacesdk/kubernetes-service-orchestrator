@@ -4,12 +4,16 @@ import {useRoute} from "vue-router";
 import AuthService from "@/services/AuthService";
 import {visibleMenuCategories} from "@/components/Shell/Menu/menuCategories";
 import OverviewCard from "@/components/Pages/Overview/OverviewCard.vue";
+import {itemBadge, useMenuBadges} from "@/components/Shell/Menu/menuBadges";
 
 /**
  * A menu category's pages, as cards, for the category's own menu item. The menu's popover is
  * the quick way to one of them; this is where to look around first.
  */
 const route = useRoute();
+
+// The same numbers as the menu, on the cards they belong to.
+useMenuBadges();
 
 const category = computed(() => visibleMenuCategories(AuthService.currentAuthUser?.allPermissions ?? [])
     .find(category => category.identifier == route.meta.category));
@@ -36,7 +40,8 @@ const category = computed(() => visibleMenuCategories(AuthService.currentAuthUse
                 :to="item.url"
                 :icon="item.icon ?? category.icon"
                 :title="item.title"
-                :description="item.description"/>
+                :description="item.description"
+                :badge="itemBadge(item.url)"/>
         </div>
         <div
             v-else

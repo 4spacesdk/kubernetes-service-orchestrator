@@ -1,10 +1,13 @@
 <script setup lang="ts">
-/** A page on an overview: its icon, its name and what it is for. */
+import type {MenuBadge} from "@/components/Shell/Menu/menuBadges";
+
+/** A page on an overview: its icon, its name, what it is for, and the menu's number for it. */
 defineProps<{
     to: string;
     icon: string;
     title: string;
     description?: string;
+    badge?: MenuBadge | null;
 }>();
 </script>
 
@@ -16,7 +19,15 @@ defineProps<{
             <v-icon size="16">{{ icon }}</v-icon>
         </span>
         <div class="overview-text">
-            <div class="overview-title">{{ title }}</div>
+            <div class="overview-title">
+                {{ title }}
+                <v-chip
+                    v-if="badge"
+                    :color="badge.color"
+                    variant="flat"
+                    size="x-small"
+                    class="overview-badge">{{ badge.count }}</v-chip>
+            </div>
             <div
                 v-if="description"
                 class="overview-description">{{ description }}</div>
@@ -60,8 +71,15 @@ defineProps<{
 }
 
 .overview-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     font-size: 14px;
     font-weight: 500;
+}
+
+.overview-badge {
+    font-weight: 600;
 }
 
 .overview-description {

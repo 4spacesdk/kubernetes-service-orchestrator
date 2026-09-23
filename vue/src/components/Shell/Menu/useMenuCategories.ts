@@ -1,12 +1,8 @@
-import { onMounted, onUnmounted, ref } from "vue";
+import { onMounted, ref, watchEffect } from "vue";
 import { useRoute } from "vue-router";
-import { HealthStatusTypes } from "@/constants";
 import AuthService from "@/services/AuthService";
-import { Api } from "@/core/services/Deploy/Api";
-import { PushSubscription } from "@/services/Push/PushSubscription";
-import PushService from "@/services/Push/PushService";
-import { Events } from "@/services/Push/Events";
 import { visibleMenuCategories, type MenuCategory } from "@/components/Shell/Menu/menuCategories";
+import { categoryBadge, itemBadge, useMenuBadges } from "@/components/Shell/Menu/menuBadges";
 
 /**
  * The menu's categories as the signed-in user sees them, with their badges kept up to date:
@@ -17,10 +13,21 @@ export function useMenuCategories() {
 
     const categories = ref<MenuCategory[]>([]);
 
-    const autoUpdatesBadgePushSubscription1 = ref<PushSubscription>();
-    const autoUpdatesBadgePushSubscription2 = ref<PushSubscription>();
-    const autoUpdatesBadgePushSubscription3 = ref<PushSubscription>();
-    const healthBadgePushSubscription = ref<PushSubscription>();
+    useMenuBadges();
+
+    // The shared numbers onto the categories and pages that show them.
+    watchEffect(() => {
+        for (const category of categories.value) {
+            const badge = categoryBadge(category.identifier);
+            category.badge = badge?.count;
+            category.badgeColor = badge?.color;
+            for (const item of category.items) {
+                const badge = itemBadge(item.url);
+                item.badge = badge?.count;
+                item.badgeColor = badge?.color;
+            }
+        }
+    });
 
     function isCategoryActive(category: MenuCategory): boolean {
         return (category.url !== undefined && isItemActive(category.url))
@@ -70,78 +77,7 @@ export function useMenuCategories() {
                     permissions: [],
                 }));
         }
-
-        autoUpdatesBadgePushSubscription1.value = PushService.subscribe(
-            Events.AutoUpdate_Created(),
-            (data) => countAutoUpdates()
-        );
-        autoUpdatesBadgePushSubscription2.value = PushService.subscribe(
-            Events.AutoUpdate_Approved(),
-            (data) => countAutoUpdates()
-        );
-        autoUpdatesBadgePushSubscription3.value = PushService.subscribe(
-            Events.AutoUpdate_Deleted(),
-            (data) => countAutoUpdates()
-        );
-        countAutoUpdates();
-
-        healthBadgePushSubscription.value = PushService.subscribe(
-            Events.Deployments_Changed_Health(),
-            (data) => countDegraded()
-        );
-        countDegraded();
     });
-
-    onUnmounted(() => {
-        autoUpdatesBadgePushSubscription1.value?.unsubscribe();
-        autoUpdatesBadgePushSubscription2.value?.unsubscribe();
-        autoUpdatesBadgePushSubscription3.value?.unsubscribe();
-        healthBadgePushSubscription.value?.unsubscribe();
-    });
-
-    /**
-     * What is Degraded right now: workspaces on Sites, which everybody sees, and deployments on
-     * Deployments under Setup. Recounted when any deployment's health changes.
-     */
-    function countDegraded() {
-        Api.workspaces()
-            .get()
-            .where("health", HealthStatusTypes.Degraded)
-            .count((value) => {
-                const category = categories.value.find((category) => category.identifier == "sites");
-                if (category) {
-                    category.badge = value;
-                    category.badgeColor = "error";
-                }
-            });
-
-        Api.deployments()
-            .get()
-            .where("health", HealthStatusTypes.Degraded)
-            .count((value) => {
-                const item = categories.value
-                    .find((category) => category.identifier == "setup")
-                    ?.items.find((item) => item.url == "/setup/deployments");
-                if (item) {
-                    item.badge = value;
-                    item.badgeColor = "error";
-                }
-            });
-    }
-
-    function countAutoUpdates() {
-        Api.autoUpdates()
-            .get()
-            .where("is_approved", false)
-            .count((value) => {
-                const menuItem = categories.value.find(
-                    (category) => category.identifier == "auto-updates"
-                );
-                if (menuItem) {
-                    menuItem.badge = value;
-                }
-            });
-    }
 
     return { categories, isCategoryActive, isItemActive, hasSubmenu, badgeOf, categoryUrl };
 }
