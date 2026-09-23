@@ -428,6 +428,7 @@ function onBatchTerminateBtnClicked() {
                 <v-toolbar
                     flat
                     density="compact"
+                    color="surface-muted"
                 >
                     <v-toolbar-title>
                         <div
@@ -560,6 +561,7 @@ function onBatchTerminateBtnClicked() {
                 <v-toolbar
                     flat
                     density="compact"
+                    color="surface-muted"
                 >
                     <v-toolbar-title>Deployment resources</v-toolbar-title>
                 </v-toolbar>

@@ -40,6 +40,31 @@ class WorkspacesApiTest extends ControllerTestCase {
     }
 
     /**
+     * A workspace lands in the project its template is for - which is how a user who creates
+     * one never has to pick a project.
+     */
+    public function testAWorkspaceLandsInItsTemplatesProject(): void {
+        $project = Fixtures::project(['name' => 'Customers']);
+        $template = Fixtures::workspaceTemplate(['project_id' => $project->id]);
+
+        $body = $this->create($template->id, [
+            'name' => 'Acme', 'namespace' => 'acme',
+            'domainId' => Fixtures::domain()->id, 'subdomain' => 'acme',
+        ]);
+
+        $this->assertSame((int) $project->id, (int) $body['resource']['project_id']);
+    }
+
+    public function testATemplateWithoutAProjectMakesAWorkspaceWithoutOne(): void {
+        $body = $this->create(Fixtures::workspaceTemplate()->id, [
+            'name' => 'Acme', 'namespace' => 'acme',
+            'domainId' => Fixtures::domain()->id, 'subdomain' => 'acme',
+        ]);
+
+        $this->assertNull($body['resource']['project_id'] ?? null);
+    }
+
+    /**
      * The readable name is kept as typed, and a second, system name is derived from it:
      * lowercased, punctuation removed, spaces turned into dashes. That one becomes part of
      * Kubernetes object names, so it has to survive being used as a DNS label.

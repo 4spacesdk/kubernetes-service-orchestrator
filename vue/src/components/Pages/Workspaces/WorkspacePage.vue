@@ -69,6 +69,7 @@ function load() {
         .include('database_service')
         .include('label')
         .include('workspace_template')
+        .include('project')
         .find(items => {
             item.value = items[0];
             isNotFound.value = !items[0];
@@ -86,7 +87,7 @@ function onBack() {
     goBack(router, {name: 'Workspaces'});
 }
 
-function edit(event: 'workspaceUpdateName' | 'workspaceUpdateIngress' | 'workspaceUpdateEmailService' | 'workspaceUpdateDatabaseService' | 'workspaceUpdateLabels') {
+function edit(event: 'workspaceUpdateName' | 'workspaceUpdateProject' | 'workspaceUpdateIngress' | 'workspaceUpdateEmailService' | 'workspaceUpdateDatabaseService' | 'workspaceUpdateLabels') {
     bus.emit(event, {workspace: item.value!});
 }
 
@@ -245,6 +246,18 @@ function edit(event: 'workspaceUpdateName' | 'workspaceUpdateIngress' | 'workspa
                 title="Settings"
                 icon="fa fa-sliders">
                 <dl class="facts settings">
+                    <dt>Project</dt>
+                    <dd>
+                        <span>{{ item.project?.name ?? '—' }}</span>
+                        <v-btn
+                            v-if="rbacWorkspaceUpdate"
+                            icon="fa fa-pen"
+                            variant="plain"
+                            size="x-small"
+                            aria-label="Move to another project"
+                            @click="edit('workspaceUpdateProject')"/>
+                    </dd>
+
                     <dt>Name</dt>
                     <dd>
                         <span>{{ item.name_readable }}</span>

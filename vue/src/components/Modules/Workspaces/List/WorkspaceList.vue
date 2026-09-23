@@ -12,6 +12,7 @@ import debounce from "lodash.debounce";
 import WorkspaceDeploymentDomains from "@/components/Modules/Workspaces/WorkspaceDeploymentDomains/WorkspaceDeploymentDomains.vue";
 import { WorkspaceStatusTypes, HealthStatusTypes } from "@/constants";
 import { useWorkspaceActions } from "@/composables/useWorkspaceActions";
+import { ReferenceData } from "@/core/referenceData";
 import WorkspaceHealth from "@/components/Modules/Workspaces/WorkspaceHealth/WorkspaceHealth.vue";
 import { useRouter } from "vue-router";
 import { useDisplay } from "vuetify";
@@ -21,6 +22,11 @@ interface Row {
     isLoadingDeleteBtn?: boolean;
 }
 
+const props = defineProps<{
+    /** One project's workspaces - `none` for those in no project - or, left out, every one. */
+    project?: number | "none";
+}>();
+
 const router = useRouter();
 
 /** A phone: the search takes the width, and the filters go behind a button. */
@@ -28,15 +34,33 @@ const { xs: isPhone } = useDisplay();
 
 const itemCount = ref(0);
 const rows = ref<Row[]>([]);
-const headers = ref([
+const allHeaders = ref([
     // The namespace is under the name rather than in a column of its own: it is rarely what
     // anybody is looking for, and the row is wide enough as it is. It is still searched.
     { title: "Name", key: "workspace.name_readable", sortable: true },
     { title: "Status", key: "status", sortable: true },
     { title: "Health", key: "health", sortable: true },
+    { title: "Project", key: "project", sortable: false },
     { title: "Url", key: "url", sortable: false },
     { title: "", key: "actions", sortable: false },
 ]);
+/** One project's list does not say which project each is in. */
+const headers = computed(() => props.project === undefined
+    ? allHeaders.value
+    : allHeaders.value.filter((header) => header.key != "project"));
+
+const title = ref("Workspaces");
+watch(() => props.project, (project) => {
+    if (project === undefined) {
+        title.value = "Workspaces";
+    } else if (project == "none") {
+        title.value = "No project";
+    } else {
+        ReferenceData.projects().then((projects) => {
+            title.value = projects.find((item) => item.id == project)?.name ?? "Project";
+        });
+    }
+}, { immediate: true });
 const isLoading = ref(true);
 const options = ref({});
 
@@ -124,7 +148,7 @@ watch(
     }, 500)
 );
 watch(
-    [selectedStatus, selectedHealth],
+    [selectedStatus, selectedHealth, () => props.project],
     debounce(() => {
         getItems(true, true);
     }, 500)
@@ -151,6 +175,9 @@ function getItems(doItems = true, doCount = false) {
     }
 
     api.whereIn("status", selectedStatus.value);
+    if (props.project !== undefined) {
+        api.whereIn("project", [String(props.project)]);
+    }
     if (selectedHealth.value.length) {
         api.whereIn("health", selectedHealth.value);
     }
@@ -159,6 +186,7 @@ function getItems(doItems = true, doCount = false) {
         applyPaging(api);
         applyOrdering(api);
         api.include("deployment")
+            .include("project")
             .include("domain")
             .find((items) => {
                 rows.value = items.map((item) => {
@@ -203,7 +231,7 @@ function onWorkspaceTemplatesShortcutClicked() {
         <v-toolbar density="compact" flat color="toolbar" dark :height="isPhone ? 104 : 120">
             <div class="d-flex flex-column w-100 py-2 px-4 gap-1">
                 <div class="d-flex">
-                    <v-toolbar-title class="my-auto">Workspaces</v-toolbar-title>
+                    <v-toolbar-title class="my-auto">{{ title }}</v-toolbar-title>
 
                     <v-spacer></v-spacer>
 
@@ -309,6 +337,11 @@ function onWorkspaceTemplatesShortcutClicked() {
 
             <template v-slot:item.health="{ item }">
                 <WorkspaceHealth :workspace="item.workspace" @click="onOpenItemClicked(item.workspace)" />
+            </template>
+
+            <template v-slot:item.project="{ item }">
+                <span v-if="item.workspace.project" class="text-no-wrap">{{ item.workspace.project.name }}</span>
+                <span v-else class="text-medium-emphasis">—</span>
             </template>
 
             <template v-slot:item.url="{ item }">

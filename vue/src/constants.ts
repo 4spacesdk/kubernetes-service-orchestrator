@@ -4,6 +4,7 @@ import type { InfoDialog_Input } from "@/components/Dialogs/Common/InfoDialog.vu
 import type { DatabaseServiceEditDialog_Input } from "@/components/Dialogs/Setup/DatabaseServices/DatabaseServiceEditDialog.vue";
 import type { DomainCreateDialog_Input } from "@/components/Dialogs/Setup/Domains/DomainCreateDialog.vue";
 import type { EmailServiceEditDialog_Input } from "@/components/Dialogs/Setup/EmailServices/EmailServiceEditDialog.vue";
+import type { ProjectEditDialog_Input } from "@/components/Dialogs/Setup/Projects/ProjectEditDialog.vue";
 import type { ContainerRegistryEditDialog_Input } from "@/components/Dialogs/Integrations/ContainerRegistries/ContainerRegistryEditDialog.vue";
 import type { ContainerRegistryImportDialog_Input } from "@/components/Dialogs/Integrations/ContainerRegistries/ContainerRegistryImportDialog.vue";
 import type { ContainerImageDeploymentsDialog_Input } from "@/components/Dialogs/Setup/ContainerImages/ContainerImageDeploymentsDialog.vue";
@@ -22,6 +23,7 @@ import {
     Domain,
     Gateway,
     EmailService,
+    Project,
     ContainerRegistry,
     GithubIntegration,
     InitContainer,
@@ -45,6 +47,7 @@ import type { AuditEventListDialog_Input } from "@/components/Dialogs/AuditEvent
 import type { WorkspaceCreateDialog_Input } from "@/components/Dialogs/Workspaces/WorkspaceCreateDialog.vue";
 import type { WorkspaceUpdateDatabaseServiceDialog_Input } from "@/components/Dialogs/Workspaces/UpdateDialogs/WorkspaceUpdateDatabaseServiceDialog.vue";
 import type { WorkspaceUpdateEmailServiceDialog_Input } from "@/components/Dialogs/Workspaces/UpdateDialogs/WorkspaceUpdateEmailServiceDialog.vue";
+import type { WorkspaceUpdateProjectDialog_Input } from "@/components/Dialogs/Workspaces/UpdateDialogs/WorkspaceUpdateProjectDialog.vue";
 import type { WorkspaceUpdateIngressDialog_Input } from "@/components/Dialogs/Workspaces/UpdateDialogs/WorkspaceUpdateIngressDialog.vue";
 import type { WorkspaceUpdateNameDialog_Input } from "@/components/Dialogs/Workspaces/UpdateDialogs/WorkspaceUpdateNameDialog.vue";
 import type { WorkerDialog_Input } from "@/components/Dialogs/Common/WorkerDialog.vue";
@@ -138,6 +141,11 @@ export type Events = {
     emailServiceEdit: EmailServiceEditDialog_Input;
     emailServiceSaved: EmailService | undefined;
     emailServiceEditDialog_closed: EmailService | undefined;
+
+    projectEdit: ProjectEditDialog_Input;
+    projectSaved: Project | undefined;
+    projectEditDialog_closed: Project | undefined;
+
     containerRegistryEdit: ContainerRegistryEditDialog_Input;
     containerRegistryImport: ContainerRegistryImportDialog_Input;
     containerImageDeployments: ContainerImageDeploymentsDialog_Input;
@@ -164,6 +172,7 @@ export type Events = {
     workspaceCreate: WorkspaceCreateDialog_Input;
     workspaceUpdateName: WorkspaceUpdateNameDialog_Input;
     workspaceUpdateEmailService: WorkspaceUpdateEmailServiceDialog_Input;
+    workspaceUpdateProject: WorkspaceUpdateProjectDialog_Input;
     workspaceUpdateDatabaseService: WorkspaceUpdateDatabaseServiceDialog_Input;
     workspaceUpdateIngress: WorkspaceUpdateIngressDialog_Input;
     workspaceLogs: WorkspaceLogsDialog_Input;

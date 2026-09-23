@@ -5,6 +5,7 @@ import {WorkspaceTemplate} from '../WorkspaceTemplate';
 import {EmailService} from '../EmailService';
 import {Domain} from '../Domain';
 import {DatabaseService} from '../DatabaseService';
+import {Project} from '../Project';
 import {Deployment} from '../Deployment';
 import {Label} from '../Label';
 import {User} from '../User';
@@ -26,6 +27,8 @@ export class WorkspaceDefinition extends BaseModel {
     aliases?: string;
     database_service_id?: number;
     database_service?: DatabaseService;
+    project_id?: number;
+    project?: Project;
     status?: string;
     is_paused?: boolean;
     health?: string;
@@ -65,6 +68,8 @@ export class WorkspaceDefinition extends BaseModel {
             delete this.aliases;
             delete this.database_service_id;
             delete this.database_service;
+            delete this.project_id;
+            delete this.project;
             delete this.status;
             delete this.is_paused;
             delete this.health;
@@ -126,6 +131,12 @@ export class WorkspaceDefinition extends BaseModel {
         }
         if (data.database_service != null) {
             this.database_service = new DatabaseService(data.database_service);
+        }
+        if (data.project_id != null) {
+            this.project_id = data.project_id;
+        }
+        if (data.project != null) {
+            this.project = new Project(data.project);
         }
         if (data.status != null) {
             this.status = data.status;

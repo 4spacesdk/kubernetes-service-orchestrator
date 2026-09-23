@@ -11,6 +11,12 @@
   min-height: 1rem !important;
 }
 
+// A chip is 26px, a line of text 24px - chips would make the field taller than those beside it.
+.v-field__input:has(.v-chip) {
+  padding-top: 7px !important;
+  padding-bottom: 7px !important;
+}
+
 body,
 .v-label,
 .v-main,

@@ -3,18 +3,28 @@
 use RestExtension\Core\Model;
 use RestExtension\ResourceModelInterface;
 
-class WorkspaceTemplateModel extends Model implements ResourceModelInterface {
+class ProjectModel extends Model implements ResourceModelInterface {
 
     public $hasOne = [
-        ProjectModel::class,
+        DeletionModel::class,
     ];
 
     public $hasMany = [
         WorkspaceModel::class,
-        WorkspaceTemplateDeploymentSpecificationModel::class,
-        WorkspaceTemplateEnvironmentVariableModel::class,
-        LabelModel::class,
+        WorkspaceTemplateModel::class,
+        UserModel::class,
     ];
+
+    /**
+     * Read by id, a project is its fields and its members - not every workspace in it, which
+     * the workspace list does with a filter.
+     */
+    public function ignoredRestGetOnRelations(): array {
+        return [
+            WorkspaceModel::class,
+            WorkspaceTemplateModel::class,
+        ];
+    }
 
     public function preRestGet($queryParser, $id) {
 
@@ -38,12 +48,6 @@ class WorkspaceTemplateModel extends Model implements ResourceModelInterface {
 
     public function appleRestGetManyRelations($items) {
 
-    }
-
-    public function ignoredRestGetOnRelations() {
-        return [
-            WorkspaceModel::class,
-        ];
     }
 
 }

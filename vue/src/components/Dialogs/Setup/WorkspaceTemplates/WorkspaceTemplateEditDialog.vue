@@ -3,7 +3,7 @@ import { ReferenceData } from "@/core/referenceData";
 import { dnsLabelRule } from "@/core/kubernetesNames";
 import { useDialogSave } from "@/composables/useDialogSave";
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
-import {DatabaseService, WorkspaceTemplate, Domain, EmailService} from "@/core/services/Deploy/models";
+import {DatabaseService, WorkspaceTemplate, Domain, EmailService, Project} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
@@ -28,6 +28,8 @@ const isLoadingDatabaseServices = ref(false);
 const databaseServiceItems = ref<DatabaseService[]>([]);
 const isLoadingDomains = ref(false);
 const domainItems = ref<Domain[]>([]);
+const isLoadingProjects = ref(false);
+const projectItems = ref<Project[]>([]);
 
 const isFormValid = ref(false);
 const rules = {
@@ -84,6 +86,12 @@ function render() {
     ReferenceData.domains().then(response => {
             domainItems.value = response;
             isLoadingDomains.value = false;
+        });
+
+    isLoadingProjects.value = true;
+    ReferenceData.projects().then(response => {
+            projectItems.value = response;
+            isLoadingProjects.value = false;
         });
 }
 
@@ -179,6 +187,20 @@ function onCloseBtnClicked() {
                                 item-value="id"
                                 variant="outlined"
                                 label="Default Domain"
+                            />
+                        </v-col>
+                        <v-col cols="12">
+                            <v-select
+                                v-model="item.project_id"
+                                :loading="isLoadingProjects"
+                                :items="projectItems"
+                                item-title="name"
+                                item-value="id"
+                                variant="outlined"
+                                label="Project"
+                                clearable
+                                hint="Workspaces made from this template land in this project"
+                                persistent-hint
                             />
                         </v-col>
                     </v-row>

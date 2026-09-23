@@ -96,6 +96,10 @@ bus.on('emailServiceEdit', async input => {
     addComponent((await import('@/components/Dialogs/Setup/EmailServices/EmailServiceEditDialog.vue')).default, input);
 });
 
+bus.on('projectEdit', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/Projects/ProjectEditDialog.vue')).default, input);
+});
+
 
 
 bus.on('deploymentCreate', async input => {
@@ -152,6 +156,9 @@ bus.on('workspaceUpdateName', async input => {
 });
 bus.on('workspaceUpdateEmailService', async input => {
     addComponent((await import('@/components/Dialogs/Workspaces/UpdateDialogs/WorkspaceUpdateEmailServiceDialog.vue')).default, input);
+});
+bus.on('workspaceUpdateProject', async input => {
+    addComponent((await import('@/components/Dialogs/Workspaces/UpdateDialogs/WorkspaceUpdateProjectDialog.vue')).default, input);
 });
 bus.on('workspaceUpdateDatabaseService', async input => {
     addComponent((await import('@/components/Dialogs/Workspaces/UpdateDialogs/WorkspaceUpdateDatabaseServiceDialog.vue')).default, input);

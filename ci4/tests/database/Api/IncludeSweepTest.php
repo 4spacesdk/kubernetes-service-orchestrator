@@ -172,6 +172,7 @@ class IncludeSweepTest extends ControllerTestCase {
             'gateways?include=deletion',
             'github_integrations?include=deletion',
             'podio_integrations?include=deletion',
+            'projects?include=deletion',
             'users?include=deletion',
             'workspaces?include=deletion',
         ], $empty, 'these were swept over an empty table');
@@ -404,7 +405,7 @@ class IncludeSweepTest extends ControllerTestCase {
     public function testTheSweepStillCoversEveryRoutedResourceAndItsRelations(): void {
         $models = $this->resourceModels();
 
-        $this->assertCount(27, $models, 'the number of plain collection reads changed');
+        $this->assertCount(28, $models, 'the number of plain collection reads changed');
         $this->assertSame(
             ['environments'],
             array_keys(array_filter($models, static fn ($model) => $model === null)),
@@ -416,7 +417,7 @@ class IncludeSweepTest extends ControllerTestCase {
             $relations += count($this->relationsOf($modelName));
         }
 
-        $this->assertSame(94, $relations, 'the number of includable relations changed');
+        $this->assertSame(101, $relations, 'the number of includable relations changed');
     }
 
     // </editor-fold>
@@ -456,7 +457,9 @@ class IncludeSweepTest extends ControllerTestCase {
 
         $emailService = Fixtures::emailService();
         $databaseService = Fixtures::databaseService();
-        $template = Fixtures::workspaceTemplate();
+        $project = Fixtures::project(['name' => 'sweep-project']);
+        $template = Fixtures::workspaceTemplate(['project_id' => $project->id]);
+        $this->insert('projects_users', ['project_id' => $project->id, 'user_id' => $this->signedInUserId()]);
 
         $workspace = Fixtures::workspace([
             'name_readable' => 'sweep-workspace',
@@ -464,6 +467,7 @@ class IncludeSweepTest extends ControllerTestCase {
             'email_service_id' => $emailService->id,
             'database_service_id' => $databaseService->id,
             'workspace_template_id' => $template->id,
+            'project_id' => $project->id,
         ]);
 
         $deployment = Fixtures::deployment([

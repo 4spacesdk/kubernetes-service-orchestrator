@@ -22,6 +22,8 @@ const isLoadingDomains = ref(false);
 const domains = ref<Domain[]>([]);
 const isSaving = ref(false);
 const showAdvanced = ref(false);
+/** The project the workspace lands in: its template's. */
+const projectName = ref<string | null>(null);
 
 // <editor-fold desc="Functions">
 
@@ -40,6 +42,12 @@ function render() {
     showDialog.value = true;
 
     item.value = Workspace.CreateDefault(props.input.workspaceTemplate);
+
+    if (props.input.workspaceTemplate.project_id) {
+        ReferenceData.projects().then(items => {
+            projectName.value = items.find(project => project.id == props.input.workspaceTemplate.project_id)?.name ?? null;
+        });
+    }
 
     isLoadingDomains.value = true;
     ReferenceData.domains().then(items => {
@@ -116,6 +124,12 @@ function onCloseBtnClicked() {
                 <v-card-title>Workspace: Create {{ props.input.workspaceTemplate.name }}</v-card-title>
                 <v-divider/>
                 <v-card-text>
+                    <div
+                        v-if="projectName"
+                        class="text-body-2 text-medium-emphasis mb-3">
+                        <v-icon size="12" class="mr-1">fa fa-folder</v-icon>
+                        Lands in the project {{ projectName }}
+                    </div>
                     <v-row
                         dense>
                         <v-col cols="12">

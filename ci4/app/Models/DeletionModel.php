@@ -28,6 +28,7 @@ class DeletionModel extends Model {
         GatewayModel::class,
         ContainerRegistryModel::class,
         GithubIntegrationModel::class,
+        ProjectModel::class,
     ];
 
 }

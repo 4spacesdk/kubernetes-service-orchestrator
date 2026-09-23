@@ -6,6 +6,7 @@ use App\Entities\WorkspaceTemplate;
 use App\Entities\WorkspaceTemplateDeploymentSpecification;
 use App\Entities\DeploymentSpecification;
 use App\Entities\Label;
+use App\Entities\Project;
 use App\Entities\Workspace;
 use App\Exceptions\ValidationException;
 use App\Interfaces\LabelList;
@@ -172,6 +173,40 @@ class Workspaces extends ResourceController {
         }
 
         $item->updateEmailServiceId($value);
+        $this->_setResource($item);
+        $this->success();
+    }
+
+    /**
+     * Moves the workspace to another project, or out of any with 0.
+     *
+     * @route /workspaces/{id}/projectId
+     * @method put
+     * @custom true
+     * @param int $id
+     * @parameter int $value parameterType=query
+     * @return void
+     * @audit entity
+     */
+    public function updateProjectId(int $id = 0): void {
+        $item = new Workspace();
+        $item->find($id);
+        if (!$item->exists()) {
+            $this->fail('unknown workspace');
+            return;
+        }
+
+        $value = (int) $this->request->getGet('value');
+        if ($value) {
+            $project = new Project();
+            $project->find($value);
+            if (!$project->exists()) {
+                $this->fail('unknown project');
+                return;
+            }
+        }
+
+        $item->updateProjectId($value ?: null);
         $this->_setResource($item);
         $this->success();
     }

@@ -1,23 +1,16 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
-import { useRoute, useRouter } from "vue-router";
-import { useDisplay } from "vuetify";
+import { ref, watch } from "vue";
+import { useRoute } from "vue-router";
 import { type MenuCategory } from "@/components/Shell/Menu/menuCategories";
 import { useMenuCategories } from "@/components/Shell/Menu/useMenuCategories";
 
-const router = useRouter();
-
-const { categories, isCategoryActive, badgeOf, categoryUrl } = useMenuCategories();
+const { categories, isCategoryActive, hasSubmenu, badgeOf, categoryUrl } = useMenuCategories();
 
 /**
- * The menu stands open where there is room for it, and folds in to a rail of icons where there
- * is not. The lists need about 1030px, so `lg` and up (1280px) keeps both; below that the menu
- * is what gives way. Folded, it stays folded: hovering an icon shows its name, and a
- * category's pages, beside it, over the page, so nothing moves. On a phone it is the bottom
- * menu instead - see BottomMenu.
+ * A rail of icons, on every screen - the page keeps the width. Hovering an icon shows its name,
+ * and a category's pages, beside it, over the page, so nothing moves. On a phone it is the
+ * bottom menu instead - see BottomMenu.
  */
-const { lgAndUp } = useDisplay();
-const isRail = computed(() => !lgAndUp.value);
 
 /**
  * The category whose popover is open. A click on the icon or in the popover goes somewhere,
@@ -38,20 +31,12 @@ watch(() => route.path, () => {
     openFlyout.value = null;
 });
 
-function onLogoClicked(event: Event) {
-    router
-        .push({
-            name: "Dashboard",
-        })
-        .catch((_) => {});
-}
-
 /**
  * The popover beside a rail icon (48px). A category of pages opens with its name above the
  * icon and its first page level with it; one of a single page shows its name level with it.
  */
 function flyoutOffset(category: MenuCategory): number[] {
-    return category.items.length > 1 ? [8, 37] : [8, -4];
+    return hasSubmenu(category) ? [8, 37] : [8, -4];
 }
 
 </script>
@@ -60,12 +45,12 @@ function flyoutOffset(category: MenuCategory): number[] {
     <v-navigation-drawer
         color="surface"
         permanent
-        :rail="isRail"
+        rail
         :rail-width="56"
         flat
         elevation="0"
     >
-        <nav v-if="isRail" class="rail">
+        <nav class="rail">
             <v-menu
                 v-for="(category, index) in categories"
                 :key="index"
@@ -116,7 +101,7 @@ function flyoutOffset(category: MenuCategory): number[] {
                             :content="badgeOf(category)!.count"
                         />
                     </component>
-                    <v-list v-if="category.items.length > 1" density="compact" class="rail-flyout-items">
+                    <v-list v-if="hasSubmenu(category)" density="compact" class="rail-flyout-items">
                         <v-list-item
                             v-for="item in category.items"
                             :key="item.title"
@@ -140,157 +125,10 @@ function flyoutOffset(category: MenuCategory): number[] {
                 </v-card>
             </v-menu>
         </nav>
-
-        <v-list v-else dense nav class="py-1">
-            <v-list-item
-                @click="onLogoClicked"
-                class="d-flex align-items-start"
-            >
-                <v-list-item-title class="title" style="line-height: 1.4rem">
-                    <div class="logo">KSO</div>
-                </v-list-item-title>
-            </v-list-item>
-
-            <v-list-item
-                style="min-height: 44px; align-items: start"
-                class="category"
-                v-for="(category, index) in categories"
-                :key="index"
-            >
-                <v-list-item
-                    v-if="category.items.length === 1"
-                    :to="category.items[0].url"
-                    link
-                >
-                    <template v-slot:prepend>
-                        <v-icon size="16">{{ category.icon }}</v-icon>
-                    </template>
-                    <v-list-item-title>{{ category.name }}</v-list-item-title>
-
-                    <template v-slot:append>
-                        <v-badge
-                            v-if="category.badge"
-                            inline
-                            :color="category.badgeColor ?? 'secondary'"
-                            :content="category.badge"
-                        />
-                    </template>
-                </v-list-item>
-
-                <v-list-group
-                    v-if="category.items.length > 1"
-                    :value="category.active"
-                >
-                    <template v-slot:activator="{ props }">
-                        <v-list-item v-bind="props">
-                            <template v-slot:prepend>
-                                <v-icon size="16">{{ category.icon }}</v-icon>
-                            </template>
-                            <v-list-item-title>{{
-                                category.name
-                            }}</v-list-item-title>
-                        </v-list-item>
-                    </template>
-
-                    <div v-if="category.url" class="category-item">
-                        <v-list-item :to="category.url" link exact>
-                            <v-list-item-title>Overview</v-list-item-title>
-                        </v-list-item>
-                    </div>
-                    <div
-                        v-for="item in category.items"
-                        :key="item.title"
-                        class="category-item"
-                    >
-                        <v-list-item :to="item.url" link>
-                            <v-list-item-title>{{
-                                item.title
-                            }}</v-list-item-title>
-
-                            <template v-slot:append>
-                                <v-badge
-                                    v-if="item.badge"
-                                    inline
-                                    :color="item.badgeColor ?? 'secondary'"
-                                    :content="item.badge"
-                                />
-                            </template>
-                        </v-list-item>
-                    </div>
-                </v-list-group>
-            </v-list-item>
-        </v-list>
     </v-navigation-drawer>
 </template>
 
 <style scoped lang="scss">
-.logo {
-    font-size: 18px;
-    color: rgb(var(--v-theme-primary));
-    font-family: "Roboto", sans-serif;
-    padding: 8px;
-}
-
-:deep(.v-list-item__prepend > .v-icon) {
-    margin-inline-end: 5px;
-}
-
-:deep(.v-navigation-drawer) {
-    box-shadow: none !important;
-}
-
-.v-list-group--open {
-    background: transparent;
-}
-
-.v-list {
-    padding: 0;
-
-    :deep(.fas) {
-        font-size: 12px;
-    }
-
-    :deep(.fa-chevron-down:before) {
-        content: "\f13a";
-    }
-
-    :deep(.fa-chevron-up:before) {
-        content: "\f139";
-    }
-}
-
-.v-list-item {
-    margin: 0 !important;
-    border-radius: 0 !important;
-    padding: 0;
-    border-bottom: none !important;
-
-    .v-list-item--link,
-    > .v-list-item,
-    > .v-list-group {
-        padding-left: 12px !important;
-        padding-right: 12px !important;
-    }
-}
-
-.v-list-item--active {
-    border-left: 4px solid rgb(var(--v-theme-secondary));
-    color: rgb(var(--v-theme-secondary));
-}
-
-.v-list-item__content:has(v-list-group--open) {
-}
-
-.v-list-group__items .v-list-item {
-    padding-inline-start: calc(0px + var(--indent-padding)) !important;
-    padding-inline-start: 36px !important;
-}
-
-.v-list-item--density-default.v-list-item--one-line {
-    min-height: 48px !important;
-    padding: 0;
-}
-
 .rail {
     display: flex;
     flex-direction: column;

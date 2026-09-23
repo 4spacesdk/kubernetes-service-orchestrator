@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { useDialogSave } from "@/composables/useDialogSave";
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
-import {RbacRole, User} from "@/core/services/Deploy/models";
+import {Project, RbacRole, User} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
 import AuthService from "@/services/AuthService";
+import { ReferenceData } from "@/core/referenceData";
 
 export interface UserEditDialog_Input {
     user: User;
@@ -30,6 +31,10 @@ const roles = ref<RbacRole[]>([]);
 const roleProps = ref<{ title: string, subtitle: string }[]>([]);
 const isLoadingRoles = ref(false);
 const selectedRoles = ref<number[]>([]);
+
+const projects = ref<Project[]>([]);
+const isLoadingProjects = ref(false);
+const selectedProjects = ref<number[]>([]);
 
 const isMFAEnabled = ref<boolean>(false);
 const isMFASetup = ref<boolean>(false);
@@ -71,12 +76,19 @@ function render() {
             isLoadingRoles.value = false;
         })
 
+    isLoadingProjects.value = true;
+    ReferenceData.projects().then(response => {
+        projects.value = response;
+        isLoadingProjects.value = false;
+    });
+
     if (props.input.user.exists()) {
         isLoading.value = true;
         showDialog.value = true;
-        Api.users().getById(props.input.user.id!).find(items => {
+        Api.users().getById(props.input.user.id!).include('project').find(items => {
             item.value = items[0];
             selectedRoles.value = item.value.rbac_roles?.map(role => role.id!) ?? [];
+            selectedProjects.value = item.value.projects?.map(project => project.id!) ?? [];
             isMFAEnabled.value = item.value.has_mfa_secret_hash ?? false;
             isMe.value = item.value.id == AuthService.currentAuthUser?.id;
             isLoading.value = false;
@@ -114,9 +126,16 @@ function onSaveBtnClicked() {
         item.value!.password = password.value;
     }
 
+    // The projects are set on their own below; sent along, the patch would write them as well.
+    item.value!.projects = undefined;
+
     save(api, item.value!, newItem => {
-        bus.emit('userSaved', newItem);
-        close();
+        // Should the projects fail, a second Save patches the user rather than creating another.
+        item.value!.id = newItem.id;
+        save(Api.users().updateProjectsPutById(newItem.id!), {values: selectedProjects.value}, savedItem => {
+            bus.emit('userSaved', savedItem);
+            close();
+        });
     });
 }
 
@@ -256,6 +275,22 @@ function onMFARemoveBtnClicked() {
                                 />
                             </template>
                         </v-select>
+                    </v-col>
+
+                    <v-col cols="12">
+                        <v-select
+                            v-model="selectedProjects"
+                            label="Projects"
+                            :items="projects"
+                            :loading="isLoadingProjects"
+                            item-title="name"
+                            item-value="id"
+                            variant="outlined"
+                            hint="What the user sees first - every user can still open every project"
+                            persistent-hint
+                            :multiple="true"
+                            chips
+                            closable-chips/>
                     </v-col>
 
                     <v-col

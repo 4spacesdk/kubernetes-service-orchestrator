@@ -3,6 +3,7 @@
 use App\Entities\Concerns\EncryptsFields;
 use App\Exceptions\ValidationException;
 use App\Libraries\EmailLib;
+use App\Models\ProjectModel;
 use App\Models\UserModel;
 use AuthExtension\AuthExtension;
 use Config\Database;
@@ -23,6 +24,7 @@ use Config\Database;
  *
  *  Many
  * @property RbacRole $rbac_roles
+ * @property Project $projects the projects relevant to the user, see Project
  *
  * OTF
  * @property bool $has_mfa_secret_hash
@@ -44,6 +46,30 @@ class User extends \RestExtension\Entities\User {
         }
 
         return parent::post($data);
+    }
+
+    /**
+     * The projects relevant to the user are these, and only these. One link at a time, as
+     * RbacRole::updatePermissions() explains; an id that is no project is left out.
+     *
+     * @param int[] $projectIds
+     */
+    public function updateProjects(array $projectIds): void {
+        /** @var Project $existing */
+        $existing = (new ProjectModel())->whereRelated(UserModel::class, 'id', $this->id)->find();
+        foreach ($existing as $project) {
+            $this->delete($project);
+        }
+
+        foreach (array_unique(array_map('intval', $projectIds)) as $projectId) {
+            $project = new Project();
+            $project->find($projectId);
+            if ($project->exists()) {
+                $this->save($project);
+            }
+        }
+
+        $this->projects = (new ProjectModel())->whereRelated(UserModel::class, 'id', $this->id)->find();
     }
 
     public static function patch($id, $data) {

@@ -408,13 +408,13 @@ class RestGetSweepTest extends ControllerTestCase {
             $this->assertContains($resource, $collections, "{$resource} is no longer routed");
         }
 
-        $this->assertCount(27, $collections, 'the number of plain collection reads changed');
+        $this->assertCount(28, $collections, 'the number of plain collection reads changed');
 
         // Two fewer by-id reads than collections, and both on purpose: `environments` has
         // nothing to address, and `o_auth_clients` is read through a `(.*)` route because
         // its key is a string. The numeric routes the generator made for the two were
         // removed by migration.
-        $this->assertCount(25, $this->byIdResources(), 'the number of plain by-id reads changed');
+        $this->assertCount(26, $this->byIdResources(), 'the number of plain by-id reads changed');
     }
 
     /**
@@ -490,6 +490,7 @@ class RestGetSweepTest extends ControllerTestCase {
             'deployments' => $deployment->id,
             'domains' => Fixtures::domain()->id,
             'email_services' => Fixtures::emailService(['pass' => 'sweep-mail-password'])->id,
+            'projects' => Fixtures::project()->id,
             'gateways' => Fixtures::gateway()->id,
             'github_integrations' => Fixtures::githubIntegration([
                 'client_secret' => 'sweep-github-client-secret',

@@ -1,27 +1,20 @@
 <script setup lang="ts">
-import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
-import {useRoute, useRouter} from "vue-router";
+import {computed} from 'vue'
+import {useRoute} from "vue-router";
 import WorkspaceList from "@/components/Modules/Workspaces/List/WorkspaceList.vue";
 
-const router = useRouter();
+const route = useRoute();
 
-onMounted(() => {
-    const route = useRoute();
-
-    switch (route.name) {
-        case 'Workspaces':
-            break;
+/** Every workspace, or one project's - `none` for those in no project. */
+const project = computed<number | 'none' | undefined>(() => {
+    const value = route.params.project;
+    if (value === undefined) {
+        return undefined;
     }
+    return value == 'none' ? 'none' : parseInt(String(value));
 });
-
-onUnmounted(() => {
-});
-
 </script>
 
 <template>
-    <WorkspaceList/>
+    <WorkspaceList :project="project"/>
 </template>
-
-<style scoped>
-</style>

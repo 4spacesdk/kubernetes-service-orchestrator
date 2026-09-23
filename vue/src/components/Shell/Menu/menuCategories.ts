@@ -5,10 +5,11 @@ export interface MenuCategory {
     identifier: string;
     name: string;
     icon: string;
-    /** An overview of the category's pages, for a category of more than one. */
+    /** An overview of the category's pages. A category with one opens to it, and lists its pages under it. */
     url?: string;
     items: MenuItem[];
-    active?: boolean;
+    /** Who sees a category whose pages are filled in later - Workspaces, whose are the user's projects. */
+    permissions?: string[];
     badge?: number;
     /** Secondary unless something is wrong - the Degraded counts are red. */
     badgeColor?: string;
@@ -20,7 +21,6 @@ export interface MenuItem {
     /** Shown on the category's overview page. */
     icon?: string;
     description?: string;
-    active?: boolean;
     permissions: string[];
     badge?: number;
     badgeColor?: string;
@@ -36,15 +36,12 @@ export function createMenuCategories(): MenuCategory[] {
             identifier: "sites",
             name: "Workspaces",
             icon: "fa fa-window-maximize",
-            items: [
-                {
-                    title: "All",
-                    url: "/workspaces",
-                    permissions: [
-                        RbacPermissions.Developer,
-                        RbacPermissions.Workspaces.List,
-                    ],
-                },
+            url: "/workspaces",
+            // The user's own projects, filled in by useMenuCategories; the rest are on the overview.
+            items: [],
+            permissions: [
+                RbacPermissions.Developer,
+                RbacPermissions.Workspaces.List,
             ],
         },
         {
@@ -82,6 +79,13 @@ export function createMenuCategories(): MenuCategory[] {
                     url: "/setup/system",
                     icon: "fa fa-sliders",
                     description: "Hosting provider and the network types the cluster supports",
+                    permissions: [RbacPermissions.Developer],
+                },
+                {
+                    title: "Projects",
+                    url: "/setup/projects",
+                    icon: "fa fa-folder-tree",
+                    description: "Workspaces divided up, and who each division is for",
                     permissions: [RbacPermissions.Developer],
                 },
                 {
@@ -230,6 +234,7 @@ export function visibleMenuCategories(userPermissions: string[]): MenuCategory[]
                 userPermissions.includes(permission)
             );
         });
-        return category.items.length > 0;
+        return category.items.length > 0
+            || (category.permissions?.some((permission) => userPermissions.includes(permission)) ?? false);
     });
 }

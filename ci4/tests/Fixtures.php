@@ -9,6 +9,7 @@ use App\Entities\ContainerImage;
 use App\Entities\ContainerRegistry;
 use App\Entities\DatabaseService;
 use App\Entities\EmailService;
+use App\Entities\Project;
 use App\Entities\GithubIntegration;
 use App\Entities\DeploymentSpecificationHttpProxyRoute;
 use App\Entities\DeploymentSpecificationClusterRoleRule;
@@ -262,6 +263,16 @@ class Fixtures {
             'user' => 'mailer',
             'pass' => 'mail-secret',
             'from' => 'noreply@test.example.org',
+        ], $overrides);
+    }
+
+    /**
+     * @param array<string, mixed> $overrides
+     */
+    public static function project(array $overrides = []): Project {
+        return self::make(Project::class, [
+            'name' => 'test-project',
+            'description' => '',
         ], $overrides);
     }
 

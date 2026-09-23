@@ -19,6 +19,7 @@ import {KNativeMinScaleSchedule} from "./models";
 import {OAuthClient} from "./models";
 import {PodioIntegration} from "./models";
 import {PostUpdateAction} from "./models";
+import {Project} from "./models";
 import {RbacPermission} from "./models";
 import {RbacRole} from "./models";
 import {System} from "./models";
@@ -7909,6 +7910,280 @@ class PostUpdateActions {
 }
 
 
+export class ProjectsGet extends BaseApi<Project> {
+
+    public topic = 'Resources.Projects';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/projects`;
+    }
+
+    protected convertToResource(data: any): Project {
+        return new Project(data);
+    }
+
+    public where(name: string, value: any): ProjectsGet {
+        this.filter().where(name, value);
+        return this;
+    }
+
+    public whereEquals(name: string, value: any): ProjectsGet {
+        this.filter().whereEquals(name, value);
+        return this;
+    }
+
+    public whereIn(name: string, value: any[]): ProjectsGet {
+        this.filter().whereIn(name, value);
+        return this;
+    }
+
+    public whereInArray(name: string, value: any[]): ProjectsGet {
+        this.filter().whereInArray(name, value);
+        return this;
+    }
+
+    public whereNot(name: string, value: any): ProjectsGet {
+        this.filter().whereNot(name, value);
+        return this;
+    }
+
+    public whereNotIn(name: string, value: any[]): ProjectsGet {
+        this.filter().whereNotIn(name, value);
+        return this;
+    }
+
+    public whereGreaterThan(name: string, value: any): ProjectsGet {
+        this.filter().whereGreaterThan(name, value);
+        return this;
+    }
+
+    public whereGreaterThanOrEqual(name: string, value: any): ProjectsGet {
+        this.filter().whereGreaterThanOrEqual(name, value);
+        return this;
+    }
+
+    public whereLessThan(name: string, value: any): ProjectsGet {
+        this.filter().whereLessThan(name, value);
+        return this;
+    }
+
+    public whereLessThanOrEqual(name: string, value: any): ProjectsGet {
+        this.filter().whereLessThanOrEqual(name, value);
+        return this;
+    }
+
+    public search(name: string, value: any): ProjectsGet {
+        this.filter().search(name, value);
+        return this;
+    }
+
+    public include(name: string): ProjectsGet {
+        this.getInclude().include(name);
+        return this;
+    }
+
+    public orderBy(name: string, direction: string): ProjectsGet {
+        this.ordering().orderBy(name, direction);
+        return this;
+    }
+
+    public orderAsc(name: string): ProjectsGet {
+        this.ordering().orderAsc(name);
+        return this;
+    }
+
+    public orderDesc(name: string): ProjectsGet {
+        this.ordering().orderDesc(name);
+        return this;
+    }
+
+    public limit(value: number): ProjectsGet {
+        this.limitValue = value;
+        return this;
+    }
+
+    public offset(value: number): ProjectsGet {
+        this.offsetValue = value;
+        return this;
+    }
+
+    public count(next?: (value: number) => void) {
+        return this.executeCount(next);
+    }
+
+    public find(next?: (value: Project[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class ProjectsGetById extends BaseApi<Project> {
+
+    public topic = 'Resources.Projects';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/projects/${id}`;
+    }
+
+    protected convertToResource(data: any): Project {
+        return new Project(data);
+    }
+
+    public include(name: string): ProjectsGetById {
+        this.getInclude().include(name);
+        return this;
+    }
+
+    public find(next?: (value: Project[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class ProjectsPost extends BaseApi<Project> {
+
+    public topic = 'Resources.Projects';
+    protected method = 'post';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/projects`;
+    }
+
+    protected convertToResource(data: any): Project {
+        return new Project(data);
+    }
+
+    public save(data: Project, next?: (value: Project) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class ProjectsPatchById extends BaseApi<Project> {
+
+    public topic = 'Resources.Projects';
+    protected method = 'patch';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/projects/${id}`;
+    }
+
+    protected convertToResource(data: any): Project {
+        return new Project(data);
+    }
+
+    public save(data: Project, next?: (value: Project) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class ProjectsPatch extends BaseApi<Project> {
+
+    public topic = 'Resources.Projects';
+    protected method = 'patch';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/projects`;
+    }
+
+    protected convertToResource(data: any): Project {
+        return new Project(data);
+    }
+
+    public save(data: Project, next?: (value: Project) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class ProjectsDeleteById extends BaseApi<Project> {
+
+    public topic = 'Resources.Projects';
+    protected method = 'delete';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/projects/${id}`;
+    }
+
+    protected convertToResource(data: any): Project {
+        return new Project(data);
+    }
+
+    public delete(next?: (value: Project) => void) {
+        return super.executeDelete(next);
+    }
+}
+
+export class ProjectsUpdateUsersPutById extends BaseApi<Project> {
+
+    public topic = 'Resources.Projects';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/projects/${id}/users`;
+    }
+
+    protected convertToResource(data: any): Project {
+        return new Project(data);
+    }
+
+    public save(data: IntArrayInterface, next?: (value: Project) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+class Projects {
+
+    public get(): ProjectsGet {
+        return new ProjectsGet();
+    }
+
+    public getById(id: number): ProjectsGetById {
+        return new ProjectsGetById(id);
+    }
+
+    public post(): ProjectsPost {
+        return new ProjectsPost();
+    }
+
+    public patchById(id: number): ProjectsPatchById {
+        return new ProjectsPatchById(id);
+    }
+
+    public patch(): ProjectsPatch {
+        return new ProjectsPatch();
+    }
+
+    public deleteById(id: number): ProjectsDeleteById {
+        return new ProjectsDeleteById(id);
+    }
+
+    public updateUsersPutById(id: number): ProjectsUpdateUsersPutById {
+        return new ProjectsUpdateUsersPutById(id);
+    }
+
+}
+
+
 export class RbacPermissionsGet extends BaseApi<RbacPermission> {
 
     public topic = 'Resources.RbacPermissions';
@@ -8571,6 +8846,27 @@ export class UsersMfaSetupRemovePut extends BaseApi<User> {
     }
 }
 
+export class UsersUpdateProjectsPutById extends BaseApi<User> {
+
+    public topic = 'Resources.Users';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/users/${id}/projects`;
+    }
+
+    protected convertToResource(data: any): User {
+        return new User(data);
+    }
+
+    public save(data: IntArrayInterface, next?: (value: User) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
 class Users {
 
     public get(): UsersGet {
@@ -8611,6 +8907,10 @@ class Users {
 
     public mfaSetupRemovePut(): UsersMfaSetupRemovePut {
         return new UsersMfaSetupRemovePut();
+    }
+
+    public updateProjectsPutById(id: number): UsersUpdateProjectsPutById {
+        return new UsersUpdateProjectsPutById(id);
     }
 
 }
@@ -9698,6 +9998,32 @@ export class WorkspacesUpdateEmailServiceIdPutById extends BaseApi<Workspace> {
     }
 }
 
+export class WorkspacesUpdateProjectIdPutById extends BaseApi<Workspace> {
+
+    public topic = 'Resources.Workspaces';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/workspaces/${id}/projectId`;
+    }
+
+    protected convertToResource(data: any): Workspace {
+        return new Workspace(data);
+    }
+
+    public value(value: number): WorkspacesUpdateProjectIdPutById {
+        this.addQueryParameter('value', value);
+        return this;
+    }
+
+    public save(data: any, next?: (value: Workspace) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
 export class WorkspacesUpdateDatabaseServiceIdPutById extends BaseApi<Workspace> {
 
     public topic = 'Resources.Workspaces';
@@ -9923,6 +10249,10 @@ class Workspaces {
         return new WorkspacesUpdateEmailServiceIdPutById(id);
     }
 
+    public updateProjectIdPutById(id: number): WorkspacesUpdateProjectIdPutById {
+        return new WorkspacesUpdateProjectIdPutById(id);
+    }
+
     public updateDatabaseServiceIdPutById(id: number): WorkspacesUpdateDatabaseServiceIdPutById {
         return new WorkspacesUpdateDatabaseServiceIdPutById(id);
     }
@@ -10053,6 +10383,10 @@ export class Api {
 
     public static postUpdateActions(): PostUpdateActions {
         return new PostUpdateActions();
+    }
+
+    public static projects(): Projects {
+        return new Projects();
     }
 
     public static rbacPermissions(): RbacPermissions {

@@ -1,6 +1,7 @@
 /**
  * Created by ModelParser
  */
+import {Project} from '../Project';
 import {Workspace} from '../Workspace';
 import {WorkspaceTemplateDeploymentSpecification} from '../WorkspaceTemplateDeploymentSpecification';
 import {WorkspaceTemplateEnvironmentVariable} from '../WorkspaceTemplateEnvironmentVariable';
@@ -15,6 +16,8 @@ export class WorkspaceTemplateDefinition extends BaseModel {
     default_email_service_id?: number;
     default_database_service_id?: number;
     default_domain_id?: number;
+    project_id?: number;
+    project?: Project;
     workspaces?: Workspace[];
     workspace_template_deployment_specifications?: WorkspaceTemplateDeploymentSpecification[];
     workspace_template_environment_variables?: WorkspaceTemplateEnvironmentVariable[];
@@ -41,6 +44,8 @@ export class WorkspaceTemplateDefinition extends BaseModel {
             delete this.default_email_service_id;
             delete this.default_database_service_id;
             delete this.default_domain_id;
+            delete this.project_id;
+            delete this.project;
             delete this.workspaces;
             delete this.workspace_template_deployment_specifications;
             delete this.workspace_template_environment_variables;
@@ -71,6 +76,12 @@ export class WorkspaceTemplateDefinition extends BaseModel {
         }
         if (data.default_domain_id != null) {
             this.default_domain_id = data.default_domain_id;
+        }
+        if (data.project_id != null) {
+            this.project_id = data.project_id;
+        }
+        if (data.project != null) {
+            this.project = new Project(data.project);
         }
         if (data.workspaces != null) {
             this.workspaces = data.workspaces.map((i: any) => new Workspace(i));

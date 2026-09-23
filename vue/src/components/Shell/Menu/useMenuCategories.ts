@@ -23,8 +23,13 @@ export function useMenuCategories() {
     const healthBadgePushSubscription = ref<PushSubscription>();
 
     function isCategoryActive(category: MenuCategory): boolean {
-        return route.path == category.url
+        return (category.url !== undefined && isItemActive(category.url))
             || category.items.some((item) => isItemActive(item.url));
+    }
+
+    /** A category with an overview lists its pages under it; one without is its one page. */
+    function hasSubmenu(category: MenuCategory): boolean {
+        return category.url !== undefined && category.items.length > 0;
     }
 
     function isItemActive(url: string): boolean {
@@ -52,6 +57,19 @@ export function useMenuCategories() {
 
     onMounted(() => {
         categories.value = visibleMenuCategories(AuthService.currentAuthUser?.allPermissions ?? []);
+
+        // Workspaces lists the user's own projects; every project is on its overview.
+        const workspaces = categories.value.find((category) => category.identifier == "sites");
+        if (workspaces) {
+            workspaces.items = [...(AuthService.currentAuthUser?.projects ?? [])]
+                .sort((a, b) => (a.name ?? "").localeCompare(b.name ?? ""))
+                .map((project) => ({
+                    title: project.name ?? "",
+                    url: `/workspaces/projects/${project.id}`,
+                    icon: "fa fa-folder",
+                    permissions: [],
+                }));
+        }
 
         autoUpdatesBadgePushSubscription1.value = PushService.subscribe(
             Events.AutoUpdate_Created(),
@@ -125,5 +143,5 @@ export function useMenuCategories() {
             });
     }
 
-    return { categories, isCategoryActive, isItemActive, badgeOf, categoryUrl };
+    return { categories, isCategoryActive, isItemActive, hasSubmenu, badgeOf, categoryUrl };
 }

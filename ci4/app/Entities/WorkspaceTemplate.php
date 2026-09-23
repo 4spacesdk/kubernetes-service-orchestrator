@@ -12,6 +12,8 @@ use App\Core\Entity;
  * @property int $default_email_service_id
  * @property int $default_database_service_id
  * @property int $default_domain_id
+ * @property int $project_id the project its workspaces are made in, or none
+ * @property Project $project
  *
  * Many
  * @property Workspace $workspaces

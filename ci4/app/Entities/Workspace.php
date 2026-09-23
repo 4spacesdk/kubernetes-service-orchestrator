@@ -33,6 +33,8 @@ use App\Core\Entity;
  * @property string $aliases
  * @property int $database_service_id
  * @property DatabaseService $database_service
+ * @property int $project_id the project it is in, or none - see Project
+ * @property Project $project
  * @property string $status
  * @property bool $is_paused
  *
@@ -105,6 +107,8 @@ class Workspace extends Entity {
         $item->subdomain = $subdomain;
         $item->email_service_id = $workspaceTemplate->default_email_service_id;
         $item->database_service_id = $workspaceTemplate->default_database_service_id;
+        // A workspace lands in the project its template is for.
+        $item->project_id = $workspaceTemplate->project_id ?: null;
 
         /** @var Workspace $workspaceNameInUse */
         $workspaceNameInUse = (new WorkspaceModel())
@@ -287,6 +291,15 @@ class Workspace extends Entity {
         DeploymentStepHelper::ExecuteWorkspaceDeployCommand($this, [
             DeploymentSteps::Deployment,
         ]);
+    }
+
+    /**
+     * Moves the workspace to another project, or out of any with null. Nothing in the cluster
+     * changes: a project is how kso divides workspaces up, not something deployed.
+     */
+    public function updateProjectId(?int $value): void {
+        $this->project_id = $value ?: null;
+        $this->save();
     }
 
     public function updateDatabaseServiceId(int $value): void {

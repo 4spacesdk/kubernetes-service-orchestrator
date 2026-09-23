@@ -47,6 +47,7 @@ export {PodioFieldReference as PodioFieldReference} from "./PodioFieldReference"
 export {PodioIntegration as PodioIntegration} from "./PodioIntegration";
 export {PostUpdateAction as PostUpdateAction} from "./PostUpdateAction";
 export {PostUpdateActionCondition as PostUpdateActionCondition} from "./PostUpdateActionCondition";
+export {Project as Project} from "./Project";
 export {RbacPermission as RbacPermission} from "./RbacPermission";
 export {RbacRole as RbacRole} from "./RbacRole";
 export {System as System} from "./System";

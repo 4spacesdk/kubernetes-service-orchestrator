@@ -4,6 +4,7 @@ use App\Core\ResourceController;
 use App\Exceptions\ValidationException;
 use App\Entities\User;
 use App\Helpers\Client;
+use App\Interfaces\IntArrayInterface;
 use App\Models\UserModel;
 use App\Libraries\MFALib;
 use DebugTool\Data;
@@ -55,6 +56,8 @@ class Users extends ResourceController {
      */
     public function me(): void {
         $me = $this->signedInUser();
+        // What the project picker starts on: a user's own projects - see Project.
+        $me->projects->find();
         $me->rbac_roles->find();
         foreach ($me->rbac_roles as $role) {
             $role->rbac_permissions->find();
@@ -135,6 +138,33 @@ class Users extends ResourceController {
      */
     public function mfaSetupRemove(): void {
         $this->signedInUser()->removeMFASecret();
+        $this->success();
+    }
+
+    /**
+     * The projects relevant to the user, as a whole: those in the list are joined, the rest
+     * are not.
+     *
+     * @route /users/{id}/projects
+     * @method put
+     * @custom true
+     * @param int $id
+     * @requestSchema IntArrayInterface
+     * @return void
+     * @audit entity
+     */
+    public function updateProjects(int $id): void {
+        $item = new User();
+        $item->find($id);
+        if (!$item->exists()) {
+            $this->fail('unknown user');
+            return;
+        }
+
+        /** @var IntArrayInterface $body */
+        $body = $this->request->getJSON();
+        $item->updateProjects((array) ($body->values ?? []));
+        $this->_setResource($item);
         $this->success();
     }
 

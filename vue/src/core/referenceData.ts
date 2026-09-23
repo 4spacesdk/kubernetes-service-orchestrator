@@ -8,6 +8,7 @@ import type {
     DeploymentSpecification,
     Domain,
     EmailService,
+    Project,
     Gateway,
     GithubIntegration,
 } from "@/core/services/Deploy/models";
@@ -62,6 +63,7 @@ export const ReferenceData = {
     emailServices: () => cached<EmailService>("emailServices", () => Api.emailServices().get().orderAsc("name")),
     gateways: () => cached<Gateway>("gateways", () => Api.gateways().get().orderAsc("name")),
     githubIntegrations: () => cached<GithubIntegration>("githubIntegrations", () => Api.githubIntegrations().get().orderAsc("name")),
+    projects: () => cached<Project>("projects", () => Api.projects().get().orderAsc("name")),
 };
 
 const invalidatedBy: [keyof Events, string[]][] = [
@@ -73,6 +75,7 @@ const invalidatedBy: [keyof Events, string[]][] = [
     ["emailServiceSaved", ["emailServices"]],
     ["gatewaySaved", ["gateways"]],
     ["githubIntegrationSaved", ["githubIntegrations"]],
+    ["projectSaved", ["projects"]],
 ];
 for (const [event, keys] of invalidatedBy) {
     bus.on(event, () => keys.forEach(key => cache.delete(key)));

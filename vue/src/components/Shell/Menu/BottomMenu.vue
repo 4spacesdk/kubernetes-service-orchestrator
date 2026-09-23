@@ -7,7 +7,7 @@ import { useMenuCategories } from "@/components/Shell/Menu/useMenuCategories";
  * updates - along the bottom, where a thumb reaches, and the rest behind More. Only what the
  * user may see: a place that is not in their menu is not here either.
  */
-const { categories, isCategoryActive, isItemActive, badgeOf, categoryUrl } = useMenuCategories();
+const { categories, isCategoryActive, isItemActive, hasSubmenu, badgeOf, categoryUrl } = useMenuCategories();
 
 const showMore = ref(false);
 
@@ -97,8 +97,8 @@ const isMoreActive = computed(() => !shortcuts.value.some((shortcut) => shortcut
         <v-card class="more-sheet">
             <v-list density="compact" nav>
                 <template v-for="category in categories" :key="category.identifier">
-                    <v-list-subheader v-if="category.items.length > 1">{{ category.name }}</v-list-subheader>
-                    <template v-if="category.items.length > 1">
+                    <v-list-subheader v-if="hasSubmenu(category)">{{ category.name }}</v-list-subheader>
+                    <template v-if="hasSubmenu(category)">
                         <v-list-item
                             v-for="item in category.items"
                             :key="item.url"
@@ -111,7 +111,7 @@ const isMoreActive = computed(() => !shortcuts.value.some((shortcut) => shortcut
                     </template>
                     <v-list-item
                         v-else
-                        :to="category.items[0].url"
+                        :to="categoryUrl(category)"
                         :prepend-icon="category.icon"
                         :title="category.name"
                         color="secondary"

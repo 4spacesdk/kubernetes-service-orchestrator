@@ -1,9 +1,12 @@
 <?php namespace App\Models;
 
+use App\Models\Concerns\FiltersByProject;
 use RestExtension\Core\Model;
 use RestExtension\ResourceModelInterface;
 
 class AutoUpdateModel extends Model implements ResourceModelInterface {
+
+    use FiltersByProject;
 
     public $hasOne = [
         DeploymentModel::class,
@@ -14,7 +17,7 @@ class AutoUpdateModel extends Model implements ResourceModelInterface {
     ];
 
     public function preRestGet($queryParser, $id) {
-
+        $this->applyProjectFilter($queryParser, [DeploymentModel::class, WorkspaceModel::class]);
     }
 
     public function postRestGet($queryParser, $items) {

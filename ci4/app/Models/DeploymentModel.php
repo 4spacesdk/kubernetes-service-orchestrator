@@ -2,12 +2,14 @@
 
 use App\Entities\Deployment;
 use App\Models\Concerns\FiltersByLabel;
+use App\Models\Concerns\FiltersByProject;
 use RestExtension\Core\Model;
 use RestExtension\ResourceModelInterface;
 
 class DeploymentModel extends Model implements ResourceModelInterface {
 
     use FiltersByLabel;
+    use FiltersByProject;
 
     public $hasOne = [
         DeletionModel::class,
@@ -41,6 +43,7 @@ class DeploymentModel extends Model implements ResourceModelInterface {
             ->includeRelated('last_migration_job');
 
         $this->applyLabelFilter($queryParser);
+        $this->applyProjectFilter($queryParser, WorkspaceModel::class);
     }
 
     /**

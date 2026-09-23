@@ -2,6 +2,7 @@
  * Created by ModelParser
  */
 import {RbacRole} from '../RbacRole';
+import {Project} from '../Project';
 import {User} from '../User';
 import {Deletion} from '../Deletion';
 import {BaseModel} from '../BaseModel';
@@ -18,6 +19,7 @@ export class UserDefinition extends BaseModel {
     password_reset_token_hash?: string;
     password_reset_expires?: string;
     rbac_roles?: RbacRole[];
+    projects?: Project[];
     has_mfa_secret_hash?: boolean;
     id?: number;
     created?: string;
@@ -47,6 +49,7 @@ export class UserDefinition extends BaseModel {
             delete this.password_reset_token_hash;
             delete this.password_reset_expires;
             delete this.rbac_roles;
+            delete this.projects;
             delete this.has_mfa_secret_hash;
             delete this.id;
             delete this.created;
@@ -92,6 +95,9 @@ export class UserDefinition extends BaseModel {
         }
         if (data.rbac_roles != null) {
             this.rbac_roles = data.rbac_roles.map((i: any) => new RbacRole(i));
+        }
+        if (data.projects != null) {
+            this.projects = data.projects.map((i: any) => new Project(i));
         }
         if (data.has_mfa_secret_hash != null) {
             this.has_mfa_secret_hash = data.has_mfa_secret_hash;

@@ -4,6 +4,7 @@ use App\Entities\Deployment;
 use App\Entities\DeploymentsLabel;
 use App\Entities\Workspace;
 use App\Models\Concerns\FiltersByLabel;
+use App\Models\Concerns\FiltersByProject;
 use DebugTool\Data;
 use RestExtension\Core\Model;
 use RestExtension\QueryParser;
@@ -12,6 +13,7 @@ use RestExtension\ResourceModelInterface;
 class WorkspaceModel extends Model implements ResourceModelInterface {
 
     use FiltersByLabel;
+    use FiltersByProject;
 
     public $hasOne = [
         DeletionModel::class,
@@ -19,6 +21,7 @@ class WorkspaceModel extends Model implements ResourceModelInterface {
         DomainModel::class,
         DatabaseServiceModel::class,
         WorkspaceTemplateModel::class,
+        ProjectModel::class,
     ];
 
     public $hasMany = [
@@ -34,6 +37,7 @@ class WorkspaceModel extends Model implements ResourceModelInterface {
         }
 
         $this->applyLabelFilter($queryParser);
+        $this->applyProjectFilter($queryParser);
 
         if ($queryParser->hasFilter('status')) {
             $filter = $queryParser->getFilter('status')[0];
