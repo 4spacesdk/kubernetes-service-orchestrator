@@ -392,6 +392,16 @@ export interface KubernetesClusterHealthResponse {
     deployments?: KubernetesClusterHealthCounts;
     workspaces?: KubernetesClusterHealthCounts;
     scheduler?: KubernetesClusterScheduler;
+    namespaces?: KubernetesClusterNamespace[];
+}
+
+export interface KubernetesClusterNamespace {
+    name?: string;
+    owner?: string;
+    pods?: number;
+    age_seconds?: number;
+    workspace_id?: number;
+    workspace?: string;
 }
 
 export interface KubernetesClusterNode {

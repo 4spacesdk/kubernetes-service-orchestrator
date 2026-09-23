@@ -29,6 +29,8 @@ class ClusterDomains {
      * webhook certificate. Not a domain, and not offered as one.
      */
     public const string Internal = 'internal';
+    /** Another kso installation's, sharing the cluster - not this one's to take over. */
+    public const string Theirs = 'theirs';
 
     public function __construct(
         private readonly KubernetesCluster $cluster,
@@ -60,6 +62,9 @@ class ClusterDomains {
         }
         if ($row['status'] === self::Known) {
             throw new \InvalidArgumentException("kso already has the Certificate {$namespace}/{$name}");
+        }
+        if ($row['status'] === self::Theirs) {
+            throw new \InvalidArgumentException("{$namespace}/{$name} belongs to another kso");
         }
         if ($row['status'] === self::Internal) {
             throw new \InvalidArgumentException("{$namespace}/{$name} is for names inside the cluster, not a domain");
@@ -117,7 +122,12 @@ class ClusterDomains {
                 'secret_name' => (string) ($spec['secretName'] ?? ''),
                 'ready' => $ready,
                 'not_after' => $certificate['status']['notAfter'] ?? null,
-                'status' => $mine !== null ? self::Known : (self::IsInternal($dnsNames) ? self::Internal : self::Unknown),
+                'status' => match (true) {
+                    $mine !== null => self::Known,
+                    KubeHelper::OwnerOf($certificate['metadata']['annotations'] ?? []) === 'theirs' => self::Theirs,
+                    self::IsInternal($dnsNames) => self::Internal,
+                    default => self::Unknown,
+                },
                 'domain_id' => $mine['id'] ?? null,
                 'differences' => [],
                 'plan' => null,
@@ -145,7 +155,7 @@ class ClusterDomains {
         }
 
         // What can be taken over first, then kso's own, then the cluster's internal ones.
-        $order = [self::Unknown => 0, self::Known => 1, self::Internal => 2];
+        $order = [self::Unknown => 0, self::Known => 1, self::Theirs => 2, self::Internal => 3];
         usort($rows, fn(array $a, array $b) => [$order[$a['status']], $a['namespace'], $a['name']] <=> [$order[$b['status']], $b['namespace'], $b['name']]);
 
         return $rows;

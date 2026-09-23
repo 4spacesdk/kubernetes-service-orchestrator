@@ -177,9 +177,9 @@ class GatewayStep {
             ->setName($gateway->name)
             ->setNamespace($gateway->namespace)
             // kso's own mark last, so it is the one that counts.
-            ->setAnnotations(array_merge($gateway->getAnnotations(), [
+            ->setAnnotations(KubeHelper::Marked(array_merge($gateway->getAnnotations(), [
                 'app.kubernetes.io/managed-by' => '4spaces.kso',
-            ]))
+            ])))
             ->buildSpec($gateway);
 
         return $resource;

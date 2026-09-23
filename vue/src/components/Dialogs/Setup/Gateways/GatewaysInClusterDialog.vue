@@ -32,6 +32,7 @@ const looks: Record<string, { title: string, color: string }> = {
     known: {title: 'In kso', color: 'success'},
     unknown: {title: 'Not in kso', color: 'info'},
     orphan: {title: "kso's, deleted in kso", color: 'warning'},
+    theirs: {title: "Another kso's", color: 'grey'},
 };
 
 onMounted(() => {
@@ -125,7 +126,7 @@ function close() {
                             {{ looks[row.status!]?.title ?? row.status }}
                         </v-chip>
                         <v-btn
-                            v-if="row.status != 'known' && importing != row"
+                            v-if="(row.status == 'unknown' || row.status == 'orphan') && importing != row"
                             size="small"
                             variant="tonal"
                             color="primary"

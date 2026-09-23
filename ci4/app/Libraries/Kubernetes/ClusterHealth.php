@@ -67,7 +67,85 @@ class ClusterHealth {
             'deployments' => self::CountByHealth('deployments'),
             'workspaces' => self::CountByHealth('workspaces'),
             'scheduler' => self::Scheduler($now),
+            'namespaces' => self::Namespaces($this->allNamespaces(), $pods, self::KsoNamespaces(), \App\Entities\System::InstallationId(), $now),
         ];
+    }
+
+    /** Kubernetes' own - there on every cluster, and nobody's to account for. */
+    private const array KubernetesNamespaces = ['default', 'kube-system', 'kube-public', 'kube-node-lease'];
+
+    /**
+     * Every namespace, and whose it is: `kso` - a workspace or deployment of this kso's lives in it -
+     * `theirs` - another kso's, by its mark - `kubernetes`, or `other`. Read-only: in kso a namespace
+     * is a workspace's, not something of its own to take over.
+     *
+     * @param list<array> $namespaces
+     * @param list<array> $pods Every pod in the cluster
+     * @param array<string, array{workspace_id: ?int, workspace: ?string}> $kso namespace => the workspace in it
+     * @return list<array{name: string, owner: string, pods: int, age_seconds: ?int, workspace_id: ?int, workspace: ?string}>
+     */
+    public static function Namespaces(array $namespaces, array $pods, array $kso, string $installationId, int $now): array {
+        $podCounts = [];
+        foreach ($pods as $pod) {
+            $namespace = $pod['metadata']['namespace'] ?? '';
+            $podCounts[$namespace] = ($podCounts[$namespace] ?? 0) + 1;
+        }
+
+        $rows = [];
+        foreach ($namespaces as $namespace) {
+            $name = (string) ($namespace['metadata']['name'] ?? '');
+            $mark = $namespace['metadata']['annotations'][KubeHelper::InstallationAnnotation] ?? null;
+            $created = strtotime((string) ($namespace['metadata']['creationTimestamp'] ?? '')) ?: null;
+
+            $owner = match (true) {
+                isset($kso[$name]) => 'kso',
+                $mark !== null && $mark !== $installationId => 'theirs',
+                in_array($name, self::KubernetesNamespaces, true) => 'kubernetes',
+                default => 'other',
+            };
+
+            $rows[] = [
+                'name' => $name,
+                'owner' => $owner,
+                'pods' => $podCounts[$name] ?? 0,
+                'age_seconds' => $created === null ? null : $now - $created,
+                'workspace_id' => $kso[$name]['workspace_id'] ?? null,
+                'workspace' => $kso[$name]['workspace'] ?? null,
+            ];
+        }
+
+        $order = ['kso' => 0, 'other' => 1, 'theirs' => 2, 'kubernetes' => 3];
+        usort($rows, fn(array $a, array $b) => [$order[$a['owner']], $a['name']] <=> [$order[$b['owner']], $b['name']]);
+
+        return $rows;
+    }
+
+    /**
+     * @return list<array>
+     */
+    private function allNamespaces(): array {
+        $namespaces = [];
+        foreach ($this->cluster->namespace()->all() as $namespace) {
+            $namespaces[] = $namespace->toArray();
+        }
+        return $namespaces;
+    }
+
+    /**
+     * The namespaces this kso's workspaces and deployments live in.
+     *
+     * @return array<string, array{workspace_id: ?int, workspace: ?string}>
+     */
+    private static function KsoNamespaces(): array {
+        $db = Database::connect();
+        $kso = [];
+        foreach ($db->table('workspaces')->select('id, name_readable, namespace')->where('deletion_id', null)->get()->getResultArray() as $row) {
+            $kso[$row['namespace']] = ['workspace_id' => (int) $row['id'], 'workspace' => $row['name_readable']];
+        }
+        foreach ($db->table('deployments')->select('namespace')->where('deletion_id', null)->get()->getResultArray() as $row) {
+            $kso[$row['namespace']] ??= ['workspace_id' => null, 'workspace' => null];
+        }
+        return $kso;
     }
 
     /**

@@ -11,6 +11,7 @@ use App\Models\SystemModel;
  * @property bool $is_network_contour_supported
  * @property bool $is_network_gateway_api_supported
  * @property string $hosting_provider
+ * @property string $installation_id Which kso this is, on the resources it marks - see `InstallationId()`
  */
 class System extends Entity {
 
@@ -91,6 +92,31 @@ class System extends Entity {
      */
     public function getIterator(): \ArrayIterator {
         return parent::getIterator();
+    }
+
+    private static ?string $installationId = null;
+
+    /**
+     * Which kso installation this is. Written on what kso owns in the cluster - the namespaces,
+     * gateways and certificates - as `4spaces.kso/installation`, so two kso's sharing a cluster
+     * can tell their own from each other's. A local kso against the development cluster beside the
+     * one deployed there is exactly that.
+     *
+     * Made once, the first time it is asked for, and never changed: a new id would disown
+     * everything already marked.
+     */
+    public static function InstallationId(): string {
+        if (self::$installationId !== null) {
+            return self::$installationId;
+        }
+
+        $system = self::Get();
+        if (!strlen((string) $system->installation_id)) {
+            $system->installation_id = bin2hex(random_bytes(16));
+            $system->save();
+        }
+
+        return self::$installationId = (string) $system->installation_id;
     }
 
 }

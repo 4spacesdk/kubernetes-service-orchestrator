@@ -77,6 +77,7 @@ class KubeCertificate {
             'metadata' => [
                 'name' => $this->domain->certificate_name,
                 'namespace' => $this->domain->certificate_namespace,
+                'annotations' => KubeHelper::Marked(),
             ],
             'spec' => self::Spec((string) $this->domain->name, (string) $this->domain->certificate_name, (string) $this->domain->issuer_ref_name),
         ]);

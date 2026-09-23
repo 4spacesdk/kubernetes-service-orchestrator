@@ -64,6 +64,20 @@ function load() {
     });
 }
 
+/** Whose each namespace is - see `ClusterHealth::Namespaces()` in the backend. */
+const namespaceGroups = computed(() => [
+    {owner: 'kso', title: 'This kso'},
+    {owner: 'other', title: 'Not kso\'s'},
+    {owner: 'theirs', title: 'Another kso\'s'},
+    {owner: 'kubernetes', title: 'Kubernetes'},
+].map(group => ({...group, namespaces: (health.value?.namespaces ?? []).filter(n => n.owner == group.owner)}))
+    .filter(group => group.namespaces.length));
+
+function openWorkspace(id: number) {
+    close();
+    router.push({name: 'WorkspaceById', params: {id}});
+}
+
 function age(seconds?: number): string {
     return seconds === undefined || seconds === null ? '-' : moment.duration(seconds, 'seconds').humanize();
 }
@@ -183,6 +197,27 @@ function close() {
                         </button>
                     </div>
 
+                    <h3 class="heading">Namespaces</h3>
+                    <div v-for="group in namespaceGroups" :key="group.owner" class="d-flex align-start flex-wrap ga-2 mb-2 inset">
+                        <span class="row-title">{{ group.title }}</span>
+                        <div class="d-flex flex-wrap ga-1 namespaces">
+                            <v-chip
+                                v-for="namespace in group.namespaces"
+                                :key="namespace.name"
+                                size="small"
+                                label
+                                :variant="namespace.workspace_id ? 'tonal' : 'outlined'"
+                                :color="namespace.workspace_id ? 'secondary' : undefined"
+                                @click="namespace.workspace_id && openWorkspace(namespace.workspace_id)">
+                                {{ namespace.name }}
+                                <span class="of ml-1">{{ namespace.pods }} pods</span>
+                                <v-tooltip activator="parent" location="top">
+                                    <template v-if="namespace.workspace">Workspace {{ namespace.workspace }} · </template>{{ age(namespace.age_seconds) }} old
+                                </v-tooltip>
+                            </v-chip>
+                        </div>
+                    </div>
+
                     <h3 class="heading">Scheduler</h3>
                     <div class="d-flex align-center ga-2 inset">
                         <v-icon
@@ -253,6 +288,11 @@ function close() {
     width: 100px;
     font-size: 12px;
     opacity: 0.7;
+}
+
+.namespaces {
+    flex: 1 1 0;
+    min-width: 0;
 }
 
 .count {

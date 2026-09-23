@@ -41,6 +41,31 @@ class KubeHelper {
      */
     public const NotFoundCode = 404;
 
+    /** The annotation that says which kso installation owns a resource - see `System::InstallationId()`. */
+    public const string InstallationAnnotation = '4spaces.kso/installation';
+
+    /**
+     * @param array<string, string> $annotations
+     * @return array<string, string> the same, with this installation's mark
+     */
+    public static function Marked(array $annotations = []): array {
+        return [...$annotations, self::InstallationAnnotation => \App\Entities\System::InstallationId()];
+    }
+
+    /**
+     * Whose a resource is, by its annotations: `ours`, `theirs` - another kso's - or null when it
+     * carries no mark, which is everything made before the mark, and everything not kso's.
+     *
+     * @param array<string, string> $annotations
+     */
+    public static function OwnerOf(array $annotations): ?string {
+        $mark = $annotations[self::InstallationAnnotation] ?? null;
+        if ($mark === null || $mark === '') {
+            return null;
+        }
+        return $mark === \App\Entities\System::InstallationId() ? 'ours' : 'theirs';
+    }
+
     /**
      * Send a resource to the cluster, and try again if it was written to underneath us.
      *

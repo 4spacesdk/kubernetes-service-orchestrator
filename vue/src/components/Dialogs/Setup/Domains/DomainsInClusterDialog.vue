@@ -32,6 +32,7 @@ const looks: Record<string, { title: string, color: string }> = {
     known: {title: 'In kso', color: 'success'},
     unknown: {title: 'Not in kso', color: 'info'},
     internal: {title: 'Inside the cluster', color: 'grey'},
+    theirs: {title: "Another kso's", color: 'grey'},
 };
 
 const importing = ref<ClusterDomain>();

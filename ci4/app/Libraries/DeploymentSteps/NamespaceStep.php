@@ -74,7 +74,12 @@ class NamespaceStep extends BaseDeploymentStep {
             unset($remote['metadata']['resourceVersion']);
             unset($remote['metadata']['creationTimestamp']);
             unset($remote['metadata']['labels']);
+            // Only the annotation kso sets itself; anything else was put there by somebody else.
+            $mark = array_intersect_key($remote['metadata']['annotations'] ?? [], [KubeHelper::InstallationAnnotation => true]);
             unset($remote['metadata']['annotations']);
+            if ($mark) {
+                $remote['metadata']['annotations'] = $mark;
+            }
             unset($remote['metadata']['managedFields']);
             unset($remote['spec']);
             unset($remote['status']);
@@ -193,7 +198,10 @@ class NamespaceStep extends BaseDeploymentStep {
 
         $resource = new K8sNamespace();
         $resource
-            ->setName($workspace->namespace);
+            ->setName($workspace->namespace)
+            // Which kso's it is. Everything a workspace has lives in its namespace, so the mark
+            // here speaks for all of it.
+            ->setAnnotations(KubeHelper::Marked());
 
         if ($auth) {
             $auth = new KubeAuth();

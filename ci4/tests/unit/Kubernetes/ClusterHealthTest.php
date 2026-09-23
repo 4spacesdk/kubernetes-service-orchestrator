@@ -101,7 +101,52 @@ class ClusterHealthTest extends CIUnitTestCase {
         $this->assertTrue($this->nodes([$node])[0]['unschedulable']);
     }
 
+    // <editor-fold desc="Namespaces">
+
+    /**
+     * The development cluster on 2026-09-23: a local kso's workspace, the namespaces of the kso
+     * deployed into the same cluster, the cluster's own, and what nobody accounts for.
+     */
+    public function testEachNamespaceSaysWhoseItIs(): void {
+        $rows = ClusterHealth::Namespaces([
+            $this->namespace('dev-martin', 'this-kso'),
+            $this->namespace('minor-klart', 'the-deployed-kso'),
+            $this->namespace('kube-system'),
+            $this->namespace('tools'),
+        ], [
+            ['metadata' => ['namespace' => 'dev-martin']],
+            ['metadata' => ['namespace' => 'dev-martin']],
+            ['metadata' => ['namespace' => 'tools']],
+        ], ['dev-martin' => ['workspace_id' => 1, 'workspace' => 'martin']], 'this-kso', self::Now);
+
+        $this->assertSame(
+            [['dev-martin', 'kso', 2, 1], ['tools', 'other', 1, null], ['minor-klart', 'theirs', 0, null], ['kube-system', 'kubernetes', 0, null]],
+            array_map(fn(array $row) => [$row['name'], $row['owner'], $row['pods'], $row['workspace_id']], $rows),
+        );
+    }
+
+    /**
+     * A row of our own outranks the mark: a namespace this kso has a workspace in is ours to show,
+     * whoever marked it last.
+     */
+    public function testAWorkspaceOfOursMakesItOursWhateverItsMark(): void {
+        $rows = ClusterHealth::Namespaces([$this->namespace('shared', 'the-deployed-kso')], [], ['shared' => ['workspace_id' => 3, 'workspace' => 'x']], 'this-kso', self::Now);
+
+        $this->assertSame('kso', $rows[0]['owner']);
+    }
+
+    // </editor-fold>
+
     // <editor-fold desc="Helpers">
+
+    private function namespace(string $name, ?string $mark = null): array {
+        return ['metadata' => [
+            'name' => $name,
+            'creationTimestamp' => gmdate('Y-m-d\TH:i:s\Z', self::Now - 86400),
+            'annotations' => $mark ? ['4spaces.kso/installation' => $mark] : [],
+        ]];
+    }
+
 
     private function nodes(array $nodes, array $pods = []): array {
         return ClusterHealth::Nodes($nodes, $pods, [], self::Now);

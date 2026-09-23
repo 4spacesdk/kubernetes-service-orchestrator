@@ -8,6 +8,7 @@
  * @property KubernetesClusterHealthCounts $deployments
  * @property KubernetesClusterHealthCounts $workspaces
  * @property KubernetesClusterScheduler $scheduler
+ * @property KubernetesClusterNamespace[] $namespaces
  */
 interface KubernetesClusterHealthResponse {
 

@@ -9,6 +9,7 @@ use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
 use App\Libraries\DeploymentSteps\NamespaceStep;
 use App\Libraries\DeploymentSteps\PersistentVolumeClaimStep;
 use App\Libraries\DeploymentSteps\ServiceStep;
+use App\Libraries\Kubernetes\KubeHelper;
 
 /**
  * What the workload steps read back out of the cluster once something is there.
@@ -35,17 +36,21 @@ class WorkloadStepReadbacksTest extends ClusterTestCase {
     /**
      * A namespace carries almost nothing of ours and a great deal of Kubernetes': labels
      * and annotations it applies itself, a `spec.finalizers` nobody wrote, a phase. All of
-     * it is stripped, and what is left is the one field kso actually sets.
+     * it is stripped, and what is left is what kso sets: the name, and the mark that says
+     * which kso it is - on both sides, so the preview shows no change where there is none.
      */
     public function testANamespacePreviewIsStrippedDownToTheNameKsoSets(): void {
         $deployment = $this->deploymentInTheTestNamespace();
         $step = new NamespaceStep();
         $step->startDeployCommand($deployment);
 
-        $remote = json_decode($this->preview($step, $deployment)['remote'], true);
+        $preview = $this->preview($step, $deployment);
+        $remote = json_decode($preview['remote'], true);
 
         $this->assertSame($this->testNamespace, $remote['metadata']['name']);
-        $this->assertSame(['name'], array_keys($remote['metadata']));
+        $this->assertSame(['name', 'annotations'], array_keys($remote['metadata']));
+        $this->assertSame([KubeHelper::InstallationAnnotation], array_keys($remote['metadata']['annotations']));
+        $this->assertSame(json_decode($preview['local'], true)['metadata']['annotations'], $remote['metadata']['annotations']);
         $this->assertArrayNotHasKey('spec', $remote);
         $this->assertArrayNotHasKey('status', $remote);
     }

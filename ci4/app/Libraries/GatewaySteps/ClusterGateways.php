@@ -5,6 +5,7 @@ use App\Entities\Gateway;
 use App\Entities\GatewayAddress;
 use App\Entities\GatewayAnnotation;
 use App\Libraries\Kubernetes\CustomResourceDefinitions\K8sGateway;
+use App\Libraries\Kubernetes\KubeHelper;
 use App\Models\DomainModel;
 use App\Models\GatewayModel;
 use Config\Database;
@@ -27,11 +28,13 @@ class ClusterGateways {
     public const string Unknown = 'unknown';
     /** kso's mark is on it, and kso has no row: deleted in kso and left in the cluster. */
     public const string Orphan = 'orphan';
+    /** Another kso installation's, sharing the cluster - not this one's to take over. */
+    public const string Theirs = 'theirs';
 
     private const string ManagedBy = 'app.kubernetes.io/managed-by';
 
     /** Annotations that are bookkeeping, not settings - not taken over on import. */
-    private const array IgnoredAnnotations = [self::ManagedBy, 'kubectl.kubernetes.io/last-applied-configuration'];
+    private const array IgnoredAnnotations = [self::ManagedBy, KubeHelper::InstallationAnnotation, 'kubectl.kubernetes.io/last-applied-configuration'];
 
     public function __construct(
         private readonly KubernetesCluster $cluster,
@@ -64,6 +67,9 @@ class ClusterGateways {
         }
         if ($row['status'] === self::Known) {
             throw new \InvalidArgumentException("kso already has the Gateway {$namespace}/{$name}");
+        }
+        if ($row['status'] === self::Theirs) {
+            throw new \InvalidArgumentException("{$namespace}/{$name} belongs to another kso");
         }
 
         $db = Database::connect();
@@ -129,7 +135,7 @@ class ClusterGateways {
                 'addresses' => array_map(fn(array $a) => ['type' => (string) ($a['type'] ?? 'IPAddress'), 'value' => (string) ($a['value'] ?? '')], $spec['addresses'] ?? []),
                 'annotations' => array_diff_key($annotations, array_flip(self::IgnoredAnnotations)),
                 'listeners' => array_map(fn(array $l) => self::Listener($l, $namespace), $spec['listeners'] ?? []),
-                'status' => $mine !== null ? self::Known : ((($annotations[self::ManagedBy] ?? null) === '4spaces.kso') ? self::Orphan : self::Unknown),
+                'status' => self::StatusOf($mine !== null, $annotations),
                 'gateway_id' => $mine['id'] ?? null,
                 'differences' => [],
                 'plan' => null,
@@ -138,7 +144,7 @@ class ClusterGateways {
             if ($mine !== null) {
                 $linked = array_values(array_filter($domains, fn(array $d) => (int) $d['gateway_id'] === (int) $mine['id']));
                 $row['differences'] = self::Differences($row, $mine, K8sGateway::Listeners($linked, $namespace));
-            } else {
+            } else if ($row['status'] !== self::Theirs) {
                 $row['plan'] = self::Plan($row, $domains, $gatewayNames);
             }
 
@@ -148,6 +154,22 @@ class ClusterGateways {
         usort($rows, fn(array $a, array $b) => [$a['status'] === self::Known, $a['namespace'], $a['name']] <=> [$b['status'] === self::Known, $b['namespace'], $b['name']]);
 
         return $rows;
+    }
+
+    /**
+     * Another kso's mark outranks everything but a row of our own: a gateway both have a row for
+     * is ours to show the differences of.
+     *
+     * @param array<string, string> $annotations
+     */
+    private static function StatusOf(bool $haveARow, array $annotations): string {
+        if ($haveARow) {
+            return self::Known;
+        }
+        if (KubeHelper::OwnerOf($annotations) === 'theirs') {
+            return self::Theirs;
+        }
+        return ($annotations[self::ManagedBy] ?? null) === '4spaces.kso' ? self::Orphan : self::Unknown;
     }
 
     /**
