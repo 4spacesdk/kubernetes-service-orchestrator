@@ -4,8 +4,6 @@ use App\Controllers\RbacPermissions;
 use App\Controllers\RbacRoles;
 use App\Entities\RbacPermission;
 use App\Entities\RbacRole;
-use App\Entities\User;
-use App\Models\UserModel;
 use CodeIgniter\Database\Migration;
 use DebugTool\Data;
 use OrmExtension\Migration\ColumnTypes;
@@ -82,11 +80,11 @@ class AddRbac extends Migration {
             $userDelete,
         ]);
 
-        // Set existing users as owner
-        /** @var User $users */
-        $users = (new UserModel())->find();
-        foreach ($users as $user) {
-            $user->save($owner);
+        // Set existing users as owner - written straight into the join table. Saving the relation
+        // through the User entity loads every relation today's UserModel has, and on a fresh
+        // installation that includes projects, whose table a migration from 2026 creates.
+        foreach ($this->db->table('users')->select('id')->get()->getResultArray() as $user) {
+            $this->db->table('rbac_roles_users')->insert(['user_id' => $user['id'], 'rbac_role_id' => $owner->id]);
         }
     }
 
