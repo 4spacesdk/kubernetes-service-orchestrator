@@ -56,6 +56,10 @@ bus.on('gatewayEdit', async input => {
     addComponent((await import('@/components/Dialogs/Setup/Gateways/GatewayEditDialog.vue')).default, input);
 });
 
+bus.on('gatewaysInCluster', async input => {
+    addComponent((await import('@/components/Dialogs/Setup/Gateways/GatewaysInClusterDialog.vue')).default, input);
+});
+
 bus.on('gatewayResourcePreview', async input => {
     addComponent((await import('@/components/Dialogs/Setup/Gateways/GatewayResourcePreviewDialog.vue')).default, input);
 });

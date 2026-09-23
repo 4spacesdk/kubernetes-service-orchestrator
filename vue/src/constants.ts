@@ -49,6 +49,7 @@ import type { WorkerDialog_Input } from "@/components/Dialogs/Common/WorkerDialo
 import type { DeploymentLogsDialog_Input } from "@/components/Dialogs/Setup/Deployments/DeploymentLogsDialog.vue";
 import type { MigrationJobLogsDialog_Input } from "@/components/Dialogs/MigrationJobs/MigrationJobLogsDialog.vue";
 import type { ClusterHealthDialog_Input } from "@/components/Dialogs/Shell/ClusterHealthDialog.vue";
+import type { GatewaysInClusterDialog_Input } from "@/components/Dialogs/Setup/Gateways/GatewaysInClusterDialog.vue";
 import type { WorkspaceLogsDialog_Input } from "@/components/Dialogs/Workspaces/WorkspaceLogsDialog.vue";
 import type { PodTerminalDialog_Input } from "@/components/Dialogs/Setup/Deployments/Pods/PodTerminalDialog.vue";
 import type { ContainerImageEditDialog_Input } from "@/components/Dialogs/Setup/ContainerImages/ContainerImageEditDialog.vue";
@@ -163,6 +164,7 @@ export type Events = {
     migrationJobList: MigrationJobListDialog_Input;
     migrationJobLogs: MigrationJobLogsDialog_Input;
     clusterHealth: ClusterHealthDialog_Input;
+    gatewaysInCluster: GatewaysInClusterDialog_Input;
 
     workspaceSaved: Workspace | undefined;
     workspaceCreate: WorkspaceCreateDialog_Input;

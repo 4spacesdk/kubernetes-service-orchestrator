@@ -287,6 +287,14 @@ function onAddressClicked(address: string) {
             />
 
             <v-spacer></v-spacer>
+            <v-btn
+                small
+                variant="text"
+                @click="bus.emit('gatewaysInCluster', {})"
+                prepend-icon="fa fa-magnifying-glass"
+            >
+                In the cluster
+            </v-btn>
             <v-btn data-shortcut="create"
                 small
                 class=""

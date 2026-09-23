@@ -7,7 +7,9 @@ use App\Entities\GatewayAnnotation;
 use App\Interfaces\GatewayAddressList;
 use App\Interfaces\GatewayAnnotationList;
 use App\Libraries\Audit\Audit;
+use App\Libraries\GatewaySteps\ClusterGateways;
 use App\Libraries\GatewaySteps\GatewayStep;
+use App\Libraries\Kubernetes\KubeAuth;
 use App\Libraries\Kubernetes\KubeHelper;
 use App\Models\GatewayModel;
 use DebugTool\Data;
@@ -25,6 +27,64 @@ class Gateways extends ResourceController {
      * @return void
      */
     public function put($id = 0) {
+    }
+
+    /**
+     * The cluster's Gateways held up against kso's - which kso has, which it does not, what differs
+     * and what taking one over would do. See `ClusterGateways`.
+     *
+     * @route /gateways/in-cluster
+     * @method get
+     * @custom true
+     * @responseSchema ClusterGateway
+     */
+    public function getInCluster(): void {
+        try {
+            $rows = (new ClusterGateways((new KubeAuth())->authenticate()))->list();
+        } catch (\Throwable $e) {
+            $this->fail(KubeHelper::PrintException($e));
+            return;
+        }
+
+        Data::set('resources', $rows);
+        $this->success();
+    }
+
+    /**
+     * Take over a Gateway kso does not have: kso's rows are written and the matching domains linked,
+     * and nothing is applied until it is deployed. `confirm` is its name, typed - kso owns what it
+     * imports, and its next Deploy replaces the listeners.
+     *
+     * @route /gateways/import
+     * @method post
+     * @custom true
+     * @parameter string $namespace parameterType=query
+     * @parameter string $name parameterType=query
+     * @parameter string $confirm parameterType=query
+     * @responseSchema Gateway
+     * @audit gateway.import
+     */
+    public function import(): void {
+        $namespace = (string) $this->request->getGet('namespace');
+        $name = (string) $this->request->getGet('name');
+        if ($name === '' || (string) $this->request->getGet('confirm') !== $name) {
+            $this->fail('Type the name of the Gateway to take it over');
+            return;
+        }
+
+        try {
+            $gateway = (new ClusterGateways((new KubeAuth())->authenticate()))->import($namespace, $name);
+        } catch (\InvalidArgumentException $e) {
+            $this->fail($e->getMessage());
+            return;
+        } catch (\Throwable $e) {
+            $this->fail(KubeHelper::PrintException($e));
+            return;
+        }
+
+        Audit::Record('gateway.import', $gateway);
+        $this->_setResource($gateway);
+        $this->success();
     }
 
     /**

@@ -35,6 +35,39 @@ export interface BoolInterface {
     value?: boolean;
 }
 
+export interface ClusterGateway {
+    namespace?: string;
+    name?: string;
+    gateway_class_name?: string;
+    addresses?: GatewayAddress[];
+    listeners?: ClusterGatewayListener[];
+    status?: string;
+    gateway_id?: number;
+    differences?: string[];
+    plan?: ClusterGatewayPlan;
+}
+
+export interface ClusterGatewayDomain {
+    id?: number;
+    name?: string;
+    gateway?: string;
+}
+
+export interface ClusterGatewayListener {
+    name?: string;
+    protocol?: string;
+    port?: number;
+    hostname?: string;
+    certificate?: string;
+}
+
+export interface ClusterGatewayPlan {
+    domains?: ClusterGatewayDomain[];
+    domains_elsewhere?: ClusterGatewayDomain[];
+    listeners_removed?: string[];
+    listeners_added?: string[];
+}
+
 export interface ClusterRoleRule {
     apiGroup?: string;
     resource?: string;
@@ -5350,6 +5383,63 @@ export class GatewaysDeleteById extends BaseApi<Gateway> {
     }
 }
 
+export class GatewaysGetInClusterGet extends BaseApi<ClusterGateway> {
+
+    public topic = 'Resources.ClusterGateways';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/gateways/in-cluster`;
+    }
+
+    protected convertToResource(data: any): ClusterGateway {
+        return data;
+    }
+
+    public find(next?: (value: ClusterGateway[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class GatewaysImportPost extends BaseApi<Gateway> {
+
+    public topic = 'Resources.Gateways';
+    protected method = 'post';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/gateways/import`;
+    }
+
+    protected convertToResource(data: any): Gateway {
+        return new Gateway(data);
+    }
+
+    public namespace(value: string): GatewaysImportPost {
+        this.addQueryParameter('namespace', value);
+        return this;
+    }
+
+    public name(value: string): GatewaysImportPost {
+        this.addQueryParameter('name', value);
+        return this;
+    }
+
+    public confirm(value: string): GatewaysImportPost {
+        this.addQueryParameter('confirm', value);
+        return this;
+    }
+
+    public save(data: any, next?: (value: Gateway) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
 export class GatewaysGetPreviewGetById extends BaseApi<StringInterface> {
 
     public topic = 'Resources.StringInterfaces';
@@ -5542,6 +5632,14 @@ class Gateways {
 
     public deleteById(id: number): GatewaysDeleteById {
         return new GatewaysDeleteById(id);
+    }
+
+    public getInClusterGet(): GatewaysGetInClusterGet {
+        return new GatewaysGetInClusterGet();
+    }
+
+    public importPost(): GatewaysImportPost {
+        return new GatewaysImportPost();
     }
 
     public getPreviewGetById(id: number): GatewaysGetPreviewGetById {
