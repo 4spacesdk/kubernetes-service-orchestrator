@@ -95,6 +95,28 @@ export interface DeploymentCronJobRunResponse {
     job?: string;
 }
 
+export interface DeploymentDiagnosisAction {
+    type?: string;
+    label?: string;
+    version?: string;
+    section?: string;
+    migration_job_id?: number;
+}
+
+export interface DeploymentDiagnosisFinding {
+    rule?: string;
+    verdict?: string;
+    cause?: string;
+    evidence?: string[];
+    action?: DeploymentDiagnosisAction;
+}
+
+export interface DeploymentDiagnosisResponse {
+    health?: string;
+    health_reason?: string;
+    findings?: DeploymentDiagnosisFinding[];
+}
+
 export interface DeploymentLogEntry {
     date?: string;
     line?: string;
@@ -4187,6 +4209,27 @@ export class DeploymentsGetMetricsGetById extends BaseApi<DeploymentMetricsRespo
     }
 }
 
+export class DeploymentsGetDiagnosisGetById extends BaseApi<DeploymentDiagnosisResponse> {
+
+    public topic = 'Resources.DeploymentDiagnosisResponses';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/deployments/${id}/diagnosis`;
+    }
+
+    protected convertToResource(data: any): DeploymentDiagnosisResponse {
+        return data;
+    }
+
+    public find(next?: (value: DeploymentDiagnosisResponse[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
 export class DeploymentsGetLogsGetById extends BaseApi<DeploymentLogEntry> {
 
     public topic = 'Resources.DeploymentLogEntries';
@@ -4343,6 +4386,10 @@ class Deployments {
 
     public getMetricsGetById(id: number): DeploymentsGetMetricsGetById {
         return new DeploymentsGetMetricsGetById(id);
+    }
+
+    public getDiagnosisGetById(id: number): DeploymentsGetDiagnosisGetById {
+        return new DeploymentsGetDiagnosisGetById(id);
     }
 
     public getLogsGetById(id: number): DeploymentsGetLogsGetById {

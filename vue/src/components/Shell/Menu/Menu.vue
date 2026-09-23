@@ -144,6 +144,18 @@ function flyoutOffset(category: MenuCategory): number[] {
     color: rgba(var(--v-theme-on-surface), 0.6) !important;
 }
 
+/* A count on an icon, small enough to leave the icon readable. */
+.rail-item :deep(.v-badge__badge) {
+    height: 15px;
+    min-width: 15px;
+    padding: 0 4px;
+    font-size: 9px;
+    font-weight: 600;
+    /* Vuetify places it for its own 20px size, which put this one over the icon. */
+    bottom: calc(100% - 7px) !important;
+    left: calc(100% - 5px) !important;
+}
+
 .rail-item.v-btn--active {
     color: rgb(var(--v-theme-secondary)) !important;
 }

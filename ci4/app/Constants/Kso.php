@@ -100,6 +100,18 @@ class MigrationJobStatusTypes {
 }
 
 /**
+ * How sure a diagnosis is of what it says - see `Libraries/Health/Diagnosis`. A rule that looked
+ * and could not settle it says so, rather than guess.
+ */
+class DiagnosisVerdicts {
+    const string
+        Certain = 'certain',
+        Possible = 'possible',
+        CannotTell = 'cannot_tell'
+    ;
+}
+
+/**
  * Whether a deployment's workload is doing well right now - a second axis beside its status,
  * which only says whether kso's resources are in the cluster. Argo CD's six, unchanged, so the
  * words mean what they mean everywhere else. See `Libraries/Health`.

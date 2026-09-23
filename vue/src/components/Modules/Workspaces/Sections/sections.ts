@@ -1,7 +1,7 @@
 import {defineAsyncComponent} from "vue";
 import {type DetailSection} from "@/components/Modules/Common/DetailPage/detailSections";
 import type {Workspace} from "@/core/services/Deploy/models";
-import {DeploymentStatusTypes, RbacPermissions} from "@/constants";
+import {DeploymentStatusTypes, HealthStatusTypes, RbacPermissions} from "@/constants";
 import AuthService from "@/services/AuthService";
 
 export type WorkspaceSection = DetailSection<Workspace>;
@@ -31,6 +31,10 @@ export const workspaceSections: WorkspaceSection[] = [
         icon: 'fa fa-cubes',
         group: '',
         isShown: () => true,
+        badge: workspace => ({
+            count: (workspace.deployments ?? []).filter(deployment => deployment.health == HealthStatusTypes.Degraded).length,
+            color: 'error',
+        }),
         component: section(() => import('./WorkspaceDeploymentsSection.vue')),
     },
     {

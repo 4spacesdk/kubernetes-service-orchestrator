@@ -16,6 +16,9 @@ use App\Interfaces\IntArrayInterface;
 use App\Interfaces\LabelList;
 use App\Libraries\Audit\Audit;
 use App\Libraries\DeploymentSteps\BaseDeploymentStep;
+use App\Libraries\Health\Diagnosis\Diagnoser;
+use App\Libraries\Health\Diagnosis\EvidenceGatherer;
+use App\Libraries\Health\Diagnosis\Finding;
 use App\Libraries\Kubernetes\DeploymentLogs;
 use App\Libraries\Kubernetes\DeploymentMetrics;
 use App\Libraries\Kubernetes\KubeAuth;
@@ -662,6 +665,40 @@ class Deployments extends ResourceController {
         }
 
         Data::set('resource', $metrics);
+        $this->success();
+    }
+
+    /**
+     * Why the deployment is doing badly: what each rule found, how sure it is, what it read it
+     * off, and what would fix it. Worked out when asked, not kept.
+     *
+     * @route /deployments/{id}/diagnosis
+     * @method get
+     * @custom true
+     * @param int $id
+     * @return void
+     * @responseSchema DeploymentDiagnosisResponse
+     */
+    public function getDiagnosis(int $id): void {
+        $item = new Deployment();
+        $item->find($id);
+        if (!$item->exists()) {
+            $this->fail('unknown deployment');
+            return;
+        }
+
+        try {
+            $evidence = (new EvidenceGatherer())->gather($item);
+        } catch (\Throwable $e) {
+            $this->fail(KubeHelper::PrintException($e));
+            return;
+        }
+
+        Data::set('resource', [
+            'health' => $item->health,
+            'health_reason' => $item->health_reason,
+            'findings' => array_map(fn(Finding $finding) => $finding->toArray(), Diagnoser::Diagnose($evidence, time())),
+        ]);
         $this->success();
     }
 

@@ -7,6 +7,8 @@ import DeploymentHealth from "@/components/Modules/Setup/Deployments/DeploymentH
 import DeploymentLastMigrationStatus
     from "@/components/Modules/Setup/Deployments/DeploymentLastMigrationStatus/DeploymentLastMigrationStatus.vue";
 import DeploymentPodsButton from "@/components/Modules/Setup/Deployments/DeploymentPodsButton/DeploymentPodsButton.vue";
+import DeploymentDiagnosis from "@/components/Modules/Setup/Deployments/DeploymentDiagnosis/DeploymentDiagnosis.vue";
+import {HealthStatusTypes} from "@/constants";
 
 /**
  * What a deployment is and how it is doing, at a glance, with its pods below. What can be
@@ -15,6 +17,9 @@ import DeploymentPodsButton from "@/components/Modules/Setup/Deployments/Deploym
 const props = defineProps<{
     deployment: Deployment
 }>();
+
+/** Health that is worth asking why about. */
+const worthDiagnosing = [HealthStatusTypes.Degraded, HealthStatusTypes.Progressing, HealthStatusTypes.Missing];
 
 </script>
 
@@ -33,6 +38,11 @@ const props = defineProps<{
                     v-if="props.deployment.health_reason"
                     class="text-medium-emphasis ml-2">{{ props.deployment.health_reason }}</span>
             </dd>
+
+            <template v-if="worthDiagnosing.includes(props.deployment.health ?? '')">
+                <dt>Why</dt>
+                <dd><deployment-diagnosis :deployment="props.deployment"/></dd>
+            </template>
 
             <template v-if="props.deployment.version">
                 <dt>Version</dt>

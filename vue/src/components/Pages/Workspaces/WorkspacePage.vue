@@ -8,6 +8,9 @@ import {Workspace} from "@/core/services/Deploy/models";
 import {useWorkspaceActions} from "@/composables/useWorkspaceActions";
 import DetailPageLayout from "@/components/Modules/Common/DetailPage/DetailPageLayout.vue";
 import {workspaceSections} from "@/components/Modules/Workspaces/Sections/sections";
+import PushService from "@/services/Push/PushService";
+import {Events} from "@/services/Push/Events";
+import type {PushSubscription} from "@/services/Push/PushSubscription";
 
 /**
  * A workspace: how it is doing and where it answers on the overview, and what it runs and is
@@ -23,15 +26,20 @@ const id = computed(() => parseInt(route.params.id as string));
 
 const {rbacWorkspaceCreate, deploy} = useWorkspaceActions();
 
+/** A deployment's health changed somewhere - the side menu counts this workspace's Degraded ones. */
+let healthSubscription: PushSubscription | undefined;
+
 onMounted(() => {
     bus.on('workspaceSaved', onSaved);
     bus.on('deploymentSaved', onSaved);
+    healthSubscription = PushService.subscribe(Events.Deployments_Changed_Health(), () => load());
     load();
 });
 
 onUnmounted(() => {
     bus.off('workspaceSaved', onSaved);
     bus.off('deploymentSaved', onSaved);
+    healthSubscription?.unsubscribe();
 });
 
 watch(id, () => {

@@ -67,6 +67,11 @@ use DebugTool\Data;
  * @property string $health_checked_at
  * @property string $health_notified
  *
+ * # The last deploy the cluster refused - see `Libraries/Health/Diagnosis`
+ * @property string $last_deploy_error
+ * @property string $last_deploy_error_step
+ * @property string $last_deploy_error_at
+ *
  * # Migration Job
  * @property int $last_migration_job_id
  * @property MigrationJob $last_migration_job
@@ -104,6 +109,7 @@ class Deployment extends Entity {
     public const array AuditIgnoredFields = [
         'last_updated', 'last_migration_job_id',
         'health', 'health_severity', 'health_reason', 'health_changed_at', 'health_checked_at', 'health_notified',
+        'last_deploy_error', 'last_deploy_error_step', 'last_deploy_error_at',
     ];
 
     use EncryptsFields;

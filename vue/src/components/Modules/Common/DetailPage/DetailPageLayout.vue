@@ -3,6 +3,7 @@ import {computed, ref} from 'vue'
 import {useRoute} from "vue-router";
 import {useDisplay} from "vuetify";
 import {
+    badgeOf,
     groupSections,
     isSectionEnabled,
     type DetailSection
@@ -122,7 +123,16 @@ function titleOf(group: string) {
                                 :prepend-icon="entry.icon"
                                 :title="entry.title"
                                 color="secondary"
-                                exact/>
+                                exact>
+                                <template
+                                    v-if="badgeOf(entry, props.item)"
+                                    v-slot:append>
+                                    <v-badge
+                                        inline
+                                        :color="badgeOf(entry, props.item)!.color"
+                                        :content="badgeOf(entry, props.item)!.count"/>
+                                </template>
+                            </v-list-item>
                         </template>
                     </v-list>
                 </v-card>
@@ -153,6 +163,14 @@ function titleOf(group: string) {
                             </template>
                             <v-list-item-title>{{ entry.title }}</v-list-item-title>
                             <v-list-item-subtitle v-if="!isSectionEnabled(entry, props.item)">{{ entry.disabledHint }}</v-list-item-subtitle>
+                            <template
+                                v-if="badgeOf(entry, props.item)"
+                                v-slot:append>
+                                <v-badge
+                                    inline
+                                    :color="badgeOf(entry, props.item)!.color"
+                                    :content="badgeOf(entry, props.item)!.count"/>
+                            </template>
                         </v-list-item>
                     </template>
                 </v-list>

@@ -29,11 +29,23 @@ class WorkspaceModel extends Model implements ResourceModelInterface {
         LabelModel::class,
     ];
 
+    /**
+     * `include=deployment` is answered by `postRestGet()`, with the urls and labels. Reading one
+     * workspace would otherwise load its deployments a second time on the way there, and every
+     * deployment came back twice.
+     */
+    private bool $deploymentsIncluded = false;
+
+    public function ignoredRestGetOnRelations(): array {
+        return $this->deploymentsIncluded ? [DeploymentModel::class] : [];
+    }
+
     public function preRestGet($queryParser, $id) {
         $this->includeRelated(DomainModel::class);
 
         if ($queryParser->hasInclude('deployment')) {
             $queryParser->getInclude('deployment')->ignoreAuto = true;
+            $this->deploymentsIncluded = true;
         }
 
         $this->applyLabelFilter($queryParser);

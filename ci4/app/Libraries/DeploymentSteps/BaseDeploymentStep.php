@@ -86,9 +86,27 @@ abstract class BaseDeploymentStep {
             $deployment->updateStatus(DeploymentStatusTypes::OutOfSync, true);
             $this->startDeployCommand($deployment, $reason);
         } catch (\Throwable $e) {
-            return KubeHelper::PrintException($e);
+            $error = KubeHelper::PrintException($e);
+            $this->rememberDeployError($deployment, $error);
+            return $error;
         }
+        $this->rememberDeployError($deployment, null);
         return null;
+    }
+
+    /**
+     * The cluster's answer to the last deploy that failed, kept until this step deploys again -
+     * what the diagnosis reads when a deployment is Degraded after a refused manifest. It was
+     * only ever in the response of the request that did it.
+     */
+    private function rememberDeployError(Deployment $deployment, ?string $error): void {
+        if ($error === null && $deployment->last_deploy_error_step !== $this->getName()) {
+            return;
+        }
+        $deployment->last_deploy_error = $error === null ? null : mb_strimwidth($error, 0, 4000, '…');
+        $deployment->last_deploy_error_step = $error === null ? null : $this->getName();
+        $deployment->last_deploy_error_at = $error === null ? null : date('Y-m-d H:i:s');
+        $deployment->save();
     }
 
     public function tryExecuteTerminateCommand(Deployment $deployment): ?string {

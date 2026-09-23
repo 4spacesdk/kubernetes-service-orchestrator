@@ -16,7 +16,14 @@ export interface DetailSection<T> {
     /** Shown but greyed out when this says no, with `disabledHint` beside it. */
     isEnabled?: (item: T) => boolean;
     disabledHint?: string;
+    /** A count beside the title in the side menu - what needs looking at in there. Nothing for none. */
+    badge?: (item: T) => DetailSectionBadge | null;
     component: Component;
+}
+
+export interface DetailSectionBadge {
+    count: number;
+    color: string;
 }
 
 export interface DetailSectionGroup<T> {
@@ -34,6 +41,11 @@ export function groupSections<T>(sections: DetailSection<T>[], item: T): DetailS
             : groups.push({group: section.group, sections: [section]});
     }
     return groups;
+}
+
+export function badgeOf<T>(section: DetailSection<T>, item: T): DetailSectionBadge | null {
+    const badge = section.badge?.(item) ?? null;
+    return badge && badge.count > 0 ? badge : null;
 }
 
 export function isSectionEnabled<T>(section: DetailSection<T>, item: T): boolean {

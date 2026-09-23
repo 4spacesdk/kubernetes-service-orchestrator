@@ -35,6 +35,7 @@
 * Retrying a webhook delivery adds an attempt to the log instead of rewriting the one it retries, stamped with its own time and no leftover response
 * A failed save in a dialog was silent, a double click saved twice, and the min scale job logged the wrong schedule's value
 * `?app_version=` with nothing after it counted as a version, and a timestamp written with a space between date and time came back a day earlier with the time dropped
+* `GET /workspaces/{id}?include=deployment` listed every deployment twice
 
 ### Security
 * The sign-in pages show messages from a link as text, so a crafted link can no longer run script on the sign-in page
@@ -114,6 +115,7 @@
 * The status is worked out every minute, like the health, so a resource deleted behind kso's back is noticed instead of standing as Synced until somebody deploys or presses refresh. It is read off one round of lists - one per kind, whatever the installation's size - rather than a call per step per deployment, and the refresh button on a workspace of five deployments or more uses the same
 * The status says what it measures: Synced when every one of a deployment's resources is in the cluster, Out of sync when some are not - during a deploy, or after one was deleted by hand. They were Active and Deploying, and a deployment whose Deployment had been deleted said Deploying for ever. Error is gone: nothing ever set it. Whether the workload is doing well is its health, beside it
 * Projects: workspaces divided up, and users joined to the ones they work in - for what they see first, not what they can open. Workspaces in the menu lists your own projects and opens to an overview of all of them. A workspace made from a template lands in the template's project, and can be moved. Set up under Setup → Projects; `filter=project:[…]` on workspaces, deployments and auto updates
+* Deployments: "Why?" on one that is Degraded, Progressing or Missing says what kso can see is wrong - a tag the registry does not have, a missing pull secret, a memory limit too low, a new version that crashes where the old one ran, a failing readiness probe, a manifest the cluster refused, a failed migration - with what it was read off and a button that fixes it, such as rolling back. A rule that cannot settle it says so rather than guess. A workspace's page counts its Degraded deployments beside Deployments in the side menu
 
 ### Upgrade guide
 1. Set `deployment.encryptionKey` in the chart to 32 characters of your own - `openssl rand -base64 24` makes one on Linux or macOS. It is what the stored credentials are encrypted with, and it has to stay the same afterwards - change it and they cannot be read back. Rotating it later: the old one in `deployment.previousEncryptionKeys`, then `php spark app:reencrypt` - see "If a secret leaks" in the README

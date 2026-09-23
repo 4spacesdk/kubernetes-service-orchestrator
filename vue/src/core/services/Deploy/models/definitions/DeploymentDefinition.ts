@@ -51,6 +51,9 @@ export class DeploymentDefinition extends BaseModel {
     health_changed_at?: string;
     health_checked_at?: string;
     health_notified?: string;
+    last_deploy_error?: string;
+    last_deploy_error_step?: string;
+    last_deploy_error_at?: string;
     last_migration_job_id?: number;
     last_migration_job?: MigrationJob;
     environment_variables?: EnvironmentVariable[];
@@ -114,6 +117,9 @@ export class DeploymentDefinition extends BaseModel {
             delete this.health_changed_at;
             delete this.health_checked_at;
             delete this.health_notified;
+            delete this.last_deploy_error;
+            delete this.last_deploy_error_step;
+            delete this.last_deploy_error_at;
             delete this.last_migration_job_id;
             delete this.last_migration_job;
             delete this.environment_variables;
@@ -243,6 +249,15 @@ export class DeploymentDefinition extends BaseModel {
         }
         if (data.health_notified != null) {
             this.health_notified = data.health_notified;
+        }
+        if (data.last_deploy_error != null) {
+            this.last_deploy_error = data.last_deploy_error;
+        }
+        if (data.last_deploy_error_step != null) {
+            this.last_deploy_error_step = data.last_deploy_error_step;
+        }
+        if (data.last_deploy_error_at != null) {
+            this.last_deploy_error_at = data.last_deploy_error_at;
         }
         if (data.last_migration_job_id != null) {
             this.last_migration_job_id = data.last_migration_job_id;

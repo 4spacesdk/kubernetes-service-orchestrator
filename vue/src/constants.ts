@@ -262,6 +262,15 @@ export const HealthStatusTypes = {
     Unknown: "unknown",
 };
 
+/**
+ * How sure a diagnosis is - see `Libraries/Health/Diagnosis` in the backend.
+ */
+export const DiagnosisVerdicts = {
+    Certain: "certain",
+    Possible: "possible",
+    CannotTell: "cannot_tell",
+};
+
 export const WorkspaceStatusTypes = {
     Draft: "draft",
     OutOfSync: "out_of_sync",

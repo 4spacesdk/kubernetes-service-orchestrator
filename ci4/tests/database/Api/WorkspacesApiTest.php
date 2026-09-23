@@ -354,6 +354,23 @@ class WorkspacesApiTest extends ControllerTestCase {
     }
 
     /**
+     * One workspace with its deployments had each of them twice - the side menu on its page
+     * counted two Degraded deployments where there was one.
+     */
+    public function testOneWorkspaceWithItsDeploymentsHasEachOnce(): void {
+        $workspace = Fixtures::workspace();
+        $spec = Fixtures::deploymentSpecification();
+        $first = Fixtures::deployment(['workspace_id' => $workspace->id, 'deployment_specification_id' => $spec->id, 'name' => 'api']);
+        $second = Fixtures::deployment(['workspace_id' => $workspace->id, 'deployment_specification_id' => $spec->id, 'name' => 'worker']);
+
+        $body = $this->decode($this->signedIn()->get("workspaces/{$workspace->id}?include=deployment"));
+
+        $ids = array_column($body['resource']['deployments'], 'id');
+        sort($ids);
+        $this->assertSame([(int) $first->id, (int) $second->id], $ids);
+    }
+
+    /**
      * The status endpoint is not a read - it recomputes every deployment's status first,
      * then derives the workspace's from them. Calling it is how the UI refreshes a
      * workspace that looks stale.
