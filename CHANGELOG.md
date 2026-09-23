@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v1.9.0 (2026-09-23)
 
 ### Fixed bugs
 * Deploying a workspace that already has its database - after a pause or a terminate - no longer fails with "Database already created"
@@ -130,21 +130,6 @@
 2. Deploy new image
 3. Run migrations [(Guide)](https://github.com/4spacesdk/kubernetes-service-orchestrator?tab=readme-ov-file#migrate-database-helm). Registry credentials and the GitHub App move to Integrations automatically
 4. Harbor and Azure: open each container registry and click "Set up auto update", then remove the old webhooks from the registry
-5. Artifact Registry: the service account only needs Artifact Registry Reader now
-6. Swagger is off. To keep it, set `deployment.config.swaggerEnabled: true` in the chart
-7. If kso is also reached on a hostname the chart's routing does not list, add it to `deployment.config.extraHostnames`
-8. Image scanning keeps Trivy's databases on a 4Gi volume (`deployment.imageScanning.cacheSizeLimit`), fetched again when the pod starts - 1.3 GB, and 1.4 GB more once an image with Java in it is scanned. The chart now sets `resources` by default: 256Mi requested and a 1Gi memory limit, measured at about 90Mi idle and 110-180Mi more during a scan. Helm merges them with your own `resources`; set `resources: null` to go without
-9. kso needs `create`, `get`, `update`, `patch`, `delete` and `list` on `secrets`, and `update` on the `finalizers` of deployments, jobs, cronjobs and Knative services. The chart's ClusterRole has them now; if you grant kso's rights yourself, add them. Knative's rights come with `knative.enabled: true` - if you gave kso Knative Services through `clusterrole.additionalRules`, set that instead
-10. The chart runs Centrifugo as a sidecar and routes `/connection` to it instead of `/socket` to port 9100. If you route to kso yourself, send `/connection` to the Service's `push` port (8000) with WebSockets allowed, and drop `/socket`
-11. The image runs as www-data (uid 82) and Apache listens on 8080. The chart's Service still answers on 80, so routing through it needs nothing. If you run the image outside the chart, map to 8080; if you set `securityContext` or `podSecurityContext` yourself, keep `runAsUser: 82` and `fsGroup: 82`
-12. Take a database backup before migrating: the migration hashes the stored OAuth tokens and client secrets and encrypts the signing key, and cannot be undone. Signed-in sessions survive it. Afterwards run `php spark auth:rotate-signing-key` once - the old key was stored in the clear in every backup until now
-13. Workspace templates are called that in the API too: `/deployment_packages` is `/workspace_templates` and `/deployment-packages/{id}/...` is `/workspace-templates/{id}/...`, and `deployment_package_id` is `workspace_template_id` - in API answers and in the workspace webhooks' JSON. Update anything that calls the API or reads the webhooks. The old names are gone
-14. Deployment and workspace statuses are renamed in the database, the API and the webhooks' JSON: `active` is `synced`, `deploying` is `out_of_sync`, and `error` is gone (it becomes `out_of_sync`). The migration renames the rows. Update anything that filters on `status` or reads it from a webhook. A bookmarked list with `?status=active` in its url shows nothing until the filter is set again
-15. Cpu and memory come from metrics.k8s.io, which needs `get` and `list` on `pods` and `nodes` in that group. The chart's ClusterRole has them; add them if you grant kso's rights yourself. A cluster without metrics-server needs nothing - the numbers are simply not there, and the dialog says so
-
-### Notes
-* An image built for arm64 has no MSSQL driver
-* `SSL_REDIRECT` is gone. It compared the request's host with the whole of `BASE_URL`, scheme included, so it never redirected; redirecting to HTTPS is the ingress's job
 
 
 
