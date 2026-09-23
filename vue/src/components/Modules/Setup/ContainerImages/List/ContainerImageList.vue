@@ -9,6 +9,9 @@ import ScanCounts from "@/components/Modules/Setup/ContainerImages/ScanCounts/Sc
 import debounce from "lodash.debounce";
 import { VersionControlProviders } from "@/constants";
 import { CopyNameStrategy, duplicateEntity } from "@/helpers/DuplicateEntity";
+import PushService from "@/services/Push/PushService";
+import { Events } from "@/services/Push/Events";
+import type { PushSubscription } from "@/services/Push/PushSubscription";
 
 const emit = defineEmits<{
     (e: 'onItemEditClicked', item: ContainerImage): void
@@ -28,6 +31,9 @@ const options = ref({});
 /** The scans of the running tags of the images on the page, by image - counts only. */
 const scansByImage = ref<Record<number, ContainerImageScan[]>>({});
 
+/** One per image on the page, so a scan that moves on shows in its row at once. */
+let scanSubscriptions: PushSubscription[] = [];
+
 const {search: searchValue, page, itemsPerPage, sortBy, applyOrdering, applyPaging} = useListState({
     sortable: {"name": "name"},
     defaultSort: {key: "name", order: "asc"},
@@ -41,6 +47,7 @@ onMounted(() => {
 
 onUnmounted(() => {
     bus.off('containerImageSaved', onItemSaved);
+    unsubscribeScans();
 });
 
 watch(searchValue, debounce(() => {
@@ -73,6 +80,7 @@ function getItems(doItems = true, doCount = false) {
                 rows.value = items;
                 isLoading.value = false;
                 loadScans(items);
+                subscribeScans(items);
             });
     }
 
@@ -97,6 +105,36 @@ function loadScans(images: ContainerImage[]) {
             scansByImage.value = byImage;
         });
 }
+
+function subscribeScans(images: ContainerImage[]) {
+    unsubscribeScans();
+    scanSubscriptions = images.map(image => PushService.subscribe(
+        Events.ContainerImage_Scans_Changed(image.id!),
+        (data) => onScanChanged(new ContainerImageScan(data.next)),
+    ));
+}
+
+function unsubscribeScans() {
+    scanSubscriptions.forEach(subscription => subscription.unsubscribe());
+    scanSubscriptions = [];
+}
+
+/**
+ * The status and counts come with the event, so a scan the row already shows is swapped in
+ * place. A new one - a tag scanned for the first time - is read again with the rest, as the
+ * list decides which scans a row shows.
+ */
+function onScanChanged(changed: ContainerImageScan) {
+    const scans = scansByImage.value[changed.container_image_id!] ?? [];
+    const index = scans.findIndex(scan => scan.id === changed.id);
+    if (index === -1) {
+        reloadScans();
+        return;
+    }
+    scans[index] = changed;
+}
+
+const reloadScans = debounce(() => loadScans(rows.value), 500);
 
 // <editor-fold desc="View functions">
 

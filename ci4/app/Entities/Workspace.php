@@ -640,7 +640,6 @@ class Workspace extends Entity {
         $isChanged = $this->hasChanged();
 
         $original = $this->getOriginal();
-        Data::debug($isChanged);
         parent::save($related, $relatedField);
 
         if (is_null($related)) {

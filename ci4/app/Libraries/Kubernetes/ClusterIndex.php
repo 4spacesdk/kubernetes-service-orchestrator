@@ -105,16 +105,42 @@ class ClusterIndex {
                 $items[$key] = $found;
             } catch (\Throwable $e) {
                 // A CRD the cluster does not have, or a kind kso may not list. Left out, so
-                // those steps ask the api server themselves.
-                $unreadable[$key] = KubeHelper::PrintException($e);
+                // those steps ask the api server themselves. Expected on most clusters, so a
+                // word for why rather than the whole exception on every run.
+                $unreadable[$key] = self::Why($e);
             }
         }
 
         if ($unreadable) {
-            Data::debug('Not indexed:', implode(', ', array_keys($unreadable)));
+            Data::debug('Not indexed:', implode(', ', array_map(
+                fn(string $key, string $why) => "{$key} ({$why})",
+                array_keys($unreadable),
+                $unreadable,
+            )));
         }
 
         return new ClusterIndex($items, $unreadable);
+    }
+
+    /**
+     * `not installed` for a kind the cluster has no CRD for, `forbidden` for one kso may not
+     * list - the two every cluster without Istio, GKE or the Gateway API answers - and the
+     * exception's own words for anything else.
+     *
+     * The status is in the code only when the api server answered in JSON. An api group that is
+     * not there answers `404 page not found` in plain text, and then only Guzzle's message has it.
+     */
+    public static function Why(\Throwable $e): string {
+        $status = $e->getCode();
+        if ($status === 0 && preg_match('/resulted in a `(\d{3}) /', $e->getMessage(), $match)) {
+            $status = (int) $match[1];
+        }
+
+        return match ($status) {
+            404 => 'not installed',
+            403 => 'forbidden',
+            default => KubeHelper::PrintException($e),
+        };
     }
 
     /**

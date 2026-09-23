@@ -138,4 +138,30 @@ class ClusterIndexTest extends CIUnitTestCase {
 
     // </editor-fold>
 
+    // <editor-fold desc="A kind that could not be listed">
+
+    /**
+     * The words the scheduler logs for a kind it could not index. On a cluster without the
+     * Gateway API, Istio or GKE that is three or four kinds every minute, and it logged each as
+     * a whole exception, which read as though the health check was failing.
+     */
+    public function testAnApiGroupTheClusterDoesNotHaveIsNotInstalled(): void {
+        // Plain text, so php-k8s has no code to give: only Guzzle's message has the status.
+        $e = new KubernetesAPIException("Client error: `GET https://k8s/apis/gateway.networking.k8s.io/v1/httproutes` resulted in a `404 Not Found` response:\n404 page not found\n", 0, null);
+
+        $this->assertSame('not installed', ClusterIndex::Why($e));
+    }
+
+    public function testAKindKsoMayNotListIsForbidden(): void {
+        $e = new KubernetesAPIException('Client error: `GET https://k8s/apis/networking.istio.io/v1/virtualservices` resulted in a `403 Forbidden` response', 403, ['code' => 403]);
+
+        $this->assertSame('forbidden', ClusterIndex::Why($e));
+    }
+
+    public function testAnythingElseIsSaidInFull(): void {
+        $this->assertSame('connection refused', ClusterIndex::Why(new \RuntimeException('connection refused')));
+    }
+
+    // </editor-fold>
+
 }
