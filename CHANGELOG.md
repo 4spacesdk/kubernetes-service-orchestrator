@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+### Enhancements
+* When a new version of kso is out, the app says which, with the first lines of what changed, a link to the release, and Reload or Later
+
 ### Fixed bugs
 * The app's theme was decided by an inline script the Content-Security-Policy blocks, so the browser console reported it on every load and a dark theme drew light first
 * The health check logged every kind the cluster does not have or kso may not list - Gateway API, Istio, GKE - as a whole exception each minute, which read as failures. It is one line now: `not installed` or `forbidden`

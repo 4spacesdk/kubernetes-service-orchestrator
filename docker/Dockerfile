@@ -17,6 +17,10 @@ RUN sed -i -e "s/_VERSION_/$BUILD_TAG_NAME/g" src/versions.ts
 ARG PROJECT_ID=project
 RUN sed -i -e "s/_PROJECT_ID_/$PROJECT_ID/g" src/versions.ts
 
+# What the update prompt shows about this version
+COPY CHANGELOG.md /CHANGELOG.md
+RUN node scripts/release-notes.mjs /CHANGELOG.md "$BUILD_TAG_NAME" public/release.json
+
 RUN npm run build
 
 
