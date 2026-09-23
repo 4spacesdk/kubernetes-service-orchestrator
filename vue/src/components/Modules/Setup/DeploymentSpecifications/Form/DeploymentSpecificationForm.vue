@@ -412,7 +412,7 @@ defineExpose({validate, prepareForSave});
                     <CodeEditor
                         v-model="item.custom_resource"
                         :languages="[['yaml']]"
-                        class="w-100"
+                        width="100%"
                         height="500px"
                         theme="atom-one-dark"
                         font-size="13px"
