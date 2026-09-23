@@ -1,19 +1,20 @@
-import axios, {CancelToken, CancelTokenSource} from 'axios';
-
+/**
+ * One request, and the means to cancel it - a log watch the dialog closes over, say.
+ *
+ * An `AbortController` rather than axios' `CancelToken`, which axios 1 deprecates. A cancelled
+ * request is rejected the way it was before (`axios.isCancel()` is true for both), so nothing that
+ * handles the rejection changes.
+ */
 export class ApiRequest {
 
-    private request: CancelTokenSource;
+    private controller = new AbortController();
 
-    constructor() {
-        this.request = axios.CancelToken.source();
-    }
-
-    public getCancelToken(): CancelToken {
-        return this.request.token;
+    public getSignal(): AbortSignal {
+        return this.controller.signal;
     }
 
     public cancel() {
-        this.request.cancel();
+        this.controller.abort();
     }
 
 }

@@ -5,11 +5,10 @@ import {Deployment} from "@/core/services/Deploy/models";
 import type {DeploymentStep} from "@/core/services/Deploy/Api";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
-import JsonViewer from 'vue-json-viewer';
+import JsonViewer from '@/plugins/JsonViewer';
 // Only these two dialogs use it, so it loads with them rather than with the app.
 import { Diff } from 'vue-diff';
 import 'vue-diff/dist/index.css';
-import _ from "lodash";
 
 export interface DeploymentResourcePreviewDialog_Input {
     deployment: Deployment,
@@ -63,7 +62,7 @@ function reload() {
             const preview = JSON.parse(response[0].value!);
             if (preview) {
 
-                if (_.isArray(preview.local)) {
+                if (Array.isArray(preview.local)) {
                     localJSON.value = preview.local.map((local: string) => JSON.parse(local));
                     remoteJSON.value = preview.remote.map((local: string) => JSON.parse(local));
                 } else {

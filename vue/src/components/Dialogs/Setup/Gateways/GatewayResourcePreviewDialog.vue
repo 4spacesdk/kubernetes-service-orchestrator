@@ -4,11 +4,10 @@ import type { DialogEventsInterface } from "@/components/Dialogs/DialogEventsInt
 import { Gateway } from "@/core/services/Deploy/models";
 import { Api } from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
-import JsonViewer from 'vue-json-viewer';
+import JsonViewer from '@/plugins/JsonViewer';
 // Only these two dialogs use it, so it loads with them rather than with the app.
 import { Diff } from 'vue-diff';
 import 'vue-diff/dist/index.css';
-import _ from "lodash";
 
 export interface GatewayResourcePreviewDialog_Input {
     gateway: Gateway,
@@ -57,7 +56,7 @@ function reload() {
         if (response && response.length == 1) {
             const preview = JSON.parse(response[0].value!);
             if (preview) {
-                if (_.isArray(preview.local)) {
+                if (Array.isArray(preview.local)) {
                     localJSON.value = preview.local.map((local: string) => JSON.parse(local));
                     remoteJSON.value = preview.remote ? preview.remote.map((remote: string) => JSON.parse(remote)) : [];
                 } else {
@@ -145,7 +144,7 @@ function onCloseBtnClicked() {
 
                             <v-window-item value="remote">
                                 <json-viewer
-                                    v-if="remoteJSON && (!_.isArray(remoteJSON) || remoteJSON.length > 0)"
+                                    v-if="remoteJSON && (!Array.isArray(remoteJSON) || remoteJSON.length > 0)"
                                     :expand-depth=10
                                     copyable
                                     :value="remoteJSON"/>

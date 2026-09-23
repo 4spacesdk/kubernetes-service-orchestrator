@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
-import JsonViewer from 'vue-json-viewer';
+import JsonViewer from '@/plugins/JsonViewer';
 
 export interface JsonDialog_Input {
     title?: string;

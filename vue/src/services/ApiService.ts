@@ -214,7 +214,7 @@ class ApiService {
         axios
             .get(url, {
                 params: Object.assign({}, params),
-                cancelToken: request.getCancelToken(),
+                signal: request.getSignal(),
                 withCredentials: withCredentials,
             })
             .then((response: any) => {
@@ -248,7 +248,7 @@ class ApiService {
         axios
             .post(url, data, {
                 params: Object.assign({}, params),
-                cancelToken: request.getCancelToken(),
+                signal: request.getSignal(),
                 withCredentials: withCredentials,
             })
             .then((response: any) => {
@@ -282,7 +282,7 @@ class ApiService {
         axios
             .put(url, data, {
                 params: Object.assign({}, params),
-                cancelToken: request.getCancelToken(),
+                signal: request.getSignal(),
                 withCredentials: withCredentials,
             })
             .then((response: any) => {
@@ -316,7 +316,7 @@ class ApiService {
         axios
             .patch(url, data, {
                 params: Object.assign({}, params),
-                cancelToken: request.getCancelToken(),
+                signal: request.getSignal(),
                 withCredentials: withCredentials,
             })
             .then((response: any) => {
@@ -350,7 +350,7 @@ class ApiService {
         axios
             .delete(url, {
                 params: Object.assign({}, params),
-                cancelToken: request.getCancelToken(),
+                signal: request.getSignal(),
                 withCredentials: withCredentials,
             })
             .then((response: any) => {
@@ -385,7 +385,7 @@ class ApiService {
             {
                 url: url,
                 params: Object.assign({}, params),
-                cancelToken: request.getCancelToken(),
+                signal: request.getSignal(),
                 method: 'GET',
                 responseType: 'blob',
             })
@@ -433,7 +433,7 @@ class ApiService {
                     'Content-Type': 'multipart/form-data'
                 },
                 params: Object.assign({}, params),
-                cancelToken: request.getCancelToken(),
+                signal: request.getSignal(),
             }).then((response: any) => {
             if (callback) {
                 callback(response.data);

@@ -1,7 +1,7 @@
 # Node for the Vue app. One stage for both uses: the production build below, and the
 # `vue` service in docker-compose.yml, where vite runs in development. So the Node that
 # builds what ships is the Node a developer runs, and neither depends on the machine.
-FROM node:16.13.1-alpine AS vue-toolchain
+FROM node:24.21.0-alpine AS vue-toolchain
 WORKDIR /vue
 
 # Build Vue app

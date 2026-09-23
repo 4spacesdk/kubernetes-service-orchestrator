@@ -1,11 +1,19 @@
 <script setup lang="ts">
 import {useRegisterSW} from 'virtual:pwa-register/vue'
 
+/**
+ * The one place the service worker is registered. It looks for a new version every minute, and
+ * says so here when there is one - `main.ts` registered it a second time for the minute check.
+ */
 const {
     offlineReady,
     needRefresh,
     updateServiceWorker,
-} = useRegisterSW()
+} = useRegisterSW({
+    onRegistered(registration) {
+        registration && setInterval(() => registration.update(), 60 * 1000);
+    },
+})
 
 const close = async() => {
     offlineReady.value = false

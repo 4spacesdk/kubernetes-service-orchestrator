@@ -1,5 +1,5 @@
 {
-  "extends": "@vue/tsconfig/tsconfig.web.json",
+  "extends": "@vue/tsconfig/tsconfig.dom.json",
   "include": [
     "env.d.ts",
     "src/**/*",
@@ -18,7 +18,7 @@
     "types": [
       "vite-plugin-pwa/client"
     ],
-    "importsNotUsedAsValues": "remove",
+    "verbatimModuleSyntax": false,
     "isolatedModules": false,
     "useDefineForClassFields": false,
     "lib": [

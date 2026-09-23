@@ -80,6 +80,7 @@
 * A migration job reports that it started and ended with a token of its own, given to its pod through the job's Secret. Without it the report is refused, so nobody else can end a job and set off its post-update commands. A job started before the upgrade cannot report back - rerun it
 * Live updates go through Centrifugo: a browser connects with its sign-in token, checked against kso's published keys, and can only listen. The WAMP router, its shared secret and the ZeroMQ extension are gone
 * Security-related improvements
+* The web app's HTTP client was axios 0.19, with 30 known advisories - prototype pollution and header injection among them. It is axios 1, and `npm audit` finds nothing in the web app
 
 ### Enhancements
 * Container Images: the tags your deployments run are scanned for known vulnerabilities with Trivy every night, and on "Scan now". The list shows the counts per tag, and a dialog lists every finding with the version that fixes it, and a graph of critical and high over the last year

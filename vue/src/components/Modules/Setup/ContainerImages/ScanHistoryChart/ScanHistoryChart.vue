@@ -76,9 +76,18 @@ const data = computed<ChartData<"line">>(() => {
     };
 });
 
-/** A theme colour with an alpha, as a canvas takes it - the theme gives `#rrggbb`. */
-function withOpacity(hex: string, opacity: number): string {
-    const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+/**
+ * A theme colour with an alpha, as a canvas takes it. Vuetify writes its computed `on-*` colours
+ * short - `#fff` since 3.13, where it was `#FFFFFF` - so both are read; one it has not worked out
+ * is drawn grey rather than taking the chart down with it.
+ */
+function withOpacity(hex: string | undefined, opacity: number): string {
+    const digits = (hex ?? '').replace('#', '');
+    const full = digits.length === 3 ? [...digits].map((d) => d + d).join('') : digits;
+    if (!/^[0-9a-f]{6}$/i.test(full)) {
+        return `rgba(128, 128, 128, ${opacity})`;
+    }
+    const [r, g, b] = [0, 2, 4].map((i) => parseInt(full.slice(i, i + 2), 16));
     return `rgba(${r}, ${g}, ${b}, ${opacity})`;
 }
 

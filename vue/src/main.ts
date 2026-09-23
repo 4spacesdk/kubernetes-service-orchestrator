@@ -13,7 +13,6 @@ import 'vuetify/styles'
 import './scss/main.scss'
 import ApiService from "@/services/ApiService";
 import AuthService from "@/services/AuthService";
-import { registerSW } from 'virtual:pwa-register'
 import vuetify from "@/plugins/vuetify";
 
 import PushService from "@/services/Push/PushService";
@@ -40,15 +39,6 @@ const setupVue = (app: App<Element>) => {
 
 };
 
-
-registerSW({
-    onRegistered(r) {
-        // console.warn('service worker registrated, starting interval update check');
-        r && setInterval(() => {
-            r.update()
-        }, 60 * 1000);
-    }
-});
 
 if (location.origin.includes('localhost')) {
     ApiService.initApi('http://localhost:8950/api');
