@@ -35,6 +35,27 @@ export interface BoolInterface {
     value?: boolean;
 }
 
+export interface ClusterDomain {
+    namespace?: string;
+    name?: string;
+    dns_names?: string[];
+    issuer?: string;
+    secret_name?: string;
+    ready?: boolean;
+    not_after?: string;
+    status?: string;
+    domain_id?: number;
+    differences?: string[];
+    plan?: ClusterDomainPlan;
+}
+
+export interface ClusterDomainPlan {
+    domain?: string;
+    gateway?: ClusterGatewayDomain;
+    conflict?: string;
+    changes?: string[];
+}
+
 export interface ClusterGateway {
     namespace?: string;
     name?: string;
@@ -4730,6 +4751,63 @@ export class DomainsDeleteById extends BaseApi<Domain> {
     }
 }
 
+export class DomainsGetInClusterGet extends BaseApi<ClusterDomain> {
+
+    public topic = 'Resources.ClusterDomains';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/domains/in-cluster`;
+    }
+
+    protected convertToResource(data: any): ClusterDomain {
+        return data;
+    }
+
+    public find(next?: (value: ClusterDomain[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class DomainsImportPost extends BaseApi<Domain> {
+
+    public topic = 'Resources.Domains';
+    protected method = 'post';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/domains/import`;
+    }
+
+    protected convertToResource(data: any): Domain {
+        return new Domain(data);
+    }
+
+    public namespace(value: string): DomainsImportPost {
+        this.addQueryParameter('namespace', value);
+        return this;
+    }
+
+    public name(value: string): DomainsImportPost {
+        this.addQueryParameter('name', value);
+        return this;
+    }
+
+    public confirm(value: string): DomainsImportPost {
+        this.addQueryParameter('confirm', value);
+        return this;
+    }
+
+    public save(data: any, next?: (value: Domain) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
 export class DomainsApplyCertificatePutById extends BaseApi<Domain> {
 
     public topic = 'Resources.Domains';
@@ -4859,6 +4937,14 @@ class Domains {
 
     public deleteById(id: number): DomainsDeleteById {
         return new DomainsDeleteById(id);
+    }
+
+    public getInClusterGet(): DomainsGetInClusterGet {
+        return new DomainsGetInClusterGet();
+    }
+
+    public importPost(): DomainsImportPost {
+        return new DomainsImportPost();
     }
 
     public applyCertificatePutById(id: number): DomainsApplyCertificatePutById {

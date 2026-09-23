@@ -188,6 +188,11 @@ function onCertificateClicked(item: Row) {
             />
 
             <v-spacer></v-spacer>
+            <v-btn small variant="text" @click="bus.emit('domainsInCluster', {})"
+                   prepend-icon="fa fa-magnifying-glass"
+            >
+                In the cluster
+            </v-btn>
             <v-btn data-shortcut="create" small class="" @click="createItem()"
                    prepend-icon="fa fa-plus"
             >

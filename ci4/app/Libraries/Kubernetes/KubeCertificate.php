@@ -78,25 +78,35 @@ class KubeCertificate {
                 'name' => $this->domain->certificate_name,
                 'namespace' => $this->domain->certificate_namespace,
             ],
-            'spec' => [
-                'secretName' => $this->domain->certificate_name,
-                'issuerRef' => [
-                    'name' => $this->domain->issuer_ref_name,
-                ],
-                'dnsNames' => [
-                    "*.{$this->domain->name}",
-                    "{$this->domain->name}",
-                ],
-                'secretTemplate' => [
-                    'annotations' => [
-                        'kubed.appscode.com/sync' => '',
-                        'reflector.v1.k8s.emberstack.com/reflection-allowed' => 'true',
-                        'reflector.v1.k8s.emberstack.com/reflection-allowed-namespaces' => '',
-                        'reflector.v1.k8s.emberstack.com/reflection-auto-enabled' => 'true',
-                    ],
-                ]
-            ],
+            'spec' => self::Spec((string) $this->domain->name, (string) $this->domain->certificate_name, (string) $this->domain->issuer_ref_name),
         ]);
+    }
+
+    /**
+     * The Certificate kso asks cert-manager for: the domain and its subdomains, in a secret named
+     * after the certificate, from the domain's issuer - and annotated so kubed or reflector may copy
+     * the secret to the namespaces that use it. In one place, so taking over a certificate kso did
+     * not write can say what kso's next apply would change.
+     */
+    public static function Spec(string $domain, string $certificateName, string $issuer): array {
+        return [
+            'secretName' => $certificateName,
+            'issuerRef' => [
+                'name' => $issuer,
+            ],
+            'dnsNames' => [
+                "*.{$domain}",
+                "{$domain}",
+            ],
+            'secretTemplate' => [
+                'annotations' => [
+                    'kubed.appscode.com/sync' => '',
+                    'reflector.v1.k8s.emberstack.com/reflection-allowed' => 'true',
+                    'reflector.v1.k8s.emberstack.com/reflection-allowed-namespaces' => '',
+                    'reflector.v1.k8s.emberstack.com/reflection-auto-enabled' => 'true',
+                ],
+            ],
+        ];
     }
 
 }

@@ -6,12 +6,72 @@ use App\Interfaces\DomainsGetCertificateStatusResponse;
 use App\Libraries\Audit\Audit;
 use App\Libraries\Kubernetes\CustomResourceDefinitions\K8sIstioGateway;
 use App\Libraries\Kubernetes\KubeAuth;
+use App\Libraries\Kubernetes\ClusterDomains;
 use App\Libraries\Kubernetes\KubeCertificate;
+use App\Libraries\Kubernetes\KubeHelper;
 use App\Libraries\Kubernetes\KubeIstioGateway;
 use DebugTool\Data;
 use RenokiCo\PhpK8s\Kinds\K8sEvent;
 
 class Domains extends ResourceController {
+
+    /**
+     * The cluster's cert-manager Certificates held up against kso's domains - which kso has, what
+     * differs, and what taking one over would do. See `ClusterDomains`.
+     *
+     * @route /domains/in-cluster
+     * @method get
+     * @custom true
+     * @responseSchema ClusterDomain
+     */
+    public function getInCluster(): void {
+        try {
+            $rows = (new ClusterDomains((new KubeAuth())->authenticate()))->list();
+        } catch (\Throwable $e) {
+            $this->fail(KubeHelper::PrintException($e));
+            return;
+        }
+
+        Data::set('resources', $rows);
+        $this->success();
+    }
+
+    /**
+     * Take over a Certificate kso does not have, as a domain: the row is written, linked to the kso
+     * gateway that listens for it, and nothing is applied. `confirm` is the certificate's name, typed.
+     *
+     * @route /domains/import
+     * @method post
+     * @custom true
+     * @parameter string $namespace parameterType=query
+     * @parameter string $name parameterType=query
+     * @parameter string $confirm parameterType=query
+     * @responseSchema Domain
+     * @audit domain.import
+     */
+    public function import(): void {
+        $namespace = (string) $this->request->getGet('namespace');
+        $name = (string) $this->request->getGet('name');
+        if ($name === '' || (string) $this->request->getGet('confirm') !== $name) {
+            $this->fail('Type the name of the certificate to take it over');
+            return;
+        }
+
+        try {
+            $domain = (new ClusterDomains((new KubeAuth())->authenticate()))->import($namespace, $name);
+        } catch (\InvalidArgumentException $e) {
+            $this->fail($e->getMessage());
+            return;
+        } catch (\Throwable $e) {
+            $this->fail(KubeHelper::PrintException($e));
+            return;
+        }
+
+        Audit::Record('domain.import', $domain);
+        $this->_setResource($domain);
+        $this->success();
+    }
+
 
     /**
      * @route /domains/{id}/certificate/apply
