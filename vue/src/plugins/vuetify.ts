@@ -8,8 +8,8 @@ import {
     VApp,
     VAutocomplete,
     VBadge,
-    VBottomNavigation,
-    VBottomSheet,
+        VBottomNavigation,
+        VBottomSheet,
     VBtn,
     VCard,
     VCardActions,
@@ -59,22 +59,8 @@ import {
     VWindowItem,
 } from 'vuetify/components'
 import * as directives from 'vuetify/directives'
-
-const customLightTheme = {
-    dark: false,
-    colors: {
-        background: '#e9f0f2',
-        surface: '#e9f0f2',
-        primary: '#1a3b46',
-        'primary-darken-1': '#0a1a1f',
-        secondary: '#2e92a3',
-        'secondary-darken-1': '#03504b',
-        error: '#B00020',
-        info: '#2196F3',
-        success: '#4CAF50',
-        warning: '#FB8C00',
-    },
-}
+import {themes} from '@/plugins/themes'
+import {initialThemeName} from '@/composables/useAppTheme'
 
 export default createVuetify({
     components: {
@@ -82,8 +68,8 @@ export default createVuetify({
         VApp,
         VAutocomplete,
         VBadge,
-    VBottomNavigation,
-    VBottomSheet,
+        VBottomNavigation,
+        VBottomSheet,
         VBtn,
         VCard,
         VCardActions,
@@ -144,10 +130,8 @@ export default createVuetify({
         VDataTableHeaders: {mobile: null, mobileBreakpoint: 'sm'},
     },
     theme: {
-        defaultTheme: 'customLightTheme',
-        themes: {
-            customLightTheme,
-        }
+        defaultTheme: initialThemeName(),
+        themes,
     },
     icons: {
         defaultSet: 'fa',

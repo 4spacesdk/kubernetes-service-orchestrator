@@ -88,10 +88,10 @@ function reload() {
 
         if (hasError) {
             icon.value = 'fa-circle-xmark';
-            color.value = 'red';
+            color.value = 'error';
         } else if (hasFailed) {
             icon.value = 'fa-circle-xmark';
-            color.value = 'red';
+            color.value = 'error';
         } else if (hasUnknown) {
             icon.value = 'fa-circle';
             color.value = 'grey';
@@ -100,7 +100,7 @@ function reload() {
             color.value = 'warning';
         } else if (hasSuccess) {
             icon.value = 'fa-circle-check';
-            color.value = 'green';
+            color.value = 'success';
         }
 
         text.value = textAll.value.join('\n');

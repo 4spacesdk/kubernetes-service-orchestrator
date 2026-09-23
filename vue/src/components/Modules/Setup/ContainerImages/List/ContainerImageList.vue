@@ -156,7 +156,7 @@ function deleteItem(item: ContainerImage) {
     bus.emit('confirm', {
         body: `Do you want to delete "${item.name}"?`,
         confirmIcon: 'fa fa-trash',
-        confirmColor: 'red',
+        confirmColor: 'error',
 
         responseCallback: (confirmed: boolean) => {
             if (confirmed) {
@@ -176,7 +176,7 @@ function deleteItem(item: ContainerImage) {
         <v-toolbar
             density="compact"
             flat
-            color="blue-grey lighten-5"
+            color="toolbar"
             dark
         >
             <v-toolbar-title>Container Images</v-toolbar-title>
@@ -285,7 +285,7 @@ function deleteItem(item: ContainerImage) {
                         <v-list density="compact">
                             <v-list-item v-if="item.container_registry_id" prepend-icon="fa fa-tags" title="List tags" @click="onTagsItemBtnClicked(item)" />
                             <v-list-item prepend-icon="fa fa-clone" title="Duplicate" @click="onDuplicateItemBtnClicked(item)" />
-                            <v-list-item prepend-icon="fa fa-trash" title="Delete" base-color="red" @click="deleteItem(item)" />
+                            <v-list-item prepend-icon="fa fa-trash" title="Delete" base-color="error" @click="deleteItem(item)" />
                         </v-list>
                     </v-menu>
                 </div>

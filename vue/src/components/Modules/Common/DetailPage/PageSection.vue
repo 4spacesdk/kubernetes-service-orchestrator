@@ -37,7 +37,7 @@ function onKeyDown(event: KeyboardEvent) {
                     flat
                     variant="tonal"
                     prepend-icon="fa fa-check"
-                    color="green"
+                    color="success"
                     class="ml-2"
                     :loading="props.isSaving"
                     :disabled="props.isLoading"
@@ -67,8 +67,8 @@ function onKeyDown(event: KeyboardEvent) {
     align-items: center;
     min-height: 48px;
     padding: 0 1rem;
-    background: #fff;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    background: rgb(var(--v-theme-background));
+    border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
 }
 
 .page-section-title {

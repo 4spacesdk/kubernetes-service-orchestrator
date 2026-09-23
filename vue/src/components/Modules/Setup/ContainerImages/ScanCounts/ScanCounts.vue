@@ -31,7 +31,7 @@ const chips = computed(() => [
                 <v-tooltip activator="parent" location="bottom">Trivy recognised no operating system and no packages in this image</v-tooltip>
             </v-chip>
         </template>
-        <v-chip v-else-if="props.scan.status === 'failed'" color="red" size="x-small" label variant="tonal">
+        <v-chip v-else-if="props.scan.status === 'failed'" color="error" size="x-small" label variant="tonal">
             failed
             <v-tooltip activator="parent" location="bottom">{{ props.scan.error }}</v-tooltip>
         </v-chip>

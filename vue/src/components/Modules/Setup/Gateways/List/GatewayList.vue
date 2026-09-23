@@ -163,7 +163,7 @@ function onDeleteItemBtnClicked(item: Row) {
     bus.emit("confirm", {
         body: `Do you want to delete "${item.gateway.name}"?`,
         confirmIcon: "fa fa-trash",
-        confirmColor: "red",
+        confirmColor: "error",
 
         responseCallback: (confirmed: boolean) => {
             if (confirmed) {
@@ -210,7 +210,7 @@ function onTerminateBtnClicked(row: Row) {
     bus.emit("confirm", {
         body: `Do you want to terminate "${row.gateway.name}" from the cluster?`,
         confirmIcon: "fa fa-stop",
-        confirmColor: "orange",
+        confirmColor: "warning",
 
         responseCallback: (confirmed: boolean) => {
             if (confirmed) {
@@ -274,7 +274,7 @@ function onAddressClicked(address: string) {
 
 <template>
     <div class="h-100 content-wrapper">
-        <v-toolbar density="compact" flat color="blue-grey lighten-5" dark>
+        <v-toolbar density="compact" flat color="toolbar" dark>
             <v-toolbar-title>Gateways</v-toolbar-title>
 
             <v-text-field data-shortcut="search"
@@ -322,7 +322,7 @@ function onAddressClicked(address: string) {
                     >
                     <v-icon
                         v-else-if="item.status === 'found'"
-                        color="green"
+                        color="success"
                         size="x-small"
                         >fa fa-circle</v-icon
                     >
@@ -332,7 +332,7 @@ function onAddressClicked(address: string) {
                         size="x-small"
                         >fa fa-circle</v-icon
                     >
-                    <v-icon v-else color="red" size="x-small"
+                    <v-icon v-else color="error" size="x-small"
                         >fa fa-circle</v-icon
                     >
 
@@ -413,7 +413,7 @@ function onAddressClicked(address: string) {
 
                     <v-btn
                         variant="plain"
-                        color="green"
+                        color="success"
                         @click="onDeployBtnClicked(item)"
                         size="small"
                         density="comfortable"
@@ -489,8 +489,8 @@ function onAddressClicked(address: string) {
                             </v-btn>
                         </template>
                         <v-list density="compact">
-                            <v-list-item prepend-icon="fa fa-stop" title="Terminate" base-color="orange" @click="onTerminateBtnClicked(item)" />
-                            <v-list-item prepend-icon="fa fa-trash" title="Delete" base-color="red" @click="onDeleteItemBtnClicked(item)" />
+                            <v-list-item prepend-icon="fa fa-stop" title="Terminate" base-color="warning" @click="onTerminateBtnClicked(item)" />
+                            <v-list-item prepend-icon="fa fa-trash" title="Delete" base-color="error" @click="onDeleteItemBtnClicked(item)" />
                         </v-list>
                     </v-menu>
                 </div>

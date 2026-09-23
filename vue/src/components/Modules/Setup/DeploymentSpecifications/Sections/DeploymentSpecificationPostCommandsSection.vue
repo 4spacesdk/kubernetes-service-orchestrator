@@ -177,7 +177,7 @@ function onSortChanged(event: CustomEvent) {
                     </v-btn>
                     <v-btn
                         variant="plain"
-                        color="red" size="small"
+                        color="error" size="small"
                         @click="onDeleteRowClicked(item)">
                         <v-icon>fa fa-trash</v-icon>
                         <v-tooltip activator="parent" location="bottom">Delete</v-tooltip>

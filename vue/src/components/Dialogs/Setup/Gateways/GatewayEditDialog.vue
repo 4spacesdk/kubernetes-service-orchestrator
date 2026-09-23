@@ -209,7 +209,7 @@ function onCloseBtnClicked() {
                             <v-col cols="1" class="d-flex mt-1">
                                 <v-btn
                                     icon="fa fa-trash"
-                                    color="red"
+                                    color="error"
                                     variant="text"
                                     size="x-small"
                                     @click="removeAddress(index)"/>
@@ -254,7 +254,7 @@ function onCloseBtnClicked() {
                             <v-col cols="1" class="d-flex mt-1">
                                 <v-btn
                                     icon="fa fa-trash"
-                                    color="red"
+                                    color="error"
                                     variant="text"
                                     size="x-small"
                                     @click="removeAnnotation(index)"/>
@@ -281,7 +281,7 @@ function onCloseBtnClicked() {
                     flat
                     variant="tonal"
                     prepend-icon="fa fa-check"
-                    color="green"
+                    color="success"
                     :loading="isSaving"
                     @click="onSaveBtnClicked">
                     Save

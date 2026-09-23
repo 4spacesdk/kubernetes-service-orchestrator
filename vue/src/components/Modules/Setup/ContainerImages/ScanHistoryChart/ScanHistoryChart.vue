@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
 import { Line } from "vue-chartjs";
+import { useTheme } from "vuetify";
 import {
     CategoryScale,
     Chart,
@@ -28,6 +29,8 @@ const props = defineProps<{
     containerImageId: number;
     tag: string;
 }>();
+
+const theme = useTheme();
 
 const records = ref<ContainerImageScanRecord[]>([]);
 const isLoading = ref(false);
@@ -73,24 +76,38 @@ const data = computed<ChartData<"line">>(() => {
     };
 });
 
-const options = computed<ChartOptions<"line">>(() => ({
-    responsive: true,
-    maintainAspectRatio: false,
-    animation: false,
-    interaction: { mode: "index", intersect: false },
-    scales: {
-        y: { beginAtZero: true, ticks: { precision: 0 } },
-    },
-    plugins: {
-        legend: { position: "bottom", labels: { boxWidth: 12 } },
-        tooltip: {
-            callbacks: {
-                title: (items: TooltipItem<"line">[]) => moment(records.value[items[0].dataIndex].scanned_at).format("DD/MM-YY HH:mm"),
-                footer: (items: TooltipItem<"line">[]) => (isNewImage(items[0].dataIndex) ? "New image" : ""),
+/** A theme colour with an alpha, as a canvas takes it - the theme gives `#rrggbb`. */
+function withOpacity(hex: string, opacity: number): string {
+    const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+}
+
+const options = computed<ChartOptions<"line">>(() => {
+    // Chart.js draws its text and grid in its own light-page greys; these are the theme's.
+    const { colors, variables } = theme.current.value;
+    const text = withOpacity(colors["on-surface"], Number(variables["medium-emphasis-opacity"]));
+    const grid = withOpacity(String(variables["border-color"]), Number(variables["border-opacity"]));
+
+    return {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false,
+        interaction: { mode: "index", intersect: false },
+        scales: {
+            x: { ticks: { color: text }, grid: { color: grid } },
+            y: { beginAtZero: true, ticks: { precision: 0, color: text }, grid: { color: grid } },
+        },
+        plugins: {
+            legend: { position: "bottom", labels: { boxWidth: 12, color: text } },
+            tooltip: {
+                callbacks: {
+                    title: (items: TooltipItem<"line">[]) => moment(records.value[items[0].dataIndex].scanned_at).format("DD/MM-YY HH:mm"),
+                    footer: (items: TooltipItem<"line">[]) => (isNewImage(items[0].dataIndex) ? "New image" : ""),
+                },
             },
         },
-    },
-}));
+    };
+});
 </script>
 
 <template>

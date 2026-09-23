@@ -169,11 +169,11 @@ onBeforeRouteUpdate((to, from) => to.path == from.path || beforeLeave());
     align-items: center;
     gap: 6px;
     font-size: 12px;
-    color: rgba(0, 0, 0, 0.55);
+    color: rgba(var(--v-theme-on-background), 0.55);
 }
 
 .save-status--saved {
-    color: #2e7d32;
+    color: rgb(var(--v-theme-success));
 }
 
 .save-status--invalid,

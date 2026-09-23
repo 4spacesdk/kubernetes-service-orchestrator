@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed } from "vue";
-import { useRouter } from "vue-router";
+import { computed, ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import { useDisplay } from "vuetify";
 import { type MenuCategory } from "@/components/Shell/Menu/menuCategories";
 import { useMenuCategories } from "@/components/Shell/Menu/useMenuCategories";
@@ -18,6 +18,25 @@ const { categories, isCategoryActive, badgeOf, categoryUrl } = useMenuCategories
  */
 const { lgAndUp } = useDisplay();
 const isRail = computed(() => !lgAndUp.value);
+
+/**
+ * The category whose popover is open. A click on the icon or in the popover goes somewhere,
+ * and the popover goes with it - left to hover, it stayed over the page it opened.
+ */
+const openFlyout = ref<string | null>(null);
+
+function setFlyout(category: MenuCategory, open: boolean) {
+    if (open) {
+        openFlyout.value = category.identifier;
+    } else if (openFlyout.value == category.identifier) {
+        openFlyout.value = null;
+    }
+}
+
+const route = useRoute();
+watch(() => route.path, () => {
+    openFlyout.value = null;
+});
 
 function onLogoClicked(event: Event) {
     router
@@ -50,6 +69,8 @@ function flyoutOffset(category: MenuCategory): number[] {
             <v-menu
                 v-for="(category, index) in categories"
                 :key="index"
+                :model-value="openFlyout == category.identifier"
+                @update:model-value="open => setFlyout(category, open)"
                 open-on-hover
                 open-on-focus
                 :open-delay="0"
@@ -64,6 +85,7 @@ function flyoutOffset(category: MenuCategory): number[] {
                         :active="isCategoryActive(category)"
                         :aria-label="category.name"
                         class="rail-item"
+                        @click="openFlyout = null"
                         variant="text"
                         color="secondary"
                         :ripple="false"
@@ -204,7 +226,7 @@ function flyoutOffset(category: MenuCategory): number[] {
 <style scoped lang="scss">
 .logo {
     font-size: 18px;
-    color: #1a3b46;
+    color: rgb(var(--v-theme-primary));
     font-family: "Roboto", sans-serif;
     padding: 8px;
 }
@@ -252,10 +274,8 @@ function flyoutOffset(category: MenuCategory): number[] {
 }
 
 .v-list-item--active {
-    border-left: 4px solid #2e92a3;
-    color: #2e92a3;
-    color: var(--v-primary-base);
-    color: var(--v-secondary-base);
+    border-left: 4px solid rgb(var(--v-theme-secondary));
+    color: rgb(var(--v-theme-secondary));
 }
 
 .v-list-item__content:has(v-list-group--open) {
@@ -283,11 +303,11 @@ function flyoutOffset(category: MenuCategory): number[] {
     width: 40px;
     height: 40px;
     border-radius: 8px;
-    color: rgba(0, 0, 0, 0.6) !important;
+    color: rgba(var(--v-theme-on-surface), 0.6) !important;
 }
 
 .rail-item.v-btn--active {
-    color: #2e92a3 !important;
+    color: rgb(var(--v-theme-secondary)) !important;
 }
 
 .rail-flyout {
@@ -303,8 +323,8 @@ function flyoutOffset(category: MenuCategory): number[] {
     padding: 0 16px;
     font-size: 15px;
     font-weight: 500;
-    color: #fff;
-    background: #1a3b46;
+    color: rgb(var(--v-theme-on-appbar));
+    background: rgb(var(--v-theme-appbar));
     border-radius: 8px 8px 0 0;
     text-decoration: none;
 }
@@ -322,16 +342,16 @@ function flyoutOffset(category: MenuCategory): number[] {
         padding: 0 12px !important;
         border-left: none;
         border-radius: 6px;
-        color: rgba(0, 0, 0, 0.75);
+        color: rgba(var(--v-theme-on-surface), 0.75);
     }
 
     .v-list-item:hover {
-        color: #2e92a3;
-        background: rgba(46, 146, 163, 0.12);
+        color: rgb(var(--v-theme-secondary));
+        background: rgba(var(--v-theme-secondary), 0.12);
     }
 
     .v-list-item--active {
-        color: #2e92a3;
+        color: rgb(var(--v-theme-secondary));
         font-weight: 500;
     }
 

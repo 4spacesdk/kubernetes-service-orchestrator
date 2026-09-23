@@ -40,7 +40,7 @@ export function useDialogSave() {
         api.setErrorHandler(response => {
             isSaving.value = false;
             error.value = String(response?.error ?? response?.message ?? "Could not save");
-            bus.emit("toast", { text: error.value, color: "red" });
+            bus.emit("toast", { text: error.value, color: "error" });
             return false;
         });
         api.save(data, saved => {

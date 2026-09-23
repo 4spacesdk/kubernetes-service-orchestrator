@@ -19,7 +19,7 @@ function onDeleteBtnClicked() {
     bus.emit('confirm', {
         body: `Do you want to delete "${props.deployment.name}"?`,
         confirmIcon: 'fa fa-trash',
-        confirmColor: 'red',
+        confirmColor: 'error',
         responseCallback: (confirmed: boolean) => {
             if (confirmed) {
                 Api.deployments().deleteById(props.deployment.id!).delete(() => {
@@ -45,7 +45,7 @@ function onDeleteBtnClicked() {
                 </div>
             </div>
             <v-btn
-                color="red"
+                color="error"
                 variant="tonal"
                 prepend-icon="fa fa-trash"
                 @click="onDeleteBtnClicked">
@@ -74,6 +74,6 @@ function onDeleteBtnClicked() {
 .danger-text {
     margin-top: 2px;
     font-size: 12px;
-    color: rgba(0, 0, 0, 0.6);
+    color: rgba(var(--v-theme-on-background), 0.6);
 }
 </style>

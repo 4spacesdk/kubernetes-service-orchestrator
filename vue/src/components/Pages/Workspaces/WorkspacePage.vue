@@ -97,7 +97,7 @@ function edit(event: 'workspaceUpdateName' | 'workspaceUpdateIngress' | 'workspa
         <v-toolbar
             density="compact"
             flat
-            color="blue-grey lighten-5"
+            color="toolbar"
             dark
         >
             <v-btn
@@ -157,7 +157,7 @@ function edit(event: 'workspaceUpdateName' | 'workspaceUpdateIngress' | 'workspa
                             v-if="rbacDeveloper && !item.is_paused"
                             prepend-icon="fa fa-pause"
                             title="Pause"
-                            base-color="red"
+                            base-color="error"
                             @click="pause(item)"
                         />
                         <v-list-item
@@ -170,14 +170,14 @@ function edit(event: 'workspaceUpdateName' | 'workspaceUpdateIngress' | 'workspa
                             v-if="rbacDeveloper"
                             prepend-icon="fa fa-skull"
                             title="Terminate"
-                            base-color="red"
+                            base-color="error"
                             @click="terminate(item)"
                         />
                         <v-list-item
                             v-if="rbacWorkspaceUpdate"
                             prepend-icon="fa fa-trash"
                             title="Delete"
-                            base-color="red"
+                            base-color="error"
                             @click="remove(item, {onDeleted: onBack})"
                         />
                     </v-list>
@@ -359,7 +359,7 @@ function edit(event: 'workspaceUpdateName' | 'workspaceUpdateIngress' | 'workspa
 
 .facts dt {
     font-size: 12px;
-    color: rgba(0, 0, 0, 0.55);
+    color: rgba(var(--v-theme-on-background), 0.55);
 }
 
 .facts dd {

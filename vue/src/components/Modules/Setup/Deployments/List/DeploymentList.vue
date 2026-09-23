@@ -194,7 +194,7 @@ function onDeleteItemBtnClicked(item: Deployment) {
     bus.emit('confirm', {
         body: `Do you want to delete "${item.name}"?`,
         confirmIcon: 'fa fa-trash',
-        confirmColor: 'red',
+        confirmColor: 'error',
 
         responseCallback: (confirmed: boolean) => {
             if (confirmed) {
@@ -251,7 +251,7 @@ function onBulkUpdateVersionBtnClicked() {
             v-if="props.showHeader"
             density="compact"
             flat
-            color="blue-grey lighten-5"
+            color="toolbar"
             dark
             :height="props.filterByWorkspaceId ? undefined : (isPhone ? 104 : 120)"
         >
@@ -493,13 +493,13 @@ function onBulkUpdateVersionBtnClicked() {
                             <v-list-item
                                 prepend-icon="fa fa-skull"
                                 title="Terminate"
-                                base-color="red"
+                                base-color="error"
                                 @click="terminate(item)"
                             />
                             <v-list-item
                                 prepend-icon="fa fa-trash"
                                 title="Delete"
-                                base-color="red"
+                                base-color="error"
                                 @click="onDeleteItemBtnClicked(item)"
                             />
                         </v-list>

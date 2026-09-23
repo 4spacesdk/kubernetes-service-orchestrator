@@ -115,7 +115,7 @@ function onCloseBtnClicked() {
             <v-card-actions>
                 <v-spacer />
                 <v-btn variant="tonal" color="grey" prepend-icon="fa fa-circle-xmark" @click="onCloseBtnClicked"> Close </v-btn>
-                <v-btn variant="tonal" color="red" prepend-icon="fa fa-trash" :disabled="isLoading || images.length > 0" @click="onDeleteBtnClicked">
+                <v-btn variant="tonal" color="error" prepend-icon="fa fa-trash" :disabled="isLoading || images.length > 0" @click="onDeleteBtnClicked">
                     Delete
                 </v-btn>
             </v-card-actions>

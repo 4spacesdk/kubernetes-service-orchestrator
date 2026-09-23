@@ -153,7 +153,7 @@ function reload() {
                             statusColor = 'warning';
                             break;
                         case 'Succeeded':
-                            statusColor = 'green';
+                            statusColor = 'success';
                             break;
                         case 'Failed':
                             statusColor = 'error';
@@ -408,7 +408,7 @@ function onAllPodsClicked() {
             v-if="props.showHeader"
             density="compact"
             flat
-            color="blue-grey lighten-5"
+            color="toolbar"
             dark
         >
             <v-toolbar-title>Kubernetes Logs</v-toolbar-title>
@@ -417,10 +417,9 @@ function onAllPodsClicked() {
 
         <!-- Two rows, as on the lists: `v-toolbar` puts its content in a row of its own height,
              so the column has to be inside it, and the height has to be told. -->
-        <v-toolbar bg-color="secondary"
-                   density="compact"
+        <v-toolbar density="compact"
                    flat
-                   color="blue-grey lighten-5"
+                   color="toolbar"
                    :height="110"
                    :class="{'toolbar-wraps': isPhone}"
         >
@@ -484,7 +483,7 @@ function onAllPodsClicked() {
             />
 
             <v-btn
-                :color="follow ? 'white' : 'grey'"
+                :color="follow ? undefined : 'grey'"
                 :variant="follow ? 'outlined' : 'text'"
                 size="small"
                 @click="onFollowClicked"
@@ -498,7 +497,7 @@ function onAllPodsClicked() {
             </v-btn>
 
             <v-btn
-                :color="previousContainer ? 'warning' : 'white'"
+                :color="previousContainer ? 'warning' : undefined"
                 :variant="previousContainer ? 'flat' : 'outlined'"
                 size="small"
                 @click="previousContainer = !previousContainer"
@@ -515,7 +514,7 @@ function onAllPodsClicked() {
                     <v-btn
                         :loading="isPodsLoading"
                         v-bind="props"
-                        variant="outlined" color="white" size="small"
+                        variant="outlined" size="small"
                     >
                         <template v-if="allPods">All pods</template>
                         <template v-else>{{ activePod?.pod }} - {{ activePod?.container }}</template>
@@ -596,7 +595,7 @@ function onAllPodsClicked() {
 
             <v-chip
                 v-if="isWatching"
-                color="green">
+                color="success">
                 <v-icon class="me-1">fas fa-circle-play</v-icon>
                 <span>Watching...</span>
             </v-chip>
@@ -676,11 +675,11 @@ function onAllPodsClicked() {
 .date-view {
     width: 148px;
     overflow: hidden;
-    color: #b0b2b2;
+    color: rgba(var(--v-theme-on-surface-muted), 0.22);
     flex-shrink: 0;
-    background: rgb(225, 231, 233, .8);
+    background: rgba(var(--v-theme-surface-muted), .8);
     filter: dropShadow(0px 2px 8px rgba(0, 0, 0, 0.8));
-    border-right: 1px solid rgba(0, 0, 0, 0.1);
+    border-right: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
     margin-right: .5rem;
     position: sticky;
     left: -16px;

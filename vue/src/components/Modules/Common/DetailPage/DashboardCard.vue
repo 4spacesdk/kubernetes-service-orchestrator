@@ -31,9 +31,9 @@ const props = defineProps<{
     display: flex;
     flex-direction: column;
     min-width: 0;
-    border: 1px solid rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
     border-radius: 8px;
-    background: #fff;
+    background: rgb(var(--v-theme-background));
 }
 
 .dashboard-card-header {
@@ -42,11 +42,11 @@ const props = defineProps<{
     gap: 8px;
     min-height: 44px;
     padding: 0 12px 0 16px;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
 }
 
 .dashboard-card-icon {
-    color: #2e92a3;
+    color: rgb(var(--v-theme-secondary));
 }
 
 .dashboard-card-title {

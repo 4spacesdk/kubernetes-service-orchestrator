@@ -99,14 +99,15 @@ class MFALibTest extends CIUnitTestCase {
     // <editor-fold desc="The name the authenticator app shows">
 
     /**
-     * The issuer is what an authenticator app lists the entry under, and a user with two
-     * installations of kso has two entries that are otherwise identical. Getting it wrong
+     * The issuer is what an authenticator app lists the entry under - the installation, as the
+     * mails name it - and a user with two installations of kso has two entries that are
+     * otherwise identical. Getting it wrong
      * is not a security problem; it is a support call from someone reading six digits off
      * the wrong line.
      */
-    public function testTheProjectNameIsAppendedWhenThereIsOne(): void {
+    public function testTheProjectNameIsTheIssuerWhenThereIsOne(): void {
         $this->withEnvironment(['PROJECT_NAME' => 'Acme', 'KUBERNETES_MY_NAMESPACE' => 'kso-prod'], function (): void {
-            $this->assertSame('4 Spaces KSO | Acme', $this->issuerOf(new MFALib()));
+            $this->assertSame('Acme', $this->issuerOf(new MFALib()));
         });
     }
 
@@ -121,7 +122,7 @@ class MFALibTest extends CIUnitTestCase {
      */
     public function testTheNamespaceIsUsedWhenThereIsNoProjectName(): void {
         $this->withEnvironment(['PROJECT_NAME' => '', 'KUBERNETES_MY_NAMESPACE' => 'kso-prod'], function (): void {
-            $this->assertSame('4 Spaces KSO | kso-prod', $this->issuerOf(new MFALib()));
+            $this->assertSame('kso-prod', $this->issuerOf(new MFALib()));
         });
     }
 
@@ -131,7 +132,7 @@ class MFALibTest extends CIUnitTestCase {
      */
     public function testTheDefaultNamespaceIsNotWorthShowing(): void {
         $this->withEnvironment(['PROJECT_NAME' => '', 'KUBERNETES_MY_NAMESPACE' => 'default'], function (): void {
-            $this->assertSame('4 Spaces KSO', $this->issuerOf(new MFALib()));
+            $this->assertSame('KSO', $this->issuerOf(new MFALib()));
         });
     }
 

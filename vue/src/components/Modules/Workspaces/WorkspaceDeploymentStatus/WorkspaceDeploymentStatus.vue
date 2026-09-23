@@ -77,7 +77,7 @@ function render() {
         text.value = "Paused";
     } else if (deploymentsOutOfSync.value.length) {
         icon.value = "fa fa-circle-arrow-up";
-        color.value = "orange";
+        color.value = "warning";
         text.value = "Out of sync";
     } else if (deploymentsInDraftStatus.value.length) {
         icon.value = "fa fa-check";
@@ -89,7 +89,7 @@ function render() {
         text.value = "Inactive";
     } else if (deploymentsSynced.value.length) {
         icon.value = "fa fa-check";
-        color.value = "green";
+        color.value = "success";
         text.value = "Synced";
     } else {
         icon.value = "fa fa-circle-info";
@@ -130,17 +130,17 @@ function onRefreshBtnClicked() {
                 <v-row>
                     <v-col cols="12">
                         <div class="d-flex align-center w-100 justify-space-between">
-                            <v-icon class="me-1" color="green">fa fa-check</v-icon>
+                            <v-icon class="me-1" color="success">fa fa-check</v-icon>
                             <div class="d-flex align-center"><span>Synced</span></div>
-                            <v-chip size="small" class="ms-auto" color="green">{{ deploymentsSynced.length }}</v-chip>
+                            <v-chip size="small" class="ms-auto" color="success">{{ deploymentsSynced.length }}</v-chip>
                         </div>
                     </v-col>
 
                     <v-col cols="12">
                         <div class="d-flex align-center w-100">
-                            <v-icon class="me-1" color="orange">fa fa-circle-arrow-up</v-icon>
+                            <v-icon class="me-1" color="warning">fa fa-circle-arrow-up</v-icon>
                             <div class="d-flex align-center"><span>Out of sync</span></div>
-                            <v-chip size="small" class="ms-auto" color="orange">{{ deploymentsOutOfSync.length }}</v-chip>
+                            <v-chip size="small" class="ms-auto" color="warning">{{ deploymentsOutOfSync.length }}</v-chip>
                         </div>
                     </v-col>
 

@@ -125,7 +125,7 @@ function onDeleteItemBtnClicked(item: ContainerRegistry) {
         <v-toolbar
             density="compact"
             flat
-            color="blue-grey lighten-5"
+            color="toolbar"
             dark
         >
             <v-toolbar-title>Container Registries</v-toolbar-title>
@@ -174,7 +174,7 @@ function onDeleteItemBtnClicked(item: ContainerRegistry) {
                         <v-icon>fa fa-download</v-icon>
                         <v-tooltip activator="parent" location="bottom">Import images</v-tooltip>
                     </v-btn>
-                    <v-btn variant="plain" color="red" @click="onDeleteItemBtnClicked(item)" size="small" density="comfortable" icon>
+                    <v-btn variant="plain" color="error" @click="onDeleteItemBtnClicked(item)" size="small" density="comfortable" icon>
                         <v-icon>fa fa-trash</v-icon>
                         <v-tooltip activator="parent" location="bottom">Delete</v-tooltip>
                     </v-btn>

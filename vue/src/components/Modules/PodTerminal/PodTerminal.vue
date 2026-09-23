@@ -138,10 +138,9 @@ function clearCommandInput() {
 
     <div class="d-flex flex-column w-100 h-100 tab-wrapper">
         <v-toolbar
-            bg-color="secondary"
             density="compact"
             flat
-            color="blue-grey lighten-5"
+            color="toolbar"
             class="d-flex w-100 flex-column"
         >
             <div class="d-flex flex-grow-1 px-5 ga-6">
@@ -243,11 +242,11 @@ function clearCommandInput() {
 .date-view {
     width: 176px;
     overflow: hidden;
-    color: #b0b2b2;
+    color: rgba(var(--v-theme-on-surface-muted), 0.22);
     flex-shrink: 0;
-    background: rgb(225, 231, 233, .8);
+    background: rgba(var(--v-theme-surface-muted), .8);
     filter: dropShadow(0px 2px 8px rgba(0, 0, 0, 0.8));
-    border-right: 1px solid rgba(0, 0, 0, 0.1);
+    border-right: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
     margin-right: .5rem;
     position: sticky;
     left: -16px;

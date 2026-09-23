@@ -209,7 +209,7 @@ class User extends \RestExtension\Entities\User {
         $link = base_url('login/resetPassword') . '?token=' . $token;
         $minutes = self::PasswordResetMinutes;
         (new EmailLib())->send(
-            '4 Spaces KSO | Choose a new password',
+            EmailLib::Subject('Choose a new password'),
             "Follow this link to choose a new password: <a href=\"{$link}\">{$link}</a><br><br>"
             . "It works once, for {$minutes} minutes. If you did not ask for it, ignore this e-mail - your password is unchanged.",
             $this->first_name,

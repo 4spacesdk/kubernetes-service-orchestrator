@@ -4,7 +4,6 @@ namespace Config;
 
 use CodeIgniter\Events\Events;
 use CodeIgniter\Exceptions\FrameworkException;
-use CodeIgniter\HotReloader\HotReloader;
 
 /*
  * --------------------------------------------------------------------
@@ -42,22 +41,8 @@ Events::on('pre_system', static function (): void {
         ob_start(static fn ($buffer) => $buffer);
     }
 
-    /*
-     * --------------------------------------------------------------------
-     * Debug Toolbar Listeners.
-     * --------------------------------------------------------------------
-     * If you delete, they will no longer be collected.
-     */
-    if (CI_DEBUG && ! is_cli()) {
-        Events::on('DBQuery', 'CodeIgniter\Debug\Toolbar\Collectors\Database::collect');
-        service('toolbar')->respond();
-        // Hot Reload route - for framework use on the hot reloader.
-        if (ENVIRONMENT === 'development') {
-            service('routes')->get('__hot-reload', static function (): void {
-                (new HotReloader())->run();
-            });
-        }
-    }
+    // No Debug Toolbar: it was drawn over the bottom of every page kso renders itself - the
+    // sign-in pages among them - in development, and nothing collected for it was read.
     // @codeCoverageIgnoreEnd
 });
 

@@ -65,31 +65,31 @@ function render(status: string) {
         case MigrationJobStatusTypes.Deploying:
             showIcon.value = true;
             icon.value = 'fa fa-box';
-            color.value = 'orange';
+            color.value = 'warning';
             text.value =  'Deploying';
             break;
         case MigrationJobStatusTypes.Started:
             showLoader.value = true;
             icon.value = 'fa fa-check';
-            color.value = 'green';
+            color.value = 'success';
             text.value =  'Running';
             break;
         case MigrationJobStatusTypes.Completed:
             showIcon.value = true;
             icon.value = 'fa fa-check';
-            color.value = 'green';
+            color.value = 'success';
             text.value =  'Completed';
             break;
         case MigrationJobStatusTypes.FailedLogVerification:
             showIcon.value = true;
             icon.value = 'fa fa-circle-xmark';
-            color.value = 'red';
+            color.value = 'error';
             text.value =  'Failed (Log verification)';
             break;
         case MigrationJobStatusTypes.Failed_PostCommands:
             showIcon.value = true;
             icon.value = 'fa fa-circle-xmark';
-            color.value = 'red';
+            color.value = 'error';
             text.value =  'Failed (Post commands)';
             break;
         default:
@@ -130,7 +130,7 @@ function onRefreshBtnClicked() {
                 v-if="showLoader"
                 class="me-1"
                 width="1" indeterminate size="x-small"
-                color="blue"/>
+                color="info"/>
             <v-tooltip activator="parent" location="bottom" v-if="text">{{ text }}</v-tooltip>
         </v-btn>
 

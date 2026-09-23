@@ -20,7 +20,7 @@ const showDialog = ref(false);
 const titleText = ref('');
 const bodyText = ref('');
 const confirmIcon = ref('fa fa-check');
-const confirmColor = ref('red');
+const confirmColor = ref('error');
 const cancelIcon = ref('fa fa-circle-xmark');
 const cancelColor = ref('grey');
 
@@ -40,7 +40,7 @@ onUnmounted(() => {
 function render() {
     titleText.value = props.input.title ?? 'Confirm';
     confirmIcon.value = props.input.confirmIcon ?? 'fa fa-check';
-    confirmColor.value = props.input.confirmColor ?? 'green';
+    confirmColor.value = props.input.confirmColor ?? 'success';
     cancelIcon.value = props.input.cancelIcon ?? 'fa fa-circle-xmark';
     cancelColor.value = props.input.cancelColor ?? 'grey';
     bodyText.value = props.input.body;

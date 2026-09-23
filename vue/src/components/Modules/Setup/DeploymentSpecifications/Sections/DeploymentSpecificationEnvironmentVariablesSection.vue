@@ -164,7 +164,7 @@ function onBulkEditBtnClicked() {
             <v-btn
                 icon
                 variant="plain"
-                color="secondary-ligthen-1"
+                color="secondary"
                 size="small"
                 @click="onCreateBtnClicked()">
                 <v-icon>fa fa-plus</v-icon>
@@ -209,7 +209,7 @@ function onBulkEditBtnClicked() {
                     </v-btn>
                     <v-btn
                         variant="plain"
-                        color="red" size="small"
+                        color="error" size="small"
                         @click="onDeleteRowClicked(item)">
                         <v-icon>fa fa-trash</v-icon>
                         <v-tooltip activator="parent" location="bottom">Delete</v-tooltip>

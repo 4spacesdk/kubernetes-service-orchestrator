@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <title><?= lang('Errors.badRequest') ?></title>
 
+    <link rel="icon" href="<?= base_url('kso.svg') ?>">
     <style>
         div.logo {
             height: 200px;
@@ -28,7 +29,7 @@
             font-size: 3rem;
             margin-top: 0;
             margin-bottom: 0;
-            color: #222;
+            color: #26313c;
         }
         .wrap {
             max-width: 1024px;
@@ -64,12 +65,13 @@
         a:active,
         a:link,
         a:visited {
-            color: #dd4814;
+            color: #2563eb;
         }
     </style>
 </head>
 <body>
 <div class="wrap">
+    <img src="<?= base_url('kso.svg') ?>" width="48" height="48" alt="KSO">
     <h1>400</h1>
 
     <p>

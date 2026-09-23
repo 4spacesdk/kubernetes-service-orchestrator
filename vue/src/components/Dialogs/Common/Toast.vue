@@ -57,7 +57,7 @@ function onCloseBtnClicked() {
 
         <template v-slot:actions>
             <v-btn
-                color="pink"
+                color="secondary"
                 variant="text"
                 @click="onCloseBtnClicked"
             >

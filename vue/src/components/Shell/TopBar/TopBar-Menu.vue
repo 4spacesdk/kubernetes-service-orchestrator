@@ -2,6 +2,7 @@
 import {computed, defineComponent, reactive, ref} from 'vue'
 import AuthService from "@/services/AuthService";
 import bus from "@/plugins/bus";
+import {useAppTheme, type ThemeMode} from "@/composables/useAppTheme";
 
 const showMenu = ref(false);
 const userFullName = computed(() => AuthService.currentAuthUser?.name);
@@ -12,6 +13,14 @@ function onMyProfileBtnClicked() {
     });
     showMenu.value = false;
 }
+
+const {mode} = useAppTheme();
+
+const modes: {value: ThemeMode, title: string, icon: string}[] = [
+    {value: 'system', title: 'As the system', icon: 'fa fa-circle-half-stroke'},
+    {value: 'light', title: 'Light', icon: 'fa fa-sun'},
+    {value: 'dark', title: 'Dark', icon: 'fa fa-moon'},
+];
 
 function onLogoutBtnClicked() {
     AuthService.handleLogout();
@@ -33,7 +42,7 @@ function onLogoutBtnClicked() {
                    color="transparent"
                    >
 
-                <span class="ml-2 my-auto text-white">{{ userFullName }}</span>
+                <span class="ml-2 my-auto">{{ userFullName }}</span>
                 <v-icon class="my-auto ml-2">fa fa-chevron-down</v-icon>
             </v-btn>
         </template>
@@ -47,6 +56,22 @@ function onLogoutBtnClicked() {
                     <span class="ml-2">Profile</span>
                 </v-list-item-title>
             </v-list-item>
+            <v-divider class="my-1"/>
+            <v-list-subheader>Theme</v-list-subheader>
+            <v-list-item
+                v-for="option in modes"
+                :key="option.value"
+                density="comfortable"
+                :active="mode == option.value"
+                color="secondary"
+                @click="mode = option.value">
+                <v-list-item-title>
+                    <v-icon size="small" class="my-auto ml-2">{{ option.icon }}</v-icon>
+                    <span class="ml-2">{{ option.title }}</span>
+                </v-list-item-title>
+            </v-list-item>
+
+            <v-divider class="my-1"/>
             <v-list-item
                 density="comfortable"
                 @click="onLogoutBtnClicked">

@@ -181,7 +181,6 @@ function onCloseBtnClicked() {
                         <v-checkbox
                             v-model="props.input.spec.enable_database"
                             :disabled="true"
-                            color="black"
                             label="Database"
                             density="compact"
                             hide-details
@@ -194,7 +193,6 @@ function onCloseBtnClicked() {
                         <v-checkbox
                             v-model="props.input.spec.enable_cronjob"
                             :disabled="true"
-                            color="black"
                             label="CronJob"
                             density="compact"
                             hide-details
@@ -207,7 +205,6 @@ function onCloseBtnClicked() {
                         <v-checkbox
                             v-model="props.input.spec.enable_external_access"
                             :disabled="true"
-                            color="black"
                             label="External Access"
                             density="compact"
                             hide-details
@@ -220,7 +217,6 @@ function onCloseBtnClicked() {
                         <v-checkbox
                             v-model="props.input.spec.enable_internal_access"
                             :disabled="true"
-                            color="black"
                             label="Internal Access"
                             density="compact"
                             hide-details
@@ -313,7 +309,7 @@ function onCloseBtnClicked() {
                     flat
                     variant="tonal"
                     prepend-icon="fa fa-check"
-                    color="green"
+                    color="success"
                     @click="onSaveBtnClicked">
                     Save
                 </v-btn>

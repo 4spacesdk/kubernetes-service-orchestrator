@@ -63,11 +63,11 @@ function onSaveBtnClicked() {
 
 <template>
     <div class="h-100 content-wrapper">
-        <v-toolbar density="compact" flat color="blue-grey lighten-5" dark>
+        <v-toolbar density="compact" flat color="toolbar" dark>
             <v-toolbar-title>System</v-toolbar-title>
         </v-toolbar>
 
-        <v-progress-linear v-if="isLoading" indeterminate color="accent" />
+        <v-progress-linear v-if="isLoading" indeterminate />
 
         <v-row class="pa-4" v-if="!isLoading && value">
             <v-col cols="6">

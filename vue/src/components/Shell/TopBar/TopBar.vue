@@ -8,19 +8,20 @@ const {xs: isPhone} = useDisplay();
 </script>
 
 <template>
-    <v-system-bar app color="primary"
+    <v-system-bar app color="appbar"
                   class="px-2"
                   :height="isPhone ? 48 : 65">
 
-        <div
-            class="d-flex h-100 align-start flex-column ml-1"
-        >
-            <v-img
-                src="/app/logo-white.svg"
-                :min-height="isPhone ? 36 : 50"
-                :min-width="isPhone ? 36 : 50"
-            />
-        </div>
+        <router-link
+            to="/"
+            class="brand ml-1">
+            <img
+                src="/app/kso.svg"
+                alt=""
+                :width="isPhone ? 32 : 40"
+                :height="isPhone ? 32 : 40"/>
+            <span>KSO</span>
+        </router-link>
 
         <v-spacer></v-spacer>
 
@@ -33,5 +34,15 @@ const {xs: isPhone} = useDisplay();
 </template>
 
 <style scoped>
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: rgb(var(--v-theme-on-appbar));
+    text-decoration: none;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: .04em;
+}
 
 </style>

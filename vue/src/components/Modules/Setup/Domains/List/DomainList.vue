@@ -132,7 +132,7 @@ function onDeleteItemBtnClicked(item: Row) {
     bus.emit('confirm', {
         body: `Do you want to delete "${item.domain.name}"?`,
         confirmIcon: 'fa fa-trash',
-        confirmColor: 'red',
+        confirmColor: 'error',
 
         responseCallback: (confirmed: boolean) => {
             if (confirmed) {
@@ -173,7 +173,7 @@ function onCertificateClicked(item: Row) {
         <v-toolbar
             density="compact"
             flat
-            color="blue-grey lighten-5"
+            color="toolbar"
             dark
         >
             <v-toolbar-title>Domains</v-toolbar-title>
@@ -323,7 +323,7 @@ function onCertificateClicked(item: Row) {
                     </v-btn>
 
                     <v-btn
-                        variant="plain" color="red" 
+                        variant="plain" color="error" 
                         @click="onDeleteItemBtnClicked(item)"
                         size="small"
                         density="comfortable"

@@ -392,7 +392,7 @@ function onBatchTerminateBtnClicked() {
                     :disabled="(selectedWorkspaceRows.length + selectedDeploymentRows.length) === 0"
                     :loading="isLoadingBatchDeploy"
                     variant="flat"
-                    color="green"
+                    color="success"
                     size="small"
                     @click="onBatchDeployBtnClicked()">
                     <v-icon>fa fa-circle-play</v-icon>
@@ -404,7 +404,7 @@ function onBatchTerminateBtnClicked() {
                     :disabled="(selectedWorkspaceRows.length + selectedDeploymentRows.length) === 0"
                     :loading="isLoadingBatchTerminate"
                     variant="flat"
-                    color="red"
+                    color="error"
                     size="small"
                     @click="onBatchTerminateBtnClicked()">
                     <v-icon>fa fa-skull</v-icon>
@@ -512,7 +512,7 @@ function onBatchTerminateBtnClicked() {
                             :disabled="!item.item.hasDeployCommand"
                             :loading="item.isLoadingDeploy"
                             variant="plain" icon
-                            :color="item.item.hasDeployCommand ? 'green' : 'grey'"
+                            :color="item.item.hasDeployCommand ? 'success' : 'grey'"
                             size="small"
                             @click="onDeployBtnClicked(item)">
                             <v-icon>fa fa-circle-play</v-icon>
@@ -528,7 +528,7 @@ function onBatchTerminateBtnClicked() {
                             :disabled="!item.item.hasTerminateCommand"
                             :loading="item.isLoadingTerminate"
                             icon
-                            variant="plain" :color="item.item.hasTerminateCommand ? 'red' : 'grey'"
+                            variant="plain" :color="item.item.hasTerminateCommand ? 'error' : 'grey'"
                             size="small"
                             @click="onTerminateBtnClicked(item)">
                             <v-icon>fa fa-skull</v-icon>
@@ -646,7 +646,7 @@ function onBatchTerminateBtnClicked() {
                             :disabled="!item.item.hasDeployCommand"
                             :loading="item.isLoadingDeploy"
                             variant="plain" icon
-                            :color="item.item.hasDeployCommand ? 'green' : 'grey'"
+                            :color="item.item.hasDeployCommand ? 'success' : 'grey'"
                             size="small"
                             @click="onDeployBtnClicked(item)">
                             <v-icon>fa fa-circle-play</v-icon>
@@ -662,7 +662,7 @@ function onBatchTerminateBtnClicked() {
                             :disabled="!item.item.hasTerminateCommand"
                             :loading="item.isLoadingTerminate"
                             icon
-                            variant="plain" :color="item.item.hasTerminateCommand ? 'red' : 'grey'"
+                            variant="plain" :color="item.item.hasTerminateCommand ? 'error' : 'grey'"
                             size="small"
                             @click="onTerminateBtnClicked(item)">
                             <v-icon>fa fa-skull</v-icon>

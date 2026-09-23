@@ -194,7 +194,7 @@ function onCloseBtnClicked() {
                     flat
                     variant="tonal"
                     prepend-icon="fa fa-download"
-                    color="green"
+                    color="success"
                     :disabled="selected.length == 0"
                     :loading="isImporting"
                     @click="onImportBtnClicked"

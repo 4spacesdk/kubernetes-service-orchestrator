@@ -186,7 +186,7 @@ function onCloseBtnClicked() {
                     flat
                     variant="tonal"
                     prepend-icon="fa fa-check"
-                    color="green"
+                    color="success"
                     :loading="isSaving"
                     @click="onSaveBtnClicked">
                     Save

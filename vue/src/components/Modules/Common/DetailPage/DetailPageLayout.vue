@@ -60,7 +60,7 @@ function titleOf(group: string) {
         <v-toolbar
             density="compact"
             flat
-            color="blue-grey lighten-5"
+            color="toolbar"
             dark
         >
             <v-btn
@@ -194,7 +194,7 @@ function titleOf(group: string) {
     overflow-y: auto;
     padding: .5rem 0;
     background: rgb(var(--v-theme-surface));
-    border-right: 1px solid rgba(0, 0, 0, 0.1);
+    border-right: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
 }
 
 .section-menu .v-list-item:not(:last-of-type) {
@@ -248,7 +248,7 @@ function titleOf(group: string) {
     font-size: 14px;
     font-weight: 500;
     background: rgb(var(--v-theme-surface));
-    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
 }
 
 .section-picker-menu {

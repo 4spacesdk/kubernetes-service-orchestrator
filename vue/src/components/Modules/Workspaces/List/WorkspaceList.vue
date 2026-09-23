@@ -200,7 +200,7 @@ function onWorkspaceTemplatesShortcutClicked() {
 
 <template>
     <div class="h-100 content-wrapper">
-        <v-toolbar density="compact" flat color="blue-grey lighten-5" dark :height="isPhone ? 104 : 120">
+        <v-toolbar density="compact" flat color="toolbar" dark :height="isPhone ? 104 : 120">
             <div class="d-flex flex-column w-100 py-2 px-4 gap-1">
                 <div class="d-flex">
                     <v-toolbar-title class="my-auto">Workspaces</v-toolbar-title>
@@ -378,7 +378,7 @@ function onWorkspaceTemplatesShortcutClicked() {
                                 v-if="rbacDeveloper && !item.workspace.is_paused"
                                 prepend-icon="fa fa-pause"
                                 title="Pause"
-                                base-color="red"
+                                base-color="error"
                                 @click="pause(item.workspace)"
                             />
                             <v-list-item
@@ -391,14 +391,14 @@ function onWorkspaceTemplatesShortcutClicked() {
                                 v-if="rbacDeveloper"
                                 prepend-icon="fa fa-skull"
                                 title="Terminate"
-                                base-color="red"
+                                base-color="error"
                                 @click="terminate(item.workspace)"
                             />
                             <v-list-item
                                 v-if="rbacWorkspaceUpdate"
                                 prepend-icon="fa fa-trash"
                                 title="Delete"
-                                base-color="red"
+                                base-color="error"
                                 @click="remove(item.workspace, { onBusy: busy => (item.isLoadingDeleteBtn = busy) })"
                             />
                         </v-list>

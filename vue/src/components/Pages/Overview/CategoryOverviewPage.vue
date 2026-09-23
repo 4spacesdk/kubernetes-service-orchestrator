@@ -20,7 +20,7 @@ const category = computed(() => visibleMenuCategories(AuthService.currentAuthUse
         <v-toolbar
             density="compact"
             flat
-            color="blue-grey lighten-5"
+            color="toolbar"
             dark
         >
             <v-toolbar-title>{{ category?.name }}</v-toolbar-title>
@@ -66,7 +66,7 @@ const category = computed(() => visibleMenuCategories(AuthService.currentAuthUse
     align-items: flex-start;
     gap: 14px;
     padding: 16px;
-    border: 1px solid rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
     border-radius: 8px;
     color: inherit;
     text-decoration: none;
@@ -75,8 +75,8 @@ const category = computed(() => visibleMenuCategories(AuthService.currentAuthUse
 
 .overview-card:hover,
 .overview-card:focus-visible {
-    border-color: #2e92a3;
-    background: rgba(46, 146, 163, 0.06);
+    border-color: rgb(var(--v-theme-secondary));
+    background: rgba(var(--v-theme-secondary), 0.06);
 }
 
 .overview-icon {
@@ -87,8 +87,8 @@ const category = computed(() => visibleMenuCategories(AuthService.currentAuthUse
     height: 36px;
     flex-shrink: 0;
     border-radius: 8px;
-    color: #2e92a3;
-    background: rgba(46, 146, 163, 0.12);
+    color: rgb(var(--v-theme-secondary));
+    background: rgba(var(--v-theme-secondary), 0.12);
 }
 
 .overview-title {
@@ -99,6 +99,6 @@ const category = computed(() => visibleMenuCategories(AuthService.currentAuthUse
 .overview-description {
     margin-top: 2px;
     font-size: 12px;
-    color: rgba(0, 0, 0, 0.6);
+    color: rgba(var(--v-theme-on-background), 0.6);
 }
 </style>

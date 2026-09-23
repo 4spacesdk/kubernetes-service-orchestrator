@@ -98,7 +98,7 @@ function deleteItem(item: User) {
     bus.emit('confirm', {
         body: `Do you want to delete "${item.name}"?`,
         confirmIcon: 'fa fa-trash',
-        confirmColor: 'red',
+        confirmColor: 'error',
 
         responseCallback: (confirmed: boolean) => {
             if (confirmed) {
@@ -116,7 +116,7 @@ function deleteItem(item: User) {
         <v-toolbar
             density="compact"
             flat
-            color="blue-grey lighten-5"
+            color="toolbar"
             dark
         >
             <v-toolbar-title>Users</v-toolbar-title>
@@ -181,7 +181,7 @@ function deleteItem(item: User) {
                         <v-icon>fa fa-pen</v-icon>
                         <v-tooltip activator="parent" location="bottom">Edit</v-tooltip>
                     </v-btn>
-                    <v-btn variant="plain" color="red" @click="deleteItem(item)" size="small" density="comfortable" icon>
+                    <v-btn variant="plain" color="error" @click="deleteItem(item)" size="small" density="comfortable" icon>
                         <v-icon>fa fa-trash</v-icon>
                         <v-tooltip activator="parent" location="bottom">Delete</v-tooltip>
                     </v-btn>

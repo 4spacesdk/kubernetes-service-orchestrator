@@ -41,27 +41,27 @@ function render() {
     switch (status) {
         case MigrationJobStatusTypes.Deploying:
             icon.value = 'fa fa-box';
-            color.value = 'orange';
+            color.value = 'warning';
             text.value =  'Deploying';
             break;
         case MigrationJobStatusTypes.Started:
             icon.value = 'fa fa-box';
-            color.value = 'orange';
+            color.value = 'warning';
             text.value =  'Started';
             break;
         case MigrationJobStatusTypes.Completed:
             icon.value = 'fa fa-check';
-            color.value = 'green';
+            color.value = 'success';
             text.value =  'Completed';
             break;
         case MigrationJobStatusTypes.FailedLogVerification:
             icon.value = 'fa fa-circle-xmark';
-            color.value = 'red';
+            color.value = 'error';
             text.value =  'Failed (Log verification)';
             break;
         case MigrationJobStatusTypes.Failed_PostCommands:
             icon.value = 'fa fa-circle-xmark';
-            color.value = 'red';
+            color.value = 'error';
             text.value =  'Failed (Post commands)';
             break;
         default:

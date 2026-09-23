@@ -150,7 +150,7 @@ function onDeleteBtnClicked(row: Row) {
     bus.emit('confirm', {
         body: `Do you want to delete this update?`,
         confirmIcon: 'fa fa-trash',
-        confirmColor: 'red',
+        confirmColor: 'error',
 
         responseCallback: (confirmed: boolean) => {
             if (confirmed) {
@@ -207,7 +207,7 @@ function onAcceptSelectedBtnClicked() {
             v-if="props.showHeader"
             density="compact"
             flat
-            color="blue-grey lighten-5"
+            color="toolbar"
             dark
             class="pr-2"
         >
@@ -314,7 +314,7 @@ function onAcceptSelectedBtnClicked() {
                         <v-tooltip activator="parent" location="bottom">Log</v-tooltip>
                     </v-btn>
                     <v-btn
-                        variant="plain" color="red"
+                        variant="plain" color="error"
                         @click="onDeleteBtnClicked(item)"
                         size="small"
                         density="comfortable"

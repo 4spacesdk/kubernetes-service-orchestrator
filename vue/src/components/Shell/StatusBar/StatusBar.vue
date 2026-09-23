@@ -83,7 +83,7 @@ function onVersionBtnClicked() {
         >
             <v-badge
                 style="margin-bottom: 4px;"
-                :color="isLoading ? 'orange' : (status != 'success' ? 'error' : (healthIsStale ? 'warning' : 'success'))"
+                :color="isLoading ? 'warning' : (status != 'success' ? 'error' : (healthIsStale ? 'warning' : 'success'))"
                 @click="onReloadBtnClicked"
             >
                 <v-tooltip activator="parent" location="top">

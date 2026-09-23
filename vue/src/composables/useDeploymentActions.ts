@@ -37,7 +37,7 @@ export function useDeploymentActions() {
         bus.emit("confirm", {
             body: `Do you want to deploy "${item.name}"?`,
             confirmIcon: "fa fa-play",
-            confirmColor: "green",
+            confirmColor: "success",
 
             responseCallback: (confirmed: boolean) => {
                 if (confirmed) {
@@ -51,7 +51,7 @@ export function useDeploymentActions() {
         bus.emit("confirm", {
             body: `Do you want to terminate "${item.name}"?\n\nEverything it runs in the cluster is taken down. It stays Inactive until it is deployed again.`,
             confirmIcon: "fa fa-skull",
-            confirmColor: "red",
+            confirmColor: "error",
 
             responseCallback: (confirmed: boolean) => {
                 if (confirmed) {

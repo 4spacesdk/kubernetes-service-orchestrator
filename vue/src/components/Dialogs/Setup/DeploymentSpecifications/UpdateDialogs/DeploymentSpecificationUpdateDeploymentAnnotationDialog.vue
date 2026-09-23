@@ -127,7 +127,7 @@ function onCloseBtnClicked() {
                     flat
                     variant="tonal"
                     prepend-icon="fa fa-check"
-                    color="green"
+                    color="success"
                     @click="onSaveBtnClicked">
                     Done
                 </v-btn>

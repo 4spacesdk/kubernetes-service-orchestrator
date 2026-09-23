@@ -9,11 +9,14 @@ class MFALib {
     private TwoFactorAuth $twoFactorAuth;
 
     public function __construct() {
-        $name = '4 Spaces KSO';
+        // What the authenticator app lists the entry under: the installation, as the mails
+        // name it - or, without a project name, the namespace kso runs in, which is usually
+        // the customer's name.
+        $name = 'KSO';
         if (getenv('PROJECT_NAME') && strlen(getenv('PROJECT_NAME'))) {
-            $name .= ' | ' . getenv('PROJECT_NAME');
+            $name = getenv('PROJECT_NAME');
         } else if (KubeHelper::GetMyNamespace() != 'default') {
-            $name .= ' | ' . KubeHelper::GetMyNamespace();
+            $name = KubeHelper::GetMyNamespace();
         }
         // Drawn here, as SVG, which needs no image extension. The QR code holds the secret
         // itself - it is the second factor - and it used to be fetched from api.qrserver.com

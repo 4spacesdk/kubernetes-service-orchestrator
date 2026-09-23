@@ -215,12 +215,12 @@ function actionColor(action?: string): string {
     switch (action) {
         case 'created':
         case 'relation_added':
-            return 'green';
+            return 'success';
         case 'deleted':
         case 'relation_removed':
-            return 'red';
+            return 'error';
         case 'updated':
-            return 'blue';
+            return 'info';
         default:
             return 'purple';
     }
@@ -244,7 +244,7 @@ function show(value: any): string {
             v-if="props.showHeader"
             density="compact"
             flat
-            color="blue-grey lighten-5"
+            color="toolbar"
             dark
         >
             <v-toolbar-title>Audit Trail</v-toolbar-title>

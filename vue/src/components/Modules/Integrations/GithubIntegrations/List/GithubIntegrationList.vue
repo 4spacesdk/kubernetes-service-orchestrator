@@ -101,7 +101,7 @@ function onDeleteItemBtnClicked(item: GithubIntegration) {
 
 <template>
     <div class="h-100 content-wrapper">
-        <v-toolbar density="compact" flat color="blue-grey lighten-5" dark>
+        <v-toolbar density="compact" flat color="toolbar" dark>
             <v-toolbar-title>GitHub Integrations</v-toolbar-title>
 
             <v-spacer></v-spacer>
@@ -134,7 +134,7 @@ function onDeleteItemBtnClicked(item: GithubIntegration) {
                         <v-icon>fa fa-pen</v-icon>
                         <v-tooltip activator="parent" location="bottom">Edit</v-tooltip>
                     </v-btn>
-                    <v-btn variant="plain" color="red" @click="onDeleteItemBtnClicked(item)" size="small" density="comfortable" icon>
+                    <v-btn variant="plain" color="error" @click="onDeleteItemBtnClicked(item)" size="small" density="comfortable" icon>
                         <v-icon>fa fa-trash</v-icon>
                         <v-tooltip activator="parent" location="bottom">Delete</v-tooltip>
                     </v-btn>

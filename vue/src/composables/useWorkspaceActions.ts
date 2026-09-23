@@ -21,7 +21,7 @@ export function useWorkspaceActions() {
         bus.emit("confirm", {
             body: `Do you want to deploy "${item.name}"?`,
             confirmIcon: "fa fa-play",
-            confirmColor: "green",
+            confirmColor: "success",
 
             responseCallback: (confirmed: boolean) => {
                 if (confirmed) {
@@ -54,7 +54,7 @@ export function useWorkspaceActions() {
         bus.emit("confirm", {
             body: `Do you want to terminate "${item.name}"?`,
             confirmIcon: "fa fa-skull",
-            confirmColor: "red",
+            confirmColor: "error",
 
             responseCallback: (confirmed: boolean) => {
                 if (confirmed) {
@@ -95,7 +95,7 @@ export function useWorkspaceActions() {
                 "\n\nThis shuts the workspace down like Terminate does, and its disks go with it" +
                 " unless their reclaim policy keeps them. The pause stays until someone takes it off.",
             confirmIcon: "fa fa-pause",
-            confirmColor: "red",
+            confirmColor: "error",
 
             responseCallback: (confirmed: boolean) => {
                 if (confirmed) {
@@ -147,7 +147,7 @@ export function useWorkspaceActions() {
         bus.emit("confirm", {
             body: `Do you want to delete "${item.name}"?`,
             confirmIcon: "fa fa-trash",
-            confirmColor: "red",
+            confirmColor: "error",
 
             responseCallback: (confirmed: boolean) => {
                 if (confirmed) {

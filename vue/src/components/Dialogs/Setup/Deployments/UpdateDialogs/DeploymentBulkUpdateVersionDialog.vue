@@ -205,8 +205,8 @@ function onCloseBtnClicked() {
                             </td>
                             <td class="text-no-wrap">
                                 <v-progress-circular v-if="row.state == 'running'" indeterminate size="16" width="2" />
-                                <v-icon v-else-if="row.state == 'ok'" color="green" size="small">fa fa-check</v-icon>
-                                <span v-else-if="row.message" :class="row.state == 'error' ? 'text-red' : 'text-medium-emphasis'" :title="row.message">
+                                <v-icon v-else-if="row.state == 'ok'" color="success" size="small">fa fa-check</v-icon>
+                                <span v-else-if="row.message" :class="row.state == 'error' ? 'text-error' : 'text-medium-emphasis'" :title="row.message">
                                     <v-icon size="small">{{ row.state == "error" ? "fa fa-circle-exclamation" : "fa fa-minus" }}</v-icon>
                                     {{ row.message.length > 60 ? row.message.slice(0, 60) + "…" : row.message }}
                                 </span>
@@ -224,7 +224,7 @@ function onCloseBtnClicked() {
                 <v-btn variant="tonal" color="grey" prepend-icon="fa fa-circle-xmark" :disabled="isRunning" @click="onCloseBtnClicked"> Close </v-btn>
                 <v-btn
                     variant="tonal"
-                    color="green"
+                    color="success"
                     prepend-icon="fa fa-play"
                     :disabled="isLoading || toRun.length == 0"
                     :loading="isRunning"

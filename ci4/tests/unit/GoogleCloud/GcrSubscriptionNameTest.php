@@ -20,8 +20,9 @@ class GcrSubscriptionNameTest extends CIUnitTestCase {
     public function testTheNameCarriesTheProjectThePodAndTheNamespace(): void {
         $name = GcrSubscription::name();
 
+        // Spaced, as a project name may be - see the test below.
         $this->assertStringContainsString(
-            strtolower((string) getenv('PROJECT_NAME')),
+            str_replace(' ', '_', strtolower((string) getenv('PROJECT_NAME'))),
             $name,
             'the project, so two installations do not share a subscription'
         );

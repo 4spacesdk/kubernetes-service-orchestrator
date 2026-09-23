@@ -27,7 +27,7 @@ const {terminate} = useDeploymentActions();
                 </div>
             </div>
             <v-btn
-                color="red"
+                color="error"
                 variant="tonal"
                 prepend-icon="fa fa-skull"
                 @click="terminate(props.deployment)">
@@ -56,6 +56,6 @@ const {terminate} = useDeploymentActions();
 .danger-text {
     margin-top: 2px;
     font-size: 12px;
-    color: rgba(0, 0, 0, 0.6);
+    color: rgba(var(--v-theme-on-background), 0.6);
 }
 </style>

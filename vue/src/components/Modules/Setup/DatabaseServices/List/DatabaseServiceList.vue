@@ -121,7 +121,7 @@ function onDeleteItemBtnClicked(row: Row) {
     bus.emit('confirm', {
         body: `Do you want to delete "${row.item.name}"?`,
         confirmIcon: 'fa fa-trash',
-        confirmColor: 'red',
+        confirmColor: 'error',
 
         responseCallback: (confirmed: boolean) => {
             if (confirmed) {
@@ -155,7 +155,7 @@ function onTestConnectionBtnClicked(row: Row) {
         <v-toolbar
             density="compact"
             flat
-            color="blue-grey lighten-5"
+            color="toolbar"
             dark
         >
             <v-toolbar-title>Database Services</v-toolbar-title>
@@ -218,7 +218,7 @@ function onTestConnectionBtnClicked(row: Row) {
                         <v-icon>fa fa-clone</v-icon>
                         <v-tooltip activator="parent" location="bottom">Duplicate</v-tooltip>
                     </v-btn>
-                    <v-btn variant="plain" color="red" @click="onDeleteItemBtnClicked(item)" size="small" density="comfortable" icon>
+                    <v-btn variant="plain" color="error" @click="onDeleteItemBtnClicked(item)" size="small" density="comfortable" icon>
                         <v-icon>fa fa-trash</v-icon>
                         <v-tooltip activator="parent" location="bottom">Delete</v-tooltip>
                     </v-btn>

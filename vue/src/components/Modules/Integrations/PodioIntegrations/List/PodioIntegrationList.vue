@@ -95,7 +95,7 @@ function deleteItem(item: PodioIntegration) {
     bus.emit('confirm', {
         body: `Do you want to delete "${item.name}"?`,
         confirmIcon: 'fa fa-trash',
-        confirmColor: 'red',
+        confirmColor: 'error',
 
         responseCallback: (confirmed: boolean) => {
             if (confirmed) {
@@ -116,7 +116,7 @@ function deleteItem(item: PodioIntegration) {
         <v-toolbar
             density="compact"
             flat
-            color="blue-grey lighten-5"
+            color="toolbar"
             dark
         >
             <v-toolbar-title>Podio Integrations</v-toolbar-title>
@@ -167,7 +167,7 @@ function deleteItem(item: PodioIntegration) {
                     </v-btn>
 
                     <v-btn
-                        variant="plain" color="red"
+                        variant="plain" color="error"
                         @click="deleteItem(item)"
                         size="small"
                         density="comfortable"

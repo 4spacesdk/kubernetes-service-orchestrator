@@ -108,7 +108,7 @@ function onSaveBtnClicked() {
     // checked by the API, which answers with the one that is broken.
     if (password.value) {
         if (password.value !== passwordConfirm.value) {
-            bus.emit("toast", { text: "The two passwords are not the same", color: "red" });
+            bus.emit("toast", { text: "The two passwords are not the same", color: "error" });
             return;
         }
         item.value!.password = password.value;
@@ -232,7 +232,7 @@ function onMFARemoveBtnClicked() {
                     <v-col cols="12">
                         <v-checkbox
                             v-model="item.renew_password"
-                            color="accent"
+                            color="secondary"
                             density="compact"
                             label="Require password renewal on next login"
                         />
@@ -354,7 +354,7 @@ function onMFARemoveBtnClicked() {
                     flat
                     variant="tonal"
                     prepend-icon="fa fa-check"
-                    color="green"
+                    color="success"
                     :loading="isSaving"
                     @click="onSaveBtnClicked">
                     Save

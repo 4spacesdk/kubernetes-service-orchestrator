@@ -91,7 +91,7 @@ class CheckCertificateExpiry extends BaseCommand {
             ->find();
         foreach ($users as $user) {
             $emailLib->send(
-                '4 Spaces KSO | ' . getenv('PROJECT_NAME') . ' | ALERT | Certificate expiration notification',
+                EmailLib::Subject('ALERT | Certificate expiration notification'),
                 implode('<br>', [
                     "Domain certificate {$domain->name} is going to expire in {$dayDiff} days.",
                     "Expiration Date: " . date('Y-m-d', $expirationDte),

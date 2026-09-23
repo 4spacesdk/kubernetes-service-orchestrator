@@ -138,7 +138,7 @@ function onResponseBodyBtnClicked(item: Row) {
             v-if="props.showHeader"
             density="compact"
             flat
-            color="blue-grey lighten-5"
+            color="toolbar"
             dark
         >
             <v-toolbar-title>Webhook Deliveries</v-toolbar-title>

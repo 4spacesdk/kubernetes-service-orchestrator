@@ -55,7 +55,7 @@ onMounted(() => {
                             statusColor = 'warning';
                             break;
                         case 'Succeeded':
-                            statusColor = 'green';
+                            statusColor = 'success';
                             break;
                         case 'Failed':
                             statusColor = 'error';
@@ -212,7 +212,7 @@ function onOpenTerminalBtnClicked(item: PodOption) {
 <style scoped>
 .totals {
     font-size: 12px;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
 }
 
 .of-limit {

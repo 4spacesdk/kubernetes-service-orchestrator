@@ -114,7 +114,7 @@ const props = defineProps<{
 
 .facts dt {
     font-size: 12px;
-    color: rgba(0, 0, 0, 0.55);
+    color: rgba(var(--v-theme-on-background), 0.55);
 }
 
 .facts dd {

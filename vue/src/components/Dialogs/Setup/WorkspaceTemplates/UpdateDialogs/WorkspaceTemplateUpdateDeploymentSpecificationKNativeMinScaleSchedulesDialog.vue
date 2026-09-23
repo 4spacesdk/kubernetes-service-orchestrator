@@ -180,7 +180,7 @@ function onSortChanged(event: CustomEvent) {
                             </v-btn>
                             <v-btn
                                 variant="plain"
-                                color="red" size="small" icon
+                                color="error" size="small" icon
                                 @click="onDeleteRowClicked(item)">
                                 <v-icon>fa fa-trash</v-icon>
                                 <v-tooltip activator="parent" location="bottom">Delete</v-tooltip>
@@ -205,7 +205,7 @@ function onSortChanged(event: CustomEvent) {
                     flat
                     variant="tonal"
                     prepend-icon="fa fa-check"
-                    color="green"
+                    color="success"
                     @click="onSaveBtnClicked">
                     Save
                 </v-btn>

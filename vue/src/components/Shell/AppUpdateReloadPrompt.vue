@@ -42,12 +42,12 @@ function reload() {
     bottom: 0;
     margin: 16px;
     padding: 12px;
-    border: 1px solid #8885;
+    border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
     border-radius: 4px;
     z-index: 1;
     text-align: left;
     box-shadow: 3px 4px 5px 0 #8885;
-    background-color: white;
+    background-color: rgb(var(--v-theme-background));
 }
 
 .pwa-toast .message {
@@ -55,7 +55,7 @@ function reload() {
 }
 
 .pwa-toast button {
-    border: 1px solid #8885;
+    border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
     outline: none;
     margin-right: 5px;
     border-radius: 2px;

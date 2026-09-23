@@ -90,7 +90,7 @@ const rest = computed(() => rows.value.slice(MaxShown));
     margin-left: auto;
     flex-shrink: 0;
     font-size: 11px;
-    color: rgba(0, 0, 0, 0.5);
+    color: rgba(var(--v-theme-on-background), 0.5);
 }
 
 .more {

@@ -108,7 +108,7 @@ function onDeleteItemBtnClicked(item: EmailService) {
     bus.emit('confirm', {
         body: `Do you want to delete "${item.name}"?`,
         confirmIcon: 'fa fa-trash',
-        confirmColor: 'red',
+        confirmColor: 'error',
 
         responseCallback: (confirmed: boolean) => {
             if (confirmed) {
@@ -128,7 +128,7 @@ function onDeleteItemBtnClicked(item: EmailService) {
         <v-toolbar
             density="compact"
             flat
-            color="blue-grey lighten-5"
+            color="toolbar"
             dark
         >
             <v-toolbar-title>Email Services</v-toolbar-title>
@@ -174,7 +174,7 @@ function onDeleteItemBtnClicked(item: EmailService) {
                         <v-icon>fa fa-clone</v-icon>
                         <v-tooltip activator="parent" location="bottom">Duplicate</v-tooltip>
                     </v-btn>
-                    <v-btn variant="plain" color="red" @click="onDeleteItemBtnClicked(item)" size="small" density="comfortable" icon>
+                    <v-btn variant="plain" color="error" @click="onDeleteItemBtnClicked(item)" size="small" density="comfortable" icon>
                         <v-icon>fa fa-trash</v-icon>
                         <v-tooltip activator="parent" location="bottom">Delete</v-tooltip>
                     </v-btn>

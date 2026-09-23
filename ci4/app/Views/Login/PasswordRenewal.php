@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="<?= base_url('assets/login/bootstrap-4.1.3.min.css') ?>">
     <script src="<?= base_url('assets/login/login.js') ?>" defer></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-    <link rel="icon" href="/api/logo-blue.svg">
+    <link rel="icon" href="/api/kso.svg">
 
     <style>
         /* Added */
@@ -122,7 +122,7 @@
         .has-float-label select:focus,
         .has-float-label textarea:focus {
             outline: 0;
-            border-color: #4285f4;
+            border-color: #2563eb;
         }
 
 
@@ -138,11 +138,11 @@
         }
 
         body {
-            background: #193b46;
+            background: #26313c;
             /* fallback for old browsers */
-            background: -webkit-linear-gradient(to top, #193b46, #152b36);
+            background: -webkit-linear-gradient(to top, #26313c, #1c252e);
             /* Chrome 10-25, Safari 5.1-6 */
-            background: linear-gradient(to top, #193b46, #152b36);
+            background: linear-gradient(to top, #26313c, #1c252e);
             /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
         }
 
@@ -176,8 +176,8 @@
         }
 
         .btn.btn-primary {
-            background: #193b46;
-            border-color: #193b46;
+            background: #26313c;
+            border-color: #26313c;
         }
 
         .btn.btn-warning {
@@ -188,7 +188,7 @@
         a,
         a:link,
         .text-primary {
-            color: #193b46 !important;
+            color: #26313c !important;
         }
 
         .form-label-group {
@@ -281,7 +281,20 @@
         .icon {
             vertical-align: -0.125em;
         }
-    </style>
+            /* KSO's mark and name at the top of the card. */
+        .brand {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            font-size: 20px;
+            font-weight: 600;
+            letter-spacing: .04em;
+            color: #26313c;
+        }
+
+</style>
 </head>
 
 <body>
@@ -291,6 +304,11 @@
         <div class="col-sm-9 col-md-7 col-lg-5 mx-auto">
             <div class="card card-signin my-5">
                 <div class="card-body">
+                    <div class="brand">
+                        <img src="/api/kso.svg" width="40" height="40" alt="">
+                        <span>KSO</span>
+                    </div>
+
                     <h5 class="card-title text-center"><svg class="icon text-primary" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.5 2.5L16 9.5"/></svg> Password renewal</h5>
                     <div class="alert alert-warning clearfix <?= isset(DebugTool\Data::getStore()['description']) ? '' : '' ?>" role="alert" id="validation">
                         <p><?= esc(DebugTool\Data::getStore()['description'] ?? '') ?></p>

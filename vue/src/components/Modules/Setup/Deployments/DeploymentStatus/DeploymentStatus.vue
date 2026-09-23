@@ -56,12 +56,12 @@ function render(status: string) {
             break;
         case DeploymentStatusTypes.OutOfSync:
             icon.value = "fa fa-circle-arrow-up";
-            color.value = "orange";
+            color.value = "warning";
             text.value = "Out of sync";
             break;
         case DeploymentStatusTypes.Synced:
             icon.value = "fa fa-check";
-            color.value = "green";
+            color.value = "success";
             text.value = "Synced";
             break;
         default:

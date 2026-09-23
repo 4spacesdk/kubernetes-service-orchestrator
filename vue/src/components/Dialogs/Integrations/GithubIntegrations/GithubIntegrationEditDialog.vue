@@ -201,7 +201,7 @@ function onCloseBtnClicked() {
                 </v-btn>
                 <v-spacer />
                 <v-btn variant="tonal" color="grey" prepend-icon="fa fa-circle-xmark" @click="onCloseBtnClicked"> Close </v-btn>
-                <v-btn flat variant="tonal" prepend-icon="fa fa-check" color="green" @click="onSaveBtnClicked"> Save </v-btn>
+                <v-btn flat variant="tonal" prepend-icon="fa fa-check" color="success" @click="onSaveBtnClicked"> Save </v-btn>
             </v-card-actions>
         </v-card>
     </v-dialog>

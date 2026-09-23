@@ -156,7 +156,7 @@ function onRerunBtnClicked(row: Row) {
             v-if="props.showHeader"
             density="compact"
             flat
-            color="blue-grey lighten-5"
+            color="toolbar"
             dark
         >
             <v-toolbar-title>Migration Jobs</v-toolbar-title>

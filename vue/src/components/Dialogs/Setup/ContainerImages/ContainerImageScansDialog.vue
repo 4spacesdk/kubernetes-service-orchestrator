@@ -203,7 +203,7 @@ function onScanTagBtnClicked() {
     const api = Api.containerImages().scanPutById(props.input.containerImage.id!).tag(tag);
     api.setErrorHandler((response) => {
         isQueuingTag.value = false;
-        bus.emit("toast", { text: response.error ?? "Could not queue the scan", color: "red" });
+        bus.emit("toast", { text: response.error ?? "Could not queue the scan", color: "error" });
         return false;
     });
     api.save(null, () => {

@@ -10,7 +10,7 @@ onMounted(() => {
 <template>
     <div class="h-100 w-100">
         <v-card ref="card"
-                color="#fff"
+                color="background"
                 flat>
             <v-card-title>Dashboard</v-card-title>
             <v-card-text>
