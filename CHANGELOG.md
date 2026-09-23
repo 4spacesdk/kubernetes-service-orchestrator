@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+### Fixed bugs
+* The app's theme was decided by an inline script the Content-Security-Policy blocks, so the browser console reported it on every load and a dark theme drew light first
+
+### Upgrade guide
+1. Deploy new image
+
+
+
 ## v1.9.2 (2026-09-23)
 
 ### Fixed bugs

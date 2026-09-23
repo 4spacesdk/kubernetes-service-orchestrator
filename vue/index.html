@@ -12,14 +12,7 @@
          app's own background - dark when the app will be dark, decided here before anything
          is drawn, as useAppTheme decides it. It fades in after a moment, so a quick reload
          does not flash it. -->
-    <script>
-        (function () {
-            var mode = null;
-            try { mode = localStorage.getItem('kso.theme.mode'); } catch (e) {}
-            var dark = mode === 'dark' || (mode !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-            if (dark) document.documentElement.classList.add('kso-dark');
-        })();
-    </script>
+    <script src="/theme.js"></script>
     <style>
         html, body { margin: 0; background: #ffffff; }
         html.kso-dark, html.kso-dark body { background: #0f1318; }
