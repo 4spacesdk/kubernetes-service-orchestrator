@@ -4,15 +4,17 @@
 
 ### Enhancements
 * When a new version of kso is out, the app says which, with the first lines of what changed, a link to the release, and Reload or Later
-* An overview's cards carry the menu's numbers: Deployments on Setup shows how many are Degraded
+* An overview's cards carry the menu's numbers: Deployments on Setup shows how many are Degraded, and the Workspaces overview how many workspaces are, in all and by project - the projects in the menu too
 
 ### Fixed bugs
 * The app's theme was decided by an inline script the Content-Security-Policy blocks, so the browser console reported it on every load and a dark theme drew light first
 * The health check logged every kind the cluster does not have or kso may not list - Gateway API, Istio, GKE - as a whole exception each minute, which read as failures. It is one line now: `not installed` or `forbidden`
 * The container image list shows a scan's result as soon as it is done, instead of at the next reload
+* Two kso's using one Harbor took its webhook over from each other - both called it `kso` - so only the last to set up heard of a push. Each has its own now, named after its host; the old one is taken over by the kso it calls
 
 ### Upgrade guide
 1. Deploy new image
+2. Harbor: set the webhook up again on each connection, so it gets its own name. Where two kso's shared the `kso` policy, the one it calls takes it over, and the other gets a new one
 
 
 

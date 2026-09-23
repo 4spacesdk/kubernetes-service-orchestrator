@@ -6,6 +6,7 @@ import AuthService from "@/services/AuthService";
 import {RbacPermissions} from "@/constants";
 import bus from "@/plugins/bus";
 import OverviewCard from "@/components/Pages/Overview/OverviewCard.vue";
+import {itemBadge, useMenuBadges} from "@/components/Shell/Menu/menuBadges";
 
 /**
  * Workspaces by project: the user's own first - they are in the menu too - then every other.
@@ -16,6 +17,9 @@ const projects = ref<Project[]>([]);
 const myProjectIds = computed(() => (AuthService.currentAuthUser?.projects ?? []).map(project => project.id));
 const mine = computed(() => projects.value.filter(project => myProjectIds.value.includes(project.id)));
 const others = computed(() => projects.value.filter(project => !myProjectIds.value.includes(project.id)));
+
+// How many are Degraded, on each card - the same numbers as the menu.
+useMenuBadges();
 
 const canManage = computed(() => AuthService.currentAuthUser?.hasPermission(RbacPermissions.Developer) ?? false);
 
@@ -57,12 +61,14 @@ function load() {
                 to="/workspaces/all"
                 icon="fa fa-layer-group"
                 title="All workspaces"
-                description="Every workspace, in any project or none"/>
+                description="Every workspace, in any project or none"
+                :badge="itemBadge('/workspaces/all')"/>
             <OverviewCard
                 to="/workspaces/projects/none"
                 icon="fa fa-folder-open"
                 title="No project"
-                description="Workspaces not in any project yet"/>
+                description="Workspaces not in any project yet"
+                :badge="itemBadge('/workspaces/projects/none')"/>
         </div>
 
         <template v-if="mine.length">
@@ -74,7 +80,8 @@ function load() {
                     :to="`/workspaces/projects/${project.id}`"
                     icon="fa fa-folder"
                     :title="project.name ?? ''"
-                    :description="project.description"/>
+                    :description="project.description"
+                    :badge="itemBadge(`/workspaces/projects/${project.id}`)"/>
             </div>
         </template>
 
@@ -87,7 +94,8 @@ function load() {
                     :to="`/workspaces/projects/${project.id}`"
                     icon="fa fa-folder"
                     :title="project.name ?? ''"
-                    :description="project.description"/>
+                    :description="project.description"
+                    :badge="itemBadge(`/workspaces/projects/${project.id}`)"/>
             </div>
         </template>
     </div>

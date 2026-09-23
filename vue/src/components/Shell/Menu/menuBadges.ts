@@ -17,6 +17,8 @@ export interface MenuBadge {
 const counts = reactive({
     /** Degraded workspaces, on Sites - which everybody sees. */
     degradedWorkspaces: 0,
+    /** The same by project id, `none` for those in no project. */
+    degradedWorkspacesByProject: {} as Record<string, number>,
     /** Degraded deployments, on Deployments under Setup. */
     degradedDeployments: 0,
     /** Auto updates waiting for approval. */
@@ -42,6 +44,12 @@ export function itemBadge(url: string): MenuBadge | null {
     switch (url) {
         case "/setup/deployments":
             return badge(counts.degradedDeployments, "error");
+        case "/workspaces/all":
+            return badge(counts.degradedWorkspaces, "error");
+    }
+    const project = url.match(/^\/workspaces\/projects\/(\d+|none)$/);
+    if (project) {
+        return badge(counts.degradedWorkspacesByProject[project[1]] ?? 0, "error");
     }
     return null;
 }
@@ -83,7 +91,15 @@ function countDegraded() {
     Api.workspaces()
         .get()
         .where("health", HealthStatusTypes.Degraded)
-        .count((value) => (counts.degradedWorkspaces = value));
+        .find((workspaces) => {
+            const byProject: Record<string, number> = {};
+            workspaces.forEach((workspace) => {
+                const key = workspace.project_id ? String(workspace.project_id) : "none";
+                byProject[key] = (byProject[key] ?? 0) + 1;
+            });
+            counts.degradedWorkspaces = workspaces.length;
+            counts.degradedWorkspacesByProject = byProject;
+        });
 
     Api.deployments()
         .get()

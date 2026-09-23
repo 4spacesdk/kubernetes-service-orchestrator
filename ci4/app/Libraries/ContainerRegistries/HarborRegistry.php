@@ -1,5 +1,6 @@
 <?php namespace App\Libraries\ContainerRegistries;
 
+use App\Entities\System;
 use App\Libraries\OutboundUrl;
 
 class HarborRegistry extends BaseContainerRegistry {
@@ -9,9 +10,13 @@ class HarborRegistry extends BaseContainerRegistry {
     }
 
     /**
-     * A webhook policy on every project the connection's images live in, called `kso`.
-     * One that is already there is updated rather than duplicated, so this can be run
-     * again - after an import into a new project, or to rotate the secret.
+     * A webhook policy on every project the connection's images live in, named after this kso -
+     * `kso-<its host>`. One that is already there is updated rather than duplicated, so this can
+     * be run again - after an import into a new project, or to rotate the secret.
+     *
+     * Every policy used to be called `kso`, and found again by that name, so two kso's using one
+     * Harbor took the policy over from each other and only the last to set up heard of a push.
+     * Which one is this kso's is now in its description - see `OwnPolicy()`.
      *
      * @codeCoverageIgnore
      */
@@ -21,11 +26,13 @@ class HarborRegistry extends BaseContainerRegistry {
             throw new \Exception('No images use this connection yet. Import or create them, then set up again.');
         }
 
+        $installationId = System::InstallationId();
+
         foreach ($projects as $project) {
             $path = '/api/v2.0/projects/' . rawurlencode($project) . '/webhook/policies';
             $policy = [
-                'name' => 'kso',
-                'description' => 'Tells kso about pushed tags. Managed by kso.',
+                'name' => self::PolicyName($webhookUrl),
+                'description' => self::PolicyDescription($installationId),
                 'enabled' => true,
                 'event_types' => ['PUSH_ARTIFACT'],
                 'targets' => [[
@@ -37,15 +44,47 @@ class HarborRegistry extends BaseContainerRegistry {
                 ]],
             ];
 
-            $existing = array_values(array_filter($this->get($path), fn ($p) => ($p['name'] ?? '') === 'kso'));
+            $existing = self::OwnPolicy($this->get($path), $installationId, $webhookUrl);
             if ($existing) {
-                $this->send('PUT', "{$path}/{$existing[0]['id']}", $policy);
+                $this->send('PUT', "{$path}/{$existing['id']}", $policy);
             } else {
                 $this->send('POST', $path, $policy);
             }
         }
 
-        return 'Webhook set up on ' . implode(', ', $projects);
+        return 'Webhook ' . self::PolicyName($webhookUrl) . ' set up on ' . implode(', ', $projects);
+    }
+
+    /** What this kso's policy is called: after the host Harbor calls, so it can be told apart. */
+    public static function PolicyName(string $webhookUrl): string {
+        $host = parse_url($webhookUrl, PHP_URL_HOST);
+        return $host ? "kso-{$host}" : 'kso';
+    }
+
+    public static function PolicyDescription(string $installationId): string {
+        return "Tells kso about pushed tags. Managed by kso installation {$installationId}.";
+    }
+
+    /**
+     * This kso's policy among a project's: the one its description names this installation in,
+     * or - set up before that - the one called `kso` that calls this kso's own address. A `kso`
+     * calling another address is another kso's, and left alone.
+     *
+     * @param list<array> $policies
+     */
+    public static function OwnPolicy(array $policies, string $installationId, string $webhookUrl): ?array {
+        foreach ($policies as $policy) {
+            if (str_contains((string) ($policy['description'] ?? ''), "installation {$installationId}")) {
+                return $policy;
+            }
+        }
+        foreach ($policies as $policy) {
+            $addresses = array_column($policy['targets'] ?? [], 'address');
+            if (($policy['name'] ?? '') === 'kso' && in_array($webhookUrl, $addresses, true)) {
+                return $policy;
+            }
+        }
+        return null;
     }
 
     /**
