@@ -36,16 +36,12 @@ readonly class Workload {
         }
 
         $lastMigration = null;
-        if ($deployment->last_migration_job_id) {
-            if (!$deployment->last_migration_job->exists()) {
-                $deployment->last_migration_job->find();
-            }
-            if ($deployment->last_migration_job->exists()) {
-                $lastMigration = [
-                    'status' => (string) $deployment->last_migration_job->status,
-                    'image' => (string) $deployment->last_migration_job->image,
-                ];
-            }
+        $job = $deployment->findLastMigrationJob();
+        if ($job) {
+            $lastMigration = [
+                'status' => (string) $job->status,
+                'image' => (string) $job->image,
+            ];
         }
 
         return new Workload(

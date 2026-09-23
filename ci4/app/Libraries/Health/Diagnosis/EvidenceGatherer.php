@@ -233,14 +233,8 @@ class EvidenceGatherer {
      * @return array{id: int, status: string, image: string, log: string}|null
      */
     private static function LastMigration(Deployment $deployment): ?array {
-        if (!$deployment->last_migration_job_id) {
-            return null;
-        }
-        $job = $deployment->last_migration_job;
-        if (!$job->exists()) {
-            $job->find();
-        }
-        if (!$job->exists()) {
+        $job = $deployment->findLastMigrationJob();
+        if (!$job) {
             return null;
         }
 

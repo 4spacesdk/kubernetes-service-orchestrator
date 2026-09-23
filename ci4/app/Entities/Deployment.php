@@ -493,6 +493,23 @@ class Deployment extends Entity {
         return count($allErrors) ? implode("\n", $allErrors) : null;
     }
 
+    /**
+     * The migration job `last_migration_job_id` points at, found by that id.
+     *
+     * Not `$this->last_migration_job->find()`: the ORM looks the relation up through
+     * `migration_jobs.deployment_id`, which matches every job of the deployment, and hands back
+     * the oldest - so a migration that failed years ago kept the health Degraded however many
+     * ran after it.
+     */
+    public function findLastMigrationJob(): ?MigrationJob {
+        if (!$this->last_migration_job_id) {
+            return null;
+        }
+        $job = new MigrationJob();
+        $job->find($this->last_migration_job_id);
+        return $job->exists() ? $job : null;
+    }
+
     public function findDeploymentSpecification(): DeploymentSpecification {
         if (!$this->deployment_specification->exists() && $this->deployment_specification_id) {
             $this->deployment_specification->find();
