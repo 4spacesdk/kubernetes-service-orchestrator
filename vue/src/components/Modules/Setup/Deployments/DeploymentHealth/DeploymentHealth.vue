@@ -6,10 +6,13 @@ import PushService from "@/services/Push/PushService";
 import { Events } from "@/services/Push/Events";
 import HealthChip from "@/components/Modules/Common/HealthChip.vue";
 import DeploymentPodsButton from "@/components/Modules/Setup/Deployments/DeploymentPodsButton/DeploymentPodsButton.vue";
+import DeploymentDiagnosis from "@/components/Modules/Setup/Deployments/DeploymentDiagnosis/DeploymentDiagnosis.vue";
+import {HealthStatusTypes} from "@/constants";
 
 /**
  * The deployment's health on its row, kept current by push. A click opens its pods - where a
- * crash loop or an image that cannot be pulled is looked into.
+ * crash loop or an image that cannot be pulled is looked into - and, when it is doing badly,
+ * "Why?" above them.
  */
 const props = defineProps<{
     deployment: Deployment;
@@ -21,6 +24,9 @@ const changedAt = ref<string | undefined>();
 const checkedAt = ref<string | undefined>();
 const pushSubscription = ref<PushSubscription>();
 const showPods = ref(false);
+
+/** Health that is worth asking why about - as on the deployment's own page. */
+const worthDiagnosing = [HealthStatusTypes.Degraded, HealthStatusTypes.Progressing, HealthStatusTypes.Missing];
 
 function render(deployment: Deployment) {
     health.value = deployment.health;
@@ -61,6 +67,11 @@ onUnmounted(() => {
                 <HealthChip :health="health" :reason="reason" :changed-at="changedAt" :checked-at="checkedAt" :hide-tooltip="showPods" />
             </span>
         </template>
+        <v-card v-if="worthDiagnosing.includes(health)" class="diagnosis">
+            <v-card-text>
+                <DeploymentDiagnosis :deployment="props.deployment"/>
+            </v-card-text>
+        </v-card>
         <DeploymentPodsButton :deployment="props.deployment" />
     </v-menu>
     <HealthChip v-else />
@@ -69,5 +80,9 @@ onUnmounted(() => {
 <style scoped>
 .clickable {
     cursor: pointer;
+}
+
+.diagnosis {
+    margin: 8px 8px 0;
 }
 </style>

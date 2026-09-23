@@ -26,6 +26,9 @@ readonly class Evidence {
      * @param array{cpu_request: ?int, cpu_limit: ?int, memory_request: ?int, memory_limit: ?int} $resources
      *   What kso gives each pod - millicores and MiB
      * @param array<string, list<string>> $previousLogs pod => the last lines of the container before this one
+     * @param array{path: string, port: int, answers: list<array{pod: string, status: ?int, error: ?string}>}|null $healthCheck
+     *   What each pod answered GKE's health check path, asked from kso. Null when the load balancer does
+     *   not check a path.
      */
     public function __construct(
         public string $version,
@@ -40,6 +43,7 @@ readonly class Evidence {
         public ?array $lastDeployError = null,
         public array $resources = ['cpu_request' => null, 'cpu_limit' => null, 'memory_request' => null, 'memory_limit' => null],
         public array $previousLogs = [],
+        public ?array $healthCheck = null,
     ) {
     }
 

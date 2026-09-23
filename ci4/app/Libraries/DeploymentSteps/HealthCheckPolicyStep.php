@@ -190,6 +190,25 @@ class HealthCheckPolicyStep extends BaseDeploymentStep {
     }
 
     /**
+     * What GKE's load balancer asks each pod, when it asks over HTTP: the path, on the target port
+     * of the port that names it. Null when there is no HTTP policy - not behind a GKE Gateway, or a
+     * TCP check. The diagnosis asks the same, to see what the load balancer sees.
+     *
+     * @return array{path: string, port: int}|null
+     */
+    public function getHttpCheck(Deployment $deployment): ?array {
+        if ($this->getPolicyType($deployment) !== \HealthCheckTypes::Http) {
+            return null;
+        }
+        foreach ($this->getServicePorts($deployment) as $port) {
+            if ($port->health_check_type == \HealthCheckTypes::Http && strlen($port->health_check_path ?? '')) {
+                return ['path' => (string) $port->health_check_path, 'port' => (int) ($port->target_port ?: $port->port)];
+            }
+        }
+        return null;
+    }
+
+    /**
      * The request path of the first HTTP port that names one. Only meaningful for an HTTP policy.
      */
     private function getRequestPath(Deployment $deployment): ?string {

@@ -200,10 +200,13 @@ class KubeHelper {
             }
 
             $space = strpos($line, ' ');
-            if ($space === false) {
-                // No prefix to take off. Cannot happen while `timestamps` is on, and
-                // keeping the text is the right way to be wrong about it - a line shown
-                // under no date is readable, a date with the line inside it is not.
+            // A timestamp starts with its year; a kubelet's own words do not.
+            if ($space === false || !ctype_digit($line[0])) {
+                // No prefix to take off. Keeping the text is the right way to be wrong about
+                // it - a line shown under no date is readable, a date with the line inside it
+                // is not. It does happen with `timestamps` on: a kubelet that has lost the
+                // previous container's log answers 200 with "unable to retrieve container logs
+                // for ..." as the log, and its first word was taken for a date.
                 $lines[] = ['date' => '', 'line' => $line];
                 continue;
             }

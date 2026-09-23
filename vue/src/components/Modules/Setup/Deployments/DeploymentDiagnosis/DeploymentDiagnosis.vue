@@ -49,7 +49,17 @@ function act(action: DeploymentDiagnosisAction) {
             router.push({name: 'DeploymentById', params: {id: props.deployment.id, section: action.section}});
             break;
         case 'migration_job':
-            router.push({name: 'DeploymentById', params: {id: props.deployment.id, section: 'migration-jobs'}});
+            // The failed job's whole log, as its row in Migration Jobs shows it.
+            Api.migrationJobs().getById(action.migration_job_id!).find(jobs => {
+                bus.emit('info', {
+                    title: 'Migration Job: Log',
+                    body: jobs[0]?.log?.trim() ?? '',
+                    monospace: true,
+                });
+            });
+            break;
+        case 'specification':
+            router.push({name: 'DeploymentSpecificationById', params: {id: props.deployment.deployment_specification_id}});
             break;
         case 'rollback':
             bus.emit('confirm', {

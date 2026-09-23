@@ -286,6 +286,51 @@ class DiagnoserTest extends CIUnitTestCase {
 
     // </editor-fold>
 
+    // <editor-fold desc="The load balancer's health check">
+
+    public function testAHealthCheckPathBehindBasicAuthIsCertain(): void {
+        $finding = $this->only(new Evidence('1.1', [$this->pod()], healthCheck: [
+            'path' => '/health', 'port' => 8080,
+            'answers' => [['pod' => 'app-a', 'status' => 401, 'error' => null]],
+        ]));
+
+        $this->assertSame('health_check_path', $finding->rule);
+        $this->assertSame(\DiagnosisVerdicts::Certain, $finding->verdict);
+        $this->assertSame("The load balancer's health check on /health is answered with 401 - is the path behind a login, such as basic auth?", $finding->cause);
+        $this->assertSame(['app-a: GET :8080/health answered 401'], $finding->evidence);
+        $this->assertSame('specification', $finding->action['type']);
+    }
+
+    /**
+     * GKE's check does not follow a redirect - a path that sends `/health` to `/health/` fails it.
+     */
+    public function testARedirectedHealthCheckPathFails(): void {
+        $finding = $this->only(new Evidence('1.1', [$this->pod()], healthCheck: [
+            'path' => '/health', 'port' => 80,
+            'answers' => [['pod' => 'app-a', 'status' => 301, 'error' => null]],
+        ]));
+
+        $this->assertStringContainsString('redirected (301)', $finding->cause);
+    }
+
+    public function testAHealthCheckPathAnswering200FindsNothing(): void {
+        $this->assertSame([], $this->diagnose(new Evidence('1.1', [$this->pod()], healthCheck: [
+            'path' => '/health', 'port' => 80,
+            'answers' => [['pod' => 'app-a', 'status' => 200, 'error' => null]],
+        ])));
+    }
+
+    /**
+     * kso outside the cluster cannot reach the pods, and that says nothing about them.
+     */
+    public function testAHealthCheckNobodyCouldAskFindsNothing(): void {
+        $this->assertSame([], $this->diagnose(new Evidence('1.1', [$this->pod()], healthCheck: [
+            'path' => '/health', 'port' => 80, 'answers' => [],
+        ])));
+    }
+
+    // </editor-fold>
+
     public function testTheMostCertainComesFirst(): void {
         $findings = $this->diagnose(new Evidence(
             '1.1',

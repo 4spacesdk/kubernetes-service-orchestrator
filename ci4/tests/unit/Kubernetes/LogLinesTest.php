@@ -95,6 +95,17 @@ class LogLinesTest extends CIUnitTestCase {
     }
 
     /**
+     * What a kubelet writes as the log when it has lost the previous container's: no timestamp,
+     * a sentence. Found 2026-09-23 by `DiagnosisTest`, where it read "to retrieve container logs"
+     * under the date "unable".
+     */
+    public function testAKubeletsOwnMessageIsNotCutAtItsFirstWord(): void {
+        $message = 'unable to retrieve container logs for containerd://7c7b70c94555';
+
+        $this->assertSame([['date' => '', 'line' => $message]], KubeHelper::LogLines("{$message}\n"));
+    }
+
+    /**
      * A timestamp with nothing after it is a blank line in the container's output, and it
      * keeps its place - the log page numbers the rows, so dropping one moves everything
      * below it.

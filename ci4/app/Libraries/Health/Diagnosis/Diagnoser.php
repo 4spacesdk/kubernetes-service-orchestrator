@@ -41,6 +41,7 @@ class Diagnoser {
             ...self::OomKilled($evidence, $now),
             ...self::CrashAfterVersionChange($evidence, $now),
             ...self::NotReady($evidence),
+            ...self::HealthCheckPath($evidence),
         ];
 
         $findings = self::Merged($findings);
@@ -433,6 +434,41 @@ class Diagnoser {
             );
         }
         return $findings;
+    }
+
+    /**
+     * The path GKE's load balancer checks, answered with something other than 200 - the pods are
+     * up and ready, and the site still answers 502, because the load balancer thinks otherwise.
+     *
+     * @return list<Finding>
+     */
+    private static function HealthCheckPath(Evidence $evidence): array {
+        $check = $evidence->healthCheck;
+        if ($check === null) {
+            return [];
+        }
+
+        $failing = array_values(array_filter($check['answers'], fn(array $answer) => $answer['status'] !== 200));
+        if (!$failing) {
+            return [];
+        }
+
+        $statuses = array_values(array_unique(array_map(fn(array $answer) => $answer['status'], $failing)));
+        $status = $statuses[0];
+        $cause = "The load balancer's health check on {$check['path']} is answered with {$status}, and it wants 200";
+        if ($status === 401 || $status === 403) {
+            $cause = "The load balancer's health check on {$check['path']} is answered with {$status} - is the path behind a login, such as basic auth?";
+        } else if ($status >= 300 && $status < 400) {
+            $cause = "The load balancer's health check on {$check['path']} is redirected ({$status}) - it does not follow, and wants 200";
+        }
+
+        return [new Finding(
+            'health_check_path',
+            \DiagnosisVerdicts::Certain,
+            $cause,
+            array_map(fn(array $answer) => "{$answer['pod']}: GET :{$check['port']}{$check['path']} answered {$answer['status']}", $failing),
+            ['type' => 'specification', 'label' => 'Change the health check'],
+        )];
     }
 
     // </editor-fold>

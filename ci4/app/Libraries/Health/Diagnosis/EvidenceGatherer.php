@@ -7,7 +7,9 @@ use App\Libraries\Kubernetes\DeploymentMetrics;
 use App\Libraries\Kubernetes\KubeAuth;
 use App\Libraries\Kubernetes\KubeHelper;
 use App\Libraries\Kubernetes\WorkloadPods;
+use App\Libraries\DeploymentSteps\HealthCheckPolicyStep;
 use Config\Database;
+use GuzzleHttp\Client;
 use DebugTool\Data;
 use RenokiCo\PhpK8s\Exceptions\KubernetesAPIException;
 use RenokiCo\PhpK8s\KubernetesCluster;
@@ -70,7 +72,45 @@ class EvidenceGatherer {
                 'memory_limit' => $deployment->memory_limit ?: null,
             ],
             previousLogs: $restarted ? $this->previousLogs($deployment) : [],
+            healthCheck: $this->healthCheck($deployment, $pods),
         );
+    }
+
+    /**
+     * GKE's load balancer asks each pod for a path and wants a 200. Asked the same way from kso -
+     * straight at the pod, no redirects followed - so a path behind basic auth answers 401 here as
+     * it does there. A pod kso cannot reach (kso outside the cluster, as in development) is left out:
+     * that says nothing about the pod.
+     *
+     * @param list<array> $pods
+     */
+    private function healthCheck(Deployment $deployment, array $pods): ?array {
+        try {
+            $check = (new HealthCheckPolicyStep())->getHttpCheck($deployment);
+        } catch (\Throwable $e) {
+            Data::debug('No health check path for', $deployment->name, ':', $e->getMessage());
+            return null;
+        }
+        if ($check === null) {
+            return null;
+        }
+
+        $client = new Client(['timeout' => 3, 'connect_timeout' => 2, 'http_errors' => false, 'allow_redirects' => false]);
+        $answers = [];
+        foreach ($pods as $pod) {
+            $ip = $pod['status']['podIP'] ?? null;
+            if ($ip === null || ($pod['status']['phase'] ?? null) !== 'Running') {
+                continue;
+            }
+            try {
+                $status = $client->get("http://{$ip}:{$check['port']}{$check['path']}")->getStatusCode();
+                $answers[] = ['pod' => $pod['metadata']['name'] ?? '', 'status' => $status, 'error' => null];
+            } catch (\Throwable $e) {
+                Data::debug('Could not ask', $ip, 'for its health check path:', $e->getMessage());
+            }
+        }
+
+        return [...$check, 'answers' => $answers];
     }
 
     /**
