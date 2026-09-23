@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {onMounted, ref} from 'vue'
-import {Deployment} from "@/core/services/Deploy/models";
+import {Workspace} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import {useUnsavedChanges} from "@/composables/useUnsavedChanges";
@@ -12,7 +12,7 @@ interface Row {
 }
 
 const props = defineProps<{
-    deployment: Deployment
+    workspace: Workspace
 }>();
 
 const isLoading = ref(false);
@@ -35,8 +35,8 @@ onMounted(() => {
 
 function render() {
     isLoading.value = true;
-    Api.deployments().get()
-        .where('id', props.deployment.id!)
+    Api.workspaces().get()
+        .where('id', props.workspace.id!)
         .include('label')
         .find(value => {
             rows.value = value[0].labels
@@ -61,14 +61,14 @@ function onCreateBtnClicked() {
         name: '',
         value: '',
     };
-    bus.emit('deploymentUpdateLabel', {
+    bus.emit('workspaceUpdateLabel', {
         label: newItem,
         onSaveCallback: () => rows.value.push(newItem),
     });
 }
 
 function onEditRowClicked(row: Row) {
-    bus.emit('deploymentUpdateLabel', {
+    bus.emit('workspaceUpdateLabel', {
         label: row,
         onSaveCallback: () => {
 
@@ -85,7 +85,7 @@ function onSave() {
         return;
     }
     isSaving.value = true;
-    const api = Api.deployments().updateLabelsPutById(props.deployment.id!);
+    const api = Api.workspaces().updateLabelsPutById(props.workspace.id!);
     api.setErrorHandler(response => {
         if (response.error) {
             bus.emit('toast', {
@@ -98,7 +98,7 @@ function onSave() {
     api.save({
         values: rows.value
     }, newItem => {
-        bus.emit('deploymentSaved', newItem);
+        bus.emit('workspaceSaved', newItem);
         bus.emit('toast', {text: 'Saved'});
         isSaving.value = false;
         render();

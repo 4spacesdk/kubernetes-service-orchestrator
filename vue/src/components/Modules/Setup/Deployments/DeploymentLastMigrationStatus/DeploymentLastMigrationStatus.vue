@@ -116,9 +116,6 @@ function onShowLogBtnClicked() {
             <v-tooltip activator="parent" location="bottom">Refresh</v-tooltip>
         </v-btn>
 
-        <span
-            v-if="!isHovering">{{ text }}</span>
-
         <v-btn
             v-if="isHovering"
             :loading="isLoading"

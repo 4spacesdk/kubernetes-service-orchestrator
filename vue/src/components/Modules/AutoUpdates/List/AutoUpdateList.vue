@@ -11,6 +11,9 @@ import PushService from "@/services/Push/PushService";
 import {Events} from "@/services/Push/Events";
 
 const props = defineProps<{
+    /** Only the updates of this workspace's deployments. */
+    filterByWorkspaceId?: number;
+
     showHeader: boolean;
 }>();
 
@@ -41,6 +44,8 @@ const isLoadingBatchApprove = ref(false);
 const {search: searchValue, page, itemsPerPage, sortBy, applyOrdering, applyPaging} = useListState({
     sortable: {"created": "id", "deployment": "deployment.name", "approved": "is_approved"},
     defaultSort: {key: "created", order: "desc"},
+    // A workspace's updates are part of its page; the url is the page's.
+    syncWithUrl: !props.filterByWorkspaceId,
 });
 
 // <editor-fold desc="Functions">
@@ -80,6 +85,9 @@ function getItems(doItems = true, doCount = false) {
 
     // Prepare API call
     const api = Api.autoUpdates().get();
+    if (props.filterByWorkspaceId) {
+        api.where('workspace', props.filterByWorkspaceId);
+    }
 
     if (searchValue.value?.length) {
         api
@@ -197,6 +205,13 @@ function onAcceptSelectedBtnClicked() {
 }
 
 // </editor-fold>
+
+/** For a page that shows the list without its header, and so without Approve. */
+defineExpose({
+    selectedCount: computed(() => selectedRows.value.length),
+    isApproving: isLoadingBatchApprove,
+    approveSelected: onAcceptSelectedBtnClicked,
+});
 
 </script>
 

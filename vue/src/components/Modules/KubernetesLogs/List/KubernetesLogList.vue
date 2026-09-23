@@ -11,7 +11,6 @@ import {Events} from "@/services/Push/Events";
 import {ChangeEvent} from "@/services/Push/ChangeEvent";
 import {ApiRequest} from "@/core/services/ApiHelpers/ApiRequest";
 import bus from "@/plugins/bus";
-import {useDisplay} from "vuetify";
 
 const props = defineProps<{
     namespace?: string;
@@ -25,9 +24,6 @@ const props = defineProps<{
 
     showHeader: boolean;
 }>();
-
-/** A phone: the toolbar's two rows wrap into more, so it is as tall as they are. */
-const {xs: isPhone} = useDisplay();
 
 defineExpose({
     reload
@@ -416,12 +412,12 @@ function onAllPodsClicked() {
         </v-toolbar>
 
         <!-- Two rows, as on the lists: `v-toolbar` puts its content in a row of its own height,
-             so the column has to be inside it, and the height has to be told. -->
+             so the column has to be inside it. Its height follows the content, as the controls
+             wrap wherever the log is narrow - beside a page's side menu too, not only on a phone. -->
         <v-toolbar density="compact"
                    flat
                    color="toolbar"
-                   :height="110"
-                   :class="{'toolbar-wraps': isPhone}"
+                   class="toolbar-wraps"
         >
             <div class="d-flex flex-column w-100 px-5 py-2 ga-2">
             <!-- Reading every pod at once, one pod's name, age and status is not the answer to
@@ -515,9 +511,10 @@ function onAllPodsClicked() {
                         :loading="isPodsLoading"
                         v-bind="props"
                         variant="outlined" size="small"
+                        class="pod-picker"
                     >
                         <template v-if="allPods">All pods</template>
-                        <template v-else>{{ activePod?.pod }} - {{ activePod?.container }}</template>
+                        <span v-else class="pod-picker-text">{{ activePod?.pod }} - {{ activePod?.container }}</span>
                     </v-btn>
                 </template>
                 <v-list>
@@ -624,6 +621,16 @@ function onAllPodsClicked() {
 .toolbar-wraps,
 .toolbar-wraps :deep(.v-toolbar__content) {
     height: auto !important;
+}
+
+/* A pod's name is long; the button shows what fits, and the name is in the row above. */
+.pod-picker {
+    max-width: 100%;
+}
+
+.pod-picker-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* The toolbar is two rows: what is being read, and how. */

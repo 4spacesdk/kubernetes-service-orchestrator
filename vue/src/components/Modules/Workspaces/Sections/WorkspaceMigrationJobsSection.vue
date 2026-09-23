@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import {Deployment} from "@/core/services/Deploy/models";
+import {Workspace} from "@/core/services/Deploy/models";
 import PageSection from "@/components/Modules/Common/DetailPage/PageSection.vue";
 import MigrationJobList from "@/components/Modules/MigrationJobs/List/MigrationJobList.vue";
 
 const props = defineProps<{
-    deployment: Deployment
+    workspace: Workspace
 }>();
 </script>
 
@@ -15,6 +15,6 @@ const props = defineProps<{
         flush>
         <migration-job-list
             :show-header="false"
-            :filter-by-deployment-id="props.deployment.id"/>
+            :filter-by-workspace-id="props.workspace.id"/>
     </page-section>
 </template>

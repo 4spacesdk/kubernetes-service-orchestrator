@@ -45,11 +45,6 @@ import type { DeploymentUpdateEnvirontmentVariableDialog_Input } from "@/compone
 import type { MigrationJobListDialog_Input } from "@/components/Dialogs/MigrationJobs/MigrationJobsListDialog.vue";
 import type { AuditEventListDialog_Input } from "@/components/Dialogs/AuditEvents/AuditEventsListDialog.vue";
 import type { WorkspaceCreateDialog_Input } from "@/components/Dialogs/Workspaces/WorkspaceCreateDialog.vue";
-import type { WorkspaceUpdateDatabaseServiceDialog_Input } from "@/components/Dialogs/Workspaces/UpdateDialogs/WorkspaceUpdateDatabaseServiceDialog.vue";
-import type { WorkspaceUpdateEmailServiceDialog_Input } from "@/components/Dialogs/Workspaces/UpdateDialogs/WorkspaceUpdateEmailServiceDialog.vue";
-import type { WorkspaceUpdateProjectDialog_Input } from "@/components/Dialogs/Workspaces/UpdateDialogs/WorkspaceUpdateProjectDialog.vue";
-import type { WorkspaceUpdateIngressDialog_Input } from "@/components/Dialogs/Workspaces/UpdateDialogs/WorkspaceUpdateIngressDialog.vue";
-import type { WorkspaceUpdateNameDialog_Input } from "@/components/Dialogs/Workspaces/UpdateDialogs/WorkspaceUpdateNameDialog.vue";
 import type { WorkerDialog_Input } from "@/components/Dialogs/Common/WorkerDialog.vue";
 import type { DeploymentLogsDialog_Input } from "@/components/Dialogs/Setup/Deployments/DeploymentLogsDialog.vue";
 import type { MigrationJobLogsDialog_Input } from "@/components/Dialogs/MigrationJobs/MigrationJobLogsDialog.vue";
@@ -73,7 +68,6 @@ import type { DeploymentUpdateVolumeDialog_Input } from "@/components/Dialogs/Se
 import type { DeploymentSpecificationUpdateIngressDialog_Input } from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateIngressDialog.vue";
 import type { DeploymentSpecificationUpdateServiceAnnotationDialog_Input } from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateServiceAnnotationDialog.vue";
 import type { WorkspaceUpdateLabelDialog_Input } from "@/components/Dialogs/Workspaces/UpdateDialogs/WorkspaceUpdateLabelDialog.vue";
-import type { WorkspaceUpdateLabelsDialog_Input } from "@/components/Dialogs/Workspaces/UpdateDialogs/WorkspaceUpdateLabelsDialog.vue";
 import type { WorkspaceTemplateUpdateEnvironmentVariablesDialog_Input } from "@/components/Dialogs/Setup/WorkspaceTemplates/UpdateDialogs/WorkspaceTemplateUpdateEnvironmentVariablesDialog.vue";
 import type { WorkspaceTemplateUpdateEnvironmentVariableDialog_Input } from "@/components/Dialogs/Setup/WorkspaceTemplates/UpdateDialogs/WorkspaceTemplateUpdateEnvironmentVariableDialog.vue";
 import type { DeploymentSpecificationUpdateQuickCommandDialog_Input } from "@/components/Dialogs/Setup/DeploymentSpecifications/UpdateDialogs/DeploymentSpecificationUpdateQuickCommandDialog.vue";
@@ -170,13 +164,7 @@ export type Events = {
 
     workspaceSaved: Workspace | undefined;
     workspaceCreate: WorkspaceCreateDialog_Input;
-    workspaceUpdateName: WorkspaceUpdateNameDialog_Input;
-    workspaceUpdateEmailService: WorkspaceUpdateEmailServiceDialog_Input;
-    workspaceUpdateProject: WorkspaceUpdateProjectDialog_Input;
-    workspaceUpdateDatabaseService: WorkspaceUpdateDatabaseServiceDialog_Input;
-    workspaceUpdateIngress: WorkspaceUpdateIngressDialog_Input;
     workspaceLogs: WorkspaceLogsDialog_Input;
-    workspaceUpdateLabels: WorkspaceUpdateLabelsDialog_Input;
     workspaceUpdateLabel: WorkspaceUpdateLabelDialog_Input;
 
     podTerminal: PodTerminalDialog_Input;

@@ -151,26 +151,8 @@ bus.on('userEdit', async input => {
 bus.on('workspaceCreate', async input => {
     addComponent((await import('@/components/Dialogs/Workspaces/WorkspaceCreateDialog.vue')).default, input);
 });
-bus.on('workspaceUpdateName', async input => {
-    addComponent((await import('@/components/Dialogs/Workspaces/UpdateDialogs/WorkspaceUpdateNameDialog.vue')).default, input);
-});
-bus.on('workspaceUpdateEmailService', async input => {
-    addComponent((await import('@/components/Dialogs/Workspaces/UpdateDialogs/WorkspaceUpdateEmailServiceDialog.vue')).default, input);
-});
-bus.on('workspaceUpdateProject', async input => {
-    addComponent((await import('@/components/Dialogs/Workspaces/UpdateDialogs/WorkspaceUpdateProjectDialog.vue')).default, input);
-});
-bus.on('workspaceUpdateDatabaseService', async input => {
-    addComponent((await import('@/components/Dialogs/Workspaces/UpdateDialogs/WorkspaceUpdateDatabaseServiceDialog.vue')).default, input);
-});
-bus.on('workspaceUpdateIngress', async input => {
-    addComponent((await import('@/components/Dialogs/Workspaces/UpdateDialogs/WorkspaceUpdateIngressDialog.vue')).default, input);
-});
 bus.on('workspaceLogs', async input => {
     addComponent((await import('@/components/Dialogs/Workspaces/WorkspaceLogsDialog.vue')).default, input);
-});
-bus.on('workspaceUpdateLabels', async input => {
-    addComponent((await import('@/components/Dialogs/Workspaces/UpdateDialogs/WorkspaceUpdateLabelsDialog.vue')).default, input);
 });
 bus.on('workspaceUpdateLabel', async input => {
     addComponent((await import('@/components/Dialogs/Workspaces/UpdateDialogs/WorkspaceUpdateLabelDialog.vue')).default, input);

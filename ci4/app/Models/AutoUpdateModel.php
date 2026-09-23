@@ -18,6 +18,13 @@ class AutoUpdateModel extends Model implements ResourceModelInterface {
 
     public function preRestGet($queryParser, $id) {
         $this->applyProjectFilter($queryParser, [DeploymentModel::class, WorkspaceModel::class]);
+
+        // `?filter=workspace:1` - the updates of that workspace's deployments.
+        if ($queryParser->hasFilter('workspace')) {
+            $filter = $queryParser->getFilter('workspace')[0];
+            $filter->ignoreAuto = true;
+            $this->whereRelated(DeploymentModel::class, 'workspace_id', (int) $filter->value);
+        }
     }
 
     public function postRestGet($queryParser, $items) {

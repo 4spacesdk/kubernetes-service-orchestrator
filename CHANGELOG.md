@@ -86,7 +86,7 @@
 * GitHub Integrations: one GitHub App per organisation
 * Lists: search, filters, page and sort kept in the url, sortable columns, clickable names ([#53](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/53)), keyboard shortcuts
 * Deployments: a status filter, so a terminated workspace's deployments are out of the way by default
-* Update the version of several deployments at once
+* Update the version of several deployments at once, or of one with a click on its version in the list
 * Pause a workspace: it is shut down like Terminate, but the pause is remembered, so auto update leaves it alone and the list says Paused
 * Run a deployment's cron job now, from the Resources dialog ([#50](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/50))
 * Annotations on gateways ([#65](https://github.com/4spacesdk/kubernetes-service-orchestrator/issues/65))

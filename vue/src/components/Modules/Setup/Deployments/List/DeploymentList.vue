@@ -13,6 +13,7 @@ import { DeploymentStatusTypes, HealthStatusTypes } from "@/constants";
 import {Deployment, DeploymentSpecification} from "@/core/services/Deploy/models";
 import DeploymentStatus from "@/components/Modules/Setup/Deployments/DeploymentStatus/DeploymentStatus.vue";
 import DeploymentHealth from "@/components/Modules/Setup/Deployments/DeploymentHealth/DeploymentHealth.vue";
+import DeploymentVersionPicker from "@/components/Modules/Setup/Deployments/DeploymentVersionPicker/DeploymentVersionPicker.vue";
 import DeploymentLastMigrationStatus
     from "@/components/Modules/Setup/Deployments/DeploymentLastMigrationStatus/DeploymentLastMigrationStatus.vue";
 import DateView from "@/components/Modules/Common/DateView.vue";
@@ -407,6 +408,10 @@ function onBulkUpdateVersionBtnClicked() {
                 <DeploymentLastMigrationStatus
                     v-if="item.canMigrate"
                     :deployment="item"/>
+            </template>
+
+            <template v-slot:item.version="{ item }">
+                <DeploymentVersionPicker :deployment="item"/>
             </template>
 
             <template v-slot:item.last_updated="{ item }">

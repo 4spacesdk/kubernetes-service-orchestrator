@@ -83,6 +83,24 @@ class AutoUpdatesApiTest extends ControllerTestCase {
         $this->assertSame(0, (new AutoUpdateModel())->where('is_approved', true)->find()->count());
     }
 
+    /**
+     * `?filter=workspace:` - the updates of that workspace's deployments, for its own page.
+     */
+    public function testAWorkspacesUpdatesAreThoseOfItsDeployments(): void {
+        $acme = Fixtures::workspace(['name_readable' => 'acme', 'namespace' => 'acme']);
+        $other = Fixtures::workspace(['name_readable' => 'other', 'namespace' => 'other']);
+        $inAcme = Fixtures::deployment(['name' => 'in-acme', 'namespace' => 'acme', 'workspace_id' => $acme->id]);
+        $inOther = Fixtures::deployment(['name' => 'in-other', 'namespace' => 'other', 'workspace_id' => $other->id]);
+        $standalone = Fixtures::deployment(['name' => 'standalone', 'namespace' => 'infra']);
+        foreach ([$inAcme, $inOther, $standalone] as $deployment) {
+            $this->pendingUpdate($deployment->id);
+        }
+
+        $body = json_decode((string) $this->signedIn()->get("auto_updates?filter=workspace:{$acme->id}")->response()->getBody(), true);
+
+        $this->assertSame([(int) $inAcme->id], array_map('intval', array_column($body['resources'], 'deployment_id')));
+    }
+
     // <editor-fold desc="Helpers">
 
     /**

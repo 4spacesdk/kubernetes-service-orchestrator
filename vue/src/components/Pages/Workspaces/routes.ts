@@ -29,7 +29,8 @@ export default ([
         }
     },
     {
-        path: '/workspaces/:id(\\d+)',
+        // :section is a key from workspaceSections, left out for Overview.
+        path: '/workspaces/:id(\\d+)/:section?',
         name: 'WorkspaceById',
         component: WorkspacePage,
         meta: {

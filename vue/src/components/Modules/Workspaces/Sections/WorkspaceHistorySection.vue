@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import {Deployment} from "@/core/services/Deploy/models";
+import {Workspace} from "@/core/services/Deploy/models";
 import PageSection from "@/components/Modules/Common/DetailPage/PageSection.vue";
 import AuditEventList from "@/components/Modules/AuditEvents/List/AuditEventList.vue";
 
 const props = defineProps<{
-    deployment: Deployment
+    workspace: Workspace
 }>();
 </script>
 
@@ -15,7 +15,7 @@ const props = defineProps<{
         flush>
         <audit-event-list
             :show-header="false"
-            filter-by-resource-type="Deployment"
-            :filter-by-resource-id="props.deployment.id"/>
+            filter-by-resource-type="Workspace"
+            :filter-by-resource-id="props.workspace.id"/>
     </page-section>
 </template>

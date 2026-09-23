@@ -2,7 +2,7 @@
 import {onMounted, ref} from 'vue'
 import {Deployment, DeploymentSpecification, Workspace} from "@/core/services/Deploy/models";
 import DeploymentList from "@/components/Modules/Setup/Deployments/List/DeploymentList.vue";
-import DashboardCard from "@/components/Modules/Common/DetailPage/DashboardCard.vue";
+import PageSection from "@/components/Modules/Common/DetailPage/PageSection.vue";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 
@@ -71,9 +71,10 @@ function onItemDeletedEvent(deployment: Deployment) {
 </script>
 
 <template>
-    <dashboard-card
+    <page-section
         title="Deployments"
-        icon="fa fa-cubes">
+        hide-save
+        flush>
         <template #actions>
             <v-menu
                 v-model="showCreateMenu"
@@ -119,17 +120,11 @@ function onItemDeletedEvent(deployment: Deployment) {
         </template>
 
         <deployment-list
-            class="deployments"
             :show-header="false"
             :filter-by-workspace-id="props.workspace.id"
             @on-item-deleted="onItemDeletedEvent"
             @on-item-saved="onItemCreatedEvent"
         />
-    </dashboard-card>
+    </page-section>
 </template>
 
-<style scoped>
-.deployments {
-    margin: -12px -16px;
-}
-</style>

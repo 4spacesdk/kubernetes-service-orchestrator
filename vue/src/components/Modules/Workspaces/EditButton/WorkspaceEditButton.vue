@@ -1,85 +1,16 @@
 <script setup lang="ts">
-import {computed, defineComponent, onMounted, reactive, ref, watch} from 'vue'
+import {computed} from 'vue'
 import {Workspace} from "@/core/services/Deploy/models";
-import type {DeploymentSpecGetResponse} from "@/core/services/Deploy/Api";
-import bus from "@/plugins/bus";
-import {DeploymentStatusTypes} from "@/constants";
+import {isSectionEnabled} from "@/components/Modules/Common/DetailPage/detailSections";
+import {workspaceSections} from "@/components/Modules/Workspaces/Sections/sections";
 
+/** The workspace's settings, each a section of its page - the same list its side menu reads. */
 const props = defineProps<{
     workspace: Workspace
 }>();
 
-const spec = ref<DeploymentSpecGetResponse>();
-
-const showUpdateName = ref(false);
-const isUpdateNameEnabled = ref(false);
-
-const showUpdateEmailService = ref(false);
-const isUpdateEmailServiceEnabled = ref(false);
-
-const showUpdateDatabaseService = ref(false);
-const isUpdateDatabaseServiceEnabled = ref(false);
-
-const showUpdateIngress = ref(false);
-const isUpdateIngressEnabled = ref(false);
-
-const showUpdateLabels = ref(false);
-const isUpdateLabelsEnabled = ref(false);
-
-onMounted(() => {
-    render();
-});
-
-function render() {
-    showUpdateName.value = true;
-    isUpdateNameEnabled.value = true;
-
-    showUpdateEmailService.value = true;
-    isUpdateEmailServiceEnabled.value = true;
-
-    showUpdateDatabaseService.value = true;
-    // Only while nothing of the workspace has been deployed. `find() === null` was never true,
-    // so this stood disabled for every workspace.
-    isUpdateDatabaseServiceEnabled.value = !(props.workspace.deployments ?? [])
-        .some(deployment => deployment.status !== DeploymentStatusTypes.Draft);
-
-    showUpdateIngress.value = true;
-    isUpdateIngressEnabled.value = true;
-
-    showUpdateLabels.value = true;
-    isUpdateLabelsEnabled.value = true;
-}
-
-function onUpdateNameClicked() {
-    bus.emit('workspaceUpdateName', {
-        workspace: props.workspace
-    });
-}
-
-function onUpdateEmailServiceClicked() {
-    bus.emit('workspaceUpdateEmailService', {
-        workspace: props.workspace
-    });
-}
-
-function onUpdateDatabaseServiceClicked() {
-    bus.emit('workspaceUpdateDatabaseService', {
-        workspace: props.workspace
-    });
-}
-
-function onUpdateIngressClicked() {
-    bus.emit('workspaceUpdateIngress', {
-        workspace: props.workspace
-    });
-}
-
-function onUpdateLabelsClicked() {
-    bus.emit('workspaceUpdateLabels', {
-        workspace: props.workspace
-    });
-}
-
+const settings = computed(() => workspaceSections
+    .filter(section => section.group == 'Settings' && section.isShown(props.workspace)));
 </script>
 
 <template>
@@ -89,74 +20,24 @@ function onUpdateLabelsClicked() {
             class="w-100 list-wrapper">
             <v-list
                 class="list-items">
-                <v-list-item
-                    v-if="showUpdateName"
-                    :disabled="!isUpdateNameEnabled"
-                    dense
-                    @click="onUpdateNameClicked">
-                    <v-list-item-title>
-                        <v-icon size="small" class="my-auto ml-2">fa fa-font</v-icon>
-                        <span class="ml-2">Name</span>
-                    </v-list-item-title>
-                </v-list-item>
-
                 <div
-                    v-if="showUpdateEmailService">
+                    v-for="section in settings"
+                    :key="section.key">
                     <v-list-item
-                        :disabled="!isUpdateEmailServiceEnabled"
-                        dense
-                        @click="onUpdateEmailServiceClicked">
+                        :disabled="!isSectionEnabled(section, props.workspace)"
+                        :to="{name: 'WorkspaceById', params: {id: props.workspace.id, section: section.key}}"
+                        dense>
                         <v-list-item-title>
-                            <v-icon size="small" class="my-auto ml-2">fa fa-envelope</v-icon>
-                            <span class="ml-2">Email Service</span>
+                            <v-icon size="small" class="my-auto ml-2">{{ section.icon }}</v-icon>
+                            <span class="ml-2">{{ section.title }}</span>
                         </v-list-item-title>
                     </v-list-item>
                     <v-tooltip
                         activator="parent"
-                        :disabled="isUpdateEmailServiceEnabled"
-                        location="left">Only available during setup
+                        :disabled="isSectionEnabled(section, props.workspace)"
+                        location="left">{{ section.disabledHint }}
                     </v-tooltip>
                 </div>
-
-                <div
-                    v-if="showUpdateDatabaseService">
-                    <v-list-item
-                        :disabled="!isUpdateDatabaseServiceEnabled"
-                        dense
-                        @click="onUpdateDatabaseServiceClicked">
-                        <v-list-item-title>
-                            <v-icon size="small" class="my-auto ml-2">fa fa-database</v-icon>
-                            <span class="ml-2">Database Service</span>
-                        </v-list-item-title>
-                    </v-list-item>
-                    <v-tooltip
-                        activator="parent"
-                        :disabled="isUpdateDatabaseServiceEnabled"
-                        location="left">Only available during setup
-                    </v-tooltip>
-                </div>
-
-                <v-list-item
-                    v-if="showUpdateIngress"
-                    :disabled="!isUpdateIngressEnabled"
-                    dense
-                    @click="onUpdateIngressClicked">
-                    <v-list-item-title>
-                        <v-icon size="small" class="my-auto ml-2">fa fa-globe</v-icon>
-                        <span class="ml-2">Domain</span>
-                    </v-list-item-title>
-                </v-list-item>
-
-                <v-list-item
-                    v-if="showUpdateLabels"
-                    :disabled="!isUpdateLabelsEnabled"
-                    dense
-                    @click="onUpdateLabelsClicked">
-                    <v-list-item-title>
-                        <v-icon size="small" class="my-auto ml-2">fa fa-tags</v-icon>
-                        <span class="ml-2">Labels</span>
-                    </v-list-item-title>
-                </v-list-item>
             </v-list>
         </v-card>
     </div>
@@ -173,9 +54,5 @@ function onUpdateLabelsClicked() {
 
 .v-list-item-title {
     font-size: 11px !important;
-}
-
-.v-progress-circular {
-    margin: 1rem;
 }
 </style>

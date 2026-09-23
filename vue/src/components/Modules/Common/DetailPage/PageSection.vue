@@ -10,6 +10,8 @@ const props = defineProps<{
     isSaving?: boolean;
     /** Leaves Save out, for a section that saves as it goes or not at all. */
     hideSave?: boolean;
+    /** No space around the content, for a list that runs edge to edge as on a list page. */
+    flush?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -52,7 +54,7 @@ function onKeyDown(event: KeyboardEvent) {
             height="2"/>
         <div
             class="page-section-body"
-            :class="{'is-loading': props.isLoading}">
+            :class="{'is-loading': props.isLoading, 'is-flush': props.flush}">
             <slot/>
         </div>
     </section>
@@ -78,6 +80,10 @@ function onKeyDown(event: KeyboardEvent) {
 
 .page-section-body {
     padding: 1rem;
+}
+
+.page-section-body.is-flush {
+    padding: 0;
 }
 
 .page-section-body.is-loading {
