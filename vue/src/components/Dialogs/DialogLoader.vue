@@ -134,6 +134,10 @@ bus.on('auditEventList', async input => {
     addComponent((await import('@/components/Dialogs/AuditEvents/AuditEventsListDialog.vue')).default, input);
 });
 
+bus.on('clusterHealth', async input => {
+    addComponent((await import('@/components/Dialogs/Shell/ClusterHealthDialog.vue')).default, input);
+});
+
 bus.on('migrationJobList', async input => {
     addComponent((await import('@/components/Dialogs/MigrationJobs/MigrationJobsListDialog.vue')).default, input);
 });

@@ -5,6 +5,7 @@ import {Api} from "@/core/services/Deploy/Api";
 import type {KubernetesNodeInfo} from "@/core/services/Deploy/Api";
 import AuthService from "@/services/AuthService";
 import moment from "moment";
+import bus from "@/plugins/bus";
 
 const version = ref(versions.version);
 
@@ -12,6 +13,9 @@ const isLoading = ref(false);
 const status = ref<string>('');
 const message = ref<string>('');
 const nodes = ref<KubernetesNodeInfo[]>([]);
+const nodesReady = ref<number>();
+const nodesTotal = ref<number>();
+const kubernetesVersion = ref<string>();
 const healthCheckedAt = ref<string>();
 
 /**
@@ -44,15 +48,18 @@ function getStatus() {
             status.value = value[0].status ?? '';
             message.value = value[0].message ?? '';
             nodes.value = value[0].nodes ?? [];
+            nodesReady.value = value[0].nodes_ready;
+            nodesTotal.value = value[0].nodes_total;
+            kubernetesVersion.value = value[0].kubernetes_version;
             healthCheckedAt.value = value[0].health_checked_at;
             isLoading.value = false;
         });
     }
 }
 
-function onReloadBtnClicked() {
-    isLoading.value = true;
-    getStatus();
+/** The nodes, the counts and the scheduler - see `ClusterHealth` in the backend. Reload is in there. */
+function onStatusClicked() {
+    bus.emit('clusterHealth', {});
 }
 
 function onVersionBtnClicked() {
@@ -84,7 +91,8 @@ function onVersionBtnClicked() {
             <v-badge
                 style="margin-bottom: 4px;"
                 :color="isLoading ? 'warning' : (status != 'success' ? 'error' : (healthIsStale ? 'warning' : 'success'))"
-                @click="onReloadBtnClicked"
+                class="status-dot"
+                @click="onStatusClicked"
             >
                 <v-tooltip activator="parent" location="top">
                     <template v-if="isLoading">Loading...</template>
@@ -92,7 +100,11 @@ function onVersionBtnClicked() {
                     <template v-else-if="healthIsStale">
                         Connected, but runtime health was last checked {{ moment(healthCheckedAt).fromNow() }} - is the scheduler running?
                     </template>
-                    <template v-else>Connected</template>
+                    <template v-else>
+                        <div>Connected<template v-if="kubernetesVersion"> - Kubernetes {{ kubernetesVersion }}</template></div>
+                        <div v-if="nodesTotal !== undefined">{{ nodesReady }}/{{ nodesTotal }} nodes ready</div>
+                        <div v-if="healthCheckedAt">Health checked {{ moment(healthCheckedAt).fromNow() }}</div>
+                    </template>
                 </v-tooltip>
             </v-badge>
         </div>
@@ -100,5 +112,7 @@ function onVersionBtnClicked() {
 </template>
 
 <style scoped>
-
+.status-dot {
+    cursor: pointer;
+}
 </style>

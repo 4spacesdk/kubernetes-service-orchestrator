@@ -56,7 +56,7 @@ function titleOf(group: string) {
 </script>
 
 <template>
-    <div class="h-100 content-wrapper d-flex flex-column">
+    <div class="content-wrapper d-flex flex-column">
 
         <v-toolbar
             density="compact"
@@ -202,6 +202,13 @@ function titleOf(group: string) {
 </template>
 
 <style scoped>
+/* Exactly the window between the app bar and the status bar. `h-100` alone was the height of
+   whatever was inside, so the document scrolled instead of the section - and a log that scrolls
+   itself, to follow its newest line, never got to. */
+.content-wrapper {
+    height: calc(100dvh - var(--v-layout-top, 0px) - var(--v-layout-bottom, 0px));
+}
+
 .page-body {
     min-height: 0;
 }

@@ -321,6 +321,52 @@ export interface IntArrayInterface {
     values?: number[];
 }
 
+export interface KubernetesClusterHealthCounts {
+    healthy?: number;
+    progressing?: number;
+    degraded?: number;
+    suspended?: number;
+    missing?: number;
+    unknown?: number;
+    none?: number;
+}
+
+export interface KubernetesClusterHealthResponse {
+    nodes?: KubernetesClusterNode[];
+    metrics_available?: boolean;
+    metrics_reason?: string;
+    deployments?: KubernetesClusterHealthCounts;
+    workspaces?: KubernetesClusterHealthCounts;
+    scheduler?: KubernetesClusterScheduler;
+}
+
+export interface KubernetesClusterNode {
+    name?: string;
+    ready?: boolean;
+    ready_reason?: string;
+    unschedulable?: boolean;
+    roles?: string[];
+    kubelet_version?: string;
+    age_seconds?: number;
+    pressures?: string[];
+    pods?: number;
+    pods_allocatable?: number;
+    cpu_capacity?: number;
+    cpu_allocatable?: number;
+    cpu_requested?: number;
+    cpu_usage?: number;
+    memory_capacity?: number;
+    memory_allocatable?: number;
+    memory_requested?: number;
+    memory_usage?: number;
+}
+
+export interface KubernetesClusterScheduler {
+    last_run?: string;
+    health_checked_at?: string;
+    behind?: boolean;
+}
+
 export interface KubernetesExecResponse {
     lines?: string[];
 }
@@ -347,6 +393,9 @@ export interface KubernetesNodeInfoResponse {
     status?: string;
     message?: string;
     nodes?: KubernetesNodeInfo[];
+    nodes_ready?: number;
+    nodes_total?: number;
+    kubernetes_version?: string;
     health_checked_at?: string;
 }
 
@@ -6832,6 +6881,27 @@ export class KubernetesNodeInfoGet extends BaseApi<KubernetesNodeInfoResponse> {
     }
 }
 
+export class KubernetesClusterHealthGet extends BaseApi<KubernetesClusterHealthResponse> {
+
+    public topic = 'Resources.KubernetesClusterHealthResponses';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/kubernetes/cluster-health`;
+    }
+
+    protected convertToResource(data: any): KubernetesClusterHealthResponse {
+        return data;
+    }
+
+    public find(next?: (value: KubernetesClusterHealthResponse[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
 class Kubernetes {
 
     public getPodsGetByNamespace(namespace: string): KubernetesGetPodsGetByNamespace {
@@ -6856,6 +6926,10 @@ class Kubernetes {
 
     public nodeInfoGet(): KubernetesNodeInfoGet {
         return new KubernetesNodeInfoGet();
+    }
+
+    public clusterHealthGet(): KubernetesClusterHealthGet {
+        return new KubernetesClusterHealthGet();
     }
 
 }

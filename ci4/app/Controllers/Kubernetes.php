@@ -2,6 +2,7 @@
 
 use App\Libraries\Audit\Audit;
 use App\Libraries\Health\HealthCheck;
+use App\Libraries\Kubernetes\ClusterHealth;
 use App\Libraries\Kubernetes\KubeAuth;
 use App\Libraries\Kubernetes\LogQuery;
 use App\Libraries\Kubernetes\KubeHelper;
@@ -207,10 +208,18 @@ class Kubernetes extends \App\Core\BaseController {
         try {
             $cluster = $kubeAuth->authenticate();
             $nodes = $cluster->node()->all();
+            // The status bar's tooltip, off the same list: no call of its own every 30 seconds.
+            $ready = array_filter($nodes->all(), fn(K8sNode $node) => array_filter(
+                $node->getAttribute('status.conditions', []),
+                fn(array $condition) => ($condition['type'] ?? null) === 'Ready' && ($condition['status'] ?? null) === 'True',
+            ));
             Data::set('resource', [
                 'status' => 'success',
                 'message' => '',
                 'nodes' => array_map(fn(K8sNode $node) => $node->getInfo(), $nodes->all()),
+                'nodes_ready' => count($ready),
+                'nodes_total' => count($nodes->all()),
+                'kubernetes_version' => $nodes->first()?->getInfo()['kubeletVersion'] ?? null,
                 'health_checked_at' => HealthCheck::LastCheckedAt(),
             ]);
         } catch (KubernetesAPIException $e) {
@@ -232,6 +241,28 @@ class Kubernetes extends \App\Core\BaseController {
                 'health_checked_at' => HealthCheck::LastCheckedAt(),
             ]);
         }
+        $this->success();
+    }
+
+    /**
+     * The cluster's nodes, how kso's deployments and workspaces are doing, and whether the
+     * scheduler keeps up - the window behind the status bar's dot. Asked for when it opens.
+     *
+     * @route /kubernetes/cluster-health
+     * @method get
+     * @custom true
+     * @return void
+     * @responseSchema KubernetesClusterHealthResponse
+     */
+    public function clusterHealth(): void {
+        try {
+            $health = (new ClusterHealth((new KubeAuth())->authenticate()))->read(time());
+        } catch (\Throwable $e) {
+            $this->fail(KubeHelper::PrintException($e));
+            return;
+        }
+
+        Data::set('resource', $health);
         $this->success();
     }
 

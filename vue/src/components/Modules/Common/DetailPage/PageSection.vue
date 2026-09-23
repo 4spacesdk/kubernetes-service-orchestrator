@@ -12,6 +12,11 @@ const props = defineProps<{
     hideSave?: boolean;
     /** No space around the content, for a list that runs edge to edge as on a list page. */
     flush?: boolean;
+    /**
+     * Exactly the height of the page, for content that scrolls itself - a log follows its newest
+     * line only if it is the log that scrolls, not the page around it.
+     */
+    fill?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -29,6 +34,7 @@ function onKeyDown(event: KeyboardEvent) {
 <template>
     <section
         class="page-section"
+        :class="{'is-fill': props.fill}"
         @keydown="onKeyDown">
         <header class="page-section-header">
             <h2 class="page-section-title">{{ props.title }}</h2>
@@ -84,6 +90,19 @@ function onKeyDown(event: KeyboardEvent) {
 
 .page-section-body.is-flush {
     padding: 0;
+}
+
+.page-section.is-fill {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.page-section.is-fill .page-section-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
 }
 
 .page-section-body.is-loading {

@@ -19,7 +19,8 @@ const kubernetesLogList = ref<InstanceType<typeof KubernetesLogList>>();
     <page-section
         title="Kubernetes Logs"
         hide-save
-        flush>
+        flush
+        fill>
         <template #actions>
             <v-btn
                 variant="text"
