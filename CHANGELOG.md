@@ -1,5 +1,23 @@
 # Changelog
 
+## v1.9.4 (unreleased)
+
+### Enhancements
+* Creating a deployment is a wizard: after name, namespace and version it walks through the settings its specification gives it - the sections of its page, in the order of its menu - and ends by deploying it or leaving it a draft. Update Management asks for on or off instead of being left as it is, and offers a tag pattern read off the version. Closed halfway, the draft stays with what was saved
+* Workspace and deployment settings save as you go: a choice at once, typing when it pauses. The section says Saving, Saved, or Not saved and why, with Retry; a value the server would refuse waits until it is whole, and leaving a section sends what is pending first. Environment Variables, Volumes and Cron Jobs keep their Save button. The Version keeps its button too, called Deploy version, as changing it rolls out
+* The deployments list leaves Suspended out until you ask for it - a paused or switched-off workspace's deployments, and ones scaled to zero. The Health filter says All but Suspended; one not checked yet is still listed, under No health
+* The running deployments of a container image can be filtered by version, with how many run each - exactly, where the search would match 1.9.10 for 1.9.1
+* The deployment on a migration job or an update is a link to its page
+* A log from the cluster has the Kubernetes wheel, a log kso keeps has a scroll - so a migration job's two logs are told apart without their tooltips
+
+### Fixed bugs
+* A field without an icon - a disabled one, or an empty one whose clear button is hidden - was 4 pixels lower than a select beside it
+
+### Upgrade guide
+1. Deploy new image
+
+
+
 ## v1.9.3 (2026-09-23)
 
 ### Enhancements
