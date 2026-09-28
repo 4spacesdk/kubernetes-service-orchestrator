@@ -25,6 +25,8 @@ const props = defineProps<{
     filterByWorkspaceId?: number;
     /** Only these deployments, e.g. the ones running a container image. */
     filterByIds?: number[];
+    /** Of those, only the ones on these versions - exactly, not as a search. Empty is all. */
+    filterByVersions?: string[];
 
     showHeader: boolean;
     showCreateBtn?: boolean;
@@ -157,6 +159,11 @@ watch([selectedStatus, selectedHealth], debounce(() => {
     getItems(true, true);
 }, 500));
 
+watch(() => props.filterByVersions, () => {
+    page.value = 1;
+    getItems(true, true);
+});
+
 function onItemSaved() {
     getItems(true, true);
 }
@@ -172,6 +179,9 @@ function getItems(doItems = true, doCount = false) {
     if (props.filterByIds) {
         // An empty whereIn would read as no filter at all.
         api.whereIn('id', props.filterByIds.length ? props.filterByIds : [0]);
+        if (props.filterByVersions?.length) {
+            api.whereIn('version', props.filterByVersions);
+        }
     } else if (props.filterByWorkspaceId) {
         api.where('workspace_id', props.filterByWorkspaceId);
     } else {
