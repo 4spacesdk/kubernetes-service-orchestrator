@@ -1,6 +1,7 @@
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { onBeforeRouteLeave, onBeforeRouteUpdate } from "vue-router";
 import bus from "@/plugins/bus";
+import { insideRouterView } from "@/composables/insideRouterView";
 
 interface SavingApi<T> {
     setErrorHandler(handler: (response: any) => boolean): unknown;
@@ -115,14 +116,16 @@ export function useAutoSave<T>(options: AutoSaveOptions<T>) {
         while (inFlight) {
             await inFlight;
         }
-        if (!isChanged()) {
-            return status.value != "error";
-        }
-        const reason = options.validate?.() ?? null;
+        // Checked even when nothing changed: a choice that has to be made is not made by
+        // leaving it alone.
+        const reason = stored === null ? null : (options.validate?.() ?? null);
         if (reason) {
             status.value = "invalid";
             message.value = reason;
             return false;
+        }
+        if (!isChanged()) {
+            return status.value != "error";
         }
 
         const sending = current();
@@ -172,8 +175,10 @@ export function useAutoSave<T>(options: AutoSaveOptions<T>) {
     }
 
     // A section is swapped within the same route, so both guards are needed.
-    onBeforeRouteLeave(() => beforeLeaving());
-    onBeforeRouteUpdate((to, from) => to.path == from.path || beforeLeaving());
+    if (insideRouterView()) {
+        onBeforeRouteLeave(() => beforeLeaving());
+        onBeforeRouteUpdate((to, from) => to.path == from.path || beforeLeaving());
+    }
 
     function onBeforeUnload(event: BeforeUnloadEvent) {
         if (isChanged()) {

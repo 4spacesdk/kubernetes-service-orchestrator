@@ -21,7 +21,31 @@ const headers = ref([
     {title: '', key: 'actions', sortable: false},
 ]);
 
-const {markSaved} = useUnsavedChanges(() => rows.value);
+const {markSaved, isChanged} = useUnsavedChanges(() => rows.value);
+
+/**
+ * Saves what has changed and answers whether it is stored - for the create wizard, whose Next
+ * saves the section it is leaving. The page keeps its Save button: this list is edited row by row.
+ */
+let settlePending: ((ok: boolean) => void) | null = null;
+function settle(ok: boolean) {
+    settlePending?.(ok);
+    settlePending = null;
+}
+function saveNow(): Promise<boolean> {
+    if (!isChanged()) {
+        return Promise.resolve(true);
+    }
+    if (isSaving.value) {
+        // Its Save was pressed and is on its way; that answer is not ours to wait for.
+        return Promise.resolve(false);
+    }
+    return new Promise(resolve => {
+        settlePending = resolve;
+        onSave();
+    });
+}
+defineExpose({saveNow});
 
 // <editor-fold desc="Functions">
 
@@ -80,6 +104,7 @@ function onSave() {
             });
         }
         isSaving.value = false;
+        settle(false);
         return false;
     });
     api.save({
@@ -89,6 +114,7 @@ function onSave() {
         bus.emit('toast', {text: 'Saved'});
         isSaving.value = false;
         render();
+        settle(true);
     });
 }
 
