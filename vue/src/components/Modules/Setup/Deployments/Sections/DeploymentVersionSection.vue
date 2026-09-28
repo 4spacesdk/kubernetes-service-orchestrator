@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import {onMounted, ref} from 'vue'
+import {computed, onMounted, ref} from 'vue'
 import {Deployment} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
+import {DeploymentStatusTypes} from "@/constants";
 import {useUnsavedChanges} from "@/composables/useUnsavedChanges";
 import PageSection from "@/components/Modules/Common/DetailPage/PageSection.vue";
 import DateView from "@/components/Modules/Common/DateView.vue";
@@ -20,6 +21,13 @@ const isLoadingTags = ref(false);
 const isSaving = ref(false);
 
 const {markSaved} = useUnsavedChanges(() => value.value);
+
+/**
+ * The one setting that does not save as it goes: a new version is rolled out the moment it is
+ * stored, so choosing one in the list must not be enough - the button says what it does. A
+ * Draft is not rolled out, and there it is only a save.
+ */
+const isDraft = computed(() => props.deployment.status == DeploymentStatusTypes.Draft);
 
 // <editor-fold desc="Functions">
 
@@ -78,7 +86,7 @@ function onSave() {
     });
     api.save(null, newItem => {
         bus.emit('deploymentSaved', newItem);
-        bus.emit('toast', {text: 'Saved'});
+        bus.emit('toast', {text: isDraft.value ? 'Saved' : `Deploying ${value.value}`});
         isSaving.value = false;
         render();
     });
@@ -93,6 +101,7 @@ function onSave() {
         title="Version"
         :is-loading="isLoading"
         :is-saving="isSaving"
+        :save-label="isDraft ? 'Save' : 'Deploy version'"
         @save="onSave">
         <div class="section-form">
             <v-select
@@ -100,7 +109,9 @@ function onSave() {
                 :loading="isLoadingTags"
                 :items="tags"
                 variant="outlined"
-                label="Version">
+                label="Version"
+                :hint="isDraft ? '' : 'Rolled out when you press Deploy version'"
+                persistent-hint>
                 <template v-slot:item="{ props: itemProps, internalItem: item }">
                     <v-list-item v-bind="itemProps">
                         <template v-if="pushedAt[item.raw]" v-slot:append>
