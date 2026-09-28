@@ -5,154 +5,269 @@ found by `composer audit`, `npm audit` and [Trivy](https://trivy.dev). A release
 this file as it was when it was tagged. Written every week by
 [a scheduled workflow](.github/workflows/security-status.yml) - do not edit by hand.
 
-Updated: 2026-09-22 16:20 UTC
+Updated: 2026-09-28 11:25 UTC
 
-Main at: `65899d9`
+Main at: `7cd31e6`
 
 | Source | Critical | High | Medium | Low | Unknown |
 |--------|---------:|-----:|-------:|----:|--------:|
 | PHP · ci4/composer.lock | 0 | 0 | 0 | 0 | 0 |
-| JavaScript · vue/package-lock.json | 1 | 50 | 43 | 6 | 0 |
-| Image · 4spaces/kubernetes-service-orchestrator:dev | 0 | 2 | 4 | 3 | 1 |
+| JavaScript · vue/package-lock.json | 0 | 0 | 0 | 0 | 0 |
+| Image · 4spaces/kubernetes-service-orchestrator:dev | 1 | 25 | 137 | 25 | 45 |
 
 ## PHP · ci4/composer.lock
 
-*abandoned: swiftmailer/swiftmailer, vierbergenlars/php-semver*
+*abandoned: vierbergenlars/php-semver*
 
 Nothing known.
 
 ## JavaScript · vue/package-lock.json
 
-| Severity | Id | Package | Installed | Fix | Title |
-|----------|----|---------|-----------|-----|-------|
-| critical | [GHSA-w7jw-789q-3m8p](https://github.com/advisories/GHSA-w7jw-789q-3m8p) | shell-quote | 1.8.1 | not >=1.1.0 <=1.8.3 | shell-quote quote() does not escape newlines in object .op values |
-| high | [GHSA-fv7c-fp4j-7gwp](https://github.com/advisories/GHSA-fv7c-fp4j-7gwp) | @babel/plugin-transform-modules-systemjs | 7.25.0 | not >=7.12.0 <=7.29.3 | @babel/plugin-transform-modules-systemjs generates arbitrary code when compiling malicious input |
-| high | [GHSA-3g43-6gmg-66jw](https://github.com/advisories/GHSA-3g43-6gmg-66jw) | axios | 0.19.2 | not >=0.19.0 <0.31.1 | axios Vulnerable to Credential Theft and Response Hijacking via Prototype Pollution Gadget in Config Merge |
-| high | [GHSA-43fc-jf86-j433](https://github.com/advisories/GHSA-43fc-jf86-j433) | axios | 0.19.2 | not <=0.30.2 | Axios is Vulnerable to Denial of Service via __proto__ Key in mergeConfig |
-| high | [GHSA-6chq-wfr3-2hj9](https://github.com/advisories/GHSA-6chq-wfr3-2hj9) | axios | 0.19.2 | not <=0.31.0 | Axios: Header Injection via Prototype Pollution |
-| high | [GHSA-cph5-m8f7-6c5x](https://github.com/advisories/GHSA-cph5-m8f7-6c5x) | axios | 0.19.2 | not <0.21.2 | axios Inefficient Regular Expression Complexity vulnerability |
-| high | [GHSA-hfxv-24rg-xrqf](https://github.com/advisories/GHSA-hfxv-24rg-xrqf) | axios | 0.19.2 | not <=0.31.1 | Axios: Regular Expression Denial of Service (ReDoS) via Cookie Name Injection |
-| high | [GHSA-j5f8-grm9-p9fc](https://github.com/advisories/GHSA-j5f8-grm9-p9fc) | axios | 0.19.2 | not <=0.31.1 | Axios: Proxy-Authorization header leaks to redirect target when proxy is re-evaluated to direct connection |
-| high | [GHSA-jr5f-v2jv-69x6](https://github.com/advisories/GHSA-jr5f-v2jv-69x6) | axios | 0.19.2 | not <0.30.0 | axios Requests Vulnerable To Possible SSRF and Credential Leakage via Absolute URL |
-| high | [GHSA-p92q-9vqr-4j8v](https://github.com/advisories/GHSA-p92q-9vqr-4j8v) | axios | 0.19.2 | not <=0.31.1 | Axios: Proxy-Authorization Credential Leak to Origin Server Across HTTP-to-HTTPS Redirect in Axios Node.js HTTP Adapter |
-| high | [GHSA-pf86-5x62-jrwf](https://github.com/advisories/GHSA-pf86-5x62-jrwf) | axios | 0.19.2 | not <=0.31.0 | Axios: Prototype Pollution Gadgets - Response Tampering, Data Exfiltration, and Request Hijacking |
-| high | [GHSA-pjwm-pj3p-43mv](https://github.com/advisories/GHSA-pjwm-pj3p-43mv) | axios | 0.19.2 | not <=0.31.1 | axios's shouldBypassProxy does not recognize IPv4-mapped IPv6 addresses, allowing NO_PROXY bypass (incomplete fix for C… |
-| high | [GHSA-pmwg-cvhr-8vh7](https://github.com/advisories/GHSA-pmwg-cvhr-8vh7) | axios | 0.19.2 | not <=0.31.0 | Axios: Incomplete Fix for CVE-2025-62718 — NO_PROXY Protection Bypassed via RFC 1122 Loopback Subnet (127.0.0.0/8) in A… |
-| high | [GHSA-3jxr-9vmj-r5cp](https://github.com/advisories/GHSA-3jxr-9vmj-r5cp) | brace-expansion | 1.1.11 | not <1.1.16 | brace-expansion: DoS via exponential-time expansion of consecutive non-expanding {} groups |
-| high | [GHSA-mh99-v99m-4gvg](https://github.com/advisories/GHSA-mh99-v99m-4gvg) | brace-expansion | 1.1.11 | not >=2.0.0 <2.1.3 | brace-expansion: DoS via unbounded expansion length causing an out-of-memory process crash |
-| high | [GHSA-rgw5-rvv9-x895](https://github.com/advisories/GHSA-rgw5-rvv9-x895) | brace-expansion | 1.1.11 | not <1.1.18 | brace-expansion: DoS via unbounded intermediate arrays, bypassing the CVE-2026-14257 mitigation |
-| high | [GHSA-73wf-gq98-2v4g](https://github.com/advisories/GHSA-73wf-gq98-2v4g) | browserslist | 4.23.2 | not <=4.28.6 | Browserslist: Uncaught crash / prototype write via untrusted browserslist-stats.json custom stats (normalizeStats) |
-| high | [GHSA-c83g-rgw3-j3cx](https://github.com/advisories/GHSA-c83g-rgw3-j3cx) | browserslist | 4.23.2 | not <=4.28.6 | Browserslist: Unbounded memory growth (no cache eviction) via distinct query results, leading to eventual OOM |
-| high | [GHSA-3xgq-45jj-v275](https://github.com/advisories/GHSA-3xgq-45jj-v275) | cross-spawn | 7.0.3 | not >=7.0.0 <7.0.5 | Regular Expression Denial of Service (ReDoS) in cross-spawn |
-| high | [GHSA-4c8g-83qw-93j6](https://github.com/advisories/GHSA-4c8g-83qw-93j6) | fast-uri | 3.0.1 | not >=3.0.0 <3.1.3 | fast-uri vulnerable to host confusion via failed IDN canonicalization |
-| high | [GHSA-7p8r-x3mc-p8w7](https://github.com/advisories/GHSA-7p8r-x3mc-p8w7) | fast-uri | 3.0.1 | not >=3.0.0 <3.1.5 | fast-uri vulnerable to host confusion via backslash authority introducer |
-| high | [GHSA-f65p-4m7j-42xc](https://github.com/advisories/GHSA-f65p-4m7j-42xc) | fast-uri | 3.0.1 | not >=3.0.0 <3.1.6 | fast-uri vulnerable to server-side request forgery via malformed IPv6 normalization |
-| high | [GHSA-jqff-g426-hqxp](https://github.com/advisories/GHSA-jqff-g426-hqxp) | fast-uri | 3.0.1 | not >=3.0.0 <3.1.6 | fast-uri vulnerable to host confusion via percent-encoded scheme normalization |
-| high | [GHSA-q3j6-qgpj-74h6](https://github.com/advisories/GHSA-q3j6-qgpj-74h6) | fast-uri | 3.0.1 | not >=3.0.0 <=3.1.0 | fast-uri vulnerable to path traversal via percent-encoded dot segments |
-| high | [GHSA-v2hh-gcrm-f6hx](https://github.com/advisories/GHSA-v2hh-gcrm-f6hx) | fast-uri | 3.0.1 | not >=3.0.0 <=3.1.3 | fast-uri vulnerable to host confusion via literal backslash authority delimiter |
-| high | [GHSA-v39h-62p7-jpjc](https://github.com/advisories/GHSA-v39h-62p7-jpjc) | fast-uri | 3.0.1 | not >=3.0.0 <=3.1.1 | fast-uri vulnerable to host confusion via percent-encoded authority delimiters |
-| high | [GHSA-25h7-pfq9-p65f](https://github.com/advisories/GHSA-25h7-pfq9-p65f) | flatted | 3.3.1 | not <3.4.0 | flatted vulnerable to unbounded recursion DoS in parse() revive phase |
-| high | [GHSA-rf6f-7fwh-wjgh](https://github.com/advisories/GHSA-rf6f-7fwh-wjgh) | flatted | 3.3.1 | not <=3.4.1 | Prototype Pollution via parse() in NodeJS flatted |
-| high | [GHSA-74fj-2j2h-c42q](https://github.com/advisories/GHSA-74fj-2j2h-c42q) | follow-redirects | 1.5.10 | not <1.14.7 | Exposure of sensitive information in follow-redirects |
-| high | [GHSA-v56q-mh7h-f735](https://github.com/advisories/GHSA-v56q-mh7h-f735) | immutable | 4.3.7 | not >=4.0.0-rc.1 <4.3.9 | Immutable.js `List` 32-bit trie overflow → unrecoverable DoS |
-| high | [GHSA-wf6x-7x77-mvgw](https://github.com/advisories/GHSA-wf6x-7x77-mvgw) | immutable | 4.3.7 | not >=4.0.0-rc.1 <4.3.8 | Immutable is vulnerable to Prototype Pollution |
-| high | [GHSA-xvcm-6775-5m9r](https://github.com/advisories/GHSA-xvcm-6775-5m9r) | immutable | 4.3.7 | not >=4.0.0-beta.1 <4.3.9 | Immutable: Hash-collision algorithmic complexity denial of service in Immutable.Map/Set |
-| high | [GHSA-2883-xcg3-v3hh](https://github.com/advisories/GHSA-2883-xcg3-v3hh) | js-yaml | 4.1.0 | not >=4.0.0 <4.3.2 | js-yaml: maxTotalMergeKeys does not limit CPU use for empty merge sources |
-| high | [GHSA-52cp-r559-cp3m](https://github.com/advisories/GHSA-52cp-r559-cp3m) | js-yaml | 4.1.0 | not >=4.0.0 <4.3.0 | js-yaml: YAML merge-key chains can force quadratic CPU consumption |
-| high | [GHSA-5p4m-2wfm-xmqj](https://github.com/advisories/GHSA-5p4m-2wfm-xmqj) | js-yaml | 4.1.0 | not >=4.0.0 <4.3.1 | JS-YAML: Quadratic CPU consumption in !!omap resolution (3.x and 4.x) — CVE-2026-59870 fix not backported |
-| high | [GHSA-r5fr-rjxr-66jc](https://github.com/advisories/GHSA-r5fr-rjxr-66jc) | lodash | 4.17.21 | not >=4.0.0 <=4.17.23 | lodash vulnerable to Code Injection via `_.template` imports key names |
-| high | [GHSA-23c5-xmqv-rm74](https://github.com/advisories/GHSA-23c5-xmqv-rm74) | minimatch | 3.1.2 | not >=9.0.0 <9.0.7 | minimatch ReDoS: nested *() extglobs generate catastrophically backtracking regular expressions |
-| high | [GHSA-3ppc-4f35-3m26](https://github.com/advisories/GHSA-3ppc-4f35-3m26) | minimatch | 3.1.2 | not >=9.0.0 <9.0.6 | minimatch has a ReDoS via repeated wildcards with non-matching literal in pattern |
-| high | [GHSA-7r86-cg39-jmmj](https://github.com/advisories/GHSA-7r86-cg39-jmmj) | minimatch | 3.1.2 | not >=9.0.0 <9.0.7 | minimatch has ReDoS: matchOne() combinatorial backtracking via multiple non-adjacent GLOBSTAR segments |
-| high | [GHSA-28wg-ghj8-5hjv](https://github.com/advisories/GHSA-28wg-ghj8-5hjv) | nanoid | 3.3.7 | not <3.3.16 | nanoid: non-secure generators can loop indefinitely with negative size |
-| high | [GHSA-2v37-7h3g-55p8](https://github.com/advisories/GHSA-2v37-7h3g-55p8) | nanoid | 3.3.7 | not <3.3.18 | nanoid: custom generators can loop indefinitely when size is zero |
-| high | [GHSA-xwg4-73v4-xw9w](https://github.com/advisories/GHSA-xwg4-73v4-xw9w) | nanoid | 3.3.7 | not <3.3.12 | nanoid: Integer Overflow or Wraparound |
-| high | [GHSA-c2c7-rcm5-vvqj](https://github.com/advisories/GHSA-c2c7-rcm5-vvqj) | picomatch | 2.3.1 | not <2.3.2 | Picomatch has a ReDoS vulnerability via extglob quantifiers |
-| high | [GHSA-6g55-p6wh-862q](https://github.com/advisories/GHSA-6g55-p6wh-862q) | postcss | 8.4.40 | not <=8.5.11 | PostCSS: Arbitrary file read and information disclosure via attacker-controlled sourceMappingURL in CSS comments |
-| high | [GHSA-r28c-9q8g-f849](https://github.com/advisories/GHSA-r28c-9q8g-f849) | postcss | 8.4.40 | not <=8.5.17 | PostCSS: Path Traversal in Previous Source Map Auto-Loading (sourceMappingURL) leads to Arbitrary .map File Disclosure |
-| high | [GHSA-gcx4-mw62-g8wm](https://github.com/advisories/GHSA-gcx4-mw62-g8wm) | rollup | 3.29.4 | not >=3.0.0 <3.29.5 | DOM Clobbering Gadget found in rollup bundled scripts that leads to XSS |
-| high | [GHSA-mw96-cpmx-2vgc](https://github.com/advisories/GHSA-mw96-cpmx-2vgc) | rollup | 3.29.4 | not <2.80.0 | Rollup 4 has Arbitrary File Write via Path Traversal |
-| high | [GHSA-5c6j-r48x-rmvq](https://github.com/advisories/GHSA-5c6j-r48x-rmvq) | serialize-javascript | 4.0.0 | not <=7.0.2 | Serialize JavaScript is Vulnerable to RCE via RegExp.flags and Date.prototype.toISOString() |
-| high | [GHSA-395f-4hp3-45gv](https://github.com/advisories/GHSA-395f-4hp3-45gv) | shell-quote | 1.8.1 | not <=1.8.4 | shell-quote: Quadratic-complexity Denial of Service in `parse()` (CWE-407) |
-| high | [GHSA-c27g-q93r-2cwf](https://github.com/advisories/GHSA-c27g-q93r-2cwf) | vite | 4.5.3 | not <=5.4.8 | launch-editor vulnerable to command injection via the crafted request on Windows |
-| high | [GHSA-fx2h-pf6j-xcff](https://github.com/advisories/GHSA-fx2h-pf6j-xcff) | vite | 4.5.3 | not <=6.4.2 | vite: `server.fs.deny` bypass on Windows alternate paths |
-| medium | [GHSA-968p-4wvh-cqc8](https://github.com/advisories/GHSA-968p-4wvh-cqc8) | @babel/helpers | 7.25.0 | not <7.26.10 | Babel has inefficient RegExp complexity in generated code with .replace when transpiling named capturing groups |
-| medium | [GHSA-968p-4wvh-cqc8](https://github.com/advisories/GHSA-968p-4wvh-cqc8) | @babel/runtime | 7.25.0 | not <7.26.10 | Babel has inefficient RegExp complexity in generated code with .replace when transpiling named capturing groups |
-| medium | [GHSA-2g4f-4pwh-qvx6](https://github.com/advisories/GHSA-2g4f-4pwh-qvx6) | ajv | 6.12.6 | not >=7.0.0-alpha.0 <8.18.0 | ajv has ReDoS when using `$data` option |
-| medium | [GHSA-3p68-rc4w-qgx5](https://github.com/advisories/GHSA-3p68-rc4w-qgx5) | axios | 0.19.2 | not <0.31.0 | Axios has a NO_PROXY Hostname Normalization Bypass that Leads to SSRF |
-| medium | [GHSA-4w2v-q235-vp99](https://github.com/advisories/GHSA-4w2v-q235-vp99) | axios | 0.19.2 | not <0.21.1 | Axios vulnerable to Server-Side Request Forgery |
-| medium | [GHSA-5c9x-8gcm-mpgx](https://github.com/advisories/GHSA-5c9x-8gcm-mpgx) | axios | 0.19.2 | not <=0.31.0 | Axios' HTTP adapter-streamed uploads bypass maxBodyLength when maxRedirects: 0 |
-| medium | [GHSA-62hf-57xw-28j9](https://github.com/advisories/GHSA-62hf-57xw-28j9) | axios | 0.19.2 | not <=0.31.0 | Axios: unbounded recursion in toFormData causes DoS via deeply nested request data |
-| medium | [GHSA-7q8q-rj6j-mhjq](https://github.com/advisories/GHSA-7q8q-rj6j-mhjq) | axios | 0.19.2 | not >=0.8.0 <0.33.0 | Axios: Nested axios option objects can consume polluted prototype values |
-| medium | [GHSA-898c-q2cr-xwhg](https://github.com/advisories/GHSA-898c-q2cr-xwhg) | axios | 0.19.2 | not <=0.31.1 | axios has DoS & Header Injection via Prototype Pollution Read-Side Gadgets in axios merge functions |
-| medium | [GHSA-fvcv-3m26-pcqx](https://github.com/advisories/GHSA-fvcv-3m26-pcqx) | axios | 0.19.2 | not <0.31.0 | Axios has Unrestricted Cloud Metadata Exfiltration via Header Injection Chain |
-| medium | [GHSA-m7pr-hjqh-92cm](https://github.com/advisories/GHSA-m7pr-hjqh-92cm) | axios | 0.19.2 | not <=0.31.0 | Axios: no_proxy bypass via IP alias allows SSRF |
-| medium | [GHSA-mmx7-hfxf-jppx](https://github.com/advisories/GHSA-mmx7-hfxf-jppx) | axios | 0.19.2 | not <0.33.0 | Axios: Prototype pollution gadgets can alter axios request construction |
-| medium | [GHSA-vf2m-468p-8v99](https://github.com/advisories/GHSA-vf2m-468p-8v99) | axios | 0.19.2 | not <=0.31.0 | Axios: HTTP adapter streamed responses bypass maxContentLength |
-| medium | [GHSA-w9j2-pvgh-6h63](https://github.com/advisories/GHSA-w9j2-pvgh-6h63) | axios | 0.19.2 | not <=0.31.0 | Axios: Authentication Bypass via Prototype Pollution Gadget in `validateStatus` Merge Strategy |
-| medium | [GHSA-wf5p-g6vw-rhxx](https://github.com/advisories/GHSA-wf5p-g6vw-rhxx) | axios | 0.19.2 | not >=0.8.1 <0.28.0 | Axios Cross-Site Request Forgery Vulnerability |
-| medium | [GHSA-xx6v-rp6x-q39c](https://github.com/advisories/GHSA-xx6v-rp6x-q39c) | axios | 0.19.2 | not <=0.31.0 | Axios: XSRF Token Cross-Origin Leakage via Prototype Pollution Gadget in `withXSRFToken` Boolean Coercion |
-| medium | [GHSA-f886-m6hf-6m8v](https://github.com/advisories/GHSA-f886-m6hf-6m8v) | brace-expansion | 1.1.11 | not >=2.0.0 <2.0.3 | brace-expansion: Zero-step sequence causes process hang and memory exhaustion |
-| medium | [GHSA-67mh-4wv8-2f99](https://github.com/advisories/GHSA-67mh-4wv8-2f99) | esbuild | 0.18.20 | not <=0.24.2 | esbuild enables any website to send any requests to the development server and read the response |
-| medium | [GHSA-cxjh-pqwp-8mfp](https://github.com/advisories/GHSA-cxjh-pqwp-8mfp) | follow-redirects | 1.5.10 | not <=1.15.5 | follow-redirects' Proxy-Authorization header kept across hosts |
-| medium | [GHSA-jchw-25xp-jwwc](https://github.com/advisories/GHSA-jchw-25xp-jwwc) | follow-redirects | 1.5.10 | not <1.15.4 | Follow Redirects improperly handles URLs in the url.parse() function |
-| medium | [GHSA-pw2r-vq6v-hr8c](https://github.com/advisories/GHSA-pw2r-vq6v-hr8c) | follow-redirects | 1.5.10 | not <1.14.8 | Exposure of Sensitive Information to an Unauthorized Actor in follow-redirects |
-| medium | [GHSA-r4q5-vmmm-2653](https://github.com/advisories/GHSA-r4q5-vmmm-2653) | follow-redirects | 1.5.10 | not <=1.15.11 | follow-redirects leaks Custom Authentication Headers to Cross-Domain Redirect Targets |
-| medium | [GHSA-h67p-54hq-rp68](https://github.com/advisories/GHSA-h67p-54hq-rp68) | js-yaml | 4.1.0 | not >=4.0.0 <=4.1.1 | JS-YAML: Quadratic-complexity DoS in merge key handling via repeated aliases |
-| medium | [GHSA-mh29-5h37-fv8m](https://github.com/advisories/GHSA-mh29-5h37-fv8m) | js-yaml | 4.1.0 | not >=4.0.0 <4.1.1 | js-yaml has prototype pollution in merge (<<) |
-| medium | [GHSA-f23m-r3pf-42rh](https://github.com/advisories/GHSA-f23m-r3pf-42rh) | lodash | 4.17.21 | not <=4.17.23 | lodash vulnerable to Prototype Pollution via array path bypass in `_.unset` and `_.omit` |
-| medium | [GHSA-xxjr-mmjv-4gpg](https://github.com/advisories/GHSA-xxjr-mmjv-4gpg) | lodash | 4.17.21 | not >=4.0.0 <=4.17.22 | Lodash has Prototype Pollution Vulnerability in `_.unset` and `_.omit` functions |
-| medium | [GHSA-952p-6rrq-rcjv](https://github.com/advisories/GHSA-952p-6rrq-rcjv) | micromatch | 4.0.7 | not <4.0.8 | Regular Expression Denial of Service (ReDoS) in micromatch |
-| medium | [GHSA-mwcw-c2x4-8c55](https://github.com/advisories/GHSA-mwcw-c2x4-8c55) | nanoid | 3.3.7 | not <3.3.8 | Predictable results in nanoid generation when given non-integer values |
-| medium | [GHSA-3v7f-55p6-f55p](https://github.com/advisories/GHSA-3v7f-55p6-f55p) | picomatch | 2.3.1 | not <2.3.2 | Picomatch: Method Injection in POSIX Character Classes causes incorrect Glob Matching |
-| medium | [GHSA-fxqj-rqcc-2cmp](https://github.com/advisories/GHSA-fxqj-rqcc-2cmp) | postcss | 8.4.40 | not <=8.5.22 | PostCSS: incomplete fix of GHSA-6g55-p6wh-862q — attacker-controlled sourceMappingURL reads arbitrary .map files when `… |
-| medium | [GHSA-qx2v-qp2m-jg93](https://github.com/advisories/GHSA-qx2v-qp2m-jg93) | postcss | 8.4.40 | not <8.5.10 | PostCSS has XSS via Unescaped </style> in its CSS Stringify Output |
-| medium | [GHSA-356w-63v5-8wf4](https://github.com/advisories/GHSA-356w-63v5-8wf4) | vite | 4.5.3 | not <4.5.13 | Vite has an `server.fs.deny` bypass with an invalid `request-target` |
-| medium | [GHSA-4r4m-qw57-chr8](https://github.com/advisories/GHSA-4r4m-qw57-chr8) | vite | 4.5.3 | not <4.5.11 | Vite has a `server.fs.deny` bypassed for `inline` and `raw` with `?import` query |
-| medium | [GHSA-4w7w-66w2-5vf9](https://github.com/advisories/GHSA-4w7w-66w2-5vf9) | vite | 4.5.3 | not <=6.4.1 | Vite Vulnerable to Path Traversal in Optimized Deps `.map` Handling |
-| medium | [GHSA-64vr-g452-qvp3](https://github.com/advisories/GHSA-64vr-g452-qvp3) | vite | 4.5.3 | not >=4.0.0 <4.5.4 | Vite DOM Clobbering gadget found in vite bundled scripts that leads to XSS |
-| medium | [GHSA-859w-5945-r5v3](https://github.com/advisories/GHSA-859w-5945-r5v3) | vite | 4.5.3 | not <=4.5.13 | Vite's server.fs.deny bypassed with /. for files under project root |
-| medium | [GHSA-93m4-6634-74q7](https://github.com/advisories/GHSA-93m4-6634-74q7) | vite | 4.5.3 | not >=4.5.3 <5.0.0 | vite allows server.fs.deny bypass via backslash on Windows |
-| medium | [GHSA-9cwx-2883-4wfx](https://github.com/advisories/GHSA-9cwx-2883-4wfx) | vite | 4.5.3 | not >=4.0.0 <=4.5.3 | Vite's `server.fs.deny` is bypassed when using `?import&raw` |
-| medium | [GHSA-v6wh-96g9-6wx3](https://github.com/advisories/GHSA-v6wh-96g9-6wx3) | vite | 4.5.3 | not <=6.4.2 | launch-editor: NTLMv2 hash disclosure via UNC path handling on Windows |
-| medium | [GHSA-vg6x-rcgg-rjx6](https://github.com/advisories/GHSA-vg6x-rcgg-rjx6) | vite | 4.5.3 | not <=4.5.5 | Websites were able to send any requests to the development server and read the response in vite |
-| medium | [GHSA-x574-m823-4x7w](https://github.com/advisories/GHSA-x574-m823-4x7w) | vite | 4.5.3 | not <4.5.10 | Vite bypasses server.fs.deny when using ?raw?? |
-| medium | [GHSA-xcj6-pq6g-qj4x](https://github.com/advisories/GHSA-xcj6-pq6g-qj4x) | vite | 4.5.3 | not <4.5.12 | Vite allows server.fs.deny to be bypassed with .svg or relative paths |
-| medium | [GHSA-g3ch-rx76-35fx](https://github.com/advisories/GHSA-g3ch-rx76-35fx) | vue-template-compiler | 2.7.16 | not >=2.0.0 <3.0.0 | vue-template-compiler vulnerable to client-side Cross-Site Scripting (XSS) |
-
-<details><summary>6 low or unknown</summary>
-
-| Severity | Id | Package | Installed | Fix | Title |
-|----------|----|---------|-----------|-----|-------|
-| low | [GHSA-4x5r-pxfx-6jf8](https://github.com/advisories/GHSA-4x5r-pxfx-6jf8) | @babel/core | 7.24.9 | not <=7.29.0 | @babel/core: Arbitrary File Read via sourceMappingURL Comment |
-| low | [GHSA-xhjh-pmcv-23jw](https://github.com/advisories/GHSA-xhjh-pmcv-23jw) | axios | 0.19.2 | not <=0.31.0 | Axios: Null Byte Injection via Reverse-Encoding in AxiosURLSearchParams |
-| low | [GHSA-v6h2-p8h4-qcjw](https://github.com/advisories/GHSA-v6h2-p8h4-qcjw) | brace-expansion | 1.1.11 | not >=2.0.0 <=2.0.1 | brace-expansion Regular Expression Denial of Service vulnerability |
-| low | [GHSA-w9m9-85wc-3x92](https://github.com/advisories/GHSA-w9m9-85wc-3x92) | postcss-selector-parser | 6.1.1 | not >=6.1.0 <6.1.3 | postcss-selector-parser allows denial of service through uncontrolled AST recursion |
-| low | [GHSA-g4jq-h2w9-997c](https://github.com/advisories/GHSA-g4jq-h2w9-997c) | vite | 4.5.3 | not <=5.4.19 | Vite middleware may serve files starting with the same name with the public directory |
-| low | [GHSA-jqfw-vq24-v9c3](https://github.com/advisories/GHSA-jqfw-vq24-v9c3) | vite | 4.5.3 | not <=5.4.19 | Vite's `server.fs` settings were not applied to HTML files |
-
-</details>
+Nothing known.
 
 ## Image · 4spaces/kubernetes-service-orchestrator:dev
 
-*built from 65899d9, the commit above · alpine 3.24.2 · 4spaces/kubernetes-service-orchestrator@sha256:8f5fc3591689ae1f9232b047f3173fc877d3118dc96bb4a16cee782d23a4fe2a*
+*built from 7cd31e6, the commit above · alpine 3.24.2 · 4spaces/kubernetes-service-orchestrator@sha256:5d7493f0edc606c4a3f09880791001074e9a902ebb6c37b8019696b9c80e2313*
 
 | Severity | Id | Package | Installed | Fix | Title |
 |----------|----|---------|-----------|-----|-------|
+| critical | [CVE-2026-13221](https://avd.aquasec.com/nvd/cve-2026-13221) | perl | 5.42.2-r0 | 5.42.2-r1 | perl: Perl: Incorrect regular expression processing via large regular expressions |
 | high | [CVE-2026-84304](https://avd.aquasec.com/nvd/cve-2026-84304) | google.golang.org/grpc | v1.82.1 | 1.83.1 | gRPC-Go is the Go language implementation of gRPC. Prior to 1.83.1, in ... |
-| high | [CVE-2026-84445](https://avd.aquasec.com/nvd/cve-2026-84445) | google.golang.org/grpc | v1.82.1 | 1.82.2, 1.83.2, 1.85.0-dev.0.20260825072537-93e31b48545e | google.golang.org/grpc: gRPC-Go: Denial of Service via malformed RPC requests |
+| high | [CVE-2026-84445](https://avd.aquasec.com/nvd/cve-2026-84445) | google.golang.org/grpc | v1.82.1 | 1.82.2, 1.83.2, 1.84.0-dev.0.20260825144003-d5a41119e0e3, 1.85.0-dev.0.20260825072537-93e31b48545e | google.golang.org/grpc: gRPC-Go: Denial of Service via malformed RPC requests |
+| high | [CVE-2026-93990](https://avd.aquasec.com/nvd/cve-2026-93990) | libexpat | 2.8.4-r0 | 2.8.5-r0 | expat: Expat: XML Injection via Malformed UTF-16 Input |
+| high | [CVE-2026-91765](https://avd.aquasec.com/nvd/cve-2026-91765) | php85-apache2 | 8.5.10-r0 | 8.5.11-r0 | php: php: Denial of Service via unbounded recursion in SOAP parser |
+| high | [CVE-2026-91765](https://avd.aquasec.com/nvd/cve-2026-91765) | php85-bcmath | 8.5.10-r0 | 8.5.11-r0 | php: php: Denial of Service via unbounded recursion in SOAP parser |
+| high | [CVE-2026-91765](https://avd.aquasec.com/nvd/cve-2026-91765) | php85-calendar | 8.5.10-r0 | 8.5.11-r0 | php: php: Denial of Service via unbounded recursion in SOAP parser |
+| high | [CVE-2026-91765](https://avd.aquasec.com/nvd/cve-2026-91765) | php85-common | 8.5.10-r0 | 8.5.11-r0 | php: php: Denial of Service via unbounded recursion in SOAP parser |
+| high | [CVE-2026-91765](https://avd.aquasec.com/nvd/cve-2026-91765) | php85-ctype | 8.5.10-r0 | 8.5.11-r0 | php: php: Denial of Service via unbounded recursion in SOAP parser |
+| high | [CVE-2026-91765](https://avd.aquasec.com/nvd/cve-2026-91765) | php85-curl | 8.5.10-r0 | 8.5.11-r0 | php: php: Denial of Service via unbounded recursion in SOAP parser |
+| high | [CVE-2026-91765](https://avd.aquasec.com/nvd/cve-2026-91765) | php85-gd | 8.5.10-r0 | 8.5.11-r0 | php: php: Denial of Service via unbounded recursion in SOAP parser |
+| high | [CVE-2026-91765](https://avd.aquasec.com/nvd/cve-2026-91765) | php85-gmp | 8.5.10-r0 | 8.5.11-r0 | php: php: Denial of Service via unbounded recursion in SOAP parser |
+| high | [CVE-2026-91765](https://avd.aquasec.com/nvd/cve-2026-91765) | php85-intl | 8.5.10-r0 | 8.5.11-r0 | php: php: Denial of Service via unbounded recursion in SOAP parser |
+| high | [CVE-2026-91765](https://avd.aquasec.com/nvd/cve-2026-91765) | php85-mbstring | 8.5.10-r0 | 8.5.11-r0 | php: php: Denial of Service via unbounded recursion in SOAP parser |
+| high | [CVE-2026-91765](https://avd.aquasec.com/nvd/cve-2026-91765) | php85-mysqli | 8.5.10-r0 | 8.5.11-r0 | php: php: Denial of Service via unbounded recursion in SOAP parser |
+| high | [CVE-2026-91765](https://avd.aquasec.com/nvd/cve-2026-91765) | php85-mysqlnd | 8.5.10-r0 | 8.5.11-r0 | php: php: Denial of Service via unbounded recursion in SOAP parser |
+| high | [CVE-2026-91765](https://avd.aquasec.com/nvd/cve-2026-91765) | php85-openssl | 8.5.10-r0 | 8.5.11-r0 | php: php: Denial of Service via unbounded recursion in SOAP parser |
+| high | [CVE-2026-91765](https://avd.aquasec.com/nvd/cve-2026-91765) | php85-pdo | 8.5.10-r0 | 8.5.11-r0 | php: php: Denial of Service via unbounded recursion in SOAP parser |
+| high | [CVE-2026-91765](https://avd.aquasec.com/nvd/cve-2026-91765) | php85-pdo_mysql | 8.5.10-r0 | 8.5.11-r0 | php: php: Denial of Service via unbounded recursion in SOAP parser |
+| high | [CVE-2026-91765](https://avd.aquasec.com/nvd/cve-2026-91765) | php85-posix | 8.5.10-r0 | 8.5.11-r0 | php: php: Denial of Service via unbounded recursion in SOAP parser |
+| high | [CVE-2026-91765](https://avd.aquasec.com/nvd/cve-2026-91765) | php85-session | 8.5.10-r0 | 8.5.11-r0 | php: php: Denial of Service via unbounded recursion in SOAP parser |
+| high | [CVE-2026-91765](https://avd.aquasec.com/nvd/cve-2026-91765) | php85-simplexml | 8.5.10-r0 | 8.5.11-r0 | php: php: Denial of Service via unbounded recursion in SOAP parser |
+| high | [CVE-2026-91765](https://avd.aquasec.com/nvd/cve-2026-91765) | php85-tokenizer | 8.5.10-r0 | 8.5.11-r0 | php: php: Denial of Service via unbounded recursion in SOAP parser |
+| high | [CVE-2026-91765](https://avd.aquasec.com/nvd/cve-2026-91765) | php85-xml | 8.5.10-r0 | 8.5.11-r0 | php: php: Denial of Service via unbounded recursion in SOAP parser |
+| high | [CVE-2026-91765](https://avd.aquasec.com/nvd/cve-2026-91765) | php85-xmlwriter | 8.5.10-r0 | 8.5.11-r0 | php: php: Denial of Service via unbounded recursion in SOAP parser |
+| high | [CVE-2026-91765](https://avd.aquasec.com/nvd/cve-2026-91765) | php85-zip | 8.5.10-r0 | 8.5.11-r0 | php: php: Denial of Service via unbounded recursion in SOAP parser |
+| medium | [CVE-2026-53493](https://avd.aquasec.com/nvd/cve-2026-53493) | github.com/containerd/containerd/v2 | v2.3.3 | 2.0.13, 2.2.9, 2.3.6, 2.4.1 | containerd is an open-source container runtime. Prior to versions 1.7. ... |
 | medium | [CVE-2026-53495](https://avd.aquasec.com/nvd/cve-2026-53495) | github.com/containerd/containerd/v2 | v2.3.3 | 2.0.12, 2.2.8, 2.3.5 | github.com/containerd/containerd: containerd: Denial of Service via CRI ExecSync goroutine leak |
 | medium | [CVE-2026-56855](https://avd.aquasec.com/nvd/cve-2026-56855) | golang.org/x/crypto | v0.55.0 | 0.56.0 | golang.org/x/crypto/ssh: golang.org/x/crypto/ssh: Denial of Service via crafted messages |
 | medium | [CVE-2026-78662](https://avd.aquasec.com/nvd/cve-2026-78662) | golang.org/x/crypto | v0.55.0 | 0.56.0 | golang.org/x/crypto/ssh: golang.org/x/crypto/ssh: Denial of Service via channel request flooding |
 | medium | [CVE-2026-84303](https://avd.aquasec.com/nvd/cve-2026-84303) | google.golang.org/grpc | v1.82.1 | 1.83.1 | gRPC-Go is the Go language implementation of gRPC. Prior to 1.83.1, th ... |
+| medium | [CVE-2026-6103](https://avd.aquasec.com/nvd/cve-2026-6103) | php85-apache2 | 8.5.10-r0 | 8.5.11-r0 | php: PHP: Archive entry injection via integer overflow in TAR parser |
+| medium | [CVE-2026-91766](https://avd.aquasec.com/nvd/cve-2026-91766) | php85-apache2 | 8.5.10-r0 | 8.5.11-r0 | php: php: Credential disclosure via cross-origin HTTP redirects |
+| medium | [CVE-2026-91767](https://avd.aquasec.com/nvd/cve-2026-91767) | php85-apache2 | 8.5.10-r0 | 8.5.11-r0 | php: php: Information disclosure via crafted TLS server certificate |
+| medium | [CVE-2026-91768](https://avd.aquasec.com/nvd/cve-2026-91768) | php85-apache2 | 8.5.10-r0 | 8.5.11-r0 | php: php: Access control bypass via partial IPv6 address comparison |
+| medium | [CVE-2026-92842](https://avd.aquasec.com/nvd/cve-2026-92842) | php85-apache2 | 8.5.10-r0 | 8.5.11-r0 | php: php: Information disclosure via out-of-bounds read in stream filters |
+| medium | [CVE-2026-93682](https://avd.aquasec.com/nvd/cve-2026-93682) | php85-apache2 | 8.5.10-r0 | 8.5.11-r0 | php: php: Out-of-bounds read via empty HTTP redirect Location header |
+| medium | [CVE-2026-6103](https://avd.aquasec.com/nvd/cve-2026-6103) | php85-bcmath | 8.5.10-r0 | 8.5.11-r0 | php: PHP: Archive entry injection via integer overflow in TAR parser |
+| medium | [CVE-2026-91766](https://avd.aquasec.com/nvd/cve-2026-91766) | php85-bcmath | 8.5.10-r0 | 8.5.11-r0 | php: php: Credential disclosure via cross-origin HTTP redirects |
+| medium | [CVE-2026-91767](https://avd.aquasec.com/nvd/cve-2026-91767) | php85-bcmath | 8.5.10-r0 | 8.5.11-r0 | php: php: Information disclosure via crafted TLS server certificate |
+| medium | [CVE-2026-91768](https://avd.aquasec.com/nvd/cve-2026-91768) | php85-bcmath | 8.5.10-r0 | 8.5.11-r0 | php: php: Access control bypass via partial IPv6 address comparison |
+| medium | [CVE-2026-92842](https://avd.aquasec.com/nvd/cve-2026-92842) | php85-bcmath | 8.5.10-r0 | 8.5.11-r0 | php: php: Information disclosure via out-of-bounds read in stream filters |
+| medium | [CVE-2026-93682](https://avd.aquasec.com/nvd/cve-2026-93682) | php85-bcmath | 8.5.10-r0 | 8.5.11-r0 | php: php: Out-of-bounds read via empty HTTP redirect Location header |
+| medium | [CVE-2026-6103](https://avd.aquasec.com/nvd/cve-2026-6103) | php85-calendar | 8.5.10-r0 | 8.5.11-r0 | php: PHP: Archive entry injection via integer overflow in TAR parser |
+| medium | [CVE-2026-91766](https://avd.aquasec.com/nvd/cve-2026-91766) | php85-calendar | 8.5.10-r0 | 8.5.11-r0 | php: php: Credential disclosure via cross-origin HTTP redirects |
+| medium | [CVE-2026-91767](https://avd.aquasec.com/nvd/cve-2026-91767) | php85-calendar | 8.5.10-r0 | 8.5.11-r0 | php: php: Information disclosure via crafted TLS server certificate |
+| medium | [CVE-2026-91768](https://avd.aquasec.com/nvd/cve-2026-91768) | php85-calendar | 8.5.10-r0 | 8.5.11-r0 | php: php: Access control bypass via partial IPv6 address comparison |
+| medium | [CVE-2026-92842](https://avd.aquasec.com/nvd/cve-2026-92842) | php85-calendar | 8.5.10-r0 | 8.5.11-r0 | php: php: Information disclosure via out-of-bounds read in stream filters |
+| medium | [CVE-2026-93682](https://avd.aquasec.com/nvd/cve-2026-93682) | php85-calendar | 8.5.10-r0 | 8.5.11-r0 | php: php: Out-of-bounds read via empty HTTP redirect Location header |
+| medium | [CVE-2026-6103](https://avd.aquasec.com/nvd/cve-2026-6103) | php85-common | 8.5.10-r0 | 8.5.11-r0 | php: PHP: Archive entry injection via integer overflow in TAR parser |
+| medium | [CVE-2026-91766](https://avd.aquasec.com/nvd/cve-2026-91766) | php85-common | 8.5.10-r0 | 8.5.11-r0 | php: php: Credential disclosure via cross-origin HTTP redirects |
+| medium | [CVE-2026-91767](https://avd.aquasec.com/nvd/cve-2026-91767) | php85-common | 8.5.10-r0 | 8.5.11-r0 | php: php: Information disclosure via crafted TLS server certificate |
+| medium | [CVE-2026-91768](https://avd.aquasec.com/nvd/cve-2026-91768) | php85-common | 8.5.10-r0 | 8.5.11-r0 | php: php: Access control bypass via partial IPv6 address comparison |
+| medium | [CVE-2026-92842](https://avd.aquasec.com/nvd/cve-2026-92842) | php85-common | 8.5.10-r0 | 8.5.11-r0 | php: php: Information disclosure via out-of-bounds read in stream filters |
+| medium | [CVE-2026-93682](https://avd.aquasec.com/nvd/cve-2026-93682) | php85-common | 8.5.10-r0 | 8.5.11-r0 | php: php: Out-of-bounds read via empty HTTP redirect Location header |
+| medium | [CVE-2026-6103](https://avd.aquasec.com/nvd/cve-2026-6103) | php85-ctype | 8.5.10-r0 | 8.5.11-r0 | php: PHP: Archive entry injection via integer overflow in TAR parser |
+| medium | [CVE-2026-91766](https://avd.aquasec.com/nvd/cve-2026-91766) | php85-ctype | 8.5.10-r0 | 8.5.11-r0 | php: php: Credential disclosure via cross-origin HTTP redirects |
+| medium | [CVE-2026-91767](https://avd.aquasec.com/nvd/cve-2026-91767) | php85-ctype | 8.5.10-r0 | 8.5.11-r0 | php: php: Information disclosure via crafted TLS server certificate |
+| medium | [CVE-2026-91768](https://avd.aquasec.com/nvd/cve-2026-91768) | php85-ctype | 8.5.10-r0 | 8.5.11-r0 | php: php: Access control bypass via partial IPv6 address comparison |
+| medium | [CVE-2026-92842](https://avd.aquasec.com/nvd/cve-2026-92842) | php85-ctype | 8.5.10-r0 | 8.5.11-r0 | php: php: Information disclosure via out-of-bounds read in stream filters |
+| medium | [CVE-2026-93682](https://avd.aquasec.com/nvd/cve-2026-93682) | php85-ctype | 8.5.10-r0 | 8.5.11-r0 | php: php: Out-of-bounds read via empty HTTP redirect Location header |
+| medium | [CVE-2026-6103](https://avd.aquasec.com/nvd/cve-2026-6103) | php85-curl | 8.5.10-r0 | 8.5.11-r0 | php: PHP: Archive entry injection via integer overflow in TAR parser |
+| medium | [CVE-2026-91766](https://avd.aquasec.com/nvd/cve-2026-91766) | php85-curl | 8.5.10-r0 | 8.5.11-r0 | php: php: Credential disclosure via cross-origin HTTP redirects |
+| medium | [CVE-2026-91767](https://avd.aquasec.com/nvd/cve-2026-91767) | php85-curl | 8.5.10-r0 | 8.5.11-r0 | php: php: Information disclosure via crafted TLS server certificate |
+| medium | [CVE-2026-91768](https://avd.aquasec.com/nvd/cve-2026-91768) | php85-curl | 8.5.10-r0 | 8.5.11-r0 | php: php: Access control bypass via partial IPv6 address comparison |
+| medium | [CVE-2026-92842](https://avd.aquasec.com/nvd/cve-2026-92842) | php85-curl | 8.5.10-r0 | 8.5.11-r0 | php: php: Information disclosure via out-of-bounds read in stream filters |
+| medium | [CVE-2026-93682](https://avd.aquasec.com/nvd/cve-2026-93682) | php85-curl | 8.5.10-r0 | 8.5.11-r0 | php: php: Out-of-bounds read via empty HTTP redirect Location header |
+| medium | [CVE-2026-6103](https://avd.aquasec.com/nvd/cve-2026-6103) | php85-gd | 8.5.10-r0 | 8.5.11-r0 | php: PHP: Archive entry injection via integer overflow in TAR parser |
+| medium | [CVE-2026-91766](https://avd.aquasec.com/nvd/cve-2026-91766) | php85-gd | 8.5.10-r0 | 8.5.11-r0 | php: php: Credential disclosure via cross-origin HTTP redirects |
+| medium | [CVE-2026-91767](https://avd.aquasec.com/nvd/cve-2026-91767) | php85-gd | 8.5.10-r0 | 8.5.11-r0 | php: php: Information disclosure via crafted TLS server certificate |
+| medium | [CVE-2026-91768](https://avd.aquasec.com/nvd/cve-2026-91768) | php85-gd | 8.5.10-r0 | 8.5.11-r0 | php: php: Access control bypass via partial IPv6 address comparison |
+| medium | [CVE-2026-92842](https://avd.aquasec.com/nvd/cve-2026-92842) | php85-gd | 8.5.10-r0 | 8.5.11-r0 | php: php: Information disclosure via out-of-bounds read in stream filters |
+| medium | [CVE-2026-93682](https://avd.aquasec.com/nvd/cve-2026-93682) | php85-gd | 8.5.10-r0 | 8.5.11-r0 | php: php: Out-of-bounds read via empty HTTP redirect Location header |
+| medium | [CVE-2026-6103](https://avd.aquasec.com/nvd/cve-2026-6103) | php85-gmp | 8.5.10-r0 | 8.5.11-r0 | php: PHP: Archive entry injection via integer overflow in TAR parser |
+| medium | [CVE-2026-91766](https://avd.aquasec.com/nvd/cve-2026-91766) | php85-gmp | 8.5.10-r0 | 8.5.11-r0 | php: php: Credential disclosure via cross-origin HTTP redirects |
+| medium | [CVE-2026-91767](https://avd.aquasec.com/nvd/cve-2026-91767) | php85-gmp | 8.5.10-r0 | 8.5.11-r0 | php: php: Information disclosure via crafted TLS server certificate |
+| medium | [CVE-2026-91768](https://avd.aquasec.com/nvd/cve-2026-91768) | php85-gmp | 8.5.10-r0 | 8.5.11-r0 | php: php: Access control bypass via partial IPv6 address comparison |
+| medium | [CVE-2026-92842](https://avd.aquasec.com/nvd/cve-2026-92842) | php85-gmp | 8.5.10-r0 | 8.5.11-r0 | php: php: Information disclosure via out-of-bounds read in stream filters |
+| medium | [CVE-2026-93682](https://avd.aquasec.com/nvd/cve-2026-93682) | php85-gmp | 8.5.10-r0 | 8.5.11-r0 | php: php: Out-of-bounds read via empty HTTP redirect Location header |
+| medium | [CVE-2026-6103](https://avd.aquasec.com/nvd/cve-2026-6103) | php85-intl | 8.5.10-r0 | 8.5.11-r0 | php: PHP: Archive entry injection via integer overflow in TAR parser |
+| medium | [CVE-2026-91766](https://avd.aquasec.com/nvd/cve-2026-91766) | php85-intl | 8.5.10-r0 | 8.5.11-r0 | php: php: Credential disclosure via cross-origin HTTP redirects |
+| medium | [CVE-2026-91767](https://avd.aquasec.com/nvd/cve-2026-91767) | php85-intl | 8.5.10-r0 | 8.5.11-r0 | php: php: Information disclosure via crafted TLS server certificate |
+| medium | [CVE-2026-91768](https://avd.aquasec.com/nvd/cve-2026-91768) | php85-intl | 8.5.10-r0 | 8.5.11-r0 | php: php: Access control bypass via partial IPv6 address comparison |
+| medium | [CVE-2026-92842](https://avd.aquasec.com/nvd/cve-2026-92842) | php85-intl | 8.5.10-r0 | 8.5.11-r0 | php: php: Information disclosure via out-of-bounds read in stream filters |
+| medium | [CVE-2026-93682](https://avd.aquasec.com/nvd/cve-2026-93682) | php85-intl | 8.5.10-r0 | 8.5.11-r0 | php: php: Out-of-bounds read via empty HTTP redirect Location header |
+| medium | [CVE-2026-6103](https://avd.aquasec.com/nvd/cve-2026-6103) | php85-mbstring | 8.5.10-r0 | 8.5.11-r0 | php: PHP: Archive entry injection via integer overflow in TAR parser |
+| medium | [CVE-2026-91766](https://avd.aquasec.com/nvd/cve-2026-91766) | php85-mbstring | 8.5.10-r0 | 8.5.11-r0 | php: php: Credential disclosure via cross-origin HTTP redirects |
+| medium | [CVE-2026-91767](https://avd.aquasec.com/nvd/cve-2026-91767) | php85-mbstring | 8.5.10-r0 | 8.5.11-r0 | php: php: Information disclosure via crafted TLS server certificate |
+| medium | [CVE-2026-91768](https://avd.aquasec.com/nvd/cve-2026-91768) | php85-mbstring | 8.5.10-r0 | 8.5.11-r0 | php: php: Access control bypass via partial IPv6 address comparison |
+| medium | [CVE-2026-92842](https://avd.aquasec.com/nvd/cve-2026-92842) | php85-mbstring | 8.5.10-r0 | 8.5.11-r0 | php: php: Information disclosure via out-of-bounds read in stream filters |
+| medium | [CVE-2026-93682](https://avd.aquasec.com/nvd/cve-2026-93682) | php85-mbstring | 8.5.10-r0 | 8.5.11-r0 | php: php: Out-of-bounds read via empty HTTP redirect Location header |
+| medium | [CVE-2026-6103](https://avd.aquasec.com/nvd/cve-2026-6103) | php85-mysqli | 8.5.10-r0 | 8.5.11-r0 | php: PHP: Archive entry injection via integer overflow in TAR parser |
+| medium | [CVE-2026-91766](https://avd.aquasec.com/nvd/cve-2026-91766) | php85-mysqli | 8.5.10-r0 | 8.5.11-r0 | php: php: Credential disclosure via cross-origin HTTP redirects |
+| medium | [CVE-2026-91767](https://avd.aquasec.com/nvd/cve-2026-91767) | php85-mysqli | 8.5.10-r0 | 8.5.11-r0 | php: php: Information disclosure via crafted TLS server certificate |
+| medium | [CVE-2026-91768](https://avd.aquasec.com/nvd/cve-2026-91768) | php85-mysqli | 8.5.10-r0 | 8.5.11-r0 | php: php: Access control bypass via partial IPv6 address comparison |
+| medium | [CVE-2026-92842](https://avd.aquasec.com/nvd/cve-2026-92842) | php85-mysqli | 8.5.10-r0 | 8.5.11-r0 | php: php: Information disclosure via out-of-bounds read in stream filters |
+| medium | [CVE-2026-93682](https://avd.aquasec.com/nvd/cve-2026-93682) | php85-mysqli | 8.5.10-r0 | 8.5.11-r0 | php: php: Out-of-bounds read via empty HTTP redirect Location header |
+| medium | [CVE-2026-6103](https://avd.aquasec.com/nvd/cve-2026-6103) | php85-mysqlnd | 8.5.10-r0 | 8.5.11-r0 | php: PHP: Archive entry injection via integer overflow in TAR parser |
+| medium | [CVE-2026-91766](https://avd.aquasec.com/nvd/cve-2026-91766) | php85-mysqlnd | 8.5.10-r0 | 8.5.11-r0 | php: php: Credential disclosure via cross-origin HTTP redirects |
+| medium | [CVE-2026-91767](https://avd.aquasec.com/nvd/cve-2026-91767) | php85-mysqlnd | 8.5.10-r0 | 8.5.11-r0 | php: php: Information disclosure via crafted TLS server certificate |
+| medium | [CVE-2026-91768](https://avd.aquasec.com/nvd/cve-2026-91768) | php85-mysqlnd | 8.5.10-r0 | 8.5.11-r0 | php: php: Access control bypass via partial IPv6 address comparison |
+| medium | [CVE-2026-92842](https://avd.aquasec.com/nvd/cve-2026-92842) | php85-mysqlnd | 8.5.10-r0 | 8.5.11-r0 | php: php: Information disclosure via out-of-bounds read in stream filters |
+| medium | [CVE-2026-93682](https://avd.aquasec.com/nvd/cve-2026-93682) | php85-mysqlnd | 8.5.10-r0 | 8.5.11-r0 | php: php: Out-of-bounds read via empty HTTP redirect Location header |
+| medium | [CVE-2026-6103](https://avd.aquasec.com/nvd/cve-2026-6103) | php85-openssl | 8.5.10-r0 | 8.5.11-r0 | php: PHP: Archive entry injection via integer overflow in TAR parser |
+| medium | [CVE-2026-91766](https://avd.aquasec.com/nvd/cve-2026-91766) | php85-openssl | 8.5.10-r0 | 8.5.11-r0 | php: php: Credential disclosure via cross-origin HTTP redirects |
+| medium | [CVE-2026-91767](https://avd.aquasec.com/nvd/cve-2026-91767) | php85-openssl | 8.5.10-r0 | 8.5.11-r0 | php: php: Information disclosure via crafted TLS server certificate |
+| medium | [CVE-2026-91768](https://avd.aquasec.com/nvd/cve-2026-91768) | php85-openssl | 8.5.10-r0 | 8.5.11-r0 | php: php: Access control bypass via partial IPv6 address comparison |
+| medium | [CVE-2026-92842](https://avd.aquasec.com/nvd/cve-2026-92842) | php85-openssl | 8.5.10-r0 | 8.5.11-r0 | php: php: Information disclosure via out-of-bounds read in stream filters |
+| medium | [CVE-2026-93682](https://avd.aquasec.com/nvd/cve-2026-93682) | php85-openssl | 8.5.10-r0 | 8.5.11-r0 | php: php: Out-of-bounds read via empty HTTP redirect Location header |
+| medium | [CVE-2026-6103](https://avd.aquasec.com/nvd/cve-2026-6103) | php85-pdo | 8.5.10-r0 | 8.5.11-r0 | php: PHP: Archive entry injection via integer overflow in TAR parser |
+| medium | [CVE-2026-91766](https://avd.aquasec.com/nvd/cve-2026-91766) | php85-pdo | 8.5.10-r0 | 8.5.11-r0 | php: php: Credential disclosure via cross-origin HTTP redirects |
+| medium | [CVE-2026-91767](https://avd.aquasec.com/nvd/cve-2026-91767) | php85-pdo | 8.5.10-r0 | 8.5.11-r0 | php: php: Information disclosure via crafted TLS server certificate |
+| medium | [CVE-2026-91768](https://avd.aquasec.com/nvd/cve-2026-91768) | php85-pdo | 8.5.10-r0 | 8.5.11-r0 | php: php: Access control bypass via partial IPv6 address comparison |
+| medium | [CVE-2026-92842](https://avd.aquasec.com/nvd/cve-2026-92842) | php85-pdo | 8.5.10-r0 | 8.5.11-r0 | php: php: Information disclosure via out-of-bounds read in stream filters |
+| medium | [CVE-2026-93682](https://avd.aquasec.com/nvd/cve-2026-93682) | php85-pdo | 8.5.10-r0 | 8.5.11-r0 | php: php: Out-of-bounds read via empty HTTP redirect Location header |
+| medium | [CVE-2026-6103](https://avd.aquasec.com/nvd/cve-2026-6103) | php85-pdo_mysql | 8.5.10-r0 | 8.5.11-r0 | php: PHP: Archive entry injection via integer overflow in TAR parser |
+| medium | [CVE-2026-91766](https://avd.aquasec.com/nvd/cve-2026-91766) | php85-pdo_mysql | 8.5.10-r0 | 8.5.11-r0 | php: php: Credential disclosure via cross-origin HTTP redirects |
+| medium | [CVE-2026-91767](https://avd.aquasec.com/nvd/cve-2026-91767) | php85-pdo_mysql | 8.5.10-r0 | 8.5.11-r0 | php: php: Information disclosure via crafted TLS server certificate |
+| medium | [CVE-2026-91768](https://avd.aquasec.com/nvd/cve-2026-91768) | php85-pdo_mysql | 8.5.10-r0 | 8.5.11-r0 | php: php: Access control bypass via partial IPv6 address comparison |
+| medium | [CVE-2026-92842](https://avd.aquasec.com/nvd/cve-2026-92842) | php85-pdo_mysql | 8.5.10-r0 | 8.5.11-r0 | php: php: Information disclosure via out-of-bounds read in stream filters |
+| medium | [CVE-2026-93682](https://avd.aquasec.com/nvd/cve-2026-93682) | php85-pdo_mysql | 8.5.10-r0 | 8.5.11-r0 | php: php: Out-of-bounds read via empty HTTP redirect Location header |
+| medium | [CVE-2026-6103](https://avd.aquasec.com/nvd/cve-2026-6103) | php85-posix | 8.5.10-r0 | 8.5.11-r0 | php: PHP: Archive entry injection via integer overflow in TAR parser |
+| medium | [CVE-2026-91766](https://avd.aquasec.com/nvd/cve-2026-91766) | php85-posix | 8.5.10-r0 | 8.5.11-r0 | php: php: Credential disclosure via cross-origin HTTP redirects |
+| medium | [CVE-2026-91767](https://avd.aquasec.com/nvd/cve-2026-91767) | php85-posix | 8.5.10-r0 | 8.5.11-r0 | php: php: Information disclosure via crafted TLS server certificate |
+| medium | [CVE-2026-91768](https://avd.aquasec.com/nvd/cve-2026-91768) | php85-posix | 8.5.10-r0 | 8.5.11-r0 | php: php: Access control bypass via partial IPv6 address comparison |
+| medium | [CVE-2026-92842](https://avd.aquasec.com/nvd/cve-2026-92842) | php85-posix | 8.5.10-r0 | 8.5.11-r0 | php: php: Information disclosure via out-of-bounds read in stream filters |
+| medium | [CVE-2026-93682](https://avd.aquasec.com/nvd/cve-2026-93682) | php85-posix | 8.5.10-r0 | 8.5.11-r0 | php: php: Out-of-bounds read via empty HTTP redirect Location header |
+| medium | [CVE-2026-6103](https://avd.aquasec.com/nvd/cve-2026-6103) | php85-session | 8.5.10-r0 | 8.5.11-r0 | php: PHP: Archive entry injection via integer overflow in TAR parser |
+| medium | [CVE-2026-91766](https://avd.aquasec.com/nvd/cve-2026-91766) | php85-session | 8.5.10-r0 | 8.5.11-r0 | php: php: Credential disclosure via cross-origin HTTP redirects |
+| medium | [CVE-2026-91767](https://avd.aquasec.com/nvd/cve-2026-91767) | php85-session | 8.5.10-r0 | 8.5.11-r0 | php: php: Information disclosure via crafted TLS server certificate |
+| medium | [CVE-2026-91768](https://avd.aquasec.com/nvd/cve-2026-91768) | php85-session | 8.5.10-r0 | 8.5.11-r0 | php: php: Access control bypass via partial IPv6 address comparison |
+| medium | [CVE-2026-92842](https://avd.aquasec.com/nvd/cve-2026-92842) | php85-session | 8.5.10-r0 | 8.5.11-r0 | php: php: Information disclosure via out-of-bounds read in stream filters |
+| medium | [CVE-2026-93682](https://avd.aquasec.com/nvd/cve-2026-93682) | php85-session | 8.5.10-r0 | 8.5.11-r0 | php: php: Out-of-bounds read via empty HTTP redirect Location header |
+| medium | [CVE-2026-6103](https://avd.aquasec.com/nvd/cve-2026-6103) | php85-simplexml | 8.5.10-r0 | 8.5.11-r0 | php: PHP: Archive entry injection via integer overflow in TAR parser |
+| medium | [CVE-2026-91766](https://avd.aquasec.com/nvd/cve-2026-91766) | php85-simplexml | 8.5.10-r0 | 8.5.11-r0 | php: php: Credential disclosure via cross-origin HTTP redirects |
+| medium | [CVE-2026-91767](https://avd.aquasec.com/nvd/cve-2026-91767) | php85-simplexml | 8.5.10-r0 | 8.5.11-r0 | php: php: Information disclosure via crafted TLS server certificate |
+| medium | [CVE-2026-91768](https://avd.aquasec.com/nvd/cve-2026-91768) | php85-simplexml | 8.5.10-r0 | 8.5.11-r0 | php: php: Access control bypass via partial IPv6 address comparison |
+| medium | [CVE-2026-92842](https://avd.aquasec.com/nvd/cve-2026-92842) | php85-simplexml | 8.5.10-r0 | 8.5.11-r0 | php: php: Information disclosure via out-of-bounds read in stream filters |
+| medium | [CVE-2026-93682](https://avd.aquasec.com/nvd/cve-2026-93682) | php85-simplexml | 8.5.10-r0 | 8.5.11-r0 | php: php: Out-of-bounds read via empty HTTP redirect Location header |
+| medium | [CVE-2026-6103](https://avd.aquasec.com/nvd/cve-2026-6103) | php85-tokenizer | 8.5.10-r0 | 8.5.11-r0 | php: PHP: Archive entry injection via integer overflow in TAR parser |
+| medium | [CVE-2026-91766](https://avd.aquasec.com/nvd/cve-2026-91766) | php85-tokenizer | 8.5.10-r0 | 8.5.11-r0 | php: php: Credential disclosure via cross-origin HTTP redirects |
+| medium | [CVE-2026-91767](https://avd.aquasec.com/nvd/cve-2026-91767) | php85-tokenizer | 8.5.10-r0 | 8.5.11-r0 | php: php: Information disclosure via crafted TLS server certificate |
+| medium | [CVE-2026-91768](https://avd.aquasec.com/nvd/cve-2026-91768) | php85-tokenizer | 8.5.10-r0 | 8.5.11-r0 | php: php: Access control bypass via partial IPv6 address comparison |
+| medium | [CVE-2026-92842](https://avd.aquasec.com/nvd/cve-2026-92842) | php85-tokenizer | 8.5.10-r0 | 8.5.11-r0 | php: php: Information disclosure via out-of-bounds read in stream filters |
+| medium | [CVE-2026-93682](https://avd.aquasec.com/nvd/cve-2026-93682) | php85-tokenizer | 8.5.10-r0 | 8.5.11-r0 | php: php: Out-of-bounds read via empty HTTP redirect Location header |
+| medium | [CVE-2026-6103](https://avd.aquasec.com/nvd/cve-2026-6103) | php85-xml | 8.5.10-r0 | 8.5.11-r0 | php: PHP: Archive entry injection via integer overflow in TAR parser |
+| medium | [CVE-2026-91766](https://avd.aquasec.com/nvd/cve-2026-91766) | php85-xml | 8.5.10-r0 | 8.5.11-r0 | php: php: Credential disclosure via cross-origin HTTP redirects |
+| medium | [CVE-2026-91767](https://avd.aquasec.com/nvd/cve-2026-91767) | php85-xml | 8.5.10-r0 | 8.5.11-r0 | php: php: Information disclosure via crafted TLS server certificate |
+| medium | [CVE-2026-91768](https://avd.aquasec.com/nvd/cve-2026-91768) | php85-xml | 8.5.10-r0 | 8.5.11-r0 | php: php: Access control bypass via partial IPv6 address comparison |
+| medium | [CVE-2026-92842](https://avd.aquasec.com/nvd/cve-2026-92842) | php85-xml | 8.5.10-r0 | 8.5.11-r0 | php: php: Information disclosure via out-of-bounds read in stream filters |
+| medium | [CVE-2026-93682](https://avd.aquasec.com/nvd/cve-2026-93682) | php85-xml | 8.5.10-r0 | 8.5.11-r0 | php: php: Out-of-bounds read via empty HTTP redirect Location header |
+| medium | [CVE-2026-6103](https://avd.aquasec.com/nvd/cve-2026-6103) | php85-xmlwriter | 8.5.10-r0 | 8.5.11-r0 | php: PHP: Archive entry injection via integer overflow in TAR parser |
+| medium | [CVE-2026-91766](https://avd.aquasec.com/nvd/cve-2026-91766) | php85-xmlwriter | 8.5.10-r0 | 8.5.11-r0 | php: php: Credential disclosure via cross-origin HTTP redirects |
+| medium | [CVE-2026-91767](https://avd.aquasec.com/nvd/cve-2026-91767) | php85-xmlwriter | 8.5.10-r0 | 8.5.11-r0 | php: php: Information disclosure via crafted TLS server certificate |
+| medium | [CVE-2026-91768](https://avd.aquasec.com/nvd/cve-2026-91768) | php85-xmlwriter | 8.5.10-r0 | 8.5.11-r0 | php: php: Access control bypass via partial IPv6 address comparison |
+| medium | [CVE-2026-92842](https://avd.aquasec.com/nvd/cve-2026-92842) | php85-xmlwriter | 8.5.10-r0 | 8.5.11-r0 | php: php: Information disclosure via out-of-bounds read in stream filters |
+| medium | [CVE-2026-93682](https://avd.aquasec.com/nvd/cve-2026-93682) | php85-xmlwriter | 8.5.10-r0 | 8.5.11-r0 | php: php: Out-of-bounds read via empty HTTP redirect Location header |
+| medium | [CVE-2026-6103](https://avd.aquasec.com/nvd/cve-2026-6103) | php85-zip | 8.5.10-r0 | 8.5.11-r0 | php: PHP: Archive entry injection via integer overflow in TAR parser |
+| medium | [CVE-2026-91766](https://avd.aquasec.com/nvd/cve-2026-91766) | php85-zip | 8.5.10-r0 | 8.5.11-r0 | php: php: Credential disclosure via cross-origin HTTP redirects |
+| medium | [CVE-2026-91767](https://avd.aquasec.com/nvd/cve-2026-91767) | php85-zip | 8.5.10-r0 | 8.5.11-r0 | php: php: Information disclosure via crafted TLS server certificate |
+| medium | [CVE-2026-91768](https://avd.aquasec.com/nvd/cve-2026-91768) | php85-zip | 8.5.10-r0 | 8.5.11-r0 | php: php: Access control bypass via partial IPv6 address comparison |
+| medium | [CVE-2026-92842](https://avd.aquasec.com/nvd/cve-2026-92842) | php85-zip | 8.5.10-r0 | 8.5.11-r0 | php: php: Information disclosure via out-of-bounds read in stream filters |
+| medium | [CVE-2026-93682](https://avd.aquasec.com/nvd/cve-2026-93682) | php85-zip | 8.5.10-r0 | 8.5.11-r0 | php: php: Out-of-bounds read via empty HTTP redirect Location header |
 
-<details><summary>4 low or unknown</summary>
+<details><summary>70 low or unknown</summary>
 
 | Severity | Id | Package | Installed | Fix | Title |
 |----------|----|---------|-----------|-----|-------|
 | low | [CVE-2026-81870](https://avd.aquasec.com/nvd/cve-2026-81870) | go.opentelemetry.io/otel/exporters/otlp/otlptrace | v1.44.0 | 1.45.0 | OpenTelemetry-Go is the Go implementation of OpenTelemetry. From versi ... |
 | low | [CVE-2026-81870](https://avd.aquasec.com/nvd/cve-2026-81870) | go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc | v1.44.0 | 1.45.0 | OpenTelemetry-Go is the Go implementation of OpenTelemetry. From versi ... |
 | low | [CVE-2026-81870](https://avd.aquasec.com/nvd/cve-2026-81870) | go.opentelemetry.io/otel/sdk | v1.44.0 | 1.45.0 | OpenTelemetry-Go is the Go implementation of OpenTelemetry. From versi ... |
+| low | [CVE-2025-1218](https://avd.aquasec.com/nvd/cve-2025-1218) | php85-apache2 | 8.5.10-r0 | 8.5.11-r0 | php: php: Denial of Service via out-of-bounds read in mysqlnd wire protocol parser |
+| low | [CVE-2025-1218](https://avd.aquasec.com/nvd/cve-2025-1218) | php85-bcmath | 8.5.10-r0 | 8.5.11-r0 | php: php: Denial of Service via out-of-bounds read in mysqlnd wire protocol parser |
+| low | [CVE-2025-1218](https://avd.aquasec.com/nvd/cve-2025-1218) | php85-calendar | 8.5.10-r0 | 8.5.11-r0 | php: php: Denial of Service via out-of-bounds read in mysqlnd wire protocol parser |
+| low | [CVE-2025-1218](https://avd.aquasec.com/nvd/cve-2025-1218) | php85-common | 8.5.10-r0 | 8.5.11-r0 | php: php: Denial of Service via out-of-bounds read in mysqlnd wire protocol parser |
+| low | [CVE-2025-1218](https://avd.aquasec.com/nvd/cve-2025-1218) | php85-ctype | 8.5.10-r0 | 8.5.11-r0 | php: php: Denial of Service via out-of-bounds read in mysqlnd wire protocol parser |
+| low | [CVE-2025-1218](https://avd.aquasec.com/nvd/cve-2025-1218) | php85-curl | 8.5.10-r0 | 8.5.11-r0 | php: php: Denial of Service via out-of-bounds read in mysqlnd wire protocol parser |
+| low | [CVE-2025-1218](https://avd.aquasec.com/nvd/cve-2025-1218) | php85-gd | 8.5.10-r0 | 8.5.11-r0 | php: php: Denial of Service via out-of-bounds read in mysqlnd wire protocol parser |
+| low | [CVE-2025-1218](https://avd.aquasec.com/nvd/cve-2025-1218) | php85-gmp | 8.5.10-r0 | 8.5.11-r0 | php: php: Denial of Service via out-of-bounds read in mysqlnd wire protocol parser |
+| low | [CVE-2025-1218](https://avd.aquasec.com/nvd/cve-2025-1218) | php85-intl | 8.5.10-r0 | 8.5.11-r0 | php: php: Denial of Service via out-of-bounds read in mysqlnd wire protocol parser |
+| low | [CVE-2025-1218](https://avd.aquasec.com/nvd/cve-2025-1218) | php85-mbstring | 8.5.10-r0 | 8.5.11-r0 | php: php: Denial of Service via out-of-bounds read in mysqlnd wire protocol parser |
+| low | [CVE-2025-1218](https://avd.aquasec.com/nvd/cve-2025-1218) | php85-mysqli | 8.5.10-r0 | 8.5.11-r0 | php: php: Denial of Service via out-of-bounds read in mysqlnd wire protocol parser |
+| low | [CVE-2025-1218](https://avd.aquasec.com/nvd/cve-2025-1218) | php85-mysqlnd | 8.5.10-r0 | 8.5.11-r0 | php: php: Denial of Service via out-of-bounds read in mysqlnd wire protocol parser |
+| low | [CVE-2025-1218](https://avd.aquasec.com/nvd/cve-2025-1218) | php85-openssl | 8.5.10-r0 | 8.5.11-r0 | php: php: Denial of Service via out-of-bounds read in mysqlnd wire protocol parser |
+| low | [CVE-2025-1218](https://avd.aquasec.com/nvd/cve-2025-1218) | php85-pdo | 8.5.10-r0 | 8.5.11-r0 | php: php: Denial of Service via out-of-bounds read in mysqlnd wire protocol parser |
+| low | [CVE-2025-1218](https://avd.aquasec.com/nvd/cve-2025-1218) | php85-pdo_mysql | 8.5.10-r0 | 8.5.11-r0 | php: php: Denial of Service via out-of-bounds read in mysqlnd wire protocol parser |
+| low | [CVE-2025-1218](https://avd.aquasec.com/nvd/cve-2025-1218) | php85-posix | 8.5.10-r0 | 8.5.11-r0 | php: php: Denial of Service via out-of-bounds read in mysqlnd wire protocol parser |
+| low | [CVE-2025-1218](https://avd.aquasec.com/nvd/cve-2025-1218) | php85-session | 8.5.10-r0 | 8.5.11-r0 | php: php: Denial of Service via out-of-bounds read in mysqlnd wire protocol parser |
+| low | [CVE-2025-1218](https://avd.aquasec.com/nvd/cve-2025-1218) | php85-simplexml | 8.5.10-r0 | 8.5.11-r0 | php: php: Denial of Service via out-of-bounds read in mysqlnd wire protocol parser |
+| low | [CVE-2025-1218](https://avd.aquasec.com/nvd/cve-2025-1218) | php85-tokenizer | 8.5.10-r0 | 8.5.11-r0 | php: php: Denial of Service via out-of-bounds read in mysqlnd wire protocol parser |
+| low | [CVE-2025-1218](https://avd.aquasec.com/nvd/cve-2025-1218) | php85-xml | 8.5.10-r0 | 8.5.11-r0 | php: php: Denial of Service via out-of-bounds read in mysqlnd wire protocol parser |
+| low | [CVE-2025-1218](https://avd.aquasec.com/nvd/cve-2025-1218) | php85-xmlwriter | 8.5.10-r0 | 8.5.11-r0 | php: php: Denial of Service via out-of-bounds read in mysqlnd wire protocol parser |
+| low | [CVE-2025-1218](https://avd.aquasec.com/nvd/cve-2025-1218) | php85-zip | 8.5.10-r0 | 8.5.11-r0 | php: php: Denial of Service via out-of-bounds read in mysqlnd wire protocol parser |
 | unknown | GO-2026-5932 | golang.org/x/crypto | v0.55.0 |  | The golang.org/x/crypto/openpgp package is unmaintained, unsafe by design, and has known security issues |
+| unknown | [CVE-2025-14181](https://avd.aquasec.com/nvd/cve-2025-14181) | php85-apache2 | 8.5.10-r0 | 8.5.11-r0 | The SOAP HTTP client guards its response buffer growth with a check th ... |
+| unknown | [CVE-2026-91769](https://avd.aquasec.com/nvd/cve-2026-91769) | php85-apache2 | 8.5.10-r0 | 8.5.11-r0 | PHP's OpenSSL stream peer verification checks the certificate's subjec ... |
+| unknown | [CVE-2025-14181](https://avd.aquasec.com/nvd/cve-2025-14181) | php85-bcmath | 8.5.10-r0 | 8.5.11-r0 | The SOAP HTTP client guards its response buffer growth with a check th ... |
+| unknown | [CVE-2026-91769](https://avd.aquasec.com/nvd/cve-2026-91769) | php85-bcmath | 8.5.10-r0 | 8.5.11-r0 | PHP's OpenSSL stream peer verification checks the certificate's subjec ... |
+| unknown | [CVE-2025-14181](https://avd.aquasec.com/nvd/cve-2025-14181) | php85-calendar | 8.5.10-r0 | 8.5.11-r0 | The SOAP HTTP client guards its response buffer growth with a check th ... |
+| unknown | [CVE-2026-91769](https://avd.aquasec.com/nvd/cve-2026-91769) | php85-calendar | 8.5.10-r0 | 8.5.11-r0 | PHP's OpenSSL stream peer verification checks the certificate's subjec ... |
+| unknown | [CVE-2025-14181](https://avd.aquasec.com/nvd/cve-2025-14181) | php85-common | 8.5.10-r0 | 8.5.11-r0 | The SOAP HTTP client guards its response buffer growth with a check th ... |
+| unknown | [CVE-2026-91769](https://avd.aquasec.com/nvd/cve-2026-91769) | php85-common | 8.5.10-r0 | 8.5.11-r0 | PHP's OpenSSL stream peer verification checks the certificate's subjec ... |
+| unknown | [CVE-2025-14181](https://avd.aquasec.com/nvd/cve-2025-14181) | php85-ctype | 8.5.10-r0 | 8.5.11-r0 | The SOAP HTTP client guards its response buffer growth with a check th ... |
+| unknown | [CVE-2026-91769](https://avd.aquasec.com/nvd/cve-2026-91769) | php85-ctype | 8.5.10-r0 | 8.5.11-r0 | PHP's OpenSSL stream peer verification checks the certificate's subjec ... |
+| unknown | [CVE-2025-14181](https://avd.aquasec.com/nvd/cve-2025-14181) | php85-curl | 8.5.10-r0 | 8.5.11-r0 | The SOAP HTTP client guards its response buffer growth with a check th ... |
+| unknown | [CVE-2026-91769](https://avd.aquasec.com/nvd/cve-2026-91769) | php85-curl | 8.5.10-r0 | 8.5.11-r0 | PHP's OpenSSL stream peer verification checks the certificate's subjec ... |
+| unknown | [CVE-2025-14181](https://avd.aquasec.com/nvd/cve-2025-14181) | php85-gd | 8.5.10-r0 | 8.5.11-r0 | The SOAP HTTP client guards its response buffer growth with a check th ... |
+| unknown | [CVE-2026-91769](https://avd.aquasec.com/nvd/cve-2026-91769) | php85-gd | 8.5.10-r0 | 8.5.11-r0 | PHP's OpenSSL stream peer verification checks the certificate's subjec ... |
+| unknown | [CVE-2025-14181](https://avd.aquasec.com/nvd/cve-2025-14181) | php85-gmp | 8.5.10-r0 | 8.5.11-r0 | The SOAP HTTP client guards its response buffer growth with a check th ... |
+| unknown | [CVE-2026-91769](https://avd.aquasec.com/nvd/cve-2026-91769) | php85-gmp | 8.5.10-r0 | 8.5.11-r0 | PHP's OpenSSL stream peer verification checks the certificate's subjec ... |
+| unknown | [CVE-2025-14181](https://avd.aquasec.com/nvd/cve-2025-14181) | php85-intl | 8.5.10-r0 | 8.5.11-r0 | The SOAP HTTP client guards its response buffer growth with a check th ... |
+| unknown | [CVE-2026-91769](https://avd.aquasec.com/nvd/cve-2026-91769) | php85-intl | 8.5.10-r0 | 8.5.11-r0 | PHP's OpenSSL stream peer verification checks the certificate's subjec ... |
+| unknown | [CVE-2025-14181](https://avd.aquasec.com/nvd/cve-2025-14181) | php85-mbstring | 8.5.10-r0 | 8.5.11-r0 | The SOAP HTTP client guards its response buffer growth with a check th ... |
+| unknown | [CVE-2026-91769](https://avd.aquasec.com/nvd/cve-2026-91769) | php85-mbstring | 8.5.10-r0 | 8.5.11-r0 | PHP's OpenSSL stream peer verification checks the certificate's subjec ... |
+| unknown | [CVE-2025-14181](https://avd.aquasec.com/nvd/cve-2025-14181) | php85-mysqli | 8.5.10-r0 | 8.5.11-r0 | The SOAP HTTP client guards its response buffer growth with a check th ... |
+| unknown | [CVE-2026-91769](https://avd.aquasec.com/nvd/cve-2026-91769) | php85-mysqli | 8.5.10-r0 | 8.5.11-r0 | PHP's OpenSSL stream peer verification checks the certificate's subjec ... |
+| unknown | [CVE-2025-14181](https://avd.aquasec.com/nvd/cve-2025-14181) | php85-mysqlnd | 8.5.10-r0 | 8.5.11-r0 | The SOAP HTTP client guards its response buffer growth with a check th ... |
+| unknown | [CVE-2026-91769](https://avd.aquasec.com/nvd/cve-2026-91769) | php85-mysqlnd | 8.5.10-r0 | 8.5.11-r0 | PHP's OpenSSL stream peer verification checks the certificate's subjec ... |
+| unknown | [CVE-2025-14181](https://avd.aquasec.com/nvd/cve-2025-14181) | php85-openssl | 8.5.10-r0 | 8.5.11-r0 | The SOAP HTTP client guards its response buffer growth with a check th ... |
+| unknown | [CVE-2026-91769](https://avd.aquasec.com/nvd/cve-2026-91769) | php85-openssl | 8.5.10-r0 | 8.5.11-r0 | PHP's OpenSSL stream peer verification checks the certificate's subjec ... |
+| unknown | [CVE-2025-14181](https://avd.aquasec.com/nvd/cve-2025-14181) | php85-pdo | 8.5.10-r0 | 8.5.11-r0 | The SOAP HTTP client guards its response buffer growth with a check th ... |
+| unknown | [CVE-2026-91769](https://avd.aquasec.com/nvd/cve-2026-91769) | php85-pdo | 8.5.10-r0 | 8.5.11-r0 | PHP's OpenSSL stream peer verification checks the certificate's subjec ... |
+| unknown | [CVE-2025-14181](https://avd.aquasec.com/nvd/cve-2025-14181) | php85-pdo_mysql | 8.5.10-r0 | 8.5.11-r0 | The SOAP HTTP client guards its response buffer growth with a check th ... |
+| unknown | [CVE-2026-91769](https://avd.aquasec.com/nvd/cve-2026-91769) | php85-pdo_mysql | 8.5.10-r0 | 8.5.11-r0 | PHP's OpenSSL stream peer verification checks the certificate's subjec ... |
+| unknown | [CVE-2025-14181](https://avd.aquasec.com/nvd/cve-2025-14181) | php85-posix | 8.5.10-r0 | 8.5.11-r0 | The SOAP HTTP client guards its response buffer growth with a check th ... |
+| unknown | [CVE-2026-91769](https://avd.aquasec.com/nvd/cve-2026-91769) | php85-posix | 8.5.10-r0 | 8.5.11-r0 | PHP's OpenSSL stream peer verification checks the certificate's subjec ... |
+| unknown | [CVE-2025-14181](https://avd.aquasec.com/nvd/cve-2025-14181) | php85-session | 8.5.10-r0 | 8.5.11-r0 | The SOAP HTTP client guards its response buffer growth with a check th ... |
+| unknown | [CVE-2026-91769](https://avd.aquasec.com/nvd/cve-2026-91769) | php85-session | 8.5.10-r0 | 8.5.11-r0 | PHP's OpenSSL stream peer verification checks the certificate's subjec ... |
+| unknown | [CVE-2025-14181](https://avd.aquasec.com/nvd/cve-2025-14181) | php85-simplexml | 8.5.10-r0 | 8.5.11-r0 | The SOAP HTTP client guards its response buffer growth with a check th ... |
+| unknown | [CVE-2026-91769](https://avd.aquasec.com/nvd/cve-2026-91769) | php85-simplexml | 8.5.10-r0 | 8.5.11-r0 | PHP's OpenSSL stream peer verification checks the certificate's subjec ... |
+| unknown | [CVE-2025-14181](https://avd.aquasec.com/nvd/cve-2025-14181) | php85-tokenizer | 8.5.10-r0 | 8.5.11-r0 | The SOAP HTTP client guards its response buffer growth with a check th ... |
+| unknown | [CVE-2026-91769](https://avd.aquasec.com/nvd/cve-2026-91769) | php85-tokenizer | 8.5.10-r0 | 8.5.11-r0 | PHP's OpenSSL stream peer verification checks the certificate's subjec ... |
+| unknown | [CVE-2025-14181](https://avd.aquasec.com/nvd/cve-2025-14181) | php85-xml | 8.5.10-r0 | 8.5.11-r0 | The SOAP HTTP client guards its response buffer growth with a check th ... |
+| unknown | [CVE-2026-91769](https://avd.aquasec.com/nvd/cve-2026-91769) | php85-xml | 8.5.10-r0 | 8.5.11-r0 | PHP's OpenSSL stream peer verification checks the certificate's subjec ... |
+| unknown | [CVE-2025-14181](https://avd.aquasec.com/nvd/cve-2025-14181) | php85-xmlwriter | 8.5.10-r0 | 8.5.11-r0 | The SOAP HTTP client guards its response buffer growth with a check th ... |
+| unknown | [CVE-2026-91769](https://avd.aquasec.com/nvd/cve-2026-91769) | php85-xmlwriter | 8.5.10-r0 | 8.5.11-r0 | PHP's OpenSSL stream peer verification checks the certificate's subjec ... |
+| unknown | [CVE-2025-14181](https://avd.aquasec.com/nvd/cve-2025-14181) | php85-zip | 8.5.10-r0 | 8.5.11-r0 | The SOAP HTTP client guards its response buffer growth with a check th ... |
+| unknown | [CVE-2026-91769](https://avd.aquasec.com/nvd/cve-2026-91769) | php85-zip | 8.5.10-r0 | 8.5.11-r0 | PHP's OpenSSL stream peer verification checks the certificate's subjec ... |
 
 </details>
