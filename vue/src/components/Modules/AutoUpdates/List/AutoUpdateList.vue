@@ -4,6 +4,7 @@ import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch}
 import {AutoUpdate} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import DateView from "@/components/Modules/Common/DateView.vue";
+import DeploymentChip from "@/components/Modules/Common/DeploymentChip.vue";
 import debounce from "lodash.debounce";
 import bus from "@/plugins/bus";
 import {PushSubscription} from "@/services/Push/PushSubscription";
@@ -267,10 +268,9 @@ defineExpose({
             @update:options="options = $event; getItems()">
 
             <template v-slot:item.deployment="{ item }">
-                <v-chip v-if="item.item.deployment">{{ item.item.deployment.name }}.{{
-                        item.item.deployment.namespace
-                    }}
-                </v-chip>
+                <DeploymentChip
+                    v-if="item.item.deployment"
+                    :deployment="item.item.deployment"/>
             </template>
 
             <template v-slot:item.created="{ item }">

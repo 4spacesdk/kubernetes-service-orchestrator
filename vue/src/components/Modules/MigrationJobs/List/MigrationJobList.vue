@@ -4,6 +4,7 @@ import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch}
 import {Deployment, MigrationJob} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import DateView from "@/components/Modules/Common/DateView.vue";
+import DeploymentChip from "@/components/Modules/Common/DeploymentChip.vue";
 import bus from "@/plugins/bus";
 import MigrationJobStatus from "@/components/Modules/MigrationJobs/MigrationJobStatus/MigrationJobStatus.vue";
 import {PushSubscription} from "@/services/Push/PushSubscription";
@@ -191,15 +192,9 @@ function onRerunBtnClicked(row: Row) {
             </template>
 
             <template v-slot:item.deployment="{ item }">
-                <v-chip
+                <DeploymentChip
                     v-if="item.item.deployment"
-                    style="max-width: 200px"
-                >
-                    <span class="text-truncate">
-                        {{ item.item.deployment.name }}.{{ item.item.deployment.namespace }}
-                    </span>
-                    <v-tooltip activator="parent" location="bottom">{{ item.item.deployment.name }}.{{ item.item.deployment.namespace }}</v-tooltip>
-                </v-chip>
+                    :deployment="item.item.deployment"/>
             </template>
 
             <template v-slot:item.created="{ item }">
