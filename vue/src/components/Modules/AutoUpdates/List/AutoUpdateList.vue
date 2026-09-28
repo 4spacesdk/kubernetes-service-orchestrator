@@ -325,7 +325,7 @@ defineExpose({
                         density="comfortable"
                         icon
                     >
-                        <v-icon>fa fa-rectangle-list</v-icon>
+                        <v-icon>fa fa-scroll</v-icon>
                         <v-tooltip activator="parent" location="bottom">Log</v-tooltip>
                     </v-btn>
                     <v-btn

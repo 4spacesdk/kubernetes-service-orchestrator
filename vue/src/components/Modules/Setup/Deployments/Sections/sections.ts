@@ -34,7 +34,7 @@ export const deploymentSections: DeploymentSection[] = [
     {
         key: 'logs',
         title: 'Kubernetes Logs',
-        icon: 'fa fa-rectangle-list',
+        icon: 'fa fa-dharmachakra',
         group: '',
         isShown: () => true,
         component: section(() => import('./DeploymentLogsSection.vue')),

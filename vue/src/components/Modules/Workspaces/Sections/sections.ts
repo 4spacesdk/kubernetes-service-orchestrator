@@ -48,7 +48,7 @@ export const workspaceSections: WorkspaceSection[] = [
     {
         key: 'logs',
         title: 'Kubernetes Logs',
-        icon: 'fa fa-rectangle-list',
+        icon: 'fa fa-dharmachakra',
         group: '',
         isShown: isDeveloper,
         component: section(() => import('./WorkspaceLogsSection.vue')),

@@ -121,7 +121,7 @@ function onShowLogBtnClicked() {
             :loading="isLoading"
             variant="plain" color="grey" size="small"
             @click="onShowLogBtnClicked">
-            <v-icon>fa fa-rectangle-list</v-icon>
+            <v-icon>fa fa-scroll</v-icon>
             <v-tooltip activator="parent" location="bottom">Log</v-tooltip>
         </v-btn>
 

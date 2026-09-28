@@ -222,8 +222,8 @@ function onRerunBtnClicked(row: Row) {
                         density="comfortable"
                         icon
                     >
-                        <v-icon>fa fa-rectangle-list</v-icon>
-                        <v-tooltip activator="parent" location="bottom">Kubernetes Log</v-tooltip>
+                        <v-icon>fa fa-dharmachakra</v-icon>
+                        <v-tooltip activator="parent" location="bottom">Pod output (Kubernetes)</v-tooltip>
                     </v-btn>
                     <v-btn
                         variant="plain" color="primary" 
@@ -232,8 +232,8 @@ function onRerunBtnClicked(row: Row) {
                         density="comfortable"
                         icon
                     >
-                        <v-icon>fa fa-rectangle-list</v-icon>
-                        <v-tooltip activator="parent" location="bottom">Job Log</v-tooltip>
+                        <v-icon>fa fa-scroll</v-icon>
+                        <v-tooltip activator="parent" location="bottom">Log reported to kso</v-tooltip>
                     </v-btn>
                     <v-btn
                         variant="plain" color="warning" 
