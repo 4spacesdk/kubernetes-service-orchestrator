@@ -1,6 +1,7 @@
 <?php namespace App\Models;
 
 use App\Entities\Deployment;
+use App\Models\Concerns\FiltersByHealth;
 use App\Models\Concerns\FiltersByLabel;
 use App\Models\Concerns\FiltersByProject;
 use RestExtension\Core\Model;
@@ -8,6 +9,7 @@ use RestExtension\ResourceModelInterface;
 
 class DeploymentModel extends Model implements ResourceModelInterface {
 
+    use FiltersByHealth;
     use FiltersByLabel;
     use FiltersByProject;
 
@@ -44,6 +46,7 @@ class DeploymentModel extends Model implements ResourceModelInterface {
 
         $this->applyLabelFilter($queryParser);
         $this->applyProjectFilter($queryParser, WorkspaceModel::class);
+        $this->applyHealthFilter($queryParser);
     }
 
     /**
