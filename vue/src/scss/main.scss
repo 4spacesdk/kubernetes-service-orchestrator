@@ -4,11 +4,13 @@
   margin-bottom: 11px;
 }
 
+// 40px, the height of a field with an icon in it: the icon areas above are 11 + 18 + 11. A field
+// with none - a disabled one loses its clear button, an empty one hides it - was 36 beside it.
 .v-field__input {
   padding: 0.5rem !important;
   padding-left: .75rem !important;
   padding-right: .75rem !important;
-  min-height: 1rem !important;
+  min-height: 2.5rem !important;
 }
 
 // A chip is 26px, a line of text 24px - chips would make the field taller than those beside it.
