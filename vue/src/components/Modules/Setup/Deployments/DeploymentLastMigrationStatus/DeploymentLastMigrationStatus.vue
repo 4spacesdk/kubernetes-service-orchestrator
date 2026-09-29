@@ -64,6 +64,16 @@ function render() {
             color.value = 'error';
             text.value =  'Failed (Post commands)';
             break;
+        case MigrationJobStatusTypes.FailedExitCode:
+            icon.value = 'fa fa-circle-xmark';
+            color.value = 'error';
+            text.value =  'Failed (Exit code)';
+            break;
+        case MigrationJobStatusTypes.Failed:
+            icon.value = 'fa fa-circle-xmark';
+            color.value = 'error';
+            text.value =  'Failed';
+            break;
         default:
             icon.value = 'fa fa-circle-info';
             color.value = 'grey';

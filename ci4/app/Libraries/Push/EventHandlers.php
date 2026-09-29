@@ -63,19 +63,16 @@ class EventHandlers {
     }
 
     private static function migrationJobChangedStatus(ChangeEvent $changeEvent): void {
-        switch ($changeEvent->next['status'] ?? null) {
-            case \MigrationJobStatusTypes::Completed:
-            case \MigrationJobStatusTypes::Failed_LogVerification:
-            case \MigrationJobStatusTypes::Failed_PostCommands:
-                $deployment = new Deployment();
-                $deployment->find($changeEvent->next['deployment_id'] ?? 0);
-                if (!$deployment->exists()) {
-                    Data::debug('No deployment with id', $changeEvent->next['deployment_id'] ?? 'none');
-                    return;
-                }
-                $deployment->checkStatus(true);
-                break;
+        if (!\MigrationJobStatusTypes::IsFinished($changeEvent->next['status'] ?? null)) {
+            return;
         }
+        $deployment = new Deployment();
+        $deployment->find($changeEvent->next['deployment_id'] ?? 0);
+        if (!$deployment->exists()) {
+            Data::debug('No deployment with id', $changeEvent->next['deployment_id'] ?? 'none');
+            return;
+        }
+        $deployment->checkStatus(true);
     }
 
     private static function workspaceCreated(ChangeEvent $changeEvent): void {

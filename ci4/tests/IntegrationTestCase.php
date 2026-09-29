@@ -36,6 +36,8 @@ abstract class IntegrationTestCase extends CIUnitTestCase {
     public function setUp(): void {
         parent::setUp();
 
+        TestCase::watchNoMigrationJobs();
+
         // The ordinary suite clears the cluster credentials from the process, and it runs
         // first. Without this every test here skips itself in a combined run.
         ClusterEnvironment::restore();

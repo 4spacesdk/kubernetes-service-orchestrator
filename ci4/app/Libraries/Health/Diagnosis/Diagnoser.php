@@ -142,6 +142,8 @@ class Diagnoser {
         $failedAt = match ($migration['status']) {
             \MigrationJobStatusTypes::Failed_LogVerification => 'its log did not show it finished',
             \MigrationJobStatusTypes::Failed_PostCommands => 'a post command failed',
+            \MigrationJobStatusTypes::Failed_ExitCode => 'it exited with an error',
+            \MigrationJobStatusTypes::Failed => 'it did not run to an end',
             default => null,
         };
         if ($failedAt === null) {

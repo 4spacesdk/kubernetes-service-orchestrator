@@ -278,6 +278,14 @@ class DiagnoserTest extends CIUnitTestCase {
         $this->assertSame(7, $finding->action['migration_job_id']);
     }
 
+    public function testAMigrationThatExitedWithAnErrorSaysSo(): void {
+        $finding = $this->only(new Evidence('1.1', lastMigration: [
+            'id' => 7, 'status' => \MigrationJobStatusTypes::Failed_ExitCode, 'image' => 'reg/app:1.1', 'log' => "Migrating\nThe migration exited with 1",
+        ]));
+
+        $this->assertSame('The migration for 1.1 failed: it exited with an error', $finding->cause);
+    }
+
     public function testAFailedMigrationForAnEarlierVersionIsNotACause(): void {
         $this->assertSame([], $this->diagnose(new Evidence('1.1', lastMigration: [
             'id' => 7, 'status' => \MigrationJobStatusTypes::Failed_PostCommands, 'image' => 'reg/app:1.0', 'log' => '',

@@ -291,6 +291,8 @@ export const MigrationJobStatusTypes = {
     Completed: "completed",
     FailedLogVerification: "failed-log-verification",
     Failed_PostCommands: "failed-post-commands",
+    FailedExitCode: "failed-exit-code",
+    Failed: "failed",
 };
 
 export const ContainerImageTagPolicies = {

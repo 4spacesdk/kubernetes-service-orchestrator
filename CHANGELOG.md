@@ -9,9 +9,16 @@
 * The running deployments of a container image can be filtered by version, with how many run each - exactly, where the search would match 1.9.10 for 1.9.1
 * The deployment on a migration job or an update is a link to its page
 * A log from the cluster has the Kubernetes wheel, a log kso keeps has a scroll - so a migration job's two logs are told apart without their tooltips
+* Migration jobs no longer need curl in the image: kso reads a job's start, end, exit code and log from the cluster
+* A migration's exit code counts: one that exits with an error fails as Failed (Exit code), and a failing migration is not run again
+* A migration job that cannot run to an end - an image that cannot be pulled, its deadline, its pod gone - fails with the reason instead of staying Started
 
 ### Fixed bugs
 * A field without an icon - a disabled one, or an empty one whose clear button is hidden - was 4 pixels lower than a select beside it
+
+### Notes
+* A migration's log is its pod's now, stderr included. A command that writes to stderr after the line its verification looks for fails verification - check the migration commands that verify with Ends with
+* Removed: `PUT /migration-jobs/{id}/started` and `/ended`, the only migration job routes open without a sign-in, and the job's callback token. A migration still running when kso is upgraded is left in Started - rerun it
 
 ### Upgrade guide
 1. Deploy new image

@@ -127,7 +127,8 @@ class DeploymentStepHelper {
     const string
         MigrationJob_NotFound = 'not-found',
         MigrationJob_Completed = 'completed',
-        MigrationJob_Running = 'running';
+        MigrationJob_Running = 'running',
+        MigrationJob_Failed = 'failed';
 
     const string
         PersistentVolume_NotFound = 'not-found',

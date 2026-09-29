@@ -279,6 +279,17 @@ class HealthEvaluatorTest extends CIUnitTestCase {
         $this->assertSame('The migration for 1.0 failed', $result->reason);
     }
 
+    public function testEveryWayAMigrationFailsIsDegraded(): void {
+        foreach ([\MigrationJobStatusTypes::Failed_ExitCode, \MigrationJobStatusTypes::Failed] as $status) {
+            $result = $this->evaluate($this->snapshot([$this->deployment()], [$this->pod()]), migration: [
+                'status' => $status,
+                'image' => 'registry/api:1.0',
+            ]);
+
+            $this->assertSame(\HealthStatusTypes::Degraded, $result->health, $status);
+        }
+    }
+
     /**
      * A migration that failed for an earlier version was put right by the deploy after it.
      * "1.0" is a suffix of "11.0" - the tag is matched with its colon.

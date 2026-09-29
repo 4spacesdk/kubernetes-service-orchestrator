@@ -7286,48 +7286,6 @@ export class MigrationJobsRerunPutById extends BaseApi<MigrationJob> {
     }
 }
 
-export class MigrationJobsSetStartedPutById extends BaseApi<MigrationJob> {
-
-    public topic = 'Resources.MigrationJobs';
-    protected method = 'put';
-    protected scope = '';
-    protected summary = '';
-
-    public constructor(id: number) {
-        super();
-        this.uri = `/migration-jobs/${id}/started`;
-    }
-
-    protected convertToResource(data: any): MigrationJob {
-        return new MigrationJob(data);
-    }
-
-    public save(data: any, next?: (value: MigrationJob) => void) {
-        return super.executeSave(data, next);
-    }
-}
-
-export class MigrationJobsSetEndedPutById extends BaseApi<MigrationJob> {
-
-    public topic = 'Resources.MigrationJobs';
-    protected method = 'put';
-    protected scope = '';
-    protected summary = '';
-
-    public constructor(id: number) {
-        super();
-        this.uri = `/migration-jobs/${id}/ended`;
-    }
-
-    protected convertToResource(data: any): MigrationJob {
-        return new MigrationJob(data);
-    }
-
-    public save(data: any, next?: (value: MigrationJob) => void) {
-        return super.executeSave(data, next);
-    }
-}
-
 class MigrationJobs {
 
     public get(): MigrationJobsGet {
@@ -7340,14 +7298,6 @@ class MigrationJobs {
 
     public rerunPutById(id: number): MigrationJobsRerunPutById {
         return new MigrationJobsRerunPutById(id);
-    }
-
-    public setStartedPutById(id: number): MigrationJobsSetStartedPutById {
-        return new MigrationJobsSetStartedPutById(id);
-    }
-
-    public setEndedPutById(id: number): MigrationJobsSetEndedPutById {
-        return new MigrationJobsSetEndedPutById(id);
     }
 
 }

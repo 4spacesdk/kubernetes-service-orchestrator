@@ -33,12 +33,12 @@ use RenokiCo\PhpK8s\Kinds\K8sPod;
 class MigrationJobStep extends BaseDeploymentStep {
 
     /**
-     * The job's callback token, from the job's Secret - see `MigrationJob::issueCallbackToken()`.
-     * Read by the shell rather than substituted by Kubernetes, so it is not in the container's
-     * arguments either.
+     * How the watcher of a new job is started - see `MigrationJobWatcher`. The test suite puts a
+     * recorder here: a real start would watch outside the test, against the development database.
+     *
+     * @var null|\Closure(int): void
      */
-    public const string CallbackTokenVariable = 'MIGRATION_JOB_TOKEN';
-    private const string CallbackTokenHeaderArgument = '-H "' . \App\Controllers\MigrationJobs::TokenHeader . ': $' . self::CallbackTokenVariable . '"';
+    public static ?\Closure $startWatching = null;
 
     public function getIdentifier(): string {
         return DeploymentSteps::Migration;
@@ -119,7 +119,6 @@ class MigrationJobStep extends BaseDeploymentStep {
             // not do anything about, every single time.
             unset($remote['spec']['parallelism']);
             unset($remote['spec']['completions']);
-            unset($remote['spec']['backoffLimit']);
             unset($remote['spec']['completionMode']);
             unset($remote['spec']['podReplacementPolicy']);
             unset($remote['spec']['manualSelector']);
@@ -150,23 +149,12 @@ class MigrationJobStep extends BaseDeploymentStep {
             unset($remote['status']);
         }
 
-        // The callback token is written by each run and is in no manifest kso builds, so it
-        // would be a difference in every preview that nobody can act on.
-        $remoteSecretData = $this->workloadSecret->remoteData($deployment, (new KubeAuth())->authenticate());
-        if ($remoteSecretData !== null) {
-            $remoteSecretData = array_filter(
-                $remoteSecretData,
-                fn (string $key) => !str_ends_with($key, '.' . self::CallbackTokenVariable),
-                ARRAY_FILTER_USE_KEY
-            ) ?: null;
-        }
-
         return json_encode(SecretPreview::of(
             $local,
             $remote ?? null,
             $this->workloadSecret,
             $deployment,
-            $remoteSecretData
+            $this->workloadSecret->remoteData($deployment, (new KubeAuth())->authenticate())
         ));
     }
 
@@ -196,6 +184,14 @@ class MigrationJobStep extends BaseDeploymentStep {
 
         if ($resource->getStatus('completionTime')) {
             return DeploymentStepHelper::MigrationJob_Completed;
+        }
+
+        // With the migration's own exit code in the pod, a failing migration fails its Job - and
+        // is not running for the rest of its days. The migration job's row says why.
+        foreach ($resource->getStatus('conditions') ?? [] as $condition) {
+            if (($condition['type'] ?? '') === 'Failed' && ($condition['status'] ?? '') === 'True') {
+                return DeploymentStepHelper::MigrationJob_Failed;
+            }
         }
 
         return DeploymentStepHelper::MigrationJob_Running;
@@ -258,18 +254,13 @@ class MigrationJobStep extends BaseDeploymentStep {
         $migrationJob->save();
         $migrationJob->updateStatus(\MigrationJobStatusTypes::Deploying);
 
-        // Extract container, add environment variable, reattach container and template
+        // Extract container, add environment variable, reattach container and template. The id
+        // is how the watcher tells this run's pod from the last one's: both are named after the
+        // deployment.
         $template = $resource->getTemplate();
         /** @var Container $container */
         $container = $template->getContainers()[0];
         $container->addEnv('MIGRATION_JOB_ID', (string)$migrationJob->id);
-        $container->addToAttribute('env', [
-            'name' => self::CallbackTokenVariable,
-            'valueFrom' => ['secretKeyRef' => [
-                'name' => $this->workloadSecret->name,
-                'key' => $this->workloadSecret->add($deployment->name, self::CallbackTokenVariable, $migrationJob->issueCallbackToken()),
-            ]],
-        ]);
         $template->setContainers([$container]);
         $resource->setTemplate(KubeHelper::AsTemplate($template));
 
@@ -279,6 +270,19 @@ class MigrationJobStep extends BaseDeploymentStep {
 
         // Created rather than applied: the job of the last run was deleted above.
         $this->workloadSecret->applyWith($resource, $deployment, static fn (K8sJob $job) => $job->create(), removeUnused: false);
+
+        (self::$startWatching ?? fn (int $id) => self::startWatchingInTheBackground($id, (int) $deployment->id))((int) $migrationJob->id);
+    }
+
+    /**
+     * Started and left, as Jobby starts a cron job: the deploy answers at once, and the job's
+     * row follows the migration. The cron job picks the job up if this goes with its kso pod.
+     * One output file per deployment, overwritten by its next run, rather than one per job kept
+     * for as long as the pod lives.
+     */
+    private static function startWatchingInTheBackground(int $migrationJobId, int $deploymentId): void {
+        $command = 'php ' . ROOTPATH . "spark app:watch-migration-job {$migrationJobId} > /tmp/migration_job_{$deploymentId}.txt 2>&1";
+        exec('nohup sh -c ' . escapeshellarg($command) . ' > /dev/null 2>&1 &');
     }
 
     public function startTerminateCommand(Deployment $deployment): void {
@@ -347,19 +351,12 @@ class MigrationJobStep extends BaseDeploymentStep {
             ->setAttribute('command', [
                 '/bin/sh'
             ])
+            // The migration and nothing else. kso reads its start, its end, its exit code and its
+            // log from the cluster (`MigrationJobWatcher`), so the image needs no curl and the
+            // pod ends with the migration's own exit code.
             ->setAttribute('args', [
                 '-c',
-
-                // Tell KSO about migration job started. Only a status, so the migration runs
-                // whether or not kso answers (#42), and the retries are kept short: waiting
-                // on it would hold up the release it is reporting on.
-                'curl --connect-timeout 5 --max-time 30 --retry 5 --retry-delay 5 --retry-max-time 60 -i -v -X PUT ' . $this->getMigrationStartedUrl() . ' ' . self::CallbackTokenHeaderArgument
-
-                // Perform migration
-                . ' ; ' . $spec->database_migration_command
-
-                // Tell KSO about migration job ended
-                . ' | curl --connect-timeout 5 --max-time 300 --retry 10 --retry-delay 5 --retry-max-time 300 -i -v -X PUT --data-binary @- ' . $this->getMigrationEndedUrl() . ' ' . self::CallbackTokenHeaderArgument,
+                $spec->database_migration_command,
             ])
             ->addEnv('ENVIRONMENT', \Environments::Development)
             ->addEnv('BASE_URL', $deployment->getUrl(true, true));
@@ -467,7 +464,10 @@ class MigrationJobStep extends BaseDeploymentStep {
             ->setName($deployment->name)
             ->setNamespace($deployment->namespace)
             ->setTemplate(KubeHelper::AsTemplate($template))
-            ->setSpec('activeDeadlineSeconds', 21600);
+            ->setSpec('activeDeadlineSeconds', 21600)
+            // Once. The migration's exit code is the pod's now, and Kubernetes' default of 6 would
+            // run a failing migration seven times over a half-migrated database.
+            ->setSpec('backoffLimit', 0);
 
         if ($auth) {
             $auth = new KubeAuth();
@@ -475,24 +475,6 @@ class MigrationJobStep extends BaseDeploymentStep {
         }
 
         return $resource;
-    }
-
-    private function getMigrationStartedUrl(): string {
-        if (getenv('DEV_REMOTE_BASE_URL')) {
-            $domain = getenv('DEV_REMOTE_BASE_URL');
-        } else {
-            $domain = KubeHelper::GetMyHostname() . '.' . KubeHelper::GetMyNamespace();
-        }
-        return "$domain/api/migration-jobs/$(MIGRATION_JOB_ID)/started";
-    }
-
-    private function getMigrationEndedUrl(): string {
-        if (getenv('DEV_REMOTE_BASE_URL')) {
-            $domain = getenv('DEV_REMOTE_BASE_URL');
-        } else {
-            $domain = KubeHelper::GetMyHostname() . '.' . KubeHelper::GetMyNamespace();
-        }
-        return "$domain/api/migration-jobs/$(MIGRATION_JOB_ID)/ended";
     }
 
 }
