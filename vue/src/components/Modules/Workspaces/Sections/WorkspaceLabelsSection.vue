@@ -3,7 +3,7 @@ import {onMounted, ref} from 'vue'
 import {Workspace} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
-import {useUnsavedChanges} from "@/composables/useUnsavedChanges";
+import {useAutoSave} from "@/composables/useAutoSave";
 import PageSection from "@/components/Modules/Common/DetailPage/PageSection.vue";
 
 interface Row {
@@ -16,8 +16,6 @@ const props = defineProps<{
 }>();
 
 const isLoading = ref(false);
-const isSaving = ref(false);
-const itemCount = ref(0);
 const rows = ref<Row[]>([]);
 const headers = ref([
     {title: 'Name', key: 'name', sortable: false},
@@ -25,7 +23,16 @@ const headers = ref([
     {title: '', key: 'actions', sortable: false},
 ]);
 
-const {markSaved} = useUnsavedChanges(() => rows.value);
+// A row changes only when its dialog is saved or it is deleted, so each of those is a save.
+const {autoSave, markLoaded, saveNow} = useAutoSave({
+    state: () => rows.value,
+    validate: () => rows.value.some(row => !row.name.trim()) ? 'a label needs a name' : null,
+    request: () => Api.workspaces().updateLabelsPutById(props.workspace.id!),
+    data: () => ({values: rows.value}),
+    onSaved: saved => bus.emit('workspaceSaved', saved),
+    delay: 0,
+});
+defineExpose({saveNow});
 
 // <editor-fold desc="Functions">
 
@@ -46,9 +53,8 @@ function render() {
                         value: label.value ?? '',
                     }
                 }) ?? [];
-            itemCount.value = rows.value.length;
             isLoading.value = false;
-            markSaved();
+            markLoaded();
         });
 }
 
@@ -80,30 +86,6 @@ function onDeleteRowClicked(row: Row) {
     rows.value.splice(rows.value.indexOf(row), 1);
 }
 
-function onSave() {
-    if (isSaving.value) {
-        return;
-    }
-    isSaving.value = true;
-    const api = Api.workspaces().updateLabelsPutById(props.workspace.id!);
-    api.setErrorHandler(response => {
-        if (response.error) {
-            bus.emit('toast', {
-                text: response.error
-            });
-        }
-        isSaving.value = false;
-        return false;
-    });
-    api.save({
-        values: rows.value
-    }, newItem => {
-        bus.emit('workspaceSaved', newItem);
-        bus.emit('toast', {text: 'Saved'});
-        isSaving.value = false;
-        render();
-    });
-}
 
 // </editor-fold>
 </script>
@@ -113,8 +95,7 @@ function onSave() {
         title="Labels"
         flush
         :is-loading="isLoading"
-        :is-saving="isSaving"
-        @save="onSave">
+        :auto-save="autoSave">
         <template #actions>
             <v-btn
                 icon
@@ -129,7 +110,7 @@ function onSave() {
 
         <v-data-table-server
             :headers="headers"
-            :items-length="itemCount"
+            :items-length="rows.length"
             :items="rows"
             :items-per-page="-1"
             class="table"

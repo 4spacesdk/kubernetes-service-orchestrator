@@ -1,6 +1,7 @@
 <?php namespace App\Libraries\DeploymentSteps;
 
 use App\Entities\Deployment;
+use App\Libraries\Kubernetes\SecurityContext;
 use App\Libraries\Kubernetes\ContainerEnvironment;
 use App\Libraries\Kubernetes\SecretPreview;
 use App\Libraries\Kubernetes\WorkloadSecret;
@@ -330,15 +331,8 @@ class CronjobStep extends BaseDeploymentStep {
                 );
             }
 
-            // Security Context
-            if (strlen($cronJob->container_image->security_context_run_as_user) > 0) {
-                $container->setAttribute('securityContext.runAsUser', (int)$cronJob->container_image->security_context_run_as_user);
-            }
-            if (strlen($cronJob->container_image->security_context_run_as_group) > 0) {
-                $container->setAttribute('securityContext.runAsGroup', (int)$cronJob->container_image->security_context_run_as_group);
-            }
-            $container->setAttribute('securityContext.allowPrivilegeEscalation', (bool)$cronJob->container_image->security_context_allow_privilege_escalation);
-            $container->setAttribute('securityContext.readOnlyRootFilesystem', (bool)$cronJob->container_image->security_context_read_only_root_filesystem);
+            // Security Context - the image's, and what the specification opts into
+            SecurityContext::ApplyToContainer($container, $cronJob->container_image, $spec);
 
             if ($cronJob->include_deployment_environment_variables) {
                 ContainerEnvironment::ofDeployment($deployment)->applyTo($container, $secret);
@@ -365,8 +359,9 @@ class CronjobStep extends BaseDeploymentStep {
                 $template->setSpec('imagePullSecrets', $imagePullSecrets);
             }
 
-            if (strlen($cronJob->container_image->security_context_fs_group) > 0) {
-                $template->setSpec('securityContext.fsGroup', (int)$cronJob->container_image->security_context_fs_group);
+            $fsGroup = SecurityContext::FsGroup($cronJob->container_image, $spec);
+            if ($fsGroup !== null) {
+                $template->setSpec('securityContext.fsGroup', $fsGroup);
             }
 
             $resource = new K8sCronJob();

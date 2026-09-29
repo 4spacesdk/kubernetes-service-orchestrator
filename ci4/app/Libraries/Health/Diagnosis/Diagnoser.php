@@ -38,6 +38,7 @@ class Diagnoser {
             ...self::RejectedByApiServer($evidence),
             ...self::MigrationFailed($evidence),
             ...self::ImagePull($evidence),
+            ...self::NotAllowedToRunAsRoot($evidence),
             ...self::OomKilled($evidence, $now),
             ...self::CrashAfterVersionChange($evidence, $now),
             ...self::NotReady($evidence),
@@ -142,6 +143,8 @@ class Diagnoser {
         $failedAt = match ($migration['status']) {
             \MigrationJobStatusTypes::Failed_LogVerification => 'its log did not show it finished',
             \MigrationJobStatusTypes::Failed_PostCommands => 'a post command failed',
+            \MigrationJobStatusTypes::Failed_ExitCode => 'it exited with an error',
+            \MigrationJobStatusTypes::Failed => 'it did not run to an end',
             default => null,
         };
         if ($failedAt === null) {
@@ -178,6 +181,38 @@ class Diagnoser {
             ];
 
             $findings[] = self::WhyTheImageCannotBePulled($evidence, $pod, $image, $reason, $message, $shown);
+        }
+        return $findings;
+    }
+
+    /**
+     * `runAsNonRoot` - stamped on the container image or set on the specification - and a container
+     * kubelet will not start under it: a version that runs as root, or one whose `USER` is a name
+     * kubelet cannot check. The image is what has to change, or the specification turns it off.
+     *
+     * @return list<Finding>
+     */
+    private static function NotAllowedToRunAsRoot(Evidence $evidence): array {
+        $findings = [];
+        foreach (self::Containers($evidence->pods) as [$pod, $container]) {
+            $waiting = $container['state']['waiting'] ?? [];
+            $message = (string) ($waiting['message'] ?? '');
+            if (($waiting['reason'] ?? null) !== 'CreateContainerConfigError' || !str_contains($message, 'runAsNonRoot')) {
+                continue;
+            }
+
+            $name = (string) ($container['name'] ?? '');
+            $cause = preg_match('/non-numeric user \(([^)]*)\)/', $message, $match)
+                ? "{$name}'s image runs as the user {$match[1]}, a name Run as non-root cannot check - give the image a numeric USER, or a user on the container image"
+                : "{$name}'s image runs as root under Run as non-root - give the image a USER that is not root, or turn Run as non-root off on the specification";
+
+            $findings[] = new Finding(
+                'run_as_non_root',
+                \DiagnosisVerdicts::Certain,
+                $cause,
+                [($pod['metadata']['name'] ?? '') . ": {$message}"],
+                ['type' => 'specification', 'label' => 'Open the security context', 'section' => 'security-context'],
+            );
         }
         return $findings;
     }

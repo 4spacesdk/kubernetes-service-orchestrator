@@ -4,6 +4,7 @@ import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch}
 import {Deployment, MigrationJob} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import DateView from "@/components/Modules/Common/DateView.vue";
+import DeploymentChip from "@/components/Modules/Common/DeploymentChip.vue";
 import bus from "@/plugins/bus";
 import MigrationJobStatus from "@/components/Modules/MigrationJobs/MigrationJobStatus/MigrationJobStatus.vue";
 import {PushSubscription} from "@/services/Push/PushSubscription";
@@ -191,15 +192,9 @@ function onRerunBtnClicked(row: Row) {
             </template>
 
             <template v-slot:item.deployment="{ item }">
-                <v-chip
+                <DeploymentChip
                     v-if="item.item.deployment"
-                    style="max-width: 200px"
-                >
-                    <span class="text-truncate">
-                        {{ item.item.deployment.name }}.{{ item.item.deployment.namespace }}
-                    </span>
-                    <v-tooltip activator="parent" location="bottom">{{ item.item.deployment.name }}.{{ item.item.deployment.namespace }}</v-tooltip>
-                </v-chip>
+                    :deployment="item.item.deployment"/>
             </template>
 
             <template v-slot:item.created="{ item }">
@@ -227,8 +222,8 @@ function onRerunBtnClicked(row: Row) {
                         density="comfortable"
                         icon
                     >
-                        <v-icon>fa fa-rectangle-list</v-icon>
-                        <v-tooltip activator="parent" location="bottom">Kubernetes Log</v-tooltip>
+                        <v-icon>fa fa-dharmachakra</v-icon>
+                        <v-tooltip activator="parent" location="bottom">Pod output (Kubernetes)</v-tooltip>
                     </v-btn>
                     <v-btn
                         variant="plain" color="primary" 
@@ -237,8 +232,8 @@ function onRerunBtnClicked(row: Row) {
                         density="comfortable"
                         icon
                     >
-                        <v-icon>fa fa-rectangle-list</v-icon>
-                        <v-tooltip activator="parent" location="bottom">Job Log</v-tooltip>
+                        <v-icon>fa fa-scroll</v-icon>
+                        <v-tooltip activator="parent" location="bottom">Log reported to kso</v-tooltip>
                     </v-btn>
                     <v-btn
                         variant="plain" color="warning" 

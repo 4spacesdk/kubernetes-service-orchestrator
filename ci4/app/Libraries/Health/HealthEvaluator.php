@@ -324,9 +324,11 @@ class HealthEvaluator {
             return null;
         }
 
+        if (\MigrationJobStatusTypes::IsFailure($migration['status'])) {
+            return \HealthStatusTypes::Degraded;
+        }
+
         return match ($migration['status']) {
-            \MigrationJobStatusTypes::Failed_LogVerification,
-            \MigrationJobStatusTypes::Failed_PostCommands => \HealthStatusTypes::Degraded,
             \MigrationJobStatusTypes::Deploying,
             \MigrationJobStatusTypes::Started => \HealthStatusTypes::Progressing,
             default => null,

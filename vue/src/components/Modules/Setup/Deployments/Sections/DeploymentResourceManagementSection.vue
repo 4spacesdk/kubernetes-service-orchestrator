@@ -6,15 +6,12 @@ import bus from "@/plugins/bus";
 import {WorkloadTypes} from "@/constants";
 import type {DeploymentMetricsResponse} from "@/core/services/Deploy/Api";
 import {cpuText, memoryText, shareOfLimit} from "@/helpers/Metrics";
-import {useDialogSave} from "@/composables/useDialogSave";
-import {useUnsavedChanges} from "@/composables/useUnsavedChanges";
+import {useAutoSave} from "@/composables/useAutoSave";
 import PageSection from "@/components/Modules/Common/DetailPage/PageSection.vue";
 
 const props = defineProps<{
     deployment: Deployment
 }>();
-
-const {isSaving, save} = useDialogSave();
 
 const isLoading = ref(false);
 const cpuLimit = ref<number>();
@@ -27,7 +24,8 @@ const knativeConcurrencyLimitHard = ref<number>();
 
 const isKNativeService = computed(() => props.deployment.deployment_specification?.workload_type == WorkloadTypes.KNativeService);
 
-const {markSaved} = useUnsavedChanges(() => [
+const {autoSave, markLoaded, saveNow} = useAutoSave({
+    state: () => [
     cpuLimit.value,
     cpuRequest.value,
     memoryLimit.value,
@@ -35,7 +33,22 @@ const {markSaved} = useUnsavedChanges(() => [
     replicas.value,
     knativeConcurrencyLimitSoft.value,
     knativeConcurrencyLimitHard.value,
-]);
+],
+    validate: () => [cpuLimit, cpuRequest, memoryLimit, memoryRequest, replicas, knativeConcurrencyLimitSoft, knativeConcurrencyLimitHard]
+        .some(field => typeof field.value !== 'number' || isNaN(field.value) || field.value < 0)
+        ? 'every field needs a number, 0 or more'
+        : null,
+    request: () => Api.deployments().updateResourceManagementPutById(props.deployment.id!)
+        .cpuLimit(cpuLimit.value!)
+        .cpuRequest(cpuRequest.value!)
+        .memoryLimit(memoryLimit.value!)
+        .memoryRequest(memoryRequest.value!)
+        .replicas(replicas.value!)
+        .knativeConcurrencyLimitSoft(knativeConcurrencyLimitSoft.value!)
+        .knativeConcurrencyLimitHard(knativeConcurrencyLimitHard.value!),
+    onSaved: saved => bus.emit('deploymentSaved', saved),
+});
+defineExpose({saveNow});
 
 /**
  * What the pods are using while these numbers are being decided. A limit is a guess until
@@ -82,7 +95,7 @@ function render() {
             knativeConcurrencyLimitSoft.value = deployment?.knative_concurrency_limit_soft ?? 0;
             knativeConcurrencyLimitHard.value = deployment?.knative_concurrency_limit_hard ?? 0;
             isLoading.value = false;
-            markSaved();
+            markLoaded();
         });
 }
 
@@ -90,21 +103,6 @@ function render() {
 
 // <editor-fold desc="View Binding Functions">
 
-function onSave() {
-    const api = Api.deployments().updateResourceManagementPutById(props.deployment.id!)
-        .cpuLimit(cpuLimit.value!)
-        .cpuRequest(cpuRequest.value!)
-        .memoryLimit(memoryLimit.value!)
-        .memoryRequest(memoryRequest.value!)
-        .replicas(replicas.value!)
-        .knativeConcurrencyLimitSoft(knativeConcurrencyLimitSoft.value!)
-        .knativeConcurrencyLimitHard(knativeConcurrencyLimitHard.value!);
-    save(api, null, newItem => {
-        bus.emit('deploymentSaved', newItem);
-        bus.emit('toast', {text: 'Saved'});
-        render();
-    });
-}
 
 // </editor-fold>
 
@@ -114,8 +112,7 @@ function onSave() {
     <page-section
         title="Resource Management"
         :is-loading="isLoading"
-        :is-saving="isSaving"
-        @save="onSave">
+        :auto-save="autoSave">
         <div class="section-form">
             <v-row density="compact">
                 <v-col cols="6">

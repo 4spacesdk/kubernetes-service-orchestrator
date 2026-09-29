@@ -1,5 +1,6 @@
 <?php namespace App\Entities;
 
+use App\Libraries\Kubernetes\SecurityContext;
 use App\Libraries\Kubernetes\ContainerEnvironment;
 use App\Libraries\Kubernetes\WorkloadSecret;
 use App\Models\DeploymentSpecificationVolumeModel;
@@ -72,15 +73,8 @@ class InitContainer extends Entity {
             );
         }
 
-        // Security Context
-        if (strlen($this->container_image->security_context_run_as_user) > 0) {
-            $container->setAttribute('securityContext.runAsUser', (int)$this->container_image->security_context_run_as_user);
-        }
-        if (strlen($this->container_image->security_context_run_as_group) > 0) {
-            $container->setAttribute('securityContext.runAsGroup', (int)$this->container_image->security_context_run_as_group);
-        }
-        $container->setAttribute('securityContext.allowPrivilegeEscalation', (bool)$this->container_image->security_context_allow_privilege_escalation);
-        $container->setAttribute('securityContext.readOnlyRootFilesystem', (bool)$this->container_image->security_context_read_only_root_filesystem);
+        // Security Context - the image's, and what the specification opts into
+        SecurityContext::ApplyToContainer($container, $this->container_image, $spec);
 
         $environment = $this->include_deployment_environment_variables
             ? ContainerEnvironment::ofDeployment($deployment)

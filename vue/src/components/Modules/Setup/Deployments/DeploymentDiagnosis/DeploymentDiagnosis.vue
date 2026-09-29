@@ -59,7 +59,7 @@ function act(action: DeploymentDiagnosisAction) {
             });
             break;
         case 'specification':
-            router.push({name: 'DeploymentSpecificationById', params: {id: props.deployment.deployment_specification_id}});
+            router.push({name: 'DeploymentSpecificationById', params: {id: props.deployment.deployment_specification_id, section: action.section}});
             break;
         case 'rollback':
             bus.emit('confirm', {

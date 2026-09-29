@@ -3,6 +3,8 @@
 use App\Libraries\CommitIdentificationMethods\BaseCommitIdentificationMethod;
 use App\Libraries\CommitIdentificationMethods\EnvironmentVariableCommitIdentification;
 use App\Libraries\ContainerRegistries\BaseContainerRegistry;
+use App\Libraries\ContainerRegistries\ImageConfig;
+use App\Libraries\Kubernetes\SecurityContext;
 use App\Libraries\VersionControlSystems\BaseVersionControlSystem;
 use App\Libraries\VersionControlSystems\GithubVersionControl;
 use App\Core\Entity;
@@ -26,6 +28,13 @@ use App\Core\Entity;
  * @property string $security_context_run_as_group
  * @property bool $security_context_allow_privilege_escalation
  * @property bool $security_context_read_only_root_filesystem
+ * @property bool $security_context_run_as_non_root stamped from `image_user` when the image is made or read anew
+ * @property bool $security_context_drop_all_capabilities
+ * @property bool $security_context_seccomp_runtime_default stamped on when the image is made
+ * @property string $image_user The `USER` the registry says `image_user_tag` runs as - "1000:1000", "appuser", empty for root
+ * @property string $image_user_tag
+ * @property string $image_user_read_at
+ * @property string $image_user_error Why the user could not be read, the last time it was tried
  *
  *  # Version Control
  * @property bool $version_control_enabled
@@ -41,6 +50,7 @@ use App\Core\Entity;
  *
  * # Computed on REST reads
  * @property int[] $running_deployment_ids
+ * @property string $security_advice JSON: a list of {level, text} - see `SecurityAdvice`
  */
 class ContainerImage extends Entity {
 
@@ -64,6 +74,18 @@ class ContainerImage extends Entity {
         $registry = $this->registry();
 
         return $registry !== null && $registry->hasPullCredentials() ? $registry->getDockerConfigJson() : null;
+    }
+
+    /**
+     * The same pull account as `[username, password]`, for a call kso makes itself - reading the
+     * image's config from its registry. Null as above.
+     *
+     * @return array{0: string, 1: string}|null
+     */
+    public function getPullCredentials(): ?array {
+        $registry = $this->registry();
+
+        return $registry !== null && $registry->hasPullCredentials() ? [(string) $registry->pull_username, (string) $registry->pull_password] : null;
     }
 
     private ?ContainerRegistry $loadedRegistry = null;
@@ -129,6 +151,38 @@ class ContainerImage extends Entity {
     }
 
     /**
+     * Read the `USER` a tag runs as from the registry, and stamp `run_as_non_root` from it - on
+     * when it is a number other than 0, or when the image sets such a user itself; off otherwise.
+     * This is how an image is made secure when it is made, and how it follows an image that
+     * changed: read anew, it is stamped anew. See `SecurityContext`.
+     *
+     * The tag asked for, else the image's default, else its newest. A registry that cannot be
+     * read changes no setting, and says why in `image_user_error`.
+     *
+     * @return bool Whether it was read
+     */
+    public function readUser(?string $tag = null): bool {
+        $this->image_user_read_at = date('Y-m-d H:i:s');
+        try {
+            $tag = $tag ?: ($this->default_tag ?: (array_slice($this->getTags(), -1)[0] ?? 'latest'));
+            $user = ImageConfig::User($this, $tag);
+        } catch (\Throwable $e) {
+            $this->image_user_error = $e->getMessage();
+            $this->save();
+            return false;
+        }
+
+        $this->image_user = $user;
+        $this->image_user_tag = $tag;
+        $this->image_user_error = null;
+        $this->security_context_run_as_non_root = SecurityContext::IsNonRootUser($user)
+            || SecurityContext::IsNonRootUser((string) $this->security_context_run_as_user);
+        $this->save();
+
+        return true;
+    }
+
+    /**
      * The short sha of the commit this deployment's image was built from, or null when the
      * image has no commit identification set up - which is what every image starts as - or
      * when nothing came back.
@@ -152,6 +206,9 @@ class ContainerImage extends Entity {
 
         if (isset($this->running_deployment_ids)) {
             $item['running_deployment_ids'] = $this->running_deployment_ids;
+        }
+        if (isset($this->security_advice)) {
+            $item['security_advice'] = $this->security_advice;
         }
 
         return $item;

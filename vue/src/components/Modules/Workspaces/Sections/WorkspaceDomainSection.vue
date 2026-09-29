@@ -4,8 +4,7 @@ import {Domain, Workspace} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import {ReferenceData} from "@/core/referenceData";
 import bus from "@/plugins/bus";
-import {useDialogSave} from "@/composables/useDialogSave";
-import {useUnsavedChanges} from "@/composables/useUnsavedChanges";
+import {useAutoSave} from "@/composables/useAutoSave";
 import PageSection from "@/components/Modules/Common/DetailPage/PageSection.vue";
 
 /** Where the workspace answers: its domain, the subdomain on it, and aliases that redirect. */
@@ -13,15 +12,25 @@ const props = defineProps<{
     workspace: Workspace
 }>();
 
-const {isSaving, save} = useDialogSave();
-
 const domainId = ref<number>();
 const subdomain = ref<string>('');
 const aliases = ref<string>('');
 const domains = ref<Domain[]>([]);
 const isLoadingDomains = ref(false);
 
-const {markSaved} = useUnsavedChanges(() => [domainId.value, subdomain.value, aliases.value]);
+// What the server refuses, so a half-filled form waits instead of failing.
+const {autoSave, markLoaded, saveNow, isChanged} = useAutoSave({
+    state: () => [domainId.value, subdomain.value, aliases.value],
+    validate: () => !domainId.value
+        ? 'choose a domain'
+        : (!subdomain.value?.trim() ? 'the subdomain is missing' : null),
+    request: () => Api.workspaces().updateIngressPutById(props.workspace.id!)
+        .domainId(domainId.value!)
+        .subdomain(subdomain.value)
+        .aliases(aliases.value),
+    onSaved: saved => bus.emit('workspaceSaved', saved),
+});
+defineExpose({saveNow});
 
 onMounted(() => {
     isLoadingDomains.value = true;
@@ -31,31 +40,24 @@ onMounted(() => {
     });
 });
 
-// The page reads the workspace again after a save; the form follows.
+// The page reads the workspace again after a save; the form follows - unless something has
+// been typed since, which the read would otherwise undo.
 watch(() => props.workspace, () => {
+    if (isChanged()) {
+        return;
+    }
     domainId.value = props.workspace.domain_id;
     subdomain.value = props.workspace.subdomain ?? '';
     aliases.value = props.workspace.aliases ?? '';
-    markSaved();
+    markLoaded();
 }, {immediate: true});
 
-function onSave() {
-    const api = Api.workspaces().updateIngressPutById(props.workspace.id!)
-        .domainId(domainId.value!)
-        .subdomain(subdomain.value)
-        .aliases(aliases.value);
-    save(api, null, newItem => {
-        bus.emit('workspaceSaved', newItem);
-        bus.emit('toast', {text: 'Saved'});
-    });
-}
 </script>
 
 <template>
     <page-section
         title="Domain"
-        :is-saving="isSaving"
-        @save="onSave">
+        :auto-save="autoSave">
         <div class="section-form">
             <v-select
                 v-model="domainId"

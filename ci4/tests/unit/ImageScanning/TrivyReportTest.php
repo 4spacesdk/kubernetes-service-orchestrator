@@ -110,4 +110,12 @@ class TrivyReportTest extends CIUnitTestCase {
         $this->assertNull($report->operatingSystem);
     }
 
+    /**
+     * What the tag runs as, so a version that changed its user is seen - see `SecurityAdvice`.
+     */
+    public function testTheUserTheImageRunsAsIsKept(): void {
+        $this->assertSame('1000:1000', (new TrivyReport(['Metadata' => ['ImageConfig' => ['config' => ['User' => '1000:1000']]]]))->user);
+        $this->assertSame('', (new TrivyReport(['Metadata' => []]))->user, 'none is root');
+    }
+
 }

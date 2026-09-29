@@ -24,8 +24,20 @@ class CronJobIds {
         CleanupApiLogs = 11,
         CleanupOAuthTokens = 12,
         CleanupAuditEvents = 13,
-        CheckHealth = 14
+        CheckHealth = 14,
+        WatchMigrationJobs = 15
     ;
+}
+
+/**
+ * A specification's say on one of its container images' security settings - see `SecurityContext`.
+ * Empty takes the image's.
+ */
+class SecurityContextOverrides {
+    const string
+        Inherit = '',
+        On = 'on',
+        Off = 'off';
 }
 
 class ContainerImageScanStatuses {
@@ -96,7 +108,20 @@ class MigrationJobStatusTypes {
         Started = 'started',
         Completed = 'completed',
         Failed_LogVerification = 'failed-log-verification',
-        Failed_PostCommands = 'failed-post-commands';
+        Failed_PostCommands = 'failed-post-commands',
+        // The migration's own exit code was not 0.
+        Failed_ExitCode = 'failed-exit-code',
+        // It never ran to an end of its own: the image could not be pulled, it ran out of
+        // time, its pod went away. The log says which.
+        Failed = 'failed';
+
+    public static function IsFailure(?string $status): bool {
+        return in_array($status, [self::Failed_LogVerification, self::Failed_PostCommands, self::Failed_ExitCode, self::Failed], true);
+    }
+
+    public static function IsFinished(?string $status): bool {
+        return $status === self::Completed || self::IsFailure($status);
+    }
 }
 
 /**

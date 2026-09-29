@@ -64,6 +64,21 @@ class MigrationStatusSurvivesAVanishingJobTest extends CIUnitTestCase {
         );
     }
 
+    /**
+     * The migration's exit code is its pod's, so a failing migration fails its Job - which
+     * never gets a `completionTime` and would otherwise be shown as running for good.
+     */
+    public function testAJobTheClusterHasGivenUpOnHasFailed(): void {
+        $step = $this->stepWhoseJob($this->jobWhoseCompletionTimeIs(null, [
+            ['type' => 'Failed', 'status' => 'True', 'reason' => 'BackoffLimitExceeded'],
+        ]));
+
+        $this->assertSame(
+            DeploymentStepHelper::MigrationJob_Failed,
+            $step->getStatus(new Deployment())
+        );
+    }
+
     public function testAJobThatIsNotThereAtAllIsReportedNotFound(): void {
         $job = $this->createMock(K8sJob::class);
         $job->method('exists')->willReturn(false);
@@ -74,11 +89,17 @@ class MigrationStatusSurvivesAVanishingJobTest extends CIUnitTestCase {
         );
     }
 
-    private function jobWhoseCompletionTimeIs(?string $completionTime): K8sJob {
+    /**
+     * @param list<array<string, string>> $conditions
+     */
+    private function jobWhoseCompletionTimeIs(?string $completionTime, array $conditions = []): K8sJob {
         $job = $this->createMock(K8sJob::class);
         $job->method('exists')->willReturn(true);
         $job->method('get')->willReturnSelf();
-        $job->method('getStatus')->with('completionTime')->willReturn($completionTime);
+        $job->method('getStatus')->willReturnMap([
+            ['completionTime', null, $completionTime],
+            ['conditions', null, $conditions],
+        ]);
 
         return $job;
     }

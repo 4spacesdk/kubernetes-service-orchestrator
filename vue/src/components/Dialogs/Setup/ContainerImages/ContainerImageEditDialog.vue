@@ -8,6 +8,7 @@ import bus from "@/plugins/bus";
 import type { DialogEventsInterface } from "@/components/Dialogs/DialogEventsInterface";
 import { CommitIdentificationMethods, ImagePullPolicies, VersionControlProviders } from "@/constants";
 import ApiService from "@/services/ApiService";
+import moment from "moment";
 
 export interface ContainerImageEditDialog_Input {
     containerImage: ContainerImage;
@@ -132,10 +133,98 @@ function load() {
             });
     } else {
         item.value = props.input.containerImage;
+        // Secure from the start: it seldom stops an image. Run as non-root is stamped from what
+        // the image runs as, read from its registry once it is saved.
+        item.value.security_context_seccomp_runtime_default ??= true;
         showDialog.value = true;
         render();
     }
 }
+
+/**
+ * The tag to read what the image runs as from - the one read last, else the default. The
+ * registry's tags are offered, newest first with when each was pushed; any can be typed.
+ */
+const userTag = ref<string | null>(null);
+const registryTags = ref<{ name: string; pushed?: string }[]>([]);
+const isLoadingRegistryTags = ref(false);
+const isReadingUser = ref(false);
+
+/** Asked for when the Security tab is first opened. A registry that refuses leaves the field to typing. */
+function loadRegistryTags() {
+    if (!item.value.exists() || !item.value.container_registry_id || registryTags.value.length || isLoadingRegistryTags.value) {
+        return;
+    }
+    isLoadingRegistryTags.value = true;
+    const api = Api.containerImages().getTagsGetById(item.value.id!);
+    api.setErrorHandler(() => {
+        isLoadingRegistryTags.value = false;
+        return false;
+    });
+    api.find((responses) => {
+        registryTags.value = [...(responses[0]?.tags ?? [])]
+            .filter((tag) => tag.name)
+            .sort((a, b) => (b.pushed_at ?? "").localeCompare(a.pushed_at ?? ""))
+            .map((tag) => ({
+                name: tag.name!,
+                pushed: tag.pushed_at ? moment(tag.pushed_at).format("D/M-YY HH:mm") : undefined,
+            }));
+        isLoadingRegistryTags.value = false;
+    });
+}
+
+watch(tab, (value) => {
+    if (value === "security") {
+        userTag.value ||= item.value.image_user_tag || item.value.default_tag || null;
+        loadRegistryTags();
+    }
+});
+
+/**
+ * Read what a tag runs as from the registry, and stamp Run as non-root from it - for an image
+ * that changed its user, or one made before kso read images.
+ */
+function onReadUserBtnClicked() {
+    isReadingUser.value = true;
+    const api = Api.containerImages().readUserPutById(item.value.id!);
+    if (userTag.value?.trim()) {
+        api.tag(userTag.value.trim());
+    }
+    api.setErrorHandler((response: any) => {
+        bus.emit("toast", {text: response?.error ?? "Could not be read"});
+        isReadingUser.value = false;
+        return false;
+    });
+    api.save(null, (read: ContainerImage) => {
+        item.value.image_user = read.image_user;
+        item.value.image_user_tag = read.image_user_tag;
+        item.value.image_user_read_at = read.image_user_read_at;
+        item.value.image_user_error = read.image_user_error;
+        item.value.security_context_run_as_non_root = read.security_context_run_as_non_root;
+        item.value.security_advice = undefined;
+        isReadingUser.value = false;
+    });
+}
+
+/** What the registry said, in words. */
+const runsAs = computed(() => {
+    if (item.value.image_user_error) {
+        return `Could not be read: ${item.value.image_user_error}`;
+    }
+    if (!item.value.image_user_tag) {
+        return item.value.exists() ? "Not read yet" : "Read from the registry when the image is saved";
+    }
+    const user = item.value.image_user ? item.value.image_user : "root - it sets no user";
+    return `${item.value.image_user_tag} runs as ${user}`;
+});
+
+const advice = computed<{ level: string; text: string }[]>(() => {
+    try {
+        return JSON.parse(item.value.security_advice ?? "[]");
+    } catch {
+        return [];
+    }
+});
 
 function render() {
     showPullSecret.value = (item.value.pull_secret?.length ?? 0) > 0;
@@ -193,9 +282,25 @@ function onSaveBtnClicked() {
     item.value.github_integration_id = item.value.github_integration_id ?? 0;
     const api = item.value!.exists() ? Api.containerImages().patchById(item.value!.id!) : Api.containerImages().post();
 
+    const isNew = !item.value.exists();
     save(api, item.value!, (newItem) => {
-        bus.emit("containerImageSaved", newItem);
-        close();
+        if (!isNew) {
+            bus.emit("containerImageSaved", newItem);
+            close();
+            return;
+        }
+        // Made secure as it is made: what it runs as, read from its registry. An image the
+        // registry will not show is saved all the same, and says why on its Security tab.
+        const read = Api.containerImages().readUserPutById(newItem.id!);
+        read.setErrorHandler(() => {
+            bus.emit("containerImageSaved", newItem);
+            close();
+            return false;
+        });
+        read.save(null, (stamped: ContainerImage) => {
+            bus.emit("containerImageSaved", stamped);
+            close();
+        });
     });
 }
 
@@ -284,6 +389,90 @@ function onCloseBtnClicked() {
 
                         <v-tabs-window-item value="security">
                             <v-row density="compact" class="pb-4 px-4 pt-2">
+                                <v-col cols="12">
+                                    <div class="d-flex align-center flex-wrap ga-2">
+                                        <v-icon size="small" class="text-medium-emphasis">fa fa-user</v-icon>
+                                        <span :class="{'text-error': !!item.image_user_error}">{{ runsAs }}</span>
+                                        <template v-if="item.exists()">
+                                            <v-spacer />
+                                            <v-combobox
+                                                v-model="userTag"
+                                                :items="registryTags"
+                                                item-title="name"
+                                                item-value="name"
+                                                :return-object="false"
+                                                :loading="isLoadingRegistryTags"
+                                                placeholder="Tag"
+                                                variant="outlined"
+                                                density="compact"
+                                                hide-details
+                                                max-width="220"
+                                                @keydown.enter.stop="onReadUserBtnClicked">
+                                                <template v-slot:item="{ props: itemProps, internalItem: tagItem }">
+                                                    <v-list-item v-bind="itemProps">
+                                                        <template v-slot:append>
+                                                            <span
+                                                                v-if="tagItem.raw.pushed"
+                                                                class="text-body-small text-medium-emphasis ml-4">{{ tagItem.raw.pushed }}</span>
+                                                        </template>
+                                                    </v-list-item>
+                                                </template>
+                                            </v-combobox>
+                                            <v-btn
+                                                size="small"
+                                                variant="tonal"
+                                                prepend-icon="fa fa-magnifying-glass"
+                                                :loading="isReadingUser"
+                                                @click="onReadUserBtnClicked">
+                                                Read again
+                                            </v-btn>
+                                        </template>
+                                    </div>
+                                    <div class="text-body-small text-medium-emphasis mt-1">
+                                        Read from the registry, and Run as non-root set from it: on when the image runs as a number that is not root
+                                    </div>
+                                </v-col>
+                                <v-col v-if="advice.length" cols="12">
+                                    <v-alert
+                                        v-for="(line, index) in advice"
+                                        :key="index"
+                                        :type="line.level == 'warning' ? 'warning' : 'info'"
+                                        variant="tonal"
+                                        density="compact"
+                                        class="mb-1">
+                                        {{ line.text }}
+                                    </v-alert>
+                                </v-col>
+                                <v-col cols="12" md="4">
+                                    <v-switch
+                                        v-model="item.security_context_run_as_non_root"
+                                        label="Run as non-root"
+                                        density="compact"
+                                        color="secondary"
+                                        persistent-hint
+                                        hint="Kubernetes will not start a container that would run as root"
+                                    />
+                                </v-col>
+                                <v-col cols="12" md="4">
+                                    <v-switch
+                                        v-model="item.security_context_seccomp_runtime_default"
+                                        label="Seccomp profile RuntimeDefault"
+                                        density="compact"
+                                        color="secondary"
+                                        persistent-hint
+                                        hint="The runtime's default filter of system calls"
+                                    />
+                                </v-col>
+                                <v-col cols="12" md="4">
+                                    <v-switch
+                                        v-model="item.security_context_drop_all_capabilities"
+                                        label="Drop all capabilities"
+                                        density="compact"
+                                        color="secondary"
+                                        persistent-hint
+                                        hint="An image that needs one - a port below 1024 as non-root - will fail"
+                                    />
+                                </v-col>
                                 <v-col cols="4">
                                     <v-text-field
                                         variant="outlined"
@@ -291,6 +480,8 @@ function onCloseBtnClicked() {
                                         v-model.number="item.security_context_run_as_user"
                                         label="Run as user"
                                         density="compact"
+                                        persistent-hint
+                                        hint="For an image whose USER is a name. Empty lets the image decide"
                                     />
                                 </v-col>
                                 <v-col cols="4">

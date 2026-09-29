@@ -1,6 +1,7 @@
 import { onMounted, onUnmounted } from "vue";
 import { onBeforeRouteLeave, onBeforeRouteUpdate } from "vue-router";
 import bus from "@/plugins/bus";
+import { insideRouterView } from "@/composables/insideRouterView";
 
 /**
  * Asks before leaving a section of a page with changes that were not saved. A dialog could
@@ -33,8 +34,10 @@ export function useUnsavedChanges(state: () => unknown) {
     }
 
     // A section is swapped within the same route, so both guards are needed.
-    onBeforeRouteLeave(() => ask());
-    onBeforeRouteUpdate((to, from) => to.path == from.path || ask());
+    if (insideRouterView()) {
+        onBeforeRouteLeave(() => ask());
+        onBeforeRouteUpdate((to, from) => to.path == from.path || ask());
+    }
 
     function onBeforeUnload(event: BeforeUnloadEvent) {
         if (isChanged()) {

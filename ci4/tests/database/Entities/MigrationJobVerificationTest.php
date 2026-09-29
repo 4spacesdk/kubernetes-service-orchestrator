@@ -7,7 +7,7 @@ use App\Fixtures;
 /**
  * Whether a finished migration is read as having worked.
  *
- * The migration container posts its log to `/migration-jobs/{id}/ended`, and
+ * kso reads a finished migration's log from its pod (`MigrationJobWatcher`), and
  * `validateLog()` is what turns that log into `completed` or `failed-log-verification` -
  * and, on the way, decides whether the specification's post commands run at all. A
  * specification says how to read it: the log has to end with a given string, or match a

@@ -188,7 +188,7 @@ function onOpenTerminalBtnClicked(item: PodOption) {
                                 <v-btn
                                     variant="plain" color="primary" size="small" icon
                                     @click="onShowLogsBtnClicked(pod)">
-                                    <v-icon>fa fa-rectangle-list</v-icon>
+                                    <v-icon>fa fa-dharmachakra</v-icon>
                                     <v-tooltip activator="parent" location="bottom">Logs</v-tooltip>
                                 </v-btn>
 

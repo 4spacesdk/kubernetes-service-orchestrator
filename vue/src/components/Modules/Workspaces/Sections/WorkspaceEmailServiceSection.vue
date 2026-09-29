@@ -4,21 +4,23 @@ import {Workspace} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import {ReferenceData} from "@/core/referenceData";
 import bus from "@/plugins/bus";
-import {useDialogSave} from "@/composables/useDialogSave";
-import {useUnsavedChanges} from "@/composables/useUnsavedChanges";
+import {useAutoSave} from "@/composables/useAutoSave";
 import PageSection from "@/components/Modules/Common/DetailPage/PageSection.vue";
 
 const props = defineProps<{
     workspace: Workspace
 }>();
 
-const {isSaving, save} = useDialogSave();
-
 const value = ref<number>();
 const items = ref<{ id: number, name: string }[]>([]);
 const isLoadingItems = ref(false);
 
-const {markSaved} = useUnsavedChanges(() => value.value);
+const {autoSave, markLoaded, saveNow, isChanged} = useAutoSave({
+    state: () => value.value,
+    request: () => Api.workspaces().updateEmailServiceIdPutById(props.workspace.id!).value(value.value!),
+    onSaved: saved => bus.emit('workspaceSaved', saved),
+});
+defineExpose({saveNow});
 
 onMounted(() => {
     isLoadingItems.value = true;
@@ -28,27 +30,22 @@ onMounted(() => {
     });
 });
 
-// The page reads the workspace again after a save; the form follows.
+// The page reads the workspace again after a save; the form follows - unless something has
+// been typed since, which the read would otherwise undo.
 watch(() => props.workspace, () => {
+    if (isChanged()) {
+        return;
+    }
     value.value = props.workspace.email_service_id;
-    markSaved();
+    markLoaded();
 }, {immediate: true});
 
-function onSave() {
-    const api = Api.workspaces().updateEmailServiceIdPutById(props.workspace.id!)
-        .value(value.value!);
-    save(api, null, newItem => {
-        bus.emit('workspaceSaved', newItem);
-        bus.emit('toast', {text: 'Saved'});
-    });
-}
 </script>
 
 <template>
     <page-section
         title="Email Service"
-        :is-saving="isSaving"
-        @save="onSave">
+        :auto-save="autoSave">
         <div class="section-form">
             <v-select
                 v-model="value"

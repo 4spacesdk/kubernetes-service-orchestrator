@@ -17,10 +17,10 @@ use RenokiCo\PhpK8s\Kinds\K8sJob;
 /**
  * The Job that migrates a deployment's database before the new version serves traffic.
  *
- * The riskiest step in the chain. It runs once per release, against customer data, and
- * reports its own progress back to kso over http - so the manifest carries not just an
- * image and a command but the whole callback arrangement that decides whether a release
- * is seen to finish at all.
+ * The riskiest step in the chain. It runs once per release, against customer data. kso
+ * follows it in the cluster (`MigrationJobWatcherTest`), so the manifest carries the image,
+ * the command and the id that tells this run's pod from the last one's - and asks nothing of
+ * the image to report with.
  */
 class MigrationJobStepTest extends ManifestTestCase {
 
@@ -100,96 +100,42 @@ class MigrationJobStepTest extends ManifestTestCase {
     }
 
     /**
-     * The container is a shell running three things in order: tell kso it started, run
-     * the migration, pipe its output to kso as it ends.
+     * The migration and nothing else. The pod used to report itself to kso with curl on either
+     * side of it, so an image without curl never reported at all; kso reads the job from the
+     * cluster now.
      */
-    public function testCommandRunsTheMigrationBetweenTwoCallbacks(): void {
+    public function testTheContainerRunsTheMigrationAndNothingElse(): void {
         $deployment = $this->migratableDeployment([], ['database_migration_command' => 'php spark migrate']);
 
         $container = $this->container($deployment);
+        $manifest = json_encode($this->build($deployment));
 
         $this->assertSame(['/bin/sh'], $container['command']);
-        $this->assertSame('-c', $container['args'][0]);
-
-        $script = $container['args'][1];
-        $this->assertStringContainsString('/api/migration-jobs/$(MIGRATION_JOB_ID)/started', $script);
-        $this->assertStringContainsString('php spark migrate', $script);
-        $this->assertStringContainsString('/api/migration-jobs/$(MIGRATION_JOB_ID)/ended', $script);
+        $this->assertSame(['-c', 'php spark migrate'], $container['args']);
+        $this->assertStringNotContainsString('curl', $manifest);
+        $this->assertStringNotContainsString('MIGRATION_JOB_TOKEN', $manifest);
     }
 
     /**
-     * A kso that cannot be reached must not stop the migration (#42). The first callback
-     * used to be joined to it with `&&`, so the job failed on the curl and never migrated.
-     *
-     * Run for real: the script goes through `/bin/sh` with a `curl` on the path that fails
-     * every call to `started` and records what `ended` is sent.
+     * Run for real: a migration that fails ends its pod with its own exit code, which is what
+     * the watcher reads. Piped into curl it ended with curl's, and a failed migration looked
+     * like one that worked.
      */
-    public function testTheMigrationRunsEvenWhenKsoCannotBeReachedAtTheStart(): void {
-        $deployment = $this->migratableDeployment([], ['database_migration_command' => 'echo migrated']);
-        $dir = sys_get_temp_dir() . '/kso-migration-' . uniqid();
-        mkdir($dir);
-        file_put_contents("{$dir}/curl", implode("\n", [
-            '#!/bin/sh',
-            'case "$*" in',
-            "  */started*) echo started >> {$dir}/calls; exit 7 ;;",
-            "  */ended*) echo ended >> {$dir}/calls; cat > {$dir}/ended-body ;;",
-            'esac',
-        ]));
-        chmod("{$dir}/curl", 0755);
+    public function testThePodEndsWithTheMigrationsOwnExitCode(): void {
+        $deployment = $this->migratableDeployment([], ['database_migration_command' => 'echo migrating; exit 3']);
 
-        try {
-            exec('PATH=' . escapeshellarg("{$dir}:" . getenv('PATH')) . ' /bin/sh -c ' . escapeshellarg($this->container($deployment)['args'][1]) . ' 2>/dev/null');
+        exec('/bin/sh -c ' . escapeshellarg($this->container($deployment)['args'][1]) . ' 2>/dev/null', $output, $exitCode);
 
-            $this->assertSame("started\nended\n", file_get_contents("{$dir}/calls"));
-            $this->assertSame("migrated\n", file_get_contents("{$dir}/ended-body"));
-        } finally {
-            array_map('unlink', glob("{$dir}/*"));
-            rmdir($dir);
-        }
+        $this->assertSame(3, $exitCode);
+        $this->assertSame(['migrating'], $output);
     }
 
     /**
-     * The first callback gives up within a minute: it is only a status now, and waiting
-     * longer would hold up the release it reports on.
+     * Once. With the migration's own exit code in the pod, Kubernetes' default of six retries
+     * would run a failing migration seven times over a half-migrated database.
      */
-    public function testTheStartedCallbackRetriesBriefly(): void {
-        $deployment = $this->migratableDeployment();
-
-        $this->assertMatchesRegularExpression(
-            '#curl --connect-timeout 5 --max-time 30 --retry 5 --retry-delay 5 --retry-max-time 60 -i -v -X PUT \S+/started#',
-            $this->container($deployment)['args'][1]
-        );
-    }
-
-    /**
-     * The migration's own output is piped into the second callback and posted as its body,
-     * which is what the migration log page shows. Joined with `;` instead of `|` the
-     * migration would still run and still be reported finished, and the log would be empty
-     * every time - a failure nobody would see until they went looking for the reason a
-     * release did not take.
-     */
-    public function testTheMigrationsOutputIsPipedToTheEndedCallback(): void {
-        $deployment = $this->migratableDeployment([], ['database_migration_command' => 'php spark migrate']);
-
-        $script = $this->container($deployment)['args'][1];
-
-        $this->assertMatchesRegularExpression('#php spark migrate\s+\|\s+curl#', $script);
-        $this->assertStringContainsString('--data-binary @-', $script);
-    }
-
-    /**
-     * The ended callback is the only thing that moves a migration off "running", so it is
-     * the one call in the job that must not be given up on. kso is frequently restarting
-     * when a migration ends - that is what a release is - and without the retries a job
-     * that migrated perfectly well is left showing as still going, forever.
-     */
-    public function testTheEndedCallbackKeepsRetryingWhileKsoIsUnreachable(): void {
-        $deployment = $this->migratableDeployment();
-
-        $this->assertStringContainsString(
-            '--connect-timeout 5 --max-time 300 --retry 10 --retry-delay 5 --retry-max-time 300',
-            $this->container($deployment)['args'][1]
-        );
+    public function testAFailingMigrationIsNotRunAgain(): void {
+        $this->assertSame(0, $this->build($this->migratableDeployment())['spec']['backoffLimit']);
     }
 
     /**
@@ -204,10 +150,9 @@ class MigrationJobStepTest extends ManifestTestCase {
     }
 
     /**
-     * The id the callbacks report under is not known until the job is created, so the
-     * built manifest carries only the shell variable. `startDeployCommand` writes the row
-     * and injects the value - which is why this step cannot be deployed from the manifest
-     * alone.
+     * The id the watcher tells the run by is not known until the job is created.
+     * `startDeployCommand` writes the row and injects the value - which is why this step
+     * cannot be deployed from the manifest alone.
      */
     public function testMigrationJobIdIsNotInTheManifestYet(): void {
         $deployment = $this->migratableDeployment();
@@ -216,8 +161,8 @@ class MigrationJobStepTest extends ManifestTestCase {
     }
 
     /**
-     * Hardcoded, whatever the deployment runs as. A migration reaches kso over plain http
-     * inside the cluster, and `production` would have the framework insist on https.
+     * Hardcoded, whatever the deployment runs as. It is what let the pod report itself to kso
+     * over plain http inside the cluster, and a migration command may have come to rely on it.
      */
     public function testEnvironmentIsAlwaysDevelopment(): void {
         $deployment = $this->migratableDeployment(['environment' => \Environments::Production]);
@@ -463,28 +408,10 @@ class MigrationJobStepTest extends ManifestTestCase {
     }
 
     /**
-     * Inside the cluster kso is reached under its own service name, so a migration pod
-     * calls back over the pod network and never leaves it. `DEV_REMOTE_BASE_URL` replaces
-     * that with a tunnel while developing, and it is set in this container - so the
-     * in-cluster form, which is the one production uses, only shows itself without it.
-     */
-    public function testTheCallbacksPointAtKsoInsideTheClusterWhenNoTunnelIsConfigured(): void {
-        $deployment = $this->migratableDeployment();
-
-        $script = $this->withoutTheDevelopmentTunnel(
-            fn () => $this->container($deployment)['args'][1]
-        );
-
-        $host = KubeHelper::GetMyHostname() . '.' . KubeHelper::GetMyNamespace();
-        $this->assertStringContainsString("$host/api/migration-jobs/\$(MIGRATION_JOB_ID)/started", $script);
-        $this->assertStringContainsString("$host/api/migration-jobs/\$(MIGRATION_JOB_ID)/ended", $script);
-    }
-
-    /**
      * What the step answers when the UI asks what it is and what it can do.
      *
-     * It reports no Kubernetes events of its own - the migration's progress is reported by
-     * the job itself over http - and it redeploys for a version change, which is the one
+     * It reports no Kubernetes events of its own - the migration's progress is on its row,
+     * followed by the watcher - and it redeploys for a version change, which is the one
      * thing that means there are new migrations to run.
      */
     public function testTheStepDescribesItselfAndWhatItReactsTo(): void {
@@ -551,11 +478,15 @@ class MigrationJobStepTest extends ManifestTestCase {
     }
 
     /**
-     * Deploying writes the row the migration reports back against, and puts its id into the
-     * container's environment - which is what turns `$(MIGRATION_JOB_ID)` in the command
-     * into a number. Without the row there is nothing for the two callbacks to address.
+     * Deploying writes the row the watcher follows the migration on, puts its id into the
+     * container's environment - which is how the watcher tells this run's pod from the last
+     * one's, both named after the deployment - and starts the watcher.
      */
-    public function testDeployingWritesTheRowTheCallbacksReportAgainst(): void {
+    public function testDeployingWritesTheRowAndStartsItsWatcher(): void {
+        $watched = [];
+        MigrationJobStep::$startWatching = function (int $migrationJobId) use (&$watched): void {
+            $watched[] = $migrationJobId;
+        };
         $deployment = $this->migratableDeployment([], ['database_migration_command' => 'php spark migrate']);
         $resource = $this->jobThatIsNotThereYet($deployment);
 
@@ -571,37 +502,7 @@ class MigrationJobStepTest extends ManifestTestCase {
             ['name' => 'MIGRATION_JOB_ID', 'value' => (string) $row->id],
             $resource->getTemplate()->getContainers()[0]->getAttribute('env')
         );
-    }
-
-    /**
-     * The job's callback token reaches its pod through the job's Secret, not the pod spec, and
-     * the row keeps only its hash - the token the pod gets is one the callbacks accept.
-     */
-    public function testDeployingHandsThePodItsCallbackTokenThroughTheSecret(): void {
-        $deployment = $this->migratableDeployment();
-        $resource = $this->jobThatIsNotThereYet($deployment);
-        $step = $this->stepWhoseResourceIs($resource);
-
-        $step->startDeployCommand($deployment);
-
-        $env = array_column($resource->getTemplate()->getContainers()[0]->getAttribute('env'), null, 'name');
-        $reference = $env[MigrationJobStep::CallbackTokenVariable]['valueFrom']['secretKeyRef'] ?? null;
-        $this->assertNotNull($reference, 'the token is not read from the Secret');
-        $this->assertArrayNotHasKey('value', $env[MigrationJobStep::CallbackTokenVariable]);
-
-        $token = $step->writtenSecret->data()[$reference['key']];
-        $this->assertTrue($this->lastMigrationJob($deployment)->acceptsCallbackToken($token));
-        $this->assertNotSame($token, $this->lastMigrationJob($deployment)->callback_token_hash);
-    }
-
-    /**
-     * Both callbacks send the token, read by the shell from the environment - so it is not in
-     * the container's arguments either.
-     */
-    public function testBothCallbacksSendTheToken(): void {
-        $script = $this->container($this->migratableDeployment())['args'][1];
-
-        $this->assertSame(2, substr_count($script, '-H "X-Migration-Job-Token: $MIGRATION_JOB_TOKEN"'));
+        $this->assertSame([(int) $row->id], $watched);
     }
 
     /**
@@ -686,8 +587,7 @@ class MigrationJobStepTest extends ManifestTestCase {
 
             protected function getResource(Deployment $deployment, bool $auth = false): K8sJob {
                 // As the real one leaves it for a deployment without secret variables - but
-                // writing the job without a cluster, and keeping the Secret to be read: the
-                // callback token is always in it.
+                // writing the job without a cluster, and keeping the Secret to be read.
                 $this->workloadSecret = $this->writtenSecret = new class (\App\Libraries\Kubernetes\WorkloadSecret::For($deployment->name, 'job')->name) extends \App\Libraries\Kubernetes\WorkloadSecret {
                     public function applyWith(\RenokiCo\PhpK8s\Kinds\K8sResource $workload, Deployment $deployment, ?callable $write = null, bool $removeUnused = true): void {
                         $write($workload);
@@ -799,26 +699,6 @@ class MigrationJobStepTest extends ManifestTestCase {
         $this->assertTrue($jobs->exists(), 'no migration job row was written');
 
         return $jobs;
-    }
-
-    /**
-     * Run the body with `DEV_REMOTE_BASE_URL` out of the way, and put it back afterwards -
-     * including when the body throws. Anything a test writes to the process environment is
-     * written for every test after it in the same process.
-     *
-     * @template T
-     * @param callable(): T $body
-     * @return T
-     */
-    private function withoutTheDevelopmentTunnel(callable $body): mixed {
-        $original = getenv('DEV_REMOTE_BASE_URL');
-        putenv('DEV_REMOTE_BASE_URL=');
-
-        try {
-            return $body();
-        } finally {
-            putenv($original === false ? 'DEV_REMOTE_BASE_URL' : "DEV_REMOTE_BASE_URL=$original");
-        }
     }
 
     /**

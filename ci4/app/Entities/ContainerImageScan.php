@@ -13,6 +13,7 @@ use App\Core\Entity;
  * @property string $status queued, scanning, scanned or failed - see ContainerImageScanStatuses
  * @property string $error why the last scan failed, in Trivy's words
  * @property string $digest
+ * @property string $image_user The `USER` the tag runs as - "1000:1000", "appuser", empty for root
  * @property string $operating_system what Trivy recognised the image as, e.g. "alpine 3.20.3"; empty
  *                                    when it recognised none
  * @property int $targets how many parts of the image Trivy could read packages from - an OS, a

@@ -4,22 +4,24 @@ import {ReferenceData} from "@/core/referenceData";
 import {DatabaseService, Deployment} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
-import {useDialogSave} from "@/composables/useDialogSave";
-import {useUnsavedChanges} from "@/composables/useUnsavedChanges";
+import {useAutoSave} from "@/composables/useAutoSave";
 import PageSection from "@/components/Modules/Common/DetailPage/PageSection.vue";
 
 const props = defineProps<{
     deployment: Deployment
 }>();
 
-const {isSaving, save} = useDialogSave();
-
 const value = ref<number>();
 const items = ref<DatabaseService[]>([]);
 const isLoading = ref(false);
 const isLoadingItems = ref(false);
 
-const {markSaved} = useUnsavedChanges(() => value.value);
+const {autoSave, markLoaded, saveNow} = useAutoSave({
+    state: () => value.value,
+    request: () => Api.deployments().updateDatabaseServiceIdPutById(props.deployment.id!).value(value.value!),
+    onSaved: saved => bus.emit('deploymentSaved', saved),
+});
+defineExpose({saveNow});
 
 // <editor-fold desc="Functions">
 
@@ -39,7 +41,7 @@ function render() {
         .find(response => {
             value.value = response[0]?.database_service_id;
             isLoading.value = false;
-            markSaved();
+            markLoaded();
         });
 }
 
@@ -47,15 +49,6 @@ function render() {
 
 // <editor-fold desc="View Binding Functions">
 
-function onSave() {
-    const api = Api.deployments().updateDatabaseServiceIdPutById(props.deployment.id!)
-        .value(value.value!)
-    save(api, null, newItem => {
-        bus.emit('deploymentSaved', newItem);
-        bus.emit('toast', {text: 'Saved'});
-        render();
-    });
-}
 
 // </editor-fold>
 
@@ -65,8 +58,7 @@ function onSave() {
     <page-section
         title="Database Service"
         :is-loading="isLoading"
-        :is-saving="isSaving"
-        @save="onSave">
+        :auto-save="autoSave">
         <div class="section-form">
             <v-select
                 v-model="value"

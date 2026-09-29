@@ -238,6 +238,8 @@ class EventHandlersTest extends DatabaseTestCase {
             'completed' => [\MigrationJobStatusTypes::Completed],
             'failed log verification' => [\MigrationJobStatusTypes::Failed_LogVerification],
             'failed post commands' => [\MigrationJobStatusTypes::Failed_PostCommands],
+            'failed exit code' => [\MigrationJobStatusTypes::Failed_ExitCode],
+            'failed' => [\MigrationJobStatusTypes::Failed],
         ];
     }
 

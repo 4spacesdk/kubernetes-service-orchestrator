@@ -26,6 +26,24 @@ class TestCase extends CIUnitTestCase {
         $this->rememberTheExceptionHandler();
         Events::trigger('pre_system');
         parent::setUp();
+
+        self::watchNoMigrationJobs();
+    }
+
+    /**
+     * A new migration job starts a watcher of its own in the background, which would follow it
+     * outside the test, against the development database. A test that wants to see it started
+     * puts a recorder in after this; a test of the watcher hands it a cluster of its own.
+     */
+    public static function watchNoMigrationJobs(): void {
+        \App\Libraries\DeploymentSteps\MigrationJobStep::$startWatching = static function (int $migrationJobId): void {
+        };
+        \App\Libraries\MigrationJobs\MigrationJobWatcher::$cluster = null;
+        \App\Libraries\MigrationJobs\MigrationJobWatcher::$sleep = null;
+
+        // Reading an image's user from its registry goes over the network. A test that wants an
+        // answer puts a registry of its own here.
+        \App\Libraries\ContainerRegistries\ImageConfig::$http = static fn (string $url): array => [503, [], 'no registry in a test'];
     }
 
     /**

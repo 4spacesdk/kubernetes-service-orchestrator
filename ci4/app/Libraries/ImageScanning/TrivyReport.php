@@ -26,6 +26,12 @@ class TrivyReport {
     public int $targets;
 
     /**
+     * The `USER` the image runs as - "1000:1000", "appuser", empty for root. Kept so a version that
+     * changed it is seen: the container image says what it was when it was made.
+     */
+    public string $user;
+
+    /**
      * @param array<string, mixed> $report Trivy's JSON, decoded
      */
     public function __construct(array $report) {
@@ -60,6 +66,7 @@ class TrivyReport {
         $os = trim(($report['Metadata']['OS']['Family'] ?? '') . ' ' . ($report['Metadata']['OS']['Name'] ?? ''));
         $this->operatingSystem = $os !== '' ? $os : null;
         $this->targets = count($report['Results'] ?? []);
+        $this->user = (string) ($report['Metadata']['ImageConfig']['config']['User'] ?? '');
     }
 
     /**

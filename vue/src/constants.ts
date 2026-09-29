@@ -291,6 +291,15 @@ export const MigrationJobStatusTypes = {
     Completed: "completed",
     FailedLogVerification: "failed-log-verification",
     Failed_PostCommands: "failed-post-commands",
+    FailedExitCode: "failed-exit-code",
+    Failed: "failed",
+};
+
+/** A specification's say on its container images' security settings. Empty takes the image's. */
+export const SecurityContextOverrides = {
+    Inherit: "",
+    On: "on",
+    Off: "off",
 };
 
 export const ContainerImageTagPolicies = {

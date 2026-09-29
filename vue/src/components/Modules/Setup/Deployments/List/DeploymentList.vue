@@ -25,6 +25,8 @@ const props = defineProps<{
     filterByWorkspaceId?: number;
     /** Only these deployments, e.g. the ones running a container image. */
     filterByIds?: number[];
+    /** Of those, only the ones on these versions - exactly, not as a search. Empty is all. */
+    filterByVersions?: string[];
 
     showHeader: boolean;
     showCreateBtn?: boolean;
@@ -82,16 +84,44 @@ const statusOptions = ref([
 ]);
 const selectedStatus = ref([DeploymentStatusTypes.OutOfSync, DeploymentStatusTypes.Synced]);
 
-/** Empty is every health - including none, which is what a Draft has. */
+/**
+ * A deployment with no health - a Draft, or one the check has not reached yet. Asked for by
+ * name, as `health IN (...)` never matches a NULL; the API knows it (`FiltersByHealth`).
+ */
+const NoHealth = 'none';
+
+/**
+ * Empty is every health. The default is every health but Suspended: a paused or switched-off
+ * workspace's deployments, and ones scaled to zero, are out of the way until asked for - and
+ * No health is in it, or a deployment not yet checked would vanish without a word.
+ */
 const healthOptions = ref([
     {value: HealthStatusTypes.Degraded, title: 'Degraded'},
     {value: HealthStatusTypes.Missing, title: 'Missing'},
     {value: HealthStatusTypes.Progressing, title: 'Progressing'},
     {value: HealthStatusTypes.Unknown, title: 'Unknown'},
     {value: HealthStatusTypes.Healthy, title: 'Healthy'},
+    {value: NoHealth, title: 'No health'},
     {value: HealthStatusTypes.Suspended, title: 'Suspended'},
 ]);
-const selectedHealth = ref<string[]>([]);
+const defaultHealth = healthOptions.value
+    .map(option => option.value)
+    .filter(value => value !== HealthStatusTypes.Suspended);
+const selectedHealth = ref<string[]>([...defaultHealth]);
+/**
+ * Seven chips do not fit the field, and wrapping them pushes the toolbar out of shape: the
+ * default and every health are said in words, anything else is two chips and a count.
+ */
+const healthInWords = computed(() => {
+    const chosen = selectedHealth.value;
+    if (chosen.length === healthOptions.value.length) {
+        return 'All';
+    }
+    if (chosen.length === defaultHealth.length && defaultHealth.every(value => chosen.includes(value))) {
+        return 'All but Suspended';
+    }
+    return null;
+});
 /** Inside a dialog the list is scoped by its caller: no status filter, and not in the url. */
 const isScoped = !!props.filterByWorkspaceId || !!props.filterByIds;
 const filtersOnTheList: Record<string, Ref<string[]>> = isScoped ? {} : {status: selectedStatus, health: selectedHealth};
@@ -129,6 +159,11 @@ watch([selectedStatus, selectedHealth], debounce(() => {
     getItems(true, true);
 }, 500));
 
+watch(() => props.filterByVersions, () => {
+    page.value = 1;
+    getItems(true, true);
+});
+
 function onItemSaved() {
     getItems(true, true);
 }
@@ -144,6 +179,9 @@ function getItems(doItems = true, doCount = false) {
     if (props.filterByIds) {
         // An empty whereIn would read as no filter at all.
         api.whereIn('id', props.filterByIds.length ? props.filterByIds : [0]);
+        if (props.filterByVersions?.length) {
+            api.whereIn('version', props.filterByVersions);
+        }
     } else if (props.filterByWorkspaceId) {
         api.where('workspace_id', props.filterByWorkspaceId);
     } else {
@@ -362,7 +400,17 @@ function onBulkUpdateVersionBtnClicked() {
                             clearable
                             :width="isPhone ? undefined : 320"
                             :max-width="isPhone ? undefined : 320"
-                        />
+                        >
+                            <template v-slot:chip="{ props: chipProps, item, index }">
+                                <template v-if="healthInWords">
+                                    <v-chip v-if="index === 0" :closable="false">{{ healthInWords }}</v-chip>
+                                </template>
+                                <v-chip v-else-if="index < 2" v-bind="chipProps">{{ item.title }}</v-chip>
+                                <span
+                                    v-else-if="index === 2"
+                                    class="text-body-small text-medium-emphasis">+{{ selectedHealth.length - 2 }}</span>
+                            </template>
+                        </v-select>
                     </list-filters>
                 </div>
             </div>

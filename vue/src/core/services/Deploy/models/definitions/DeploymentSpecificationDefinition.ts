@@ -35,6 +35,10 @@ export class DeploymentSpecificationDefinition extends BaseModel {
     enable_internal_access?: boolean;
     enable_rbac?: boolean;
     enable_volumes?: boolean;
+    security_context_run_as_non_root?: string;
+    security_context_drop_all_capabilities?: string;
+    security_context_seccomp_runtime_default?: string;
+    security_context_fs_group?: string;
     network_type?: string;
     gateway_backend_timeout?: number;
     domain_tls?: string;
@@ -94,6 +98,10 @@ export class DeploymentSpecificationDefinition extends BaseModel {
             delete this.enable_internal_access;
             delete this.enable_rbac;
             delete this.enable_volumes;
+            delete this.security_context_run_as_non_root;
+            delete this.security_context_drop_all_capabilities;
+            delete this.security_context_seccomp_runtime_default;
+            delete this.security_context_fs_group;
             delete this.network_type;
             delete this.gateway_backend_timeout;
             delete this.domain_tls;
@@ -167,6 +175,18 @@ export class DeploymentSpecificationDefinition extends BaseModel {
         }
         if (data.enable_volumes != null) {
             this.enable_volumes = data.enable_volumes;
+        }
+        if (data.security_context_run_as_non_root != null) {
+            this.security_context_run_as_non_root = data.security_context_run_as_non_root;
+        }
+        if (data.security_context_drop_all_capabilities != null) {
+            this.security_context_drop_all_capabilities = data.security_context_drop_all_capabilities;
+        }
+        if (data.security_context_seccomp_runtime_default != null) {
+            this.security_context_seccomp_runtime_default = data.security_context_seccomp_runtime_default;
+        }
+        if (data.security_context_fs_group != null) {
+            this.security_context_fs_group = data.security_context_fs_group;
         }
         if (data.network_type != null) {
             this.network_type = data.network_type;

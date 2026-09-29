@@ -148,6 +148,20 @@ function createItem() {
     });
 }
 
+/**
+ * What could make the image run more securely - see `SecurityAdvice` - cut to what is about
+ * running as non-root. The rest, seccomp among it, is on the image's Security tab: it would be on
+ * every image made before kso read images, and a mark on every row is no mark.
+ */
+function adviceOf(item: ContainerImage): { key: string; level: string; text: string }[] {
+    try {
+        return (JSON.parse(item.security_advice ?? "[]") as { key: string; level: string; text: string }[])
+            .filter(line => line.key == 'run_as_non_root');
+    } catch {
+        return [];
+    }
+}
+
 function onEditItemBtnClicked(item: ContainerImage) {
     bus.emit('containerImageEdit', {
         containerImage: item,
@@ -259,6 +273,15 @@ function deleteItem(item: ContainerImage) {
                         <span v-if="item.pull_secret" class="d-inline-flex">
                             <v-icon size="x-small" color="blue-grey" icon="fa fa-key" />
                             <v-tooltip activator="parent" location="bottom">Pull secret: {{ item.pull_secret }}</v-tooltip>
+                        </span>
+                        <span v-if="adviceOf(item).length" class="d-inline-flex cursor-pointer" @click="onEditItemBtnClicked(item)">
+                            <v-icon
+                                size="x-small"
+                                :color="adviceOf(item).some(line => line.level == 'warning') ? 'warning' : 'blue-grey'"
+                                icon="fa fa-shield-halved" />
+                            <v-tooltip activator="parent" location="bottom">
+                                <div v-for="(line, index) in adviceOf(item)" :key="index">{{ line.text }}</div>
+                            </v-tooltip>
                         </span>
                         <span v-if="item.version_control_enabled" class="d-inline-flex">
                             <v-icon size="x-small" color="blue-grey"

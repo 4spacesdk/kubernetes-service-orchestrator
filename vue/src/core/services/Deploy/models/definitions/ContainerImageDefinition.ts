@@ -20,6 +20,13 @@ export class ContainerImageDefinition extends BaseModel {
     security_context_run_as_group?: string;
     security_context_allow_privilege_escalation?: boolean;
     security_context_read_only_root_filesystem?: boolean;
+    security_context_run_as_non_root?: boolean;
+    security_context_drop_all_capabilities?: boolean;
+    security_context_seccomp_runtime_default?: boolean;
+    image_user?: string;
+    image_user_tag?: string;
+    image_user_read_at?: string;
+    image_user_error?: string;
     version_control_enabled?: boolean;
     version_control_provider?: string;
     version_control_repository_name?: string;
@@ -29,6 +36,7 @@ export class ContainerImageDefinition extends BaseModel {
     commit_identification_method?: string;
     commit_identification_environment_variable_name?: string;
     running_deployment_ids?: number[];
+    security_advice?: string;
     id?: number;
     created?: string;
     updated?: string;
@@ -58,6 +66,13 @@ export class ContainerImageDefinition extends BaseModel {
             delete this.security_context_run_as_group;
             delete this.security_context_allow_privilege_escalation;
             delete this.security_context_read_only_root_filesystem;
+            delete this.security_context_run_as_non_root;
+            delete this.security_context_drop_all_capabilities;
+            delete this.security_context_seccomp_runtime_default;
+            delete this.image_user;
+            delete this.image_user_tag;
+            delete this.image_user_read_at;
+            delete this.image_user_error;
             delete this.version_control_enabled;
             delete this.version_control_provider;
             delete this.version_control_repository_name;
@@ -67,6 +82,7 @@ export class ContainerImageDefinition extends BaseModel {
             delete this.commit_identification_method;
             delete this.commit_identification_environment_variable_name;
             delete this.running_deployment_ids;
+            delete this.security_advice;
             delete this.id;
             delete this.created;
             delete this.updated;
@@ -115,6 +131,27 @@ export class ContainerImageDefinition extends BaseModel {
         if (data.security_context_read_only_root_filesystem != null) {
             this.security_context_read_only_root_filesystem = data.security_context_read_only_root_filesystem;
         }
+        if (data.security_context_run_as_non_root != null) {
+            this.security_context_run_as_non_root = data.security_context_run_as_non_root;
+        }
+        if (data.security_context_drop_all_capabilities != null) {
+            this.security_context_drop_all_capabilities = data.security_context_drop_all_capabilities;
+        }
+        if (data.security_context_seccomp_runtime_default != null) {
+            this.security_context_seccomp_runtime_default = data.security_context_seccomp_runtime_default;
+        }
+        if (data.image_user != null) {
+            this.image_user = data.image_user;
+        }
+        if (data.image_user_tag != null) {
+            this.image_user_tag = data.image_user_tag;
+        }
+        if (data.image_user_read_at != null) {
+            this.image_user_read_at = data.image_user_read_at;
+        }
+        if (data.image_user_error != null) {
+            this.image_user_error = data.image_user_error;
+        }
         if (data.version_control_enabled != null) {
             this.version_control_enabled = data.version_control_enabled;
         }
@@ -141,6 +178,9 @@ export class ContainerImageDefinition extends BaseModel {
         }
         if (data.running_deployment_ids != null) {
             this.running_deployment_ids = data.running_deployment_ids;
+        }
+        if (data.security_advice != null) {
+            this.security_advice = data.security_advice;
         }
         if (data.id != null) {
             this.id = data.id;

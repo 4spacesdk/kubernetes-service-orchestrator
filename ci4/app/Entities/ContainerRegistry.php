@@ -241,7 +241,10 @@ class ContainerRegistry extends Entity {
             $image->url = $repository['url'];
             $image->container_registry_id = $this->id;
             $image->pull_secret = (string) env('IMAGE_PULL_SECRET_DEFAULT_NAME');
+            // Secure from the start, as an image made by hand is - see `SecurityContext`.
+            $image->security_context_seccomp_runtime_default = true;
             $image->save();
+            $image->readUser();
             $created->add($image);
         }
         return $created;

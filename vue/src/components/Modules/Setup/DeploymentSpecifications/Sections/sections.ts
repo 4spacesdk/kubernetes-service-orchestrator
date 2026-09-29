@@ -50,6 +50,14 @@ export const deploymentSpecificationSections: DeploymentSpecificationSection[] =
         isShown: spec => !isCustomResource(spec),
         component: section(() => import('./DeploymentSpecificationDeploymentAnnotationsSection.vue')),
     },
+    {
+        key: 'security-context',
+        title: 'Security Context',
+        icon: 'fa fa-user-shield',
+        group: 'Workload',
+        isShown: spec => !isCustomResource(spec),
+        component: section(() => import('./DeploymentSpecificationSecurityContextSection.vue')),
+    },
 
     {
         key: 'ingresses',

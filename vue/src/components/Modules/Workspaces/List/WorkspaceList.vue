@@ -390,7 +390,7 @@ function onWorkspaceTemplatesShortcutClicked() {
                         <v-list density="compact">
                             <v-list-item
                                 v-if="rbacDeveloper"
-                                prepend-icon="fa fa-rectangle-list"
+                                prepend-icon="fa fa-dharmachakra"
                                 title="Kubernetes Logs"
                                 @click="showLogs(item.workspace)"
                             />

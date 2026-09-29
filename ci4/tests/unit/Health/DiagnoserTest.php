@@ -278,6 +278,14 @@ class DiagnoserTest extends CIUnitTestCase {
         $this->assertSame(7, $finding->action['migration_job_id']);
     }
 
+    public function testAMigrationThatExitedWithAnErrorSaysSo(): void {
+        $finding = $this->only(new Evidence('1.1', lastMigration: [
+            'id' => 7, 'status' => \MigrationJobStatusTypes::Failed_ExitCode, 'image' => 'reg/app:1.1', 'log' => "Migrating\nThe migration exited with 1",
+        ]));
+
+        $this->assertSame('The migration for 1.1 failed: it exited with an error', $finding->cause);
+    }
+
     public function testAFailedMigrationForAnEarlierVersionIsNotACause(): void {
         $this->assertSame([], $this->diagnose(new Evidence('1.1', lastMigration: [
             'id' => 7, 'status' => \MigrationJobStatusTypes::Failed_PostCommands, 'image' => 'reg/app:1.0', 'log' => '',
@@ -286,7 +294,43 @@ class DiagnoserTest extends CIUnitTestCase {
 
     // </editor-fold>
 
-    // <editor-fold desc="The load balancer's health check">
+    // <editor-fold desc="Run as non-root">
+
+    public function testAnImageThatRunsAsRootUnderRunAsNonRootIsCertain(): void {
+        $finding = $this->only(new Evidence('1.1', [$this->pod(
+            waiting: 'CreateContainerConfigError',
+            waitingMessage: 'container has runAsNonRoot and image will run as root (pod: "app-a_ns(1)", container: app)',
+        )]));
+
+        $this->assertSame('run_as_non_root', $finding->rule);
+        $this->assertStringStartsWith("app's image runs as root under Run as non-root", $finding->cause);
+        $this->assertSame('security-context', $finding->action['section']);
+    }
+
+    /**
+     * `USER appuser` rather than `USER 100`: kubelet cannot tell whether a name is root, so it
+     * starts nothing - and the fix is a number in the Dockerfile, which is what the cause says.
+     */
+    public function testANamedUserUnderRunAsNonRootIsNamed(): void {
+        $finding = $this->only(new Evidence('1.1', [$this->pod(
+            waiting: 'CreateContainerConfigError',
+            waitingMessage: 'container has runAsNonRoot and image has non-numeric user (appuser), cannot verify user is non-root (pod: "app-a_ns(1)", container: app)',
+        )]));
+
+        $this->assertStringContainsString('runs as the user appuser', $finding->cause);
+        $this->assertStringContainsString('numeric USER', $finding->cause);
+    }
+
+    public function testAnotherConfigErrorIsNotPutDownToRunAsNonRoot(): void {
+        $this->assertSame([], $this->diagnose(new Evidence('1.1', [$this->pod(
+            waiting: 'CreateContainerConfigError',
+            waitingMessage: 'secret "api-env" not found',
+        )])));
+    }
+
+    // </editor-fold>
+
+        // <editor-fold desc="The load balancer's health check">
 
     public function testAHealthCheckPathBehindBasicAuthIsCertain(): void {
         $finding = $this->only(new Evidence('1.1', [$this->pod()], healthCheck: [

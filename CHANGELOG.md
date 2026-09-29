@@ -1,5 +1,38 @@
 # Changelog
 
+## v1.9.4 (2026-09-29)
+
+### Enhancements
+* Creating a deployment is a wizard: after name, namespace and version it walks through the settings its specification gives it - the sections of its page, in the order of its menu - and ends by deploying it or leaving it a draft. Update Management asks for on or off instead of being left as it is, and offers a tag pattern read off the version. Closed halfway, the draft stays with what was saved
+* Workspace and deployment settings save as you go: a choice at once, typing when it pauses. The section says Saving, Saved, or Not saved and why, with Retry; a value the server would refuse waits until it is whole, and leaving a section sends what is pending first. Environment Variables, Volumes and Cron Jobs keep their Save button. The Version keeps its button too, called Deploy version, as changing it rolls out
+* The deployments list leaves Suspended out until you ask for it - a paused or switched-off workspace's deployments, and ones scaled to zero. The Health filter says All but Suspended; one not checked yet is still listed, under No health
+* The running deployments of a container image can be filtered by version, with how many run each - exactly, where the search would match 1.9.10 for 1.9.1
+* The deployment on a migration job or an update is a link to its page
+* A log from the cluster has the Kubernetes wheel, a log kso keeps has a scroll - so a migration job's two logs are told apart without their tooltips
+* Migration jobs no longer need curl in the image: kso reads a job's start, end, exit code and log from the cluster
+* A migration's exit code counts: one that exits with an error fails as Failed (Exit code), and a failing migration is not run again
+* A migration job that cannot run to an end - an image that cannot be pulled, its deadline, its pod gone - fails with the reason instead of staying Started
+* A new container image is made secure when it is made: kso reads the user its registry says it runs as, turns Run as non-root on when that is a number other than root, and seccomp RuntimeDefault on. Read it again from the image's Security tab, for a version that changed its user
+* A container image says what could make it more secure, and the list marks the ones with something to do about running as non-root
+* A deployment specification inherits its images' security settings, can turn each on or off, and can give all its pods one FS group
+* The diagnosis says when a container is refused under Run as non-root, because its image runs as root or its USER is a name
+
+### Fixed bugs
+* A field without an icon - a disabled one, or an empty one whose clear button is hidden - was 4 pixels lower than a select beside it
+* Why? in a deployment's health menu closed the menu instead of showing the answer
+
+### Notes
+* A migration's log is its pod's now, stderr included. A command that writes to stderr after the line its verification looks for fails verification - check the migration commands that verify with Ends with
+* Removed: `PUT /migration-jobs/{id}/started` and `/ended`, the only migration job routes open without a sign-in, and the job's callback token. A migration still running when kso is upgraded is left in Started - rerun it
+* Existing container images keep running as they did. Read one again from its Security tab to have it stamped
+* Run as non-root needs a numeric USER in the image (`USER 1000:1000`, not `USER appuser`), or a user set on the container image
+
+### Upgrade guide
+1. Deploy new image
+2. Run migrations [(Guide)](https://github.com/4spacesdk/kubernetes-service-orchestrator?tab=readme-ov-file#migrate-database-helm)
+
+
+
 ## v1.9.3 (2026-09-23)
 
 ### Enhancements
@@ -167,7 +200,7 @@
 ### Upgrade guide
 1. Set `deployment.encryptionKey` in the chart to 32 characters of your own - `openssl rand -base64 24` makes one on Linux or macOS. It is what the stored credentials are encrypted with, and it has to stay the same afterwards - change it and they cannot be read back. Rotating it later: the old one in `deployment.previousEncryptionKeys`, then `php spark app:reencrypt` - see "If a secret leaks" in the README
 2. Deploy new image
-3. Run migrations [(Guide)](https://github.com/4spacesdk/kubernetes-service-orchestrator?tab=readme-ov-file#migrate-database-helm). Registry credentials and the GitHub App move to Integrations automatically
+3. Run migrations [(Guide)](https://github.com/4spacesdk/kubernetes-service-orchestrator?tab=readme-ov-file#migrate-database-helm)
 4. Harbor and Azure: open each container registry and click "Set up auto update", then remove the old webhooks from the registry
 
 
