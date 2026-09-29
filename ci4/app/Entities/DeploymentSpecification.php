@@ -59,6 +59,12 @@ use App\Core\Entity;
  * @property bool $enable_rbac
  * @property bool $enable_volumes
  *
+ * # Security context - each image's, overridden here; see `SecurityContext`
+ * @property string $security_context_run_as_non_root A `SecurityContextOverrides`
+ * @property string $security_context_drop_all_capabilities A `SecurityContextOverrides`
+ * @property string $security_context_seccomp_runtime_default A `SecurityContextOverrides`
+ * @property string $security_context_fs_group One for all the specification's pods; empty is each image's
+ *
  * # Network
  * @property string $network_type
  * @property int $gateway_backend_timeout

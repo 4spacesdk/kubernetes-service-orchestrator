@@ -2,6 +2,7 @@
 
 use App\Entities\DatabaseService;
 use App\Entities\Deployment;
+use App\Libraries\Kubernetes\SecurityContext;
 use App\Libraries\Kubernetes\ContainerEnvironment;
 use App\Libraries\Kubernetes\SecretPreview;
 use App\Libraries\Kubernetes\WorkloadSecret;
@@ -350,15 +351,8 @@ class DeploymentStep extends BaseDeploymentStep {
             $container->maxMemory($deployment->memory_limit, 'Mi');
         }
 
-        // Security Context
-        if (strlen($spec->container_image->security_context_run_as_user) > 0) {
-            $container->setAttribute('securityContext.runAsUser', (int)$spec->container_image->security_context_run_as_user);
-        }
-        if (strlen($spec->container_image->security_context_run_as_group) > 0) {
-            $container->setAttribute('securityContext.runAsGroup', (int)$spec->container_image->security_context_run_as_group);
-        }
-        $container->setAttribute('securityContext.allowPrivilegeEscalation', (bool)$spec->container_image->security_context_allow_privilege_escalation);
-        $container->setAttribute('securityContext.readOnlyRootFilesystem', (bool)$spec->container_image->security_context_read_only_root_filesystem);
+        // Security Context - the image's, and what the specification opts into
+        SecurityContext::ApplyToContainer($container, $spec->container_image, $spec);
 
         // Init Containers
         $initContainers = [];
@@ -440,8 +434,9 @@ class DeploymentStep extends BaseDeploymentStep {
                 $container
             ]);
 
-        if (strlen($spec->container_image->security_context_fs_group) > 0) {
-            $template->setSpec('securityContext.fsGroup', (int)$spec->container_image->security_context_fs_group);
+        $fsGroup = SecurityContext::FsGroup($spec->container_image, $spec);
+        if ($fsGroup !== null) {
+            $template->setSpec('securityContext.fsGroup', $fsGroup);
         }
 
         $imagePullSecrets = ImagePullSecrets::of(...$podImages);

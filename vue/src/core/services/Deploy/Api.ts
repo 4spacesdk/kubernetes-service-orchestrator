@@ -2037,6 +2037,32 @@ export class ContainerImagesScanPutById extends BaseApi<ContainerImageScanReques
     }
 }
 
+export class ContainerImagesReadUserPutById extends BaseApi<ContainerImage> {
+
+    public topic = 'Resources.ContainerImages';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/container-images/${id}/read-user`;
+    }
+
+    protected convertToResource(data: any): ContainerImage {
+        return new ContainerImage(data);
+    }
+
+    public tag(value: string): ContainerImagesReadUserPutById {
+        this.addQueryParameter('tag', value);
+        return this;
+    }
+
+    public save(data: any, next?: (value: ContainerImage) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
 export class ContainerImagesGetTagsGetById extends BaseApi<ContainerImageTagsGetResponse> {
 
     public topic = 'Resources.ContainerImageTagsGetResponses';
@@ -2086,6 +2112,10 @@ class ContainerImages {
 
     public scanPutById(id: number): ContainerImagesScanPutById {
         return new ContainerImagesScanPutById(id);
+    }
+
+    public readUserPutById(id: number): ContainerImagesReadUserPutById {
+        return new ContainerImagesReadUserPutById(id);
     }
 
     public getTagsGetById(id: number): ContainerImagesGetTagsGetById {

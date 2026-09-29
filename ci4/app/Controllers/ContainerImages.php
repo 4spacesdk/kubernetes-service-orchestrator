@@ -53,6 +53,41 @@ class ContainerImages extends ResourceController {
     }
 
     /**
+     * Read the `USER` a tag of the image runs as from its registry, and stamp Run as non-root
+     * from it - see `ContainerImage::readUser()`. Without a tag, the image's default or newest.
+     * A registry that cannot be read changes nothing, and the image's `image_user_error` says why.
+     *
+     * @route /container-images/{id}/read-user
+     * @method put
+     * @custom true
+     * @param int $id
+     * @parameter string $tag parameterType=query
+     * @responseSchema ContainerImage
+     * @return void
+     * @audit container_image.read_user
+     */
+    public function readUser(int $id): void {
+        $item = new ContainerImage();
+        $item->find($id);
+        if (!$item->exists()) {
+            $this->fail('unknown container image');
+            return;
+        }
+
+        $tag = trim((string) $this->request->getGet('tag'));
+        // What a registry accepts as a tag: it becomes part of the url the registry is asked.
+        if ($tag !== '' && !preg_match('/^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$/', $tag)) {
+            $this->fail('invalid tag');
+            return;
+        }
+
+        $item->readUser($tag === '' ? null : $tag);
+        Audit::Record('container_image.read_user', $item, ['tag' => $item->image_user_tag, 'user' => $item->image_user]);
+        Data::set('resource', $item);
+        $this->success();
+    }
+
+    /**
      * The image's tags, straight from its registry, each with when it was pushed - a quick
      * check that the registry's credentials work for this image. A registry that refuses answers with its reason, not
      * with an empty list.

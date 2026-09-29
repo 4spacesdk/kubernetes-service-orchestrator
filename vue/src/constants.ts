@@ -295,6 +295,13 @@ export const MigrationJobStatusTypes = {
     Failed: "failed",
 };
 
+/** A specification's say on its container images' security settings. Empty takes the image's. */
+export const SecurityContextOverrides = {
+    Inherit: "",
+    On: "on",
+    Off: "off",
+};
+
 export const ContainerImageTagPolicies = {
     MatchDeployment: "match-deployment",
     Static: "static",

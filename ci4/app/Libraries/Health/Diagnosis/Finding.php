@@ -7,12 +7,12 @@ readonly class Finding {
 
     /**
      * @param string $rule Which rule - `image_pull`, `oom_killed`, `crash_after_version_change`,
-     *   `not_ready`, `rejected_by_api_server`, `migration_failed`, `health_check_path`
+     *   `not_ready`, `rejected_by_api_server`, `migration_failed`, `health_check_path`, `run_as_non_root`
      * @param string $verdict A `DiagnosisVerdicts`
      * @param list<string> $evidence What the cause was read off, in the cluster's own words
      * @param array{type: string, label: string, version?: string, section?: string, migration_job_id?: int}|null $action
      *   `rollback` to a version, `section` of the deployment's page, `migration_job` to open, `deploy`,
-     *   or `specification` - the deployment's specification, where the health check is set
+     *   or `specification` - the deployment's specification, at `section` when there is one
      */
     public function __construct(
         public string $rule,

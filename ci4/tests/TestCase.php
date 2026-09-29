@@ -40,6 +40,10 @@ class TestCase extends CIUnitTestCase {
         };
         \App\Libraries\MigrationJobs\MigrationJobWatcher::$cluster = null;
         \App\Libraries\MigrationJobs\MigrationJobWatcher::$sleep = null;
+
+        // Reading an image's user from its registry goes over the network. A test that wants an
+        // answer puts a registry of its own here.
+        \App\Libraries\ContainerRegistries\ImageConfig::$http = static fn (string $url): array => [503, [], 'no registry in a test'];
     }
 
     /**

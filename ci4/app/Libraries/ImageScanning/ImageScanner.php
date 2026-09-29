@@ -187,6 +187,7 @@ class ImageScanner {
             $scan->digest = $report->digest;
             $scan->operating_system = $report->operatingSystem;
             $scan->targets = $report->targets;
+            $scan->image_user = $report->user;
             $scan->error = null;
             $scan->status = \ContainerImageScanStatuses::Scanned;
             $ok = true;

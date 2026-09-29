@@ -14,6 +14,7 @@ export class ContainerImageScanDefinition extends BaseModel {
     status?: string;
     error?: string;
     digest?: string;
+    image_user?: string;
     operating_system?: string;
     targets?: number;
     critical?: number;
@@ -48,6 +49,7 @@ export class ContainerImageScanDefinition extends BaseModel {
             delete this.status;
             delete this.error;
             delete this.digest;
+            delete this.image_user;
             delete this.operating_system;
             delete this.targets;
             delete this.critical;
@@ -90,6 +92,9 @@ export class ContainerImageScanDefinition extends BaseModel {
         }
         if (data.digest != null) {
             this.digest = data.digest;
+        }
+        if (data.image_user != null) {
+            this.image_user = data.image_user;
         }
         if (data.operating_system != null) {
             this.operating_system = data.operating_system;

@@ -29,6 +29,17 @@ class CronJobIds {
     ;
 }
 
+/**
+ * A specification's say on one of its container images' security settings - see `SecurityContext`.
+ * Empty takes the image's.
+ */
+class SecurityContextOverrides {
+    const string
+        Inherit = '',
+        On = 'on',
+        Off = 'off';
+}
+
 class ContainerImageScanStatuses {
 
     const string
