@@ -67,11 +67,14 @@ onUnmounted(() => {
                 <HealthChip :health="health" :reason="reason" :changed-at="changedAt" :checked-at="checkedAt" :hide-tooltip="showPods" />
             </span>
         </template>
-        <v-card v-if="worthDiagnosing.includes(health)" class="diagnosis">
-            <v-card-text>
-                <DeploymentDiagnosis :deployment="props.deployment"/>
-            </v-card-text>
-        </v-card>
+        <!-- A click in the menu closes it, and "Why?" is one: the answer would never be seen. -->
+        <div v-if="worthDiagnosing.includes(health)" @click.stop>
+            <v-card class="diagnosis">
+                <v-card-text>
+                    <DeploymentDiagnosis :deployment="props.deployment"/>
+                </v-card-text>
+            </v-card>
+        </div>
         <DeploymentPodsButton :deployment="props.deployment" />
     </v-menu>
     <HealthChip v-else />

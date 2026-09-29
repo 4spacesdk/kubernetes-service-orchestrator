@@ -15,6 +15,7 @@
 
 ### Fixed bugs
 * A field without an icon - a disabled one, or an empty one whose clear button is hidden - was 4 pixels lower than a select beside it
+* Why? in a deployment's health menu closed the menu instead of showing the answer
 
 ### Notes
 * A migration's log is its pod's now, stderr included. A command that writes to stderr after the line its verification looks for fails verification - check the migration commands that verify with Ends with
