@@ -3,7 +3,8 @@ import {computed, onMounted, onUnmounted, ref} from 'vue'
 import {Project} from "@/core/services/Deploy/models";
 import {ReferenceData} from "@/core/referenceData";
 import AuthService from "@/services/AuthService";
-import {RbacPermissions} from "@/constants";
+import {RbacPermissions, WorkspaceStatusTypes} from "@/constants";
+import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import OverviewCard from "@/components/Pages/Overview/OverviewCard.vue";
 import {itemBadge, useMenuBadges} from "@/components/Shell/Menu/menuBadges";
@@ -21,19 +22,41 @@ const others = computed(() => projects.value.filter(project => !myProjectIds.val
 // How many are Degraded, on each card - the same numbers as the menu.
 useMenuBadges();
 
+/**
+ * How many workspaces each card lists, by the card's url - counted as the list shows them when
+ * it opens: Synced and Out of sync.
+ */
+const counts = ref<Record<string, number>>({});
+
 const canManage = computed(() => AuthService.currentAuthUser?.hasPermission(RbacPermissions.Developer) ?? false);
 
 onMounted(() => {
     load();
     bus.on('projectSaved', load);
+    bus.on('workspaceSaved', load);
 });
 
 onUnmounted(() => {
     bus.off('projectSaved', load);
+    bus.off('workspaceSaved', load);
 });
 
 function load() {
-    ReferenceData.projects().then(items => projects.value = items);
+    ReferenceData.projects().then(items => {
+        projects.value = items;
+        count('/workspaces/all');
+        count('/workspaces/projects/none', 'none');
+        items.forEach(project => count(`/workspaces/projects/${project.id}`, String(project.id)));
+    });
+}
+
+function count(url: string, project?: string) {
+    const api = Api.workspaces().get()
+        .whereIn('status', [WorkspaceStatusTypes.OutOfSync, WorkspaceStatusTypes.Synced]);
+    if (project !== undefined) {
+        api.whereIn('project', [project]);
+    }
+    api.count(value => counts.value[url] = value);
 }
 </script>
 
@@ -62,13 +85,15 @@ function load() {
                 icon="fa fa-layer-group"
                 title="All workspaces"
                 description="Every workspace, in any project or none"
-                :badge="itemBadge('/workspaces/all')"/>
+                :badge="itemBadge('/workspaces/all')"
+                :count="counts['/workspaces/all']"/>
             <OverviewCard
                 to="/workspaces/projects/none"
                 icon="fa fa-folder-open"
                 title="No project"
                 description="Workspaces not in any project yet"
-                :badge="itemBadge('/workspaces/projects/none')"/>
+                :badge="itemBadge('/workspaces/projects/none')"
+                :count="counts['/workspaces/projects/none']"/>
         </div>
 
         <template v-if="mine.length">
@@ -81,7 +106,8 @@ function load() {
                     icon="fa fa-folder"
                     :title="project.name ?? ''"
                     :description="project.description"
-                    :badge="itemBadge(`/workspaces/projects/${project.id}`)"/>
+                    :badge="itemBadge(`/workspaces/projects/${project.id}`)"
+                    :count="counts[`/workspaces/projects/${project.id}`]"/>
             </div>
         </template>
 
@@ -95,7 +121,8 @@ function load() {
                     icon="fa fa-folder"
                     :title="project.name ?? ''"
                     :description="project.description"
-                    :badge="itemBadge(`/workspaces/projects/${project.id}`)"/>
+                    :badge="itemBadge(`/workspaces/projects/${project.id}`)"
+                    :count="counts[`/workspaces/projects/${project.id}`]"/>
             </div>
         </template>
     </div>

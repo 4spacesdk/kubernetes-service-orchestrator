@@ -1,13 +1,17 @@
 <script setup lang="ts">
 import type {MenuBadge} from "@/components/Shell/Menu/menuBadges";
 
-/** A page on an overview: its icon, its name, what it is for, and the menu's number for it. */
+/**
+ * A page on an overview: its icon, its name, what it is for, the menu's number for it, and how
+ * many things it lists.
+ */
 defineProps<{
     to: string;
     icon: string;
     title: string;
     description?: string;
     badge?: MenuBadge | null;
+    count?: number;
 }>();
 </script>
 
@@ -32,6 +36,11 @@ defineProps<{
                 v-if="description"
                 class="overview-description">{{ description }}</div>
         </div>
+        <v-chip
+            v-if="count !== undefined"
+            variant="tonal"
+            size="small"
+            class="overview-count">{{ count }}</v-chip>
     </router-link>
 </template>
 
@@ -76,6 +85,11 @@ defineProps<{
     gap: 8px;
     font-size: 14px;
     font-weight: 500;
+}
+
+.overview-count {
+    margin-left: auto;
+    flex-shrink: 0;
 }
 
 .overview-badge {
