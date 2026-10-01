@@ -1,6 +1,7 @@
 <?php namespace App\Libraries\Health\Diagnosis;
 
 use App\Libraries\Kubernetes\Quantity;
+use App\Libraries\Kubernetes\Sidecars;
 
 /**
  * Why a deployment is doing badly, from what kso can see and a general tool cannot: which
@@ -438,8 +439,9 @@ class Diagnoser {
             if (($pod['status']['phase'] ?? null) !== 'Running' || !isset($container['state']['running']) || ($container['ready'] ?? true)) {
                 continue;
             }
-            // An init container is never "ready"; it is done or not.
-            if (!in_array($container['name'] ?? '', array_column($pod['spec']['containers'] ?? [], 'name'), true)) {
+            // An init container is never "ready"; it is done or not. A sidecar is, like the app.
+            $readyOrNot = [...array_column($pod['spec']['containers'] ?? [], 'name'), ...Sidecars::Names($pod['spec'] ?? [])];
+            if (!in_array($container['name'] ?? '', $readyOrNot, true)) {
                 continue;
             }
 

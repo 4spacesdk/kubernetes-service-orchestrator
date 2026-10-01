@@ -336,6 +336,26 @@ class KServiceStepTest extends ManifestTestCase {
         $this->assertSame(['wait-for-db', 'warm-cache'], array_column($initContainers, 'name'));
     }
 
+    /**
+     * Knative lets a fixed list of container fields through, and `restartPolicy` is not on it:
+     * a sidecar would be refused by the cluster. Refused here instead, before anything is sent,
+     * with what to do about it.
+     */
+    public function testASidecarIsRefusedBeforeTheClusterIsAsked(): void {
+        $deployment = $this->knativeDeployment(['image' => 'registry.example.org/test/app']);
+        $image = Fixtures::containerImage(['url' => 'centrifugo/centrifugo']);
+        $sidecar = Fixtures::initContainer(['name' => 'centrifugo', 'container_image_id' => $image->id, 'is_sidecar' => true]);
+        Fixtures::specificationInitContainer([
+            'deployment_specification_id' => $deployment->deployment_specification_id,
+            'init_container_id' => $sidecar->id,
+        ]);
+
+        $this->assertSame(
+            'A Knative Service cannot run sidecars, and centrifugo runs as one - turn Run as sidecar off, or make the workload a Deployment',
+            (new KServiceStep())->validateDeployCommand($deployment)
+        );
+    }
+
     public function testServiceAccountIsUsedWhenTheSpecificationEnablesRbac(): void {
         $withRbac = $this->knativeDeployment([], ['enable_rbac' => true]);
         $without = $this->knativeDeployment([], ['enable_rbac' => false]);

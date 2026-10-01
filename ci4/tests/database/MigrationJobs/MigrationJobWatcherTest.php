@@ -124,6 +124,25 @@ class MigrationJobWatcherTest extends DatabaseTestCase {
     }
 
     /**
+     * A sidecar is stopped by Kubernetes when the job is over, and the exit code of being
+     * stopped is no reason the job failed - so it is not named as one.
+     */
+    public function testASidecarStoppedAtTheEndIsNotWhyTheJobFailed(): void {
+        $job = $this->aJob();
+        $this->cluster->job = $this->k8sJob($job, [['type' => 'Failed', 'status' => 'True', 'reason' => 'DeadlineExceeded']]);
+        $pod = $this->pod($job, ['running' => ['startedAt' => '2026-09-29T08:00:00Z']]);
+        $pod['spec']['initContainers'] = [['name' => 'db-proxy', 'restartPolicy' => 'Always']];
+        $pod['status']['initContainerStatuses'] = [['name' => 'db-proxy', 'state' => ['terminated' => ['exitCode' => 143, 'reason' => 'Error']]]];
+        $this->cluster->pods = [$pod];
+
+        MigrationJobWatcher::Check($job->id);
+
+        $log = (string) $this->reread($job)->log;
+        $this->assertStringContainsString('DeadlineExceeded', $log, 'the job\'s own reason');
+        $this->assertStringNotContainsString('db-proxy', $log);
+    }
+
+    /**
      * An image that cannot be pulled leaves the pod waiting until the Job's deadline, six hours
      * on. kso gives up well before, and stops the Job - or the migration would run the day the
      * image turned up, with nobody watching.

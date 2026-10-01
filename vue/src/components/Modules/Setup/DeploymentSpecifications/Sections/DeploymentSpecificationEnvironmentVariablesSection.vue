@@ -151,6 +151,7 @@ function onBulkEditBtnClicked() {
 <template>
     <page-section
         title="Environment Variables"
+        flush
         :is-loading="isLoading"
         :is-saving="isSaving"
         @save="onSave">
@@ -172,21 +173,22 @@ function onBulkEditBtnClicked() {
             </v-btn>
         </template>
 
-        <div
-            v-if="showBulkEdit && rows.some(row => row.is_secret)"
-            class="text-body-small text-medium-emphasis mb-2">
-            Secret variables are left out here, and kept as they are.
+        <div v-if="showBulkEdit" class="pa-4">
+            <div
+                v-if="rows.some(row => row.is_secret)"
+                class="text-body-small text-medium-emphasis mb-2">
+                Secret variables are left out here, and kept as they are.
+            </div>
+            <v-textarea
+                v-model="bulkEditContent"
+                variant="outlined"
+                :no-resize="false"
+                auto-grow
+                max-rows="20"
+                :rows="bulkEditContentRowCount"
+                @update:modelValue="updateBulkEditContentRowCount()">
+            </v-textarea>
         </div>
-        <v-textarea
-            v-if="showBulkEdit"
-            v-model="bulkEditContent"
-            variant="outlined"
-            :no-resize="false"
-            auto-grow
-            max-rows="20"
-            :rows="bulkEditContentRowCount"
-            @update:modelValue="updateBulkEditContentRowCount()">
-        </v-textarea>
 
         <v-data-table-server
             v-else

@@ -4,9 +4,14 @@
 
 ### Enhancements
 * Each card on Workspaces says how many workspaces it lists - Synced and Out of sync, as the list shows them when it opens
+* A specification has Sidecars: containers that keep running beside the app, such as Centrifugo. They start before the init containers, which can use them; a Service port aimed at one reaches it, health counts it like the app, and a migration job that includes one still completes. Native sidecars, so Kubernetes 1.29 or later; not on a Knative Service, which cannot run them
+
+### Fixed bugs
+* The preview showed the defaults the cluster writes on every init container as a change, on every deploy
 
 ### Upgrade guide
 1. Deploy new image
+2. Run migrations [(Guide)](https://github.com/4spacesdk/kubernetes-service-orchestrator?tab=readme-ov-file#migrate-database-helm)
 
 
 

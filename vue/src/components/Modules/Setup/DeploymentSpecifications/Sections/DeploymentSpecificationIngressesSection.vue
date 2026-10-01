@@ -198,6 +198,7 @@ function onSave() {
 <template>
     <page-section
         title="Ingresses"
+        flush
         :is-loading="isLoading"
         :is-saving="isSaving"
         @save="onSave">

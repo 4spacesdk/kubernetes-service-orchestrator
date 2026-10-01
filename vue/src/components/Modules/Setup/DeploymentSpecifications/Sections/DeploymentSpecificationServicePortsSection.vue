@@ -160,6 +160,7 @@ function onSave() {
 <template>
     <page-section
         title="Service Ports"
+        flush
         :is-loading="isLoading"
         :is-saving="isSaving"
         @save="onSave">
@@ -208,14 +209,14 @@ function onSave() {
             </template>
         </v-data-table-server>
 
-        <v-alert
-            v-if="healthCheckSummary"
-            class="mt-2"
-            type="info"
-            variant="tonal"
-            density="compact">
-            {{ healthCheckSummary }}
-        </v-alert>
+        <div v-if="healthCheckSummary" class="pa-4">
+            <v-alert
+                type="info"
+                variant="tonal"
+                density="compact">
+                {{ healthCheckSummary }}
+            </v-alert>
+        </div>
     </page-section>
 </template>
 

@@ -310,6 +310,29 @@ class MigrationJobStepTest extends ManifestTestCase {
     }
 
     /**
+     * A sidecar marked for the migration runs in it - Kubernetes stops it when the migration is
+     * done, so the Job still completes. One that is not marked stays out, as any init container.
+     */
+    public function testASidecarMarkedForMigrationRunsBesideIt(): void {
+        $deployment = $this->migratableDeployment();
+        $image = Fixtures::containerImage(['url' => 'registry.example.org/proxy']);
+
+        foreach ([['db-proxy', true], ['centrifugo', false]] as [$name, $include]) {
+            $initContainer = Fixtures::initContainer(['name' => $name, 'container_image_id' => $image->id, 'is_sidecar' => true]);
+            Fixtures::specificationInitContainer([
+                'deployment_specification_id' => $deployment->deployment_specification_id,
+                'init_container_id' => $initContainer->id,
+                'include_in_migration_job' => $include,
+            ]);
+        }
+
+        $initContainers = $this->podSpec($deployment)['initContainers'];
+
+        $this->assertSame(['db-proxy'], array_column($initContainers, 'name'));
+        $this->assertSame('Always', $initContainers[0]['restartPolicy']);
+    }
+
+    /**
      * The migration runs under the deployment's service account when the specification
      * has RBAC turned on, so it gets the same cluster permissions the app does.
      */

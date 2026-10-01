@@ -252,6 +252,70 @@ class HealthEvaluatorTest extends CIUnitTestCase {
     }
 
     /**
+     * A sidecar is listed with the init containers, and running is what it is meant to be: a
+     * pod with one running and ready beside an init container that is done is a healthy pod.
+     */
+    public function testARunningSidecarIsNotAnInitContainerThatHangs(): void {
+        $pod = $this->pod();
+        $pod['spec']['initContainers'] = [['name' => 'wait-for-db'], ['name' => 'centrifugo', 'restartPolicy' => 'Always']];
+        $pod['status']['initContainerStatuses'] = [
+            ['name' => 'wait-for-db', 'state' => ['terminated' => ['exitCode' => 0, 'reason' => 'Completed']], 'ready' => false, 'restartCount' => 0],
+            ['name' => 'centrifugo', 'state' => ['running' => ['startedAt' => '2027-01-15T08:00:00Z']], 'started' => true, 'ready' => true, 'restartCount' => 0],
+        ];
+
+        $result = $this->evaluate($this->snapshot([$this->deployment()], [$pod]));
+
+        $this->assertSame(\HealthStatusTypes::Healthy, $result->health);
+        $this->assertSame('', $result->reason);
+    }
+
+    /**
+     * A sidecar that crashes takes the pod's readiness with it, and says why - the same as the
+     * app's own container would.
+     */
+    public function testACrashingSidecarIsDegraded(): void {
+        $pod = $this->pod();
+        $pod['spec']['initContainers'] = [['name' => 'centrifugo', 'restartPolicy' => 'Always']];
+        $pod['status']['initContainerStatuses'] = [[
+            'name' => 'centrifugo',
+            'state' => ['waiting' => ['reason' => 'CrashLoopBackOff']],
+            'started' => false,
+            'ready' => false,
+            'restartCount' => 5,
+            'lastState' => ['terminated' => ['reason' => 'Error', 'exitCode' => 1, 'finishedAt' => gmdate('Y-m-d\TH:i:s\Z', self::Now - 30)]],
+        ]];
+
+        $result = $this->evaluate($this->snapshot(
+            [$this->deployment(status: ['availableReplicas' => 0, 'readyReplicas' => 0])],
+            [$pod],
+        ));
+
+        $this->assertSame(\HealthStatusTypes::Degraded, $result->health);
+        $this->assertStringContainsString('CrashLoopBackOff (api-1)', $result->reason);
+    }
+
+    /**
+     * Up again between crashes, a sidecar is still counted by its restarts.
+     */
+    public function testASidecarThatKeepsRestartingIsDegradedWhileRunning(): void {
+        $pod = $this->pod();
+        $pod['spec']['initContainers'] = [['name' => 'centrifugo', 'restartPolicy' => 'Always']];
+        $pod['status']['initContainerStatuses'] = [[
+            'name' => 'centrifugo',
+            'state' => ['running' => ['startedAt' => '2027-01-15T08:00:00Z']],
+            'started' => true,
+            'ready' => true,
+            'restartCount' => 4,
+            'lastState' => ['terminated' => ['reason' => 'Error', 'exitCode' => 1, 'finishedAt' => gmdate('Y-m-d\TH:i:s\Z', self::Now - 120)]],
+        ]];
+
+        $result = $this->evaluate($this->snapshot([$this->deployment()], [$pod]));
+
+        $this->assertSame(\HealthStatusTypes::Degraded, $result->health);
+        $this->assertSame('Restarted 4 times, last 2 min ago (api-1)', $result->reason);
+    }
+
+    /**
      * Only the pods with the deployment's `app` label, in its namespace, count.
      */
     public function testAnotherWorkloadsPodsAreNotThisOnes(): void {

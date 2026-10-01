@@ -115,6 +115,22 @@ class InitContainersApiTest extends ControllerTestCase {
         $this->assertSame('wait-for-db', $body['resource']['name']);
     }
 
+    /**
+     * Run as sidecar: off for a container made before it existed, and saved and read back as
+     * a boolean like the switches beside it.
+     */
+    public function testRunAsSidecarIsOffUntilTurnedOnAndIsReadBack(): void {
+        $container = Fixtures::initContainer();
+        $this->assertSame(0, (int) $this->row($container)['is_sidecar']);
+
+        $patched = $this->decode($this->withBodyFormat('json')->signedIn()->patch("init_containers/{$container->id}", ['is_sidecar' => true]));
+
+        $this->assertSame('OK', $patched['status']);
+        $this->assertSame(1, (int) $this->row($container)['is_sidecar']);
+        $read = $this->decode($this->signedIn()->get("init_containers/{$container->id}"));
+        $this->assertTrue($read['resource']['is_sidecar']);
+    }
+
     // <editor-fold desc="Helpers">
 
     /**
@@ -133,6 +149,20 @@ class InitContainersApiTest extends ControllerTestCase {
         $response = $this->withBodyFormat('json')->signedIn()->put($path, ['values' => $values]);
 
         return json_decode((string) $response->response()->getBody(), true);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function decode(\CodeIgniter\Test\TestResponse $response): array {
+        return json_decode((string) $response->response()->getBody(), true);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function row(InitContainer $container): array {
+        return db_connect()->table('init_containers')->where('id', $container->id)->get()->getRowArray();
     }
 
     /**

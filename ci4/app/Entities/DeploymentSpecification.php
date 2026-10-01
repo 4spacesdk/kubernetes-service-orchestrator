@@ -497,8 +497,83 @@ class DeploymentSpecification extends Entity {
         $this->deployment_specification_deployment_annotations = $values;
     }
 
-    public function updateInitContainers(DeploymentSpecificationInitContainer $values): void {
-        $this->deployment_specification_init_containers->find()->deleteAll();
+    /**
+     * Why the sidecars among this specification's init containers cannot run, or null.
+     *
+     * A Knative Service takes no `restartPolicy` on an init container: its validation lets a fixed
+     * list of container fields through, and that is not one of them. Refused here, a sidecar is
+     * caught before a deploy that the cluster would refuse.
+     *
+     * @param list<int>|null $initContainerIds the init containers about to be set, or null for the ones it has
+     */
+    public function reasonSidecarsCannotRun(?array $initContainerIds = null): ?string {
+        if ($this->workload_type !== \WorkloadTypes::KNativeService) {
+            return null;
+        }
+        if ($initContainerIds === null) {
+            $initContainerIds = array_map(
+                fn(DeploymentSpecificationInitContainer $item) => (int) $item->init_container_id,
+                iterator_to_array((new DeploymentSpecificationInitContainerModel())
+                    ->where('deployment_specification_id', $this->id)
+                    ->find())
+            );
+        }
+        if ($initContainerIds === []) {
+            return null;
+        }
+
+        /** @var InitContainer $sidecars */
+        $sidecars = (new InitContainerModel())
+            ->whereIn('id', $initContainerIds)
+            ->where('is_sidecar', true)
+            ->find();
+        $names = array_map(fn(InitContainer $item) => $item->name, iterator_to_array($sidecars));
+        if ($names === []) {
+            return null;
+        }
+
+        return 'A Knative Service cannot run sidecars, and ' . implode(', ', $names) . ' '
+            . (count($names) === 1 ? 'runs as one' : 'run as sidecars')
+            . ' - turn Run as sidecar off, or make the workload a Deployment';
+    }
+
+    /**
+     * The init containers in the order the pod starts them: the sidecars first, then the ones
+     * that run to an end - each kind by its own position. A sidecar is started before every init
+     * container, so they can all use it: the database proxy is there before `wait-for-db` asks.
+     *
+     * @return list<DeploymentSpecificationInitContainer> with their init container and its image
+     */
+    public function findInitContainersInStartOrder(bool $onlyForTheMigrationJob = false): array {
+        $query = (new DeploymentSpecificationInitContainerModel())
+            ->includeRelated([InitContainerModel::class, ContainerImageModel::class])
+            ->where('deployment_specification_id', $this->id);
+        if ($onlyForTheMigrationJob) {
+            $query->where('include_in_migration_job', true);
+        }
+        $rows = iterator_to_array($query->find());
+
+        usort($rows, fn(DeploymentSpecificationInitContainer $a, DeploymentSpecificationInitContainer $b) =>
+            [(bool) $b->init_container->is_sidecar, (int) $a->position] <=> [(bool) $a->init_container->is_sidecar, (int) $b->position]);
+
+        return array_values($rows);
+    }
+
+    /**
+     * Replace the init containers of one kind - the sidecars, or the rest - and leave the other
+     * kind as it is. Each has its own section and its own list.
+     */
+    public function updateInitContainers(DeploymentSpecificationInitContainer $values, bool $sidecars = false): void {
+        /** @var DeploymentSpecificationInitContainer $rows */
+        $rows = (new DeploymentSpecificationInitContainerModel())
+            ->includeRelated(InitContainerModel::class)
+            ->where('deployment_specification_id', $this->id)
+            ->find();
+        foreach ($rows as $row) {
+            if ((bool) $row->init_container->is_sidecar === $sidecars) {
+                $row->delete();
+            }
+        }
         $this->save($values);
         $this->deployment_specification_init_containers = $values;
     }

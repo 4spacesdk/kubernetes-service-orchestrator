@@ -111,6 +111,7 @@ function onSave() {
 <template>
     <page-section
         title="Service Annotations"
+        flush
         :is-loading="isLoading"
         :is-saving="isSaving"
         @save="onSave">

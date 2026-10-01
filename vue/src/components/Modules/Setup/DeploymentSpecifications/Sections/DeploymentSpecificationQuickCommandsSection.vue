@@ -117,6 +117,7 @@ function onSave() {
 <template>
     <page-section
         title="Quick Commands"
+        flush
         :is-loading="isLoading"
         :is-saving="isSaving"
         @save="onSave">

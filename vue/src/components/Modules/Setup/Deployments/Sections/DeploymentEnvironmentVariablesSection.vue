@@ -124,6 +124,7 @@ function onSave() {
 <template>
     <page-section
         title="Environment Variables"
+        flush
         :is-loading="isLoading"
         :is-saving="isSaving"
         @save="onSave">

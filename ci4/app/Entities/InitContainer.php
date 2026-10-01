@@ -22,6 +22,7 @@ use RenokiCo\PhpK8s\Instances\Volume;
  * @property string $container_image_pull_policy
  * @property bool $include_deployment_environment_variables
  * @property bool $include_volumes
+ * @property bool $is_sidecar Keeps running beside the app container, see toKubernetesResource()
  *
  * Many
  * @property InitContainerEnvironmentVariable $init_container_environment_variables
@@ -60,6 +61,15 @@ class InitContainer extends Entity {
                 }
             )
             ->setAttribute('imagePullPolicy', $this->container_image_pull_policy);
+
+        // A native sidecar (Kubernetes 1.29+): an init container that is restarted rather than
+        // waited for. It starts in its place in the order - before the init containers that come
+        // after it, which can use it - and keeps running beside the app until the pod stops. In a
+        // Job it is stopped when the job's own container is done.
+        if ($this->is_sidecar) {
+            $container->setAttribute('restartPolicy', 'Always');
+        }
+
         if (strlen($this->command)) {
             $container->setAttribute('command', [
                 EnvironmentVariable::ApplyVariablesToString($this->command, $deployment),

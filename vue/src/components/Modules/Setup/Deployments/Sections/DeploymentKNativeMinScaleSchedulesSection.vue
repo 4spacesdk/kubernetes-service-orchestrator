@@ -113,6 +113,7 @@ function onSortChanged(event: CustomEvent) {
 <template>
     <page-section
         title="KNative Min Scale Schedules"
+        flush
         :is-loading="isLoading"
         :auto-save="autoSave">
         <template #actions>

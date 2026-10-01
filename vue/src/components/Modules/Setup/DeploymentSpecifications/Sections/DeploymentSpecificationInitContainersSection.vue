@@ -13,8 +13,14 @@ interface Row {
     item: InitContainer;
 }
 
+/**
+ * The specification's init containers, or its sidecars - one kind at a time, each with its own
+ * list and its own save, so saving one leaves the other alone. Sidecars start first, before every
+ * init container, so the order is only within the kind.
+ */
 const props = defineProps<{
-    deploymentSpecification: DeploymentSpecification
+    deploymentSpecification: DeploymentSpecification,
+    sidecars?: boolean,
 }>();
 
 const isLoading = ref(false);
@@ -44,6 +50,7 @@ function render() {
         .include('deployment_specification_init_container')
         .find(value => {
             rows.value = value[0].deployment_specification_init_containers
+                ?.filter(initContainer => !!initContainer.init_container?.is_sidecar === !!props.sidecars)
                 ?.sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
                 ?.map(initContainer => {
                     return {
@@ -64,7 +71,7 @@ function render() {
 
 function onCreateBtnClicked() {
     bus.emit('initContainerEdit', {
-        initContainer: InitContainer.CreateDefault(),
+        initContainer: InitContainer.CreateDefault(props.sidecars),
         onSaveCallback: (item: InitContainer) => {
             Api.initContainers().getById(item.id!)
                 .find(value => rows.value.push({
@@ -102,7 +109,9 @@ function onSave() {
         return;
     }
     isSaving.value = true;
-    const api = Api.deploymentSpecifications().updateInitContainersPutById(props.deploymentSpecification.id!);
+    const api = props.sidecars
+        ? Api.deploymentSpecifications().updateSidecarsPutById(props.deploymentSpecification.id!)
+        : Api.deploymentSpecifications().updateInitContainersPutById(props.deploymentSpecification.id!);
     api.setErrorHandler(response => {
         if (response.error) {
             bus.emit('toast', {
@@ -146,7 +155,8 @@ function onSortChanged(event: CustomEvent) {
 
 <template>
     <page-section
-        title="Init Containers"
+        :title="props.sidecars ? 'Sidecars' : 'Init Containers'"
+        flush
         :is-loading="isLoading"
         :is-saving="isSaving"
         @save="onSave">
@@ -161,6 +171,10 @@ function onSortChanged(event: CustomEvent) {
                 <v-tooltip activator="parent" location="bottom">Create</v-tooltip>
             </v-btn>
         </template>
+
+        <p v-if="props.sidecars" class="text-medium-emphasis pa-4 mb-0">
+            Containers that keep running beside the app for as long as the pod lives - a push server, a database proxy. They start before the init containers, which can use them. A migration job that includes one still completes.
+        </p>
 
         <v-data-table-server
             :headers="headers"

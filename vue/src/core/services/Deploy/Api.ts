@@ -3220,6 +3220,27 @@ export class DeploymentSpecificationsUpdateInitContainersPutById extends BaseApi
     }
 }
 
+export class DeploymentSpecificationsUpdateSidecarsPutById extends BaseApi<DeploymentSpecification> {
+
+    public topic = 'Resources.DeploymentSpecifications';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/deployment-specifications/${id}/sidecars`;
+    }
+
+    protected convertToResource(data: any): DeploymentSpecification {
+        return new DeploymentSpecification(data);
+    }
+
+    public save(data: DeploymentSpecificationInitContainersRequest, next?: (value: DeploymentSpecification) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
 export class DeploymentSpecificationsUpdatePostUpdateActionsPutById extends BaseApi<DeploymentSpecification> {
 
     public topic = 'Resources.DeploymentSpecifications';
@@ -3397,6 +3418,10 @@ class DeploymentSpecifications {
 
     public updateInitContainersPutById(id: number): DeploymentSpecificationsUpdateInitContainersPutById {
         return new DeploymentSpecificationsUpdateInitContainersPutById(id);
+    }
+
+    public updateSidecarsPutById(id: number): DeploymentSpecificationsUpdateSidecarsPutById {
+        return new DeploymentSpecificationsUpdateSidecarsPutById(id);
     }
 
     public updatePostUpdateActionsPutById(id: number): DeploymentSpecificationsUpdatePostUpdateActionsPutById {

@@ -41,9 +41,36 @@ class MigrationJobWatcherClusterTest extends ClusterTestCase {
         $this->assertCount(1, $pods);
     }
 
-    private function migrate(string $command): MigrationJob {
+    /**
+     * A sidecar in the migration job keeps running beside the migration - and the Job still
+     * completes: Kubernetes stops the sidecar when the migration's container is done, which is
+     * why sidecars are kept in the migration job rather than filtered out.
+     */
+    public function testAMigrationWithASidecarStillCompletes(): void {
+        $job = $this->migrate('echo Migrating; echo Done.', withASidecar: true);
+
+        $this->assertSame(\MigrationJobStatusTypes::Completed, $job->status);
+        $this->assertSame(0, (int) $job->exit_code);
+    }
+
+    private function migrate(string $command, bool $withASidecar = false): MigrationJob {
         $deployment = $this->deploymentInTheTestNamespace();
         $specification = $deployment->findDeploymentSpecification();
+        if ($withASidecar) {
+            $sidecar = Fixtures::initContainer([
+                'name' => 'proxy',
+                'container_image_id' => $specification->container_image_id,
+                'container_image_tag_policy' => \ContainerImageTagPolicies::Default,
+                'command' => 'sleep',
+                'args' => json_encode(['3600']),
+                'is_sidecar' => true,
+            ]);
+            Fixtures::specificationInitContainer([
+                'deployment_specification_id' => $specification->id,
+                'init_container_id' => $sidecar->id,
+                'include_in_migration_job' => true,
+            ]);
+        }
         $specification->enable_database = true;
         $specification->database_migration_command = $command;
         $specification->database_migration_verification_type = \MigrationVerificationTypes::EndsWith;

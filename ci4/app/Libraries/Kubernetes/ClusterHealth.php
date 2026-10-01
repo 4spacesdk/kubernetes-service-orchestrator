@@ -212,27 +212,37 @@ class ClusterHealth {
      * What a pod asks of its node, as the scheduler adds it up: its containers together, or its
      * largest init container if that is more - they run one at a time, before the rest.
      *
+     * A sidecar is the exception: once started it runs for the rest of the pod's life, so it is
+     * added to the containers, and to every init container that starts after it.
+     *
      * @return array{0: int, 1: int} [millicores, bytes]
      */
     private static function PodRequests(array $pod): array {
-        $sum = fn(array $containers, string $resource, \Closure $parse) => array_sum(array_map(
-            fn(array $container) => $parse($container['resources']['requests'][$resource] ?? null) ?? 0,
-            $containers,
-        ));
-        $max = fn(array $containers, string $resource, \Closure $parse) => max([0, ...array_map(
-            fn(array $container) => $parse($container['resources']['requests'][$resource] ?? null) ?? 0,
-            $containers,
-        )]);
-
+        $parsers = [
+            'cpu' => fn(?string $q) => Quantity::Millicores($q),
+            'memory' => fn(?string $q) => Quantity::Bytes($q),
+        ];
         $containers = $pod['spec']['containers'] ?? [];
         $init = $pod['spec']['initContainers'] ?? [];
-        $millicores = fn(?string $q) => Quantity::Millicores($q);
-        $bytes = fn(?string $q) => Quantity::Bytes($q);
 
-        return [
-            max($sum($containers, 'cpu', $millicores), $max($init, 'cpu', $millicores)),
-            max($sum($containers, 'memory', $bytes), $max($init, 'memory', $bytes)),
-        ];
+        $requests = [];
+        foreach ($parsers as $resource => $parse) {
+            $request = fn(array $container) => $parse($container['resources']['requests'][$resource] ?? null) ?? 0;
+
+            $sidecars = 0;
+            $largestInit = 0;
+            foreach ($init as $container) {
+                if (Sidecars::Is($container)) {
+                    $sidecars += $request($container);
+                } else {
+                    $largestInit = max($largestInit, $sidecars + $request($container));
+                }
+            }
+
+            $requests[] = max(array_sum(array_map($request, $containers)) + $sidecars, $largestInit);
+        }
+
+        return $requests;
     }
 
     /**

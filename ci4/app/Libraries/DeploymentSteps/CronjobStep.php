@@ -351,6 +351,10 @@ class CronjobStep extends BaseDeploymentStep {
                 $container->maxMemory($cronJob->memory_limit, 'Mi');
             }
 
+            // The cron job's container alone: a cron job takes none of the specification's init
+            // containers, so none of its sidecars either. A job that needs one - a database proxy
+            // - would want it on the cron job itself; Kubernetes would stop it when the job is
+            // done, as it does in the migration job.
             $template = (new K8sPod())
                 ->setContainers([$container])
                 ->setSpec('restartPolicy', $cronJob->restart_policy);

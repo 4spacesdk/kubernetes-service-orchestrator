@@ -243,6 +243,25 @@ class KubeHelper {
     }
 
     /**
+     * The init containers of a pod spec read back from the cluster, without the defaults the api
+     * server writes on each of them and kso never sends - so a preview shows no change on a
+     * container nobody changed. Sidecars included: they are init containers.
+     *
+     * @param array<string, mixed> $podSpec
+     * @return array<string, mixed>
+     */
+    public static function WithoutInitContainerDefaults(array $podSpec): array {
+        foreach ($podSpec['initContainers'] ?? [] as $index => $container) {
+            unset($container['terminationMessagePath'], $container['terminationMessagePolicy']);
+            if (($container['resources'] ?? null) === []) {
+                unset($container['resources']);
+            }
+            $podSpec['initContainers'][$index] = $container;
+        }
+        return $podSpec;
+    }
+
+    /**
      * A resource as the template inside another resource.
      *
      * php-k8s serialises a `K8sPod` or a `K8sJob` whole, `apiVersion` and `kind` included -

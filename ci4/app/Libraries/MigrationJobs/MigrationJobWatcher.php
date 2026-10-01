@@ -3,6 +3,7 @@
 use App\Entities\Deployment;
 use App\Entities\MigrationJob;
 use App\Libraries\Kubernetes\KubeHelper;
+use App\Libraries\Kubernetes\Sidecars;
 use App\Models\MigrationJobModel;
 use Config\Database;
 use DebugTool\Data;
@@ -241,10 +242,13 @@ class MigrationJobWatcher {
     private static function Explain(array $failed, ?array $pod, Deployment $deployment, MigrationJobCluster $cluster): string {
         $lines = [trim('The job failed: ' . ($failed['reason'] ?? '') . ' ' . ($failed['message'] ?? ''))];
 
-        // An init container that failed is why the migration never ran, and its log is why.
+        // An init container that failed is why the migration never ran, and its log is why. Not a
+        // sidecar: Kubernetes stops it when the job's container is done, and the exit code of
+        // being stopped says nothing about why the job failed.
+        $sidecars = Sidecars::Names($pod['spec'] ?? []);
         foreach ($pod['status']['initContainerStatuses'] ?? [] as $init) {
             $exitCode = $init['state']['terminated']['exitCode'] ?? null;
-            if ($exitCode === null || (int) $exitCode === 0) {
+            if ($exitCode === null || (int) $exitCode === 0 || in_array($init['name'] ?? '', $sidecars, true)) {
                 continue;
             }
             $lines[] = "Init container {$init['name']} exited with {$exitCode}";

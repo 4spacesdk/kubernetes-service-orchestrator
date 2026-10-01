@@ -203,6 +203,24 @@ class DiagnoserTest extends CIUnitTestCase {
         $this->assertSame('The readiness probe is answered with 401 on /health - is the path behind a login, such as basic auth?', $finding->cause);
     }
 
+    /**
+     * A sidecar is ready or not, like the app, and holds the pod back when it is not - where an
+     * ordinary init container, done or running, is never ready and is not looked at.
+     */
+    public function testASidecarThatIsNotReadyIsLookedAtAndAnInitContainerIsNot(): void {
+        $pod = $this->pod();
+        $pod['spec']['initContainers'] = [['name' => 'migrate'], ['name' => 'centrifugo', 'restartPolicy' => 'Always']];
+        $pod['status']['initContainerStatuses'] = [
+            ['name' => 'migrate', 'state' => ['running' => ['startedAt' => $this->ago(60)]], 'ready' => false, 'restartCount' => 0],
+            ['name' => 'centrifugo', 'state' => ['running' => ['startedAt' => $this->ago(60)]], 'ready' => false, 'restartCount' => 0],
+        ];
+
+        $finding = $this->only(new Evidence('1.1', [$pod]));
+
+        $this->assertSame('not_ready', $finding->rule);
+        $this->assertSame(['app-a/centrifugo: running, not ready'], $finding->evidence);
+    }
+
     public function testNotReadyWithoutAProbeEventCannotTell(): void {
         $finding = $this->only(new Evidence('1.1', [$this->pod(ready: false)]));
 

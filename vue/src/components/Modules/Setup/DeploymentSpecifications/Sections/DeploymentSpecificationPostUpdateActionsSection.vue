@@ -140,6 +140,7 @@ function onSortChanged(event: CustomEvent) {
 <template>
     <page-section
         title="Post Update Actions"
+        flush
         :is-loading="isLoading"
         :is-saving="isSaving"
         @save="onSave">

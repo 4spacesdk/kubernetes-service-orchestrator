@@ -3,12 +3,12 @@
 use App\Entities\DatabaseService;
 use App\Entities\Deployment;
 use App\Libraries\Kubernetes\SecurityContext;
+use App\Libraries\Kubernetes\Sidecars;
 use App\Libraries\Kubernetes\ContainerEnvironment;
 use App\Libraries\Kubernetes\SecretPreview;
 use App\Libraries\Kubernetes\WorkloadSecret;
 use App\Libraries\Kubernetes\KubeHelper;
 use App\Entities\DeploymentSpecificationDeploymentAnnotation;
-use App\Entities\DeploymentSpecificationInitContainer;
 use App\Entities\DeploymentSpecificationVolume;
 use App\Entities\DeploymentVolume;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
@@ -17,12 +17,9 @@ use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepTriggers;
 use App\Libraries\Kubernetes\ImagePullSecrets;
 use App\Libraries\Kubernetes\KubeAuth;
-use App\Models\ContainerImageModel;
 use App\Models\DeploymentSpecificationDeploymentAnnotationModel;
-use App\Models\DeploymentSpecificationInitContainerModel;
 use App\Models\DeploymentSpecificationVolumeModel;
 use App\Models\DeploymentVolumeModel;
-use App\Models\InitContainerModel;
 use DebugTool\Data;
 use RenokiCo\PhpK8s\Exceptions\KubernetesAPIException;
 use RenokiCo\PhpK8s\Instances\Container;
@@ -107,6 +104,9 @@ class DeploymentStep extends BaseDeploymentStep {
             unset($remote['spec']['template']['metadata']['annotations']);
             unset($remote['spec']['template']['spec']['containers'][0]['terminationMessagePath']);
             unset($remote['spec']['template']['spec']['containers'][0]['terminationMessagePolicy']);
+            if (isset($remote['spec']['template']['spec'])) {
+                $remote['spec']['template']['spec'] = KubeHelper::WithoutInitContainerDefaults($remote['spec']['template']['spec']);
+            }
             unset($remote['spec']['template']['spec']['restartPolicy']);
             unset($remote['spec']['template']['spec']['terminationGracePeriodSeconds']);
             unset($remote['spec']['template']['spec']['dnsPolicy']);
@@ -239,6 +239,9 @@ class DeploymentStep extends BaseDeploymentStep {
     }
 
     /**
+     * Whether a pod has an app container, or a sidecar, that is not ready. An ordinary init
+     * container is never ready - it is done or not - so only the sidecars among them count.
+     *
      * @throws \Exception
      */
     public function hasNonReadyContainer(Deployment $deployment): bool {
@@ -254,7 +257,7 @@ class DeploymentStep extends BaseDeploymentStep {
         /** @var K8sPod $pod */
         foreach ($pods as $pod) {
             Data::debug("Pod found for", $deployment->name, 'with name', $pod->getName());
-            if (!$pod->containersAreReady()) {
+            if (!$pod->containersAreReady() || Sidecars::AnyNotReady($pod->toArray())) {
                 $hasNonReadyContainer = true;
             }
         }
@@ -356,12 +359,7 @@ class DeploymentStep extends BaseDeploymentStep {
 
         // Init Containers
         $initContainers = [];
-        /** @var DeploymentSpecificationInitContainer $deploymentSpecificationInitContainers */
-        $deploymentSpecificationInitContainers = (new DeploymentSpecificationInitContainerModel())
-            ->includeRelated([InitContainerModel::class, ContainerImageModel::class])
-            ->where('deployment_specification_id', $spec->id)
-            ->orderBy('position', 'asc')
-            ->find();
+        $deploymentSpecificationInitContainers = $spec->findInitContainersInStartOrder();
         $podImages = [$spec->container_image];
         foreach ($deploymentSpecificationInitContainers as $deploymentSpecificationInitContainer) {
             $initContainers[] = $deploymentSpecificationInitContainer->init_container->toKubernetesResource($deployment, $secret);

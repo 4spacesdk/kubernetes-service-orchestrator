@@ -116,6 +116,7 @@ function onSave() {
 <template>
     <page-section
         title="Role Rules"
+        flush
         :is-loading="isLoading"
         :is-saving="isSaving"
         @save="onSave">

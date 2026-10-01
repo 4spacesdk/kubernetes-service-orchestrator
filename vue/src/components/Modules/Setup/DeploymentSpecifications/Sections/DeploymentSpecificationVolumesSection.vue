@@ -98,6 +98,7 @@ function onSave() {
 <template>
     <page-section
         title="Volumes"
+        flush
         :is-loading="isLoading"
         :is-saving="isSaving"
         @save="onSave">

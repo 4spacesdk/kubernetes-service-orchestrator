@@ -3,7 +3,6 @@
 use App\Entities\DatabaseService;
 use App\Entities\Deployment;
 use App\Entities\DeploymentSpecificationDeploymentAnnotation;
-use App\Entities\DeploymentSpecificationInitContainer;
 use App\Entities\DeploymentSpecificationVolume;
 use App\Entities\DeploymentVolume;
 use App\Entities\Domain;
@@ -19,12 +18,9 @@ use App\Libraries\Kubernetes\WorkloadSecret;
 use App\Libraries\Kubernetes\CustomResourceDefinitions\K8sKNativeService;
 use App\Libraries\Kubernetes\ImagePullSecrets;
 use App\Libraries\Kubernetes\KubeAuth;
-use App\Models\ContainerImageModel;
 use App\Models\DeploymentSpecificationDeploymentAnnotationModel;
-use App\Models\DeploymentSpecificationInitContainerModel;
 use App\Models\DeploymentSpecificationVolumeModel;
 use App\Models\DeploymentVolumeModel;
-use App\Models\InitContainerModel;
 use RenokiCo\PhpK8s\Exceptions\KubernetesAPIException;
 use RenokiCo\PhpK8s\Instances\Instance;
 use RenokiCo\PhpK8s\Kinds\K8sEvent;
@@ -142,6 +138,12 @@ class KServiceStep extends BaseDeploymentStep {
         }
         if (!in_array($deployment->environment, \Environments::All())) {
             return 'Missing environment';
+        }
+
+        // Before the cluster is asked anything: it is the specification, not the cluster.
+        $sidecarsCannotRun = $deployment->findDeploymentSpecification()->reasonSidecarsCannotRun();
+        if ($sidecarsCannotRun !== null) {
+            return $sidecarsCannotRun;
         }
 
         $namespaceStep = new NamespaceStep();
@@ -410,12 +412,7 @@ class KServiceStep extends BaseDeploymentStep {
 
         // Init Containers
         $initContainers = [];
-        /** @var DeploymentSpecificationInitContainer $deploymentSpecificationInitContainers */
-        $deploymentSpecificationInitContainers = (new DeploymentSpecificationInitContainerModel())
-            ->includeRelated([InitContainerModel::class, ContainerImageModel::class])
-            ->where('deployment_specification_id', $spec->id)
-            ->orderBy('position', 'asc')
-            ->find();
+        $deploymentSpecificationInitContainers = $spec->findInitContainersInStartOrder();
         $podImages = [$spec->container_image];
         foreach ($deploymentSpecificationInitContainers as $deploymentSpecificationInitContainer) {
             $initContainers[] = $deploymentSpecificationInitContainer->init_container->toKubernetesResource($deployment, $secret)->toArray();

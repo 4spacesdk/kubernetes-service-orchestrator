@@ -240,6 +240,53 @@ class DeploymentSpecificationsApiTest extends ControllerTestCase {
         $this->assertSame(1, (int) $rows[1]['include_in_migration_job']);
     }
 
+    /**
+     * Sidecars and init containers are two lists with an endpoint each, and saving one leaves the
+     * other as it is - the two sections save on their own.
+     */
+    public function testSavingTheSidecarsLeavesTheInitContainersAndTheOtherWayRound(): void {
+        $specification = Fixtures::deploymentSpecification(['workload_type' => \WorkloadTypes::Deployment]);
+        $sidecar = Fixtures::initContainer(['name' => 'centrifugo', 'is_sidecar' => true]);
+        $initContainer = Fixtures::initContainer(['name' => 'wait-for-db']);
+
+        $this->putValues("deployment-specifications/{$specification->id}/sidecars", [['initContainerId' => $sidecar->id, 'position' => 0, 'includeInMigrationJob' => false]]);
+        $this->putValues("deployment-specifications/{$specification->id}/init-containers", [['initContainerId' => $initContainer->id, 'position' => 0, 'includeInMigrationJob' => false]]);
+        $this->assertSame([(int) $sidecar->id, (int) $initContainer->id], $this->initContainerIdsOf($specification));
+
+        $this->putValues("deployment-specifications/{$specification->id}/sidecars", []);
+        $this->assertSame([(int) $initContainer->id], $this->initContainerIdsOf($specification), 'emptying the sidecars left the init container');
+    }
+
+    /**
+     * Each list takes its own kind, and says where the other goes.
+     */
+    public function testEachListRefusesTheOtherKind(): void {
+        $specification = Fixtures::deploymentSpecification(['workload_type' => \WorkloadTypes::Deployment]);
+        $sidecar = Fixtures::initContainer(['name' => 'centrifugo', 'is_sidecar' => true]);
+        $initContainer = Fixtures::initContainer(['name' => 'wait-for-db']);
+
+        $asInitContainer = $this->putValues("deployment-specifications/{$specification->id}/init-containers", [['initContainerId' => $sidecar->id, 'position' => 0, 'includeInMigrationJob' => false]]);
+        $asSidecar = $this->putValues("deployment-specifications/{$specification->id}/sidecars", [['initContainerId' => $initContainer->id, 'position' => 0, 'includeInMigrationJob' => false]]);
+
+        $this->assertSame('centrifugo is a sidecar - it goes under Sidecars', $asInitContainer['error'] ?? null);
+        $this->assertSame('wait-for-db is not a sidecar - it goes under Init Containers', $asSidecar['error'] ?? null);
+        $this->assertSame([], $this->initContainerIdsOf($specification));
+    }
+
+    /**
+     * A Knative Service takes no sidecar - its validation refuses `restartPolicy` on an init
+     * container - so the list is refused when it is saved, with why, and left as it was.
+     */
+    public function testASidecarIsRefusedOnAKnativeSpecification(): void {
+        $knative = Fixtures::deploymentSpecification(['workload_type' => \WorkloadTypes::KNativeService]);
+        $sidecar = Fixtures::initContainer(['name' => 'centrifugo', 'is_sidecar' => true]);
+
+        $refused = $this->putValues("deployment-specifications/{$knative->id}/sidecars", [['initContainerId' => $sidecar->id, 'position' => 0, 'includeInMigrationJob' => false]]);
+
+        $this->assertStringStartsWith('A Knative Service cannot run sidecars, and centrifugo runs as one', $refused['error'] ?? '');
+        $this->assertSame([], $this->initContainerIdsOf($knative));
+    }
+
     // </editor-fold>
 
     // <editor-fold desc="The rest of the collections">
@@ -634,6 +681,13 @@ class DeploymentSpecificationsApiTest extends ControllerTestCase {
         $response = $this->withBodyFormat('json')->signedIn()->put($path, ['values' => $values]);
 
         return json_decode((string) $response->response()->getBody(), true);
+    }
+
+    /**
+     * @return list<int> sidecars first, as they start
+     */
+    private function initContainerIdsOf(DeploymentSpecification $specification): array {
+        return array_map(fn($row) => (int) $row->init_container_id, $specification->findInitContainersInStartOrder());
     }
 
     /**

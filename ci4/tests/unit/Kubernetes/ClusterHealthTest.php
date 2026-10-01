@@ -78,6 +78,40 @@ class ClusterHealthTest extends CIUnitTestCase {
         $this->assertSame(500, $node['cpu_requested']);
     }
 
+    /**
+     * A sidecar runs for the pod's whole life, so the scheduler adds it to the containers - and
+     * to every init container that starts after it. 100m app + 50m sidecar = 150m, more than the
+     * 60m init container that came before the sidecar.
+     */
+    public function testASidecarIsAddedToTheContainers(): void {
+        $pod = $this->pod('node-a', [['cpu' => '100m', 'memory' => '64Mi']]);
+        $pod['spec']['initContainers'] = [
+            ['resources' => ['requests' => ['cpu' => '60m']]],
+            ['restartPolicy' => 'Always', 'resources' => ['requests' => ['cpu' => '50m', 'memory' => '32Mi']]],
+        ];
+
+        $node = $this->nodes([$this->node()], [$pod])[0];
+
+        $this->assertSame(150, $node['cpu_requested']);
+        $this->assertSame(96 * 1024 * 1024, $node['memory_requested']);
+    }
+
+    /**
+     * An init container after a sidecar runs beside it: 400m + 50m is what the pod asks for
+     * while it does, and that is more than the app and the sidecar together.
+     */
+    public function testAnInitContainerAfterASidecarIsCountedWithIt(): void {
+        $pod = $this->pod('node-a', [['cpu' => '100m']]);
+        $pod['spec']['initContainers'] = [
+            ['restartPolicy' => 'Always', 'resources' => ['requests' => ['cpu' => '50m']]],
+            ['resources' => ['requests' => ['cpu' => '400m']]],
+        ];
+
+        $node = $this->nodes([$this->node()], [$pod])[0];
+
+        $this->assertSame(450, $node['cpu_requested']);
+    }
+
     public function testUsageComesFromMetricsServer(): void {
         $node = ClusterHealth::Nodes([$this->node()], [], [
             ['metadata' => ['name' => 'node-a'], 'usage' => ['cpu' => '523m', 'memory' => '2Gi']],

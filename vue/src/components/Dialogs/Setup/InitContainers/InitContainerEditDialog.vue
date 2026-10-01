@@ -9,6 +9,7 @@ import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInter
 import {ContainerImageTagPolicies, ImagePullPolicies} from "@/constants";
 import {VTextField} from "vuetify/components/VTextField";
 import VariableBtn from "@/components/Modules/Common/VariableBtn.vue";
+import moment from "moment";
 
 export interface InitContainerEditDialog_Input {
     initContainer: InitContainer;
@@ -61,6 +62,47 @@ const imagePullPolicies = ref([
         name: "Never",
     },
 ]);
+
+/**
+ * A static tag is picked from the image's tags in its registry, newest first with when each was
+ * pushed; any can be typed. An image without a registry, or one that refuses, leaves it to typing.
+ */
+const registryTags = ref<{ name: string; pushed?: string }[]>([]);
+const isLoadingRegistryTags = ref(false);
+let registryTagsOf: number | null = null;
+
+watch(
+    () => [item.value.container_image_tag_policy, item.value.container_image_id],
+    () => loadRegistryTags(),
+);
+
+function loadRegistryTags() {
+    const imageId = item.value.container_image_id;
+    if (item.value.container_image_tag_policy != ContainerImageTagPolicies.Static || !imageId || imageId === registryTagsOf) {
+        return;
+    }
+    registryTagsOf = imageId;
+    registryTags.value = [];
+    isLoadingRegistryTags.value = true;
+    const api = Api.containerImages().getTagsGetById(imageId);
+    api.setErrorHandler(() => {
+        isLoadingRegistryTags.value = false;
+        return false;
+    });
+    api.find((responses) => {
+        if (registryTagsOf !== imageId) {
+            return;
+        }
+        registryTags.value = [...(responses[0]?.tags ?? [])]
+            .filter((tag) => tag.name)
+            .sort((a, b) => (b.pushed_at ?? "").localeCompare(a.pushed_at ?? ""))
+            .map((tag) => ({
+                name: tag.name!,
+                pushed: tag.pushed_at ? moment(tag.pushed_at).format("D/M-YY HH:mm") : undefined,
+            }));
+        isLoadingRegistryTags.value = false;
+    });
+}
 
 // <editor-fold desc="Functions">
 
@@ -161,7 +203,7 @@ function onArgVariableAdded(index: number, value: string) {
             class="w-100 h-100"
             :loading="isLoading"
             :disabled="isLoading">
-            <v-card-title>Init Container</v-card-title>
+            <v-card-title>{{ item.is_sidecar ? 'Sidecar' : 'Init Container' }}</v-card-title>
             <v-divider/>
             <v-card-text>
                 <v-row density="compact">
@@ -220,13 +262,28 @@ function onArgVariableAdded(index: number, value: string) {
                     <v-col cols="6"
                            v-if="item.container_image_tag_policy == ContainerImageTagPolicies.Static"
                     >
-                        <v-text-field
+                        <v-combobox
                             v-model="item.container_image_tag_value"
+                            :items="registryTags"
+                            item-title="name"
+                            item-value="name"
+                            :return-object="false"
+                            :loading="isLoadingRegistryTags"
                             variant="outlined"
                             label="Tag"
+                            placeholder="Choose or type a tag"
                             density="compact"
-                            hide-details
-                        />
+                            hide-details>
+                            <template v-slot:item="{ props: itemProps, internalItem: tagItem }">
+                                <v-list-item v-bind="itemProps">
+                                    <template v-slot:append>
+                                        <span
+                                            v-if="tagItem.raw.pushed"
+                                            class="text-body-small text-medium-emphasis ml-4">{{ tagItem.raw.pushed }}</span>
+                                    </template>
+                                </v-list-item>
+                            </template>
+                        </v-combobox>
                     </v-col>
 
                     <v-col cols="12">

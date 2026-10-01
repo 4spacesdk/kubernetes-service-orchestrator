@@ -310,6 +310,32 @@ class DeploymentStepTest extends ManifestTestCase {
     }
 
     /**
+     * A sidecar is an init container Kubernetes restarts rather than waits for. The sidecars
+     * start first - before every init container, whatever the positions say, as they are two lists
+     * - so the init containers can use them. The ordinary ones are written exactly as before.
+     */
+    public function testASidecarIsRestartedAlwaysAndStartsBeforeTheInitContainers(): void {
+        $deployment = Fixtures::deployableDeployment();
+        $image = Fixtures::containerImage(['url' => 'centrifugo/centrifugo', 'default_tag' => 'v6.9.6']);
+
+        foreach ([['wait-for-push', false, 0], ['centrifugo', true, 5]] as [$name, $isSidecar, $position]) {
+            $initContainer = Fixtures::initContainer(['name' => $name, 'container_image_id' => $image->id, 'is_sidecar' => $isSidecar]);
+            Fixtures::specificationInitContainer([
+                'deployment_specification_id' => $deployment->deployment_specification_id,
+                'init_container_id' => $initContainer->id,
+                'position' => $position,
+            ]);
+        }
+
+        $initContainers = $this->podSpec($deployment)['initContainers'];
+
+        $this->assertSame(['centrifugo', 'wait-for-push'], array_column($initContainers, 'name'));
+        $this->assertSame('Always', $initContainers[0]['restartPolicy']);
+        $this->assertArrayNotHasKey('restartPolicy', $initContainers[1]);
+        $this->assertCount(1, $this->podSpec($deployment)['containers'], 'the app is still the only container');
+    }
+
+    /**
      * An annotation is written at the level it was set for, and nowhere else. The two are
      * read by different things - a Deployment annotation by whatever watches Deployments,
      * a pod one by the sidecar injectors and scrapers that only ever see pods - so putting

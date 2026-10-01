@@ -19,6 +19,7 @@ export class InitContainerDefinition extends BaseModel {
     container_image_pull_policy?: string;
     include_deployment_environment_variables?: boolean;
     include_volumes?: boolean;
+    is_sidecar?: boolean;
     init_container_environment_variables?: InitContainerEnvironmentVariable[];
     deployment_specifications?: DeploymentSpecification[];
     id?: number;
@@ -48,6 +49,7 @@ export class InitContainerDefinition extends BaseModel {
             delete this.container_image_pull_policy;
             delete this.include_deployment_environment_variables;
             delete this.include_volumes;
+            delete this.is_sidecar;
             delete this.init_container_environment_variables;
             delete this.deployment_specifications;
             delete this.id;
@@ -91,6 +93,9 @@ export class InitContainerDefinition extends BaseModel {
         }
         if (data.include_volumes != null) {
             this.include_volumes = data.include_volumes;
+        }
+        if (data.is_sidecar != null) {
+            this.is_sidecar = data.is_sidecar;
         }
         if (data.init_container_environment_variables != null) {
             this.init_container_environment_variables = data.init_container_environment_variables.map((i: any) => new InitContainerEnvironmentVariable(i));

@@ -111,6 +111,7 @@ function onSave() {
 <template>
     <page-section
         title="Labels"
+        flush
         :is-loading="isLoading"
         :is-saving="isSaving"
         @save="onSave">

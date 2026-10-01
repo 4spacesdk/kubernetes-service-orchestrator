@@ -116,6 +116,7 @@ function onSave() {
 <template>
     <page-section
         title="Deployment Annotations"
+        flush
         :is-loading="isLoading"
         :is-saving="isSaving"
         @save="onSave">

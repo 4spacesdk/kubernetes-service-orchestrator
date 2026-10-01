@@ -17,6 +17,7 @@ use App\Entities\DeploymentSpecificationQuickCommand;
 use App\Entities\DeploymentSpecificationServiceAnnotation;
 use App\Entities\DeploymentSpecificationServicePort;
 use App\Entities\DeploymentSpecificationInitContainer;
+use App\Entities\InitContainer;
 use App\Interfaces\ClusterRoleRuleList;
 use App\Interfaces\DeploymentAnnotationList;
 use App\Interfaces\DeploymentSpecificationInitContainersRequest;
@@ -32,6 +33,7 @@ use App\Interfaces\RoleRuleList;
 use App\Interfaces\ServiceAnnotationList;
 use App\Interfaces\ServicePortList;
 use App\Libraries\RequestField;
+use App\Models\InitContainerModel;
 use DebugTool\Data;
 
 class DeploymentSpecifications extends ResourceController {
@@ -386,6 +388,8 @@ class DeploymentSpecifications extends ResourceController {
     }
 
     /**
+     * The init containers that run to an end, before the app. The sidecars are their own list.
+     *
      * @route /deployment-specifications/{id}/init-containers
      * @method put
      * @custom true
@@ -395,6 +399,26 @@ class DeploymentSpecifications extends ResourceController {
      * @audit entity
      */
     public function updateInitContainers(int $id): void {
+        $this->replaceInitContainers($id, false);
+    }
+
+    /**
+     * The sidecars: init containers that keep running beside the app. A Knative Service cannot
+     * run one, so it is refused there.
+     *
+     * @route /deployment-specifications/{id}/sidecars
+     * @method put
+     * @custom true
+     * @param int $id
+     * @requestSchema DeploymentSpecificationInitContainersRequest
+     * @return void
+     * @audit entity
+     */
+    public function updateSidecars(int $id): void {
+        $this->replaceInitContainers($id, true);
+    }
+
+    private function replaceInitContainers(int $id, bool $sidecars): void {
         $item = new DeploymentSpecification();
         $item->find($id);
         if (!$item->exists()) {
@@ -404,6 +428,27 @@ class DeploymentSpecifications extends ResourceController {
 
         /** @var DeploymentSpecificationInitContainersRequest $body */
         $body = $this->request->getJSON();
+        $ids = array_map(fn($value) => (int) $value->initContainerId, $body->values);
+
+        // Each list takes its own kind only - saving one must not empty the other.
+        /** @var InitContainer $initContainers */
+        $initContainers = (new InitContainerModel())->whereIn('id', $ids ?: [0])->find();
+        foreach ($initContainers as $initContainer) {
+            if ((bool) $initContainer->is_sidecar !== $sidecars) {
+                $this->fail($sidecars
+                    ? "{$initContainer->name} is not a sidecar - it goes under Init Containers"
+                    : "{$initContainer->name} is a sidecar - it goes under Sidecars");
+                return;
+            }
+        }
+
+        if ($sidecars) {
+            $sidecarsCannotRun = $item->reasonSidecarsCannotRun($ids);
+            if ($sidecarsCannotRun !== null) {
+                $this->fail($sidecarsCannotRun);
+                return;
+            }
+        }
 
         // Unlike cron jobs and post update actions next door, an init container's position
         // is sent rather than taken from where it sits in the list. The call used to be
@@ -411,15 +456,15 @@ class DeploymentSpecifications extends ResourceController {
         // keys went nowhere and the two shapes only looked alike.
         $values = new DeploymentSpecificationInitContainer();
         $values->all = array_map(
-            fn($item) => DeploymentSpecificationInitContainer::Create(
-                $item->initContainerId,
-                $item->position,
-                $item->includeInMigrationJob
+            fn($value) => DeploymentSpecificationInitContainer::Create(
+                $value->initContainerId,
+                $value->position,
+                $value->includeInMigrationJob
             ),
             $body->values
         );
 
-        $item->updateInitContainers($values);
+        $item->updateInitContainers($values, $sidecars);
         $this->_setResource($item);
         $this->success();
     }

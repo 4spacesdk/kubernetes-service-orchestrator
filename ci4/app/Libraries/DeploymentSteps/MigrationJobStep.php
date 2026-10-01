@@ -3,7 +3,6 @@
 use App\Entities\ContainerImage;
 use App\Entities\DatabaseService;
 use App\Entities\Deployment;
-use App\Entities\DeploymentSpecificationInitContainer;
 use App\Entities\DeploymentSpecificationVolume;
 use App\Entities\DeploymentVolume;
 use App\Entities\MigrationJob;
@@ -18,11 +17,8 @@ use App\Libraries\Kubernetes\WorkloadSecret;
 use App\Libraries\Kubernetes\ImagePullSecrets;
 use App\Libraries\Kubernetes\KubeAuth;
 use App\Libraries\Kubernetes\KubeHelper;
-use App\Models\ContainerImageModel;
-use App\Models\DeploymentSpecificationInitContainerModel;
 use App\Models\DeploymentSpecificationVolumeModel;
 use App\Models\DeploymentVolumeModel;
-use App\Models\InitContainerModel;
 use DebugTool\Data;
 use RenokiCo\PhpK8s\Exceptions\KubernetesAPIException;
 use RenokiCo\PhpK8s\Instances\Container;
@@ -135,6 +131,9 @@ class MigrationJobStep extends BaseDeploymentStep {
             unset($remote['spec']['template']['spec']['containers'][0]['resources']);
             unset($remote['spec']['template']['spec']['containers'][0]['terminationMessagePath']);
             unset($remote['spec']['template']['spec']['containers'][0]['terminationMessagePolicy']);
+            if (isset($remote['spec']['template']['spec'])) {
+                $remote['spec']['template']['spec'] = KubeHelper::WithoutInitContainerDefaults($remote['spec']['template']['spec']);
+            }
             unset($remote['spec']['template']['spec']['terminationGracePeriodSeconds']);
             unset($remote['spec']['template']['spec']['dnsPolicy']);
             unset($remote['spec']['template']['spec']['schedulerName']);
@@ -365,15 +364,13 @@ class MigrationJobStep extends BaseDeploymentStep {
         // Security Context - the image's, and what the specification opts into
         SecurityContext::ApplyToContainer($container, $containerImage, $spec);
 
-        // Init Containers
+        // Init Containers - the ones the specification includes in the migration job, sidecars
+        // among them. Kept rather than filtered: Kubernetes stops a sidecar when the job's own
+        // container is done, so the Job still completes, and a sidecar the migration needs - a
+        // database proxy, say - is what the job would otherwise lack. One only the app uses, such
+        // as a push server, is left out the way any init container is: not included in the job.
         $initContainers = [];
-        /** @var DeploymentSpecificationInitContainer $deploymentSpecificationInitContainers */
-        $deploymentSpecificationInitContainers = (new DeploymentSpecificationInitContainerModel())
-            ->includeRelated([InitContainerModel::class, ContainerImageModel::class])
-            ->where('deployment_specification_id', $spec->id)
-            ->where('include_in_migration_job', true)
-            ->orderBy('position', 'asc')
-            ->find();
+        $deploymentSpecificationInitContainers = $spec->findInitContainersInStartOrder(onlyForTheMigrationJob: true);
         $podImages = [$containerImage];
         foreach ($deploymentSpecificationInitContainers as $deploymentSpecificationInitContainer) {
             $initContainers[] = $deploymentSpecificationInitContainer->init_container->toKubernetesResource($deployment, $secret);

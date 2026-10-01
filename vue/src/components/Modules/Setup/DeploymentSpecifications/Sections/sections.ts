@@ -35,6 +35,15 @@ export const deploymentSpecificationSections: DeploymentSpecificationSection[] =
         component: section(() => import('./DeploymentSpecificationInitContainersSection.vue')),
     },
     {
+        key: 'sidecars',
+        title: 'Sidecars',
+        icon: 'fa fa-cubes',
+        group: 'Workload',
+        // A Knative Service cannot run one: its validation refuses `restartPolicy` on an init container.
+        isShown: spec => spec.workload_type == WorkloadTypes.Deployment,
+        component: section(() => import('./DeploymentSpecificationSidecarsSection.vue')),
+    },
+    {
         key: 'environment-variables',
         title: 'Environment Variables',
         icon: 'fa fa-key',
