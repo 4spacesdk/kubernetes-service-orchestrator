@@ -11,6 +11,7 @@ use App\Models\SystemModel;
  * @property bool $is_network_contour_supported
  * @property bool $is_network_gateway_api_supported
  * @property string $hosting_provider
+ * @property string $pod_network CIDRs, in place of the nodes' podCIDRs - see TrustedProxies
  * @property string $installation_id Which kso this is, on the resources it marks - see `InstallationId()`
  */
 class System extends Entity {

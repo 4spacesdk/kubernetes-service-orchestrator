@@ -34,10 +34,9 @@ class ContainerEnvironment {
     private array $secret = [];
 
     /**
-     * The specification's variables, with `${…}` filled in, and then the deployment's own,
-     * which replace them. The deployment's are used as they are written, but for the generated
-     * secrets: a workspace template writes its variables there, and `${secret.…}` is the whole
-     * point of writing one.
+     * The specification's variables, and then the deployment's own, which replace them - both
+     * with `${…}` filled in. The deployment's own used to be taken as written; a workspace
+     * template writes its variables there, and its placeholders were never filled in.
      */
     public static function ofDeployment(Deployment $deployment): self {
         $environment = new self();
@@ -55,8 +54,7 @@ class ContainerEnvironment {
             ->where('deployment_id', $deployment->id)
             ->find();
         foreach ($own as $variable) {
-            $written = (string) $variable->value;
-            $environment->set($variable->name, GeneratedSecrets::Fill($written, $deployment), (bool) $variable->is_secret || self::takesAPassword($written));
+            $environment->setWritten($variable->name, (string) $variable->value, (bool) $variable->is_secret, $deployment);
         }
 
         return $environment;

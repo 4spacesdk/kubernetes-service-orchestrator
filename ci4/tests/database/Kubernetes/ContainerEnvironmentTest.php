@@ -27,18 +27,23 @@ class ContainerEnvironmentTest extends DatabaseTestCase {
     }
 
     /**
-     * The deployment's own are used as written - no placeholders.
+     * The deployment's own replace the specification's, with their placeholders filled in too -
+     * a workspace template writes its variables there.
      */
-    public function testTheDeploymentsVariablesReplaceTheSpecificationsAsWritten(): void {
+    public function testTheDeploymentsVariablesReplaceTheSpecificationsWithTheirPlaceholdersFilledIn(): void {
         $deployment = $this->aDeployment();
         Fixtures::specificationEnvironmentVariable(['deployment_specification_id' => $deployment->deployment_specification_id, 'name' => 'SHARED', 'value' => 'from-specification']);
         Fixtures::specificationEnvironmentVariable(['deployment_specification_id' => $deployment->deployment_specification_id, 'name' => 'ONLY_SPEC', 'value' => 'spec']);
         Fixtures::deploymentEnvironmentVariable(['deployment_id' => $deployment->id, 'name' => 'SHARED', 'value' => '${database.pass}']);
+        Fixtures::deploymentEnvironmentVariable(['deployment_id' => $deployment->id, 'name' => 'DB_HOST', 'value' => '${database.host}']);
+
+        $environment = ContainerEnvironment::ofDeployment($deployment);
 
         $this->assertSame(
-            ['SHARED' => '${database.pass}', 'ONLY_SPEC' => 'spec'],
-            ContainerEnvironment::ofDeployment($deployment)->toArray()
+            ['SHARED' => 'db-secret', 'ONLY_SPEC' => 'spec', 'DB_HOST' => 'db.test'],
+            $environment->toArray()
         );
+        $this->assertTrue($environment->isSecret('SHARED'), 'a password, so secret without the mark');
     }
 
     public function testAnInitContainerGetsTheDeploymentsVariablesOnlyWhenAskedAndItsOwnWin(): void {

@@ -2,6 +2,7 @@
 
 use App\Core\Entity;
 use App\Entities\Concerns\SecretEnvironmentVariable;
+use App\Libraries\Kubernetes\TrustedProxies;
 
 /**
  * Class EnvironmentVariable
@@ -71,6 +72,11 @@ class EnvironmentVariable extends Entity {
             fn(string $value) => str_replace('${workspace.subdomain}', (string) $deployment->workspace->subdomain, $value),
 
             fn(string $value) => str_replace('${migration.job.name}', (string) $deployment->name, $value),
+
+            // Worked out from the cluster, so only when it is asked for - see TrustedProxies.
+            fn(string $value) => str_contains($value, TrustedProxies::Placeholder)
+                ? str_replace(TrustedProxies::Placeholder, TrustedProxies::For($deployment), $value)
+                : $value,
         ];
 
         foreach ($modifiers as $fn) {

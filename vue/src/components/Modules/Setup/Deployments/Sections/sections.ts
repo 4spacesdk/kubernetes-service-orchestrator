@@ -115,6 +115,14 @@ export const deploymentSections: DeploymentSection[] = [
         component: section(() => import('./DeploymentKNativeMinScaleSchedulesSection.vue')),
     },
     {
+        key: 'network',
+        title: 'Network',
+        icon: 'fa fa-network-wired',
+        group: 'Settings',
+        isShown: deployment => !isCustomResource(deployment),
+        component: section(() => import('./DeploymentNetworkSection.vue')),
+    },
+    {
         key: 'update-management',
         title: 'Update Management',
         icon: 'fa fa-arrows-rotate',

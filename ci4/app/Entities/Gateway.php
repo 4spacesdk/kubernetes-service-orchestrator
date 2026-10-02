@@ -10,6 +10,7 @@ use App\Models\GatewayAnnotationModel;
  * @property string $name
  * @property string $gateway_class_name
  * @property string $namespace
+ * @property string $proxy_source_ranges CIDRs a regional or internal GKE load balancer sends from - see TrustedProxies
  *
  * Many
  * @property Domain $domains

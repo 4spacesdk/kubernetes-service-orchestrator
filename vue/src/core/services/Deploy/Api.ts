@@ -253,6 +253,12 @@ export interface DeploymentStep {
     hasKubernetesStatus?: boolean;
 }
 
+export interface DeploymentTrustedProxiesResponse {
+    way?: string;
+    value?: string;
+    error?: string;
+}
+
 export interface DeploymentVolume {
     mount_path?: string;
     sub_path?: string;
@@ -3853,6 +3859,27 @@ export class DeploymentsDeleteById extends BaseApi<Deployment> {
     }
 }
 
+export class DeploymentsGetTrustedProxiesGetById extends BaseApi<DeploymentTrustedProxiesResponse> {
+
+    public topic = 'Resources.DeploymentTrustedProxiesResponses';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/deployments/${id}/trusted-proxies`;
+    }
+
+    protected convertToResource(data: any): DeploymentTrustedProxiesResponse {
+        return data;
+    }
+
+    public find(next?: (value: DeploymentTrustedProxiesResponse[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
 export class DeploymentsGetSecretsGetById extends BaseApi<GeneratedSecretsGetResponse> {
 
     public topic = 'Resources.GeneratedSecretsGetResponses';
@@ -4586,6 +4613,10 @@ class Deployments {
 
     public deleteById(id: number): DeploymentsDeleteById {
         return new DeploymentsDeleteById(id);
+    }
+
+    public getTrustedProxiesGetById(id: number): DeploymentsGetTrustedProxiesGetById {
+        return new DeploymentsGetTrustedProxiesGetById(id);
     }
 
     public getSecretsGetById(id: number): DeploymentsGetSecretsGetById {

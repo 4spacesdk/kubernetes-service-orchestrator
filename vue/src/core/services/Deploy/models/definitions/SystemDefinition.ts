@@ -11,6 +11,7 @@ export class SystemDefinition extends BaseModel {
     is_network_contour_supported?: boolean;
     is_network_gateway_api_supported?: boolean;
     hosting_provider?: string;
+    pod_network?: string;
     installation_id?: string;
     id?: number;
     created?: string;
@@ -34,6 +35,7 @@ export class SystemDefinition extends BaseModel {
             delete this.is_network_contour_supported;
             delete this.is_network_gateway_api_supported;
             delete this.hosting_provider;
+            delete this.pod_network;
             delete this.installation_id;
             delete this.id;
             delete this.created;
@@ -61,6 +63,9 @@ export class SystemDefinition extends BaseModel {
         }
         if (data.hosting_provider != null) {
             this.hosting_provider = data.hosting_provider;
+        }
+        if (data.pod_network != null) {
+            this.pod_network = data.pod_network;
         }
         if (data.installation_id != null) {
             this.installation_id = data.installation_id;

@@ -44,6 +44,12 @@ class TestCase extends CIUnitTestCase {
         // Reading an image's user from its registry goes over the network. A test that wants an
         // answer puts a registry of its own here.
         \App\Libraries\ContainerRegistries\ImageConfig::$http = static fn (string $url): array => [503, [], 'no registry in a test'];
+
+        // `${network.trustedProxies}` reads the cluster's nodes and Gateways. A test that wants an
+        // answer puts its own here; a cluster test sets them to null.
+        \App\Libraries\Kubernetes\TrustedProxies::$nodes = static fn (): array => throw new \RuntimeException('no cluster in a test');
+        \App\Libraries\Kubernetes\TrustedProxies::$gateway = static fn (): ?array => throw new \RuntimeException('no cluster in a test');
+        \App\Libraries\Kubernetes\TrustedProxies::ForgetWorkedOut();
     }
 
     /**

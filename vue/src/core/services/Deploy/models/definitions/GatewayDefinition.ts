@@ -12,6 +12,7 @@ export class GatewayDefinition extends BaseModel {
     name?: string;
     gateway_class_name?: string;
     namespace?: string;
+    proxy_source_ranges?: string;
     domains?: Domain[];
     gateway_addresses?: GatewayAddress[];
     gateway_annotations?: GatewayAnnotation[];
@@ -35,6 +36,7 @@ export class GatewayDefinition extends BaseModel {
             delete this.name;
             delete this.gateway_class_name;
             delete this.namespace;
+            delete this.proxy_source_ranges;
             delete this.domains;
             delete this.gateway_addresses;
             delete this.gateway_annotations;
@@ -58,6 +60,9 @@ export class GatewayDefinition extends BaseModel {
         }
         if (data.namespace != null) {
             this.namespace = data.namespace;
+        }
+        if (data.proxy_source_ranges != null) {
+            this.proxy_source_ranges = data.proxy_source_ranges;
         }
         if (data.domains != null) {
             this.domains = data.domains.map((i: any) => new Domain(i));

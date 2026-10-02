@@ -2,6 +2,7 @@
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
 import EnvironmentVariableValueField from "@/components/Modules/Common/EnvironmentVariables/EnvironmentVariableValueField.vue";
+import VariableBtn from "@/components/Modules/Common/VariableBtn.vue";
 import type {EnvironmentVariableRow} from "@/components/Modules/Common/EnvironmentVariables/environmentVariables";
 import {VTextField} from "vuetify/components/VTextField";
 
@@ -9,11 +10,6 @@ export interface WorkspaceTemplateUpdateEnvironmentVariableDialog_Input {
     environmentVariable: EnvironmentVariableRow;
 
     onSaveCallback: () => void;
-}
-
-interface Variable {
-    name: string;
-    code: string;
 }
 
 const props = defineProps<{
@@ -28,61 +24,6 @@ const value = ref('');
 const isSecret = ref(false);
 const hasStoredSecret = ref(false);
 
-const showVariablesMenu = ref(false);
-const variables = ref<Variable[]>([
-    {
-        name: "Namespace",
-        code: "${namespace}"
-    },
-    {
-        name: "Database Host",
-        code: "${database.host}"
-    },
-    {
-        name: "Database Port",
-        code: "${database.port}"
-    },
-    {
-        name: "Database Name",
-        code: "${database.name}"
-    },
-    {
-        name: "Database User",
-        code: "${database.user}"
-    },
-    {
-        name: "Database Password",
-        code: "${database.pass}"
-    },
-    {
-        name: "Email Service Host",
-        code: "${emailService.host}"
-    },
-    {
-        name: "Email Service Port",
-        code: "${emailService.port}"
-    },
-    {
-        name: "Email Service User",
-        code: "${emailService.user}"
-    },
-    {
-        name: "Email Service Pass",
-        code: "${emailService.pass}"
-    },
-    {
-        name: "Email Service Sender",
-        code: "${emailService.sender}"
-    },
-    {
-        name: "Workspace Id",
-        code: "${workspace.id}"
-    },
-    {
-        name: "Workspace Name",
-        code: "${workspace.name}"
-    },
-]);
 
 // <editor-fold desc="Functions">
 
@@ -126,11 +67,6 @@ function onCloseBtnClicked() {
     close();
 }
 
-function onVariableClicked(variable: Variable) {
-    value.value += variable.code;
-    showVariablesMenu.value = false;
-}
-
 // </editor-fold>
 
 </script>
@@ -162,37 +98,9 @@ function onVariableClicked(variable: Variable) {
                             :has-stored-secret="hasStoredSecret"
                         >
                             <template v-slot:append>
-                                <v-menu
-                                    v-model="showVariablesMenu"
-                                    :close-on-content-click="false"
-                                    left
-                                    min-width="250"
-                                    offset-y>
-                                    <template v-slot:activator="{ props }">
-                                        <v-btn
-                                            v-bind="props"
-                                            icon
-                                            variant="plain"
-                                            color="primary"
-                                            size="small">
-                                            <v-icon>fa fa-plus</v-icon>
-                                            <v-tooltip activator="parent" location="bottom">Insert variable</v-tooltip>
-                                        </v-btn>
-                                    </template>
-
-                                    <v-list
-                                        class="list-items">
-                                        <v-list-item
-                                            v-for="(variable, i) in variables" :key="i"
-                                            dense
-                                            @click="onVariableClicked(variable)">
-                                            <v-list-item-title>
-                                                <v-icon size="small" class="my-auto">fa fa-window-maximize fa</v-icon>
-                                                <span class="ml-2">{{ variable.name }}</span>
-                                            </v-list-item-title>
-                                        </v-list-item>
-                                    </v-list>
-                                </v-menu>
+                                <variable-btn
+                                    @add-variable="item => value += item"
+                                />
                             </template>
                         </environment-variable-value-field>
                     </v-col>

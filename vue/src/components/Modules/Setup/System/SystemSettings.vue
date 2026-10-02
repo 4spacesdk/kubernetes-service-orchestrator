@@ -99,6 +99,19 @@ function onSaveBtnClicked() {
                 />
             </v-col>
             <v-col cols="12">
+                <v-text-field
+                    v-model="value.pod_network"
+                    label="Pod network"
+                    placeholder="Read from the nodes"
+                    persistent-placeholder
+                    hint="CIDRs, comma-separated - only when the network plugin keeps them out of the nodes' spec.podCIDRs. ${network.trustedProxies} trusts the proxies in the cluster by it"
+                    persistent-hint
+                    variant="outlined"
+                    density="compact"
+                    clearable
+                />
+            </v-col>
+            <v-col cols="12">
                 <v-btn @click="onSaveBtnClicked">Save</v-btn>
             </v-col>
 

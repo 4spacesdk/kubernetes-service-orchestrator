@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useDialogSave } from "@/composables/useDialogSave";
-import {onMounted, onUnmounted, ref} from 'vue'
+import {computed, onMounted, onUnmounted, ref} from 'vue'
 import {Gateway, GatewayAddress, GatewayAnnotation} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
@@ -19,6 +19,14 @@ const showDialog = ref(false);
 const isLoading = ref(false);
 
 const item = ref<Gateway>(new Gateway());
+
+/**
+ * A GKE class of a regional or internal load balancer: its proxies send from the VPC's proxy-only
+ * subnet, which only the Gateway can say. A global one's are Google's own - see `TrustedProxies`.
+ */
+const GkeGlobalClasses = ['gke-l7-global-external-managed', 'gke-l7-global-external-managed-mc', 'gke-l7-gxlb', 'gke-l7-gxlb-mc'];
+const isRegionalGke = computed(() => (item.value.gateway_class_name ?? '').startsWith('gke-l7-')
+    && !GkeGlobalClasses.includes(item.value.gateway_class_name ?? ''));
 
 const addressTypePattern = /^(Hostname|IPAddress|NamedAddress|([a-z0-9]+(\.[a-z0-9]+)*\/)?[A-Za-z0-9\/\-._~%!$&'()+,;=:]+)$/;
 const addressTypes = ['Hostname', 'IPAddress', 'NamedAddress', 'Custom'];
@@ -164,6 +172,17 @@ function onCloseBtnClicked() {
                             label="Namespace"
                             placeholder="envoy-gateway"
                             hint="The namespace where the Gateway resource should be deployed"
+                            persistent-hint
+                            :loading="isLoading"
+                        />
+                    </v-col>
+                    <v-col v-if="isRegionalGke" cols="12">
+                        <v-text-field
+                            variant="outlined"
+                            v-model="item.proxy_source_ranges"
+                            label="Proxy source ranges"
+                            placeholder="10.129.0.0/23"
+                            hint="The VPC's proxy-only subnet this load balancer sends from - Kubernetes cannot tell it. CIDRs, comma-separated; ${network.trustedProxies} needs it"
                             persistent-hint
                             :loading="isLoading"
                         />

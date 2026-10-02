@@ -199,6 +199,10 @@ watch(value, (next, previous) => {
                     Shown here and in the pod spec.
                 </template>
             </div>
+            <div class="text-body-small text-medium-emphasis mt-1">
+                <code>${network.trustedProxies}</code> is the proxies in front of the deployment, as kso works them out from its way in -
+                for an app that reads the client's address from X-Forwarded-For.
+            </div>
             <v-alert
                 v-if="suggestSecret"
                 density="compact"

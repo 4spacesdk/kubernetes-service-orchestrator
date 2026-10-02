@@ -35,8 +35,37 @@ use App\Models\MigrationJobModel;
 use DebugTool\Data;
 use Google\ApiCore\ApiException;
 use App\Libraries\Kubernetes\GeneratedSecrets;
+use App\Libraries\Kubernetes\TrustedProxies;
 
 class Deployments extends ResourceController {
+
+    /**
+     * What `${network.trustedProxies}` is for this deployment now - the proxies in front of it,
+     * worked out from its way in - or why it cannot be told. See `TrustedProxies`.
+     *
+     * @route /deployments/{id}/trusted-proxies
+     * @method get
+     * @custom true
+     * @param int $id
+     * @responseSchema DeploymentTrustedProxiesResponse
+     */
+    public function getTrustedProxies(int $id): void {
+        $item = new Deployment();
+        $item->find($id);
+        if (!$item->exists()) {
+            $this->fail('unknown deployment');
+            return;
+        }
+        $answer = ['way' => TrustedProxies::Describe($item)];
+        try {
+            TrustedProxies::ForgetWorkedOut();
+            $answer['value'] = TrustedProxies::For($item);
+        } catch (\Throwable $e) {
+            $answer['error'] = $e->getMessage();
+        }
+        Data::set('resource', $answer);
+        $this->success();
+    }
 
     /**
      * The secrets kso made for this deployment - `${secret.<name>}` - by name, when

@@ -2,6 +2,7 @@
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
 import {EnvironmentVariable} from "@/core/services/Deploy/models";
 import EnvironmentVariableValueField from "@/components/Modules/Common/EnvironmentVariables/EnvironmentVariableValueField.vue";
+import VariableBtn from "@/components/Modules/Common/VariableBtn.vue";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
 
 export interface DeploymentUpdateEnvirontmentVariableDialog_Input {
@@ -82,14 +83,19 @@ function onCloseBtnClicked() {
                             variant="outlined"
                             label="Name"/>
                     </v-col>
-                    <!-- No placeholders: a deployment's own variables are used as written. -->
                     <v-col cols="12">
                         <environment-variable-value-field
                             v-model="value"
                             v-model:secret="isSecret"
                             :name="name"
                             :has-stored-secret="hasStoredSecret"
-                        />
+                        >
+                            <template v-slot:append>
+                                <variable-btn
+                                    @add-variable="item => value += item"
+                                />
+                            </template>
+                        </environment-variable-value-field>
                     </v-col>
                 </v-row>
             </v-card-text>

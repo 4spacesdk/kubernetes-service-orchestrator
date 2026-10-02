@@ -86,6 +86,10 @@ const variables = ref<Variable[]>([
         name: "Migration Job Name",
         code: "${migration.job.name}"
     },
+    {
+        name: "Trusted Proxies",
+        code: "${network.trustedProxies}"
+    },
 ]);
 
 onMounted(() => {

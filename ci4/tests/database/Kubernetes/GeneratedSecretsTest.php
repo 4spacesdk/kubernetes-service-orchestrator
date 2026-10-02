@@ -88,10 +88,9 @@ class GeneratedSecretsTest extends ManifestTestCase {
     }
 
     /**
-     * The deployment's own variables are used as they are written - but for these, which a
-     * workspace template writes there. Other placeholders stay as written, as before.
+     * The deployment's own variables get theirs too - a workspace template writes there.
      */
-    public function testTheDeploymentsOwnVariablesGetTheirSecretsAndKeepTheRestAsWritten(): void {
+    public function testTheDeploymentsOwnVariablesGetTheirSecrets(): void {
         $deployment = $this->aDeployment();
         Fixtures::deploymentEnvironmentVariable(['deployment_id' => $deployment->id, 'name' => 'KEY', 'value' => '${secret.key}']);
         Fixtures::deploymentEnvironmentVariable(['deployment_id' => $deployment->id, 'name' => 'NS', 'value' => '${namespace}']);
@@ -100,7 +99,7 @@ class GeneratedSecretsTest extends ManifestTestCase {
 
         $this->assertMatchesRegularExpression('/^[0-9a-f]{64}$/', $environment->toArray()['KEY']);
         $this->assertTrue($environment->isSecret('KEY'));
-        $this->assertSame('${namespace}', $environment->toArray()['NS']);
+        $this->assertSame((string) $deployment->namespace, $environment->toArray()['NS']);
     }
 
     /**
