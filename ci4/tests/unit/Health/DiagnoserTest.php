@@ -173,6 +173,24 @@ class DiagnoserTest extends CIUnitTestCase {
         $this->assertSame(\DiagnosisVerdicts::CannotTell, $finding->verdict);
     }
 
+    /**
+     * A read-only root filesystem the container wrote to: the path is in its log, and the
+     * finding says where to make it writable.
+     */
+    public function testWritingToAReadOnlyRootFilesystemNamesThePath(): void {
+        $findings = $this->diagnose(new Evidence(
+            '1.1',
+            [$this->pod(waiting: 'CrashLoopBackOff', restarts: 4)],
+            previousLogs: ['app-a' => ['AH00023: Couldn\'t create the mutex', '(30)Read-only file system: AH00023: Couldn\'t create /var/run/apache2/apache2.pid']],
+        ));
+
+        $finding = array_values(array_filter($findings, fn(Finding $f) => $f->rule === 'read_only_file_system'))[0] ?? null;
+        $this->assertNotNull($finding);
+        $this->assertSame(\DiagnosisVerdicts::Certain, $finding->verdict);
+        $this->assertStringStartsWith('It cannot write to /var/run/apache2/apache2.pid: its root filesystem is read-only', $finding->cause);
+        $this->assertSame('security-context', $finding->action['section']);
+    }
+
     public function testOneOrTwoRestartsAreNotACrash(): void {
         $this->assertSame([], $this->diagnose(new Evidence('1.1', [$this->pod(restarts: 2, lastTerminated: ['exitCode' => 1, 'finishedAt' => $this->ago(60)])])));
     }

@@ -64,6 +64,8 @@ use App\Core\Entity;
  * @property string $security_context_drop_all_capabilities A `SecurityContextOverrides`
  * @property string $security_context_seccomp_runtime_default A `SecurityContextOverrides`
  * @property string $security_context_fs_group One for all the specification's pods; empty is each image's
+ * @property string $writable_paths More paths its workload's containers write to, on top of their images' - see WritablePaths
+ * @property string $writable_paths_size_limit The size of each writable path's emptyDir, 1Gi when empty
  *
  * # Network
  * @property string $network_type

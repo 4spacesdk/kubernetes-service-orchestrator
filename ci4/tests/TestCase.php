@@ -50,6 +50,9 @@ class TestCase extends CIUnitTestCase {
         \App\Libraries\Kubernetes\TrustedProxies::$nodes = static fn (): array => throw new \RuntimeException('no cluster in a test');
         \App\Libraries\Kubernetes\TrustedProxies::$gateway = static fn (): ?array => throw new \RuntimeException('no cluster in a test');
         \App\Libraries\Kubernetes\TrustedProxies::ForgetWorkedOut();
+
+        // Knative's feature flags, read from the cluster before a writable path is mounted on one.
+        \App\Libraries\DeploymentSteps\KServiceStep::$knativeFeatures = static fn (): ?array => null;
     }
 
     /**

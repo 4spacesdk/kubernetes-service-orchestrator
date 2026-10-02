@@ -113,6 +113,22 @@ class ContainerImageSecurityApiTest extends ControllerTestCase {
     }
 
     /**
+     * Where it writes, from its label, read with its user. The label is the image's own word and
+     * wins; without one, what was set by hand stays.
+     */
+    public function testTheWritablePathsAreReadFromTheImagesLabel(): void {
+        $this->aRegistryWhereTheImageRunsAs('1000', ['dk.4spaces.kso.writable-paths' => '/tmp, /var/run/apache2,/tmp']);
+        $labelled = Fixtures::containerImage(['writable_paths' => '/old']);
+        $labelled->readUser('develop');
+        $this->assertSame('/tmp,/var/run/apache2', $this->reread($labelled)->writable_paths);
+
+        $this->aRegistryWhereTheImageRunsAs('1000');
+        $unlabelled = Fixtures::containerImage(['writable_paths' => '/set/by/hand']);
+        $unlabelled->readUser('develop');
+        $this->assertSame('/set/by/hand', $this->reread($unlabelled)->writable_paths);
+    }
+
+    /**
      * What to do next is on the image: a version that runs as non-root, not yet turned on.
      */
     public function testTheImageSaysWhatCouldBeMoreSecure(): void {
@@ -126,12 +142,15 @@ class ContainerImageSecurityApiTest extends ControllerTestCase {
 
     // <editor-fold desc="Helpers">
 
-    private function aRegistryWhereTheImageRunsAs(string $user): void {
-        ImageConfig::$http = static function (string $url) use ($user): array {
+    /**
+     * @param array<string, string> $labels
+     */
+    private function aRegistryWhereTheImageRunsAs(string $user, array $labels = []): void {
+        ImageConfig::$http = static function (string $url) use ($user, $labels): array {
             if (str_contains($url, '/manifests/')) {
                 return [200, [], json_encode(['config' => ['digest' => 'sha256:config']])];
             }
-            return [200, [], json_encode(['config' => ['User' => $user]])];
+            return [200, [], json_encode(['config' => ['User' => $user, 'Labels' => $labels ?: null]])];
         };
     }
 

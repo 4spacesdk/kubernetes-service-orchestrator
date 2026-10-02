@@ -30,8 +30,11 @@ class SecurityContext {
 
     /**
      * @param Instance $container A `Container` - or the plain `Instance` the Knative step builds its one from
+     * @param bool $runsTheWorkload the app, the migration job, a cron job or a job `RunJobHelper` starts -
+     *                              not an init container or a sidecar: the specification's writable paths
+     *                              are added to these, see `WritablePaths`
      */
-    public static function ApplyToContainer(Instance $container, ContainerImage $image, DeploymentSpecification $spec): void {
+    public static function ApplyToContainer(Instance $container, ContainerImage $image, DeploymentSpecification $spec, bool $runsTheWorkload = true): void {
         if (strlen((string) $image->security_context_run_as_user) > 0) {
             $container->setAttribute('securityContext.runAsUser', (int) $image->security_context_run_as_user);
         }
@@ -50,6 +53,9 @@ class SecurityContext {
         if (self::Effective($spec->security_context_seccomp_runtime_default, $image->security_context_seccomp_runtime_default)) {
             $container->setAttribute('securityContext.seccompProfile', ['type' => 'RuntimeDefault']);
         }
+
+        // Where it may still write when its root filesystem is read-only.
+        WritablePaths::Mount($container, $image, $runsTheWorkload ? $spec : null);
     }
 
     /**

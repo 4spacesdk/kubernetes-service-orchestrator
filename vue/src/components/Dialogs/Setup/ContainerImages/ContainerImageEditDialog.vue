@@ -142,6 +142,18 @@ function load() {
 }
 
 /**
+ * Where the image writes, as chips - stored comma-separated, see `WritablePaths`. Absolute paths only.
+ */
+const writablePaths = computed<string[]>({
+    get: () => (item.value.writable_paths ?? '').split(',').map(path => path.trim()).filter(Boolean),
+    set: paths => item.value.writable_paths = [...new Set(paths.map(path => path.trim()).filter(Boolean))].join(','),
+});
+const writablePathsError = computed(() => {
+    const wrong = writablePaths.value.find(path => !path.startsWith('/') || path.includes('..') || /[\s:]/.test(path));
+    return wrong ? `${wrong} is not an absolute path, such as /tmp` : '';
+});
+
+/**
  * The tag to read what the image runs as from - the one read last, else the default. The
  * registry's tags are offered, newest first with when each was pushed; any can be typed.
  */
@@ -518,6 +530,21 @@ function onCloseBtnClicked() {
                                         label="Readonly root filesystem"
                                         density="compact"
                                         color="secondary"
+                                    />
+                                </v-col>
+                                <v-col cols="12">
+                                    <v-combobox
+                                        v-model="writablePaths"
+                                        multiple
+                                        chips
+                                        closable-chips
+                                        variant="outlined"
+                                        density="compact"
+                                        label="Writable paths"
+                                        placeholder="/tmp"
+                                        :error-messages="writablePathsError ? [writablePathsError] : []"
+                                        hint="Where it writes - each an empty directory when the root filesystem is read-only. Read from its label dk.4spaces.kso.writable-paths when it is read"
+                                        persistent-hint
                                     />
                                 </v-col>
                             </v-row>

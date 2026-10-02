@@ -20,6 +20,7 @@ export class ContainerImageDefinition extends BaseModel {
     security_context_run_as_group?: string;
     security_context_allow_privilege_escalation?: boolean;
     security_context_read_only_root_filesystem?: boolean;
+    writable_paths?: string;
     security_context_run_as_non_root?: boolean;
     security_context_drop_all_capabilities?: boolean;
     security_context_seccomp_runtime_default?: boolean;
@@ -66,6 +67,7 @@ export class ContainerImageDefinition extends BaseModel {
             delete this.security_context_run_as_group;
             delete this.security_context_allow_privilege_escalation;
             delete this.security_context_read_only_root_filesystem;
+            delete this.writable_paths;
             delete this.security_context_run_as_non_root;
             delete this.security_context_drop_all_capabilities;
             delete this.security_context_seccomp_runtime_default;
@@ -130,6 +132,9 @@ export class ContainerImageDefinition extends BaseModel {
         }
         if (data.security_context_read_only_root_filesystem != null) {
             this.security_context_read_only_root_filesystem = data.security_context_read_only_root_filesystem;
+        }
+        if (data.writable_paths != null) {
+            this.writable_paths = data.writable_paths;
         }
         if (data.security_context_run_as_non_root != null) {
             this.security_context_run_as_non_root = data.security_context_run_as_non_root;

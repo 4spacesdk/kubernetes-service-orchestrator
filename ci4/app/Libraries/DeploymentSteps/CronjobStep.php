@@ -26,6 +26,7 @@ use RenokiCo\PhpK8s\Kinds\K8sEvent;
 use RenokiCo\PhpK8s\Kinds\K8sJob;
 use RenokiCo\PhpK8s\Kinds\K8sPod;
 use App\Entities\K8sCronJob as CronJob;
+use App\Libraries\Kubernetes\WritablePaths;
 
 class CronjobStep extends BaseDeploymentStep {
 
@@ -366,6 +367,11 @@ class CronjobStep extends BaseDeploymentStep {
             $fsGroup = SecurityContext::FsGroup($cronJob->container_image, $spec);
             if ($fsGroup !== null) {
                 $template->setSpec('securityContext.fsGroup', $fsGroup);
+            }
+
+            $writable = WritablePaths::Volumes([$container], $spec);
+            if (count($writable) > 0) {
+                $template->setVolumes([...($template->getSpec('volumes') ?? []), ...$writable]);
             }
 
             $resource = new K8sCronJob();

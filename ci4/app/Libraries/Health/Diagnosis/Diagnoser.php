@@ -41,6 +41,7 @@ class Diagnoser {
             ...self::ImagePull($evidence),
             ...self::NotAllowedToRunAsRoot($evidence),
             ...self::OomKilled($evidence, $now),
+            ...self::ReadOnlyFileSystem($evidence),
             ...self::CrashAfterVersionChange($evidence, $now),
             ...self::NotReady($evidence),
             ...self::HealthCheckPath($evidence),
@@ -336,6 +337,55 @@ class Diagnoser {
                 );
         }
         return $findings;
+    }
+
+    /**
+     * A container that crashed writing to its read-only root filesystem: the path it wrote to is
+     * one its image did not say it writes to - see `WritablePaths`.
+     *
+     * @return list<Finding>
+     */
+    private static function ReadOnlyFileSystem(Evidence $evidence): array {
+        $paths = [];
+        $shown = [];
+        foreach ($evidence->previousLogs as $podName => $lines) {
+            foreach ($lines as $line) {
+                if (stripos($line, 'Read-only file system') === false) {
+                    continue;
+                }
+                $shown[] = "{$podName}: {$line}";
+                $path = self::PathIn($line);
+                if ($path !== null) {
+                    $paths[$path] = true;
+                }
+            }
+        }
+        if (!$shown) {
+            return [];
+        }
+
+        $where = $paths ? implode(', ', array_keys($paths)) : 'a path';
+        return [new Finding(
+            'read_only_file_system',
+            \DiagnosisVerdicts::Certain,
+            "It cannot write to {$where}: its root filesystem is read-only. Add the path to the container image's writable paths - or the specification's - or turn read-only off",
+            array_slice($shown, 0, self::LogLines),
+            ['type' => 'specification', 'label' => 'Open the security context', 'section' => 'security-context'],
+        )];
+    }
+
+    /**
+     * The path a log line is about: one in quotes first - `mkdir() "/var/cache/nginx" failed` - then
+     * a bare one. Not a date such as `2026/10/02`: a path has a letter in it.
+     */
+    private static function PathIn(string $line): ?string {
+        preg_match_all('#["\'](/[^"\']+)["\']|(/[^\s\'"`:,()]+)#', $line, $matches, PREG_SET_ORDER);
+        $quoted = array_values(array_filter(array_map(fn(array $m) => $m[1] ?? '', $matches), fn(string $p) => preg_match('/[a-z]/i', $p)));
+        if ($quoted !== []) {
+            return $quoted[0];
+        }
+        $bare = array_values(array_filter(array_map(fn(array $m) => $m[2] ?? '', $matches), fn(string $p) => preg_match('/[a-z]/i', $p)));
+        return $bare[0] ?? null;
     }
 
     /**

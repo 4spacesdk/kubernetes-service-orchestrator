@@ -45,6 +45,16 @@ class ImageConfig {
     }
 
     /**
+     * The image's labels - `LABEL` in its Dockerfile - by name, from its config blob (`Read()`).
+     *
+     * @param array<string, mixed> $config
+     * @return array<string, string>
+     */
+    public static function Labels(array $config): array {
+        return array_map('strval', $config['config']['Labels'] ?? []);
+    }
+
+    /**
      * @return array<string, mixed> The config blob
      * @throws \RuntimeException
      */

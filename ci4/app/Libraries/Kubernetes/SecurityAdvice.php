@@ -21,7 +21,7 @@ class SecurityAdvice {
      * @param array{tag: string, image_user: string, scanned_at: string}|null $lastScan The newest
      *   scan of a tag that says what it runs as
      * @return list<array{key: string, level: string, text: string}> `key` says which setting the
-     *   line is about - `run_as_non_root`, `seccomp`, `unreadable`
+     *   line is about - `run_as_non_root`, `read_only`, `seccomp`, `unreadable`
      */
     public static function For(ContainerImage $image, ?array $lastScan = null): array {
         $advice = [];
@@ -48,6 +48,14 @@ class SecurityAdvice {
             $advice[] = $nonRoot
                 ? self::Line('run_as_non_root', self::Warning, "{$tag} runs as {$as} - its containers will not start under Run as non-root. Give it a numeric USER, or a user here")
                 : self::Line('run_as_non_root', self::Suggestion, "{$tag} runs as {$as} - with a numeric USER that is not root, it could run as non-root");
+        }
+
+        // Read-only, and where it may still write - see WritablePaths.
+        $writes = WritablePaths::Parse((string) $image->writable_paths) !== [];
+        if ($image->security_context_read_only_root_filesystem && !$writes) {
+            $advice[] = self::Line('read_only', self::Warning, 'Its root filesystem is read-only and it says nowhere it writes - it will likely crash as it starts. Read it again for its label dk.4spaces.kso.writable-paths, or add the paths it writes to');
+        } elseif (!$image->security_context_read_only_root_filesystem && $writes) {
+            $advice[] = self::Line('read_only', self::Suggestion, 'It says where it writes - Read-only root filesystem can be turned on, with those paths writable');
         }
 
         if (!$image->security_context_seccomp_runtime_default) {

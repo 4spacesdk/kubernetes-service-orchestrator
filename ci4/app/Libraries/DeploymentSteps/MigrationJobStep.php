@@ -26,6 +26,7 @@ use RenokiCo\PhpK8s\Instances\Volume;
 use RenokiCo\PhpK8s\Kinds\K8sEvent;
 use RenokiCo\PhpK8s\Kinds\K8sJob;
 use RenokiCo\PhpK8s\Kinds\K8sPod;
+use App\Libraries\Kubernetes\WritablePaths;
 
 class MigrationJobStep extends BaseDeploymentStep {
 
@@ -443,6 +444,7 @@ class MigrationJobStep extends BaseDeploymentStep {
             $template->setInitContainers($initContainers);
         }
 
+        $volumes = [...$volumes, ...WritablePaths::Volumes([$container, ...$initContainers], $spec)];
         if (count($volumes) > 0) {
             $template->setVolumes($volumes);
         }

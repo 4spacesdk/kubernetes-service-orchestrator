@@ -24,16 +24,34 @@ const runAsNonRoot = ref(SecurityContextOverrides.Inherit);
 const dropAllCapabilities = ref(SecurityContextOverrides.Inherit);
 const seccompRuntimeDefault = ref(SecurityContextOverrides.Inherit);
 const fsGroup = ref('');
+const writablePaths = ref<string[]>([]);
+const sizeLimit = ref('');
+
+function reasonInvalid(): string | null {
+    if (fsGroup.value !== '' && !/^\d+$/.test(fsGroup.value)) {
+        return 'the fs group is a number';
+    }
+    const wrong = writablePaths.value.find(path => !path.startsWith('/') || path.includes('..') || /[\s:]/.test(path));
+    if (wrong) {
+        return `${wrong} is not an absolute path, such as /tmp`;
+    }
+    if (sizeLimit.value !== '' && !/^\d+(Ki|Mi|Gi|Ti|K|M|G|T)?$/.test(sizeLimit.value)) {
+        return 'the size is one Kubernetes reads, such as 512Mi or 1Gi';
+    }
+    return null;
+}
 
 const {autoSave, markLoaded, saveNow} = useAutoSave({
-    state: () => [runAsNonRoot.value, dropAllCapabilities.value, seccompRuntimeDefault.value, fsGroup.value],
-    validate: () => fsGroup.value === '' || /^\d+$/.test(fsGroup.value) ? null : 'the fs group is a number',
+    state: () => [runAsNonRoot.value, dropAllCapabilities.value, seccompRuntimeDefault.value, fsGroup.value, writablePaths.value.join(','), sizeLimit.value],
+    validate: reasonInvalid,
     request: () => Api.deploymentSpecifications().patchById(props.deploymentSpecification.id!),
     data: () => ({
         security_context_run_as_non_root: runAsNonRoot.value,
         security_context_drop_all_capabilities: dropAllCapabilities.value,
         security_context_seccomp_runtime_default: seccompRuntimeDefault.value,
         security_context_fs_group: fsGroup.value,
+        writable_paths: writablePaths.value.join(','),
+        writable_paths_size_limit: sizeLimit.value,
     }),
     onSaved: saved => bus.emit('deploymentSpecificationSaved', saved),
 });
@@ -50,6 +68,8 @@ onMounted(() => {
             dropAllCapabilities.value = spec?.security_context_drop_all_capabilities ?? SecurityContextOverrides.Inherit;
             seccompRuntimeDefault.value = spec?.security_context_seccomp_runtime_default ?? SecurityContextOverrides.Inherit;
             fsGroup.value = String(spec?.security_context_fs_group ?? '');
+            writablePaths.value = (spec?.writable_paths ?? '').split(',').map(path => path.trim()).filter(Boolean);
+            sizeLimit.value = spec?.writable_paths_size_limit ?? '';
             isLoading.value = false;
             markLoaded();
         });
@@ -75,6 +95,9 @@ const restricted = computed(() => [
     {label: 'All capabilities dropped', met: effective(dropAllCapabilities.value, image.value?.security_context_drop_all_capabilities)},
     {label: 'Seccomp profile RuntimeDefault', met: effective(seccompRuntimeDefault.value, image.value?.security_context_seccomp_runtime_default)},
 ]);
+
+/** The paths the specification's image says it writes to - they come along whatever is added here. */
+const imagePaths = computed(() => (image.value?.writable_paths ?? '').split(',').map(path => path.trim()).filter(Boolean));
 
 const runsAs = computed(() => {
     if (!image.value?.image_user_tag) {
@@ -129,6 +152,27 @@ const runsAs = computed(() => {
                 persistent-hint
                 :placeholder="String(image?.security_context_fs_group ?? '')"
                 hint="One group for all this specification's pods, kept when an image's user changes, so a new version can still write what an old one left on a volume. Empty is the container image's"/>
+
+            <v-combobox
+                v-model="writablePaths"
+                multiple
+                chips
+                closable-chips
+                variant="outlined"
+                class="mt-4"
+                label="Writable paths"
+                placeholder="/var/cache/app"
+                persistent-hint
+                :hint="imagePaths.length ? `More, for this specification's workload - its images' own come along: ${imagePaths.join(', ')}` : 'Where its workload writes when the image\'s root filesystem is read-only - an empty directory on each. Its images\' own come along'"/>
+
+            <v-text-field
+                v-model="sizeLimit"
+                variant="outlined"
+                class="mt-4"
+                label="Size of each writable path"
+                placeholder="1Gi"
+                persistent-hint
+                hint="The most each may hold - on disk, not in memory. Empty is 1Gi"/>
 
             <div class="mt-6">
                 <div class="text-body-medium mb-2">

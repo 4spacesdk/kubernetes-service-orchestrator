@@ -84,7 +84,7 @@ class InitContainer extends Entity {
         }
 
         // Security Context - the image's, and what the specification opts into
-        SecurityContext::ApplyToContainer($container, $this->container_image, $spec);
+        SecurityContext::ApplyToContainer($container, $this->container_image, $spec, runsTheWorkload: false);
 
         $environment = $this->include_deployment_environment_variables
             ? ContainerEnvironment::ofDeployment($deployment)

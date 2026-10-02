@@ -8,6 +8,7 @@ use App\Libraries\Kubernetes\SecurityContext;
 use App\Libraries\VersionControlSystems\BaseVersionControlSystem;
 use App\Libraries\VersionControlSystems\GithubVersionControl;
 use App\Core\Entity;
+use App\Libraries\Kubernetes\WritablePaths;
 
 /**
  * Class ContainerImage
@@ -28,6 +29,7 @@ use App\Core\Entity;
  * @property string $security_context_run_as_group
  * @property bool $security_context_allow_privilege_escalation
  * @property bool $security_context_read_only_root_filesystem
+ * @property string $writable_paths Where it writes, comma-separated - mounted as emptyDirs when its root filesystem is read-only, see WritablePaths. Read from the label dk.4spaces.kso.writable-paths
  * @property bool $security_context_run_as_non_root stamped from `image_user` when the image is made or read anew
  * @property bool $security_context_drop_all_capabilities
  * @property bool $security_context_seccomp_runtime_default stamped on when the image is made
@@ -159,13 +161,17 @@ class ContainerImage extends Entity {
      * The tag asked for, else the image's default, else its newest. A registry that cannot be
      * read changes no setting, and says why in `image_user_error`.
      *
+     * Its label `dk.4spaces.kso.writable-paths`, when it has one, is read in the same go - see
+     * `WritablePaths`.
+     *
      * @return bool Whether it was read
      */
     public function readUser(?string $tag = null): bool {
         $this->image_user_read_at = date('Y-m-d H:i:s');
         try {
             $tag = $tag ?: ($this->default_tag ?: (array_slice($this->getTags(), -1)[0] ?? 'latest'));
-            $user = ImageConfig::User($this, $tag);
+            $config = ImageConfig::Read($this, $tag);
+            $user = (string) ($config['config']['User'] ?? '');
         } catch (\Throwable $e) {
             $this->image_user_error = $e->getMessage();
             $this->save();
@@ -177,6 +183,12 @@ class ContainerImage extends Entity {
         $this->image_user_error = null;
         $this->security_context_run_as_non_root = SecurityContext::IsNonRootUser($user)
             || SecurityContext::IsNonRootUser((string) $this->security_context_run_as_user);
+        // Where it writes, when the image says - its label is the image's own word, and wins over
+        // what was set by hand. Without the label, what was set by hand stays.
+        $labels = ImageConfig::Labels($config);
+        if (isset($labels[WritablePaths::Label])) {
+            $this->writable_paths = implode(',', WritablePaths::Parse($labels[WritablePaths::Label]));
+        }
         $this->save();
 
         return true;

@@ -27,6 +27,7 @@ use RenokiCo\PhpK8s\Instances\Volume;
 use RenokiCo\PhpK8s\Kinds\K8sDeployment;
 use RenokiCo\PhpK8s\Kinds\K8sEvent;
 use RenokiCo\PhpK8s\Kinds\K8sPod;
+use App\Libraries\Kubernetes\WritablePaths;
 
 class DeploymentStep extends BaseDeploymentStep {
 
@@ -445,6 +446,7 @@ class DeploymentStep extends BaseDeploymentStep {
         if (count($initContainers) > 0) {
             $template->setInitContainers($initContainers);
         }
+        $volumes = [...$volumes, ...WritablePaths::Volumes([$container, ...$initContainers], $spec)];
         if (count($volumes) > 0) {
             $template->setVolumes($volumes);
         }

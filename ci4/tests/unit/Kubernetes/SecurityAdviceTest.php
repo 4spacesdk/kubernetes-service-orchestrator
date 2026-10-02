@@ -65,6 +65,32 @@ class SecurityAdviceTest extends CIUnitTestCase {
         $this->assertSame([['key' => 'unreadable', 'level' => 'info', 'text' => 'What it runs as could not be read: unauthorized']], $advice);
     }
 
+    /**
+     * It says where it writes, so read-only can be turned on with those paths writable.
+     */
+    public function testKnownWritablePathsSuggestReadOnly(): void {
+        $advice = $this->only('read_only', SecurityAdvice::For($this->image(['writable_paths' => '/tmp'])));
+
+        $this->assertSame('suggestion', $advice['level']);
+        $this->assertStringStartsWith('It says where it writes - Read-only root filesystem can be turned on', $advice['text']);
+    }
+
+    /**
+     * Read-only with nowhere to write crashes as it starts, for almost any image.
+     */
+    public function testReadOnlyWithoutWritablePathsIsAWarning(): void {
+        $advice = $this->only('read_only', SecurityAdvice::For($this->image(['security_context_read_only_root_filesystem' => true])));
+
+        $this->assertSame('warning', $advice['level']);
+        $this->assertStringContainsString('it will likely crash as it starts', $advice['text']);
+    }
+
+    public function testReadOnlyWithItsPathsHasNothingToSayAboutIt(): void {
+        $advice = SecurityAdvice::For($this->image(['security_context_read_only_root_filesystem' => true, 'writable_paths' => '/tmp']));
+
+        $this->assertSame([], array_values(array_filter($advice, fn(array $line) => $line['key'] === 'read_only')));
+    }
+
     public function testSeccompOffIsSuggested(): void {
         $advice = SecurityAdvice::For($this->image(['image_user' => '1000', 'security_context_run_as_non_root' => true, 'security_context_seccomp_runtime_default' => false]));
 
@@ -75,6 +101,16 @@ class SecurityAdviceTest extends CIUnitTestCase {
     /**
      * @param array<string, mixed> $fields
      */
+    /**
+     * @param list<array{key: string, level: string, text: string}> $advice
+     * @return array{key: string, level: string, text: string}
+     */
+    private function only(string $key, array $advice): array {
+        $lines = array_values(array_filter($advice, fn(array $line) => $line['key'] === $key));
+        $this->assertCount(1, $lines);
+        return $lines[0];
+    }
+
     private function image(array $fields): ContainerImage {
         $image = new ContainerImage();
         foreach (array_merge([

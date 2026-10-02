@@ -39,6 +39,8 @@ export class DeploymentSpecificationDefinition extends BaseModel {
     security_context_drop_all_capabilities?: string;
     security_context_seccomp_runtime_default?: string;
     security_context_fs_group?: string;
+    writable_paths?: string;
+    writable_paths_size_limit?: string;
     network_type?: string;
     gateway_backend_timeout?: number;
     domain_tls?: string;
@@ -102,6 +104,8 @@ export class DeploymentSpecificationDefinition extends BaseModel {
             delete this.security_context_drop_all_capabilities;
             delete this.security_context_seccomp_runtime_default;
             delete this.security_context_fs_group;
+            delete this.writable_paths;
+            delete this.writable_paths_size_limit;
             delete this.network_type;
             delete this.gateway_backend_timeout;
             delete this.domain_tls;
@@ -187,6 +191,12 @@ export class DeploymentSpecificationDefinition extends BaseModel {
         }
         if (data.security_context_fs_group != null) {
             this.security_context_fs_group = data.security_context_fs_group;
+        }
+        if (data.writable_paths != null) {
+            this.writable_paths = data.writable_paths;
+        }
+        if (data.writable_paths_size_limit != null) {
+            this.writable_paths_size_limit = data.writable_paths_size_limit;
         }
         if (data.network_type != null) {
             this.network_type = data.network_type;

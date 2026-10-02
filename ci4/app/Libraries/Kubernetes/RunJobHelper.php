@@ -85,6 +85,10 @@ class RunJobHelper {
             ->addEnv('ENVIRONMENT', $deployment->environment)
             ->addEnv('BASE_URL', $deployment->getUrl(true, true));
 
+        // The image's security context, as every other container of the deployment has it - and
+        // with it the writable paths, when its root filesystem is read-only.
+        SecurityContext::ApplyToContainer($container, $containerImage, $spec);
+
         $secret = WorkloadSecret::For($this->getJobName($deployment, $jobId), 'job');
         ContainerEnvironment::ofDeployment($deployment)->applyTo($container, $secret);
 
@@ -124,6 +128,12 @@ class RunJobHelper {
             $template->setSpec('imagePullSecrets', $imagePullSecrets);
         }
 
+        $fsGroup = SecurityContext::FsGroup($containerImage, $spec);
+        if ($fsGroup !== null) {
+            $template->setSpec('securityContext.fsGroup', $fsGroup);
+        }
+
+        $volumes = [...$volumes, ...WritablePaths::Volumes([$container], $spec)];
         if (count($volumes) > 0) {
             $template->setVolumes($volumes);
         }

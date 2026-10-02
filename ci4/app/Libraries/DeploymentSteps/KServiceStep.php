@@ -24,8 +24,17 @@ use App\Models\DeploymentVolumeModel;
 use RenokiCo\PhpK8s\Exceptions\KubernetesAPIException;
 use RenokiCo\PhpK8s\Instances\Instance;
 use RenokiCo\PhpK8s\Kinds\K8sEvent;
+use App\Libraries\Kubernetes\WritablePaths;
+use App\Entities\ContainerImage;
 
 class KServiceStep extends BaseDeploymentStep {
+
+    /**
+     * Knative's `config-features`, or null when it cannot be read. A test's own in place of the cluster's.
+     *
+     * @var (\Closure(): ?array)|null
+     */
+    public static ?\Closure $knativeFeatures = null;
 
     public function getIdentifier(): string {
         return DeploymentSteps::KService;
@@ -144,6 +153,11 @@ class KServiceStep extends BaseDeploymentStep {
         $sidecarsCannotRun = $deployment->findDeploymentSpecification()->reasonSidecarsCannotRun();
         if ($sidecarsCannotRun !== null) {
             return $sidecarsCannotRun;
+        }
+
+        $emptyDirIsOff = $this->reasonEmptyDirIsOff($deployment);
+        if ($emptyDirIsOff !== null) {
+            return $emptyDirIsOff;
         }
 
         $namespaceStep = new NamespaceStep();
@@ -421,6 +435,9 @@ class KServiceStep extends BaseDeploymentStep {
         if (count($initContainers) > 0) {
             $template->setAttribute('spec.initContainers', $initContainers);
         }
+        foreach (WritablePaths::Volumes([$container, ...$initContainers], $spec) as $volume) {
+            $template->addToAttribute('spec.volumes', $volume);
+        }
 
         // After the init containers: their secret variables are in the Secret too.
         if (!$secret->isEmpty()) {
@@ -469,4 +486,44 @@ class KServiceStep extends BaseDeploymentStep {
         return $resource;
     }
 
+
+    /**
+     * A writable path is an `emptyDir`, which Knative takes behind the feature flag
+     * `kubernetes.podspec-volumes-emptydir` - on by default, but a cluster can turn it off. Refused
+     * here then, rather than by Knative at deploy. A flag that cannot be read is taken as the default.
+     */
+    private function reasonEmptyDirIsOff(Deployment $deployment): ?string {
+        $spec = $deployment->findDeploymentSpecification();
+        $own = new ContainerImage();
+        $own->find($spec->container_image_id);
+        $images = [$own];
+        foreach ($spec->findInitContainersInStartOrder() as $row) {
+            $images[] = $row->init_container->container_image;
+        }
+        $mounts = false;
+        foreach ($images as $index => $image) {
+            $paths = [...WritablePaths::Parse((string) $image->writable_paths), ...($index === 0 ? WritablePaths::Parse((string) $spec->writable_paths) : [])];
+            if ($image->security_context_read_only_root_filesystem && $paths !== []) {
+                $mounts = true;
+            }
+        }
+        if (!$mounts) {
+            return null;
+        }
+
+        $features = self::$knativeFeatures !== null ? (self::$knativeFeatures)() : self::KnativeFeaturesInTheCluster();
+        if (($features['kubernetes.podspec-volumes-emptydir'] ?? 'enabled') !== 'disabled') {
+            return null;
+        }
+
+        return 'Its writable paths are emptyDir volumes, and this cluster\'s Knative has them turned off (kubernetes.podspec-volumes-emptydir in config-features). Turn it on, or turn read-only root filesystem off';
+    }
+
+    private static function KnativeFeaturesInTheCluster(): ?array {
+        try {
+            return (new KubeAuth())->authenticate()->getConfigmapByName('config-features', 'knative-serving')->getData();
+        } catch (\Throwable) {
+            return null;
+        }
+    }
 }
