@@ -34,8 +34,92 @@ use App\Models\KNativeMinScaleScheduleModel;
 use App\Models\MigrationJobModel;
 use DebugTool\Data;
 use Google\ApiCore\ApiException;
+use App\Libraries\Kubernetes\GeneratedSecrets;
 
 class Deployments extends ResourceController {
+
+    /**
+     * The secrets kso made for this deployment - `${secret.<name>}` - by name, when
+     * each was made and last rotated. Never the values.
+     *
+     * @route /deployments/{id}/secrets
+     * @method get
+     * @custom true
+     * @param int $id
+     * @responseSchema GeneratedSecretsGetResponse
+     */
+    public function getSecrets(int $id): void {
+        $item = new Deployment();
+        $item->find($id);
+        if (!$item->exists()) {
+            $this->fail('unknown deployment');
+            return;
+        }
+        Data::set('resource', ['secrets' => GeneratedSecrets::Of(GeneratedSecrets::Deployment, (int) $item->id)]);
+        $this->success();
+    }
+
+    /**
+     * Rotate one of the secrets: the next deploy makes a new value, as the placeholders are
+     * written then, and what was signed or opened with the old one stops working.
+     *
+     * @route /deployments/{id}/secrets/rotate
+     * @method put
+     * @custom true
+     * @param int $id
+     * @parameter string $name parameterType=query
+     * @responseSchema GeneratedSecretsGetResponse
+     * @audit deployment.secret_rotate
+     */
+    public function rotateSecret(int $id): void {
+        $item = new Deployment();
+        $item->find($id);
+        $name = (string) $this->request->getGet('name');
+        if (!$item->exists()) {
+            $this->fail('unknown deployment');
+            return;
+        }
+        if (!GeneratedSecrets::Rotate(GeneratedSecrets::Deployment, (int) $item->id, $name)) {
+            $this->fail('unknown secret');
+            return;
+        }
+        Audit::Record('deployment.secret_rotate', $item, ['name' => $name]);
+        Data::set('resource', ['secrets' => GeneratedSecrets::Of(GeneratedSecrets::Deployment, (int) $item->id)]);
+        $this->success();
+    }
+
+    /**
+     * One secret's value, for a person who asked for it - recorded, as it leaves kso.
+     *
+     * @route /deployments/{id}/secrets/reveal
+     * @method put
+     * @custom true
+     * @param int $id
+     * @parameter string $name parameterType=query
+     * @responseSchema GeneratedSecretRevealResponse
+     * @audit deployment.secret_reveal
+     */
+    public function revealSecret(int $id): void {
+        $item = new Deployment();
+        $item->find($id);
+        $name = (string) $this->request->getGet('name');
+        if (!$item->exists()) {
+            $this->fail('unknown deployment');
+            return;
+        }
+        $value = GeneratedSecrets::Reveal(GeneratedSecrets::Deployment, (int) $item->id, $name);
+        if ($value === null) {
+            $this->fail('unknown secret');
+            return;
+        }
+        if ($value === '') {
+            $this->fail('rotated - the new value is made at the next deploy');
+            return;
+        }
+        Audit::Record('deployment.secret_reveal', $item, ['name' => $name]);
+        Data::set('resource', ['name' => $name, 'value' => $value]);
+        $this->success();
+    }
 
     /**
      * @route /deployments/create
@@ -308,6 +392,11 @@ class Deployments extends ResourceController {
 
         /** @var EnvironmentVariableList $body */
         $body = $this->request->getJSON();
+        $invalid = GeneratedSecrets::ReasonVariablesAreInvalid($body->values);
+        if ($invalid !== null) {
+            $this->fail($invalid);
+            return;
+        }
         $values = new EnvironmentVariable();
         $values->all = array_map(
             fn(array $variable) => EnvironmentVariable::Create(...$variable),

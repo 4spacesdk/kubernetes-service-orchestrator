@@ -18,6 +18,7 @@ use App\Models\DomainModel;
 use App\Models\EnvironmentVariableModel;
 use App\Models\WorkspaceModel;
 use DebugTool\Data;
+use App\Libraries\Kubernetes\GeneratedSecrets;
 
 /**
  * Class Deployment
@@ -528,6 +529,17 @@ class Deployment extends Entity {
         }
 
         return $item;
+    }
+
+    /**
+     * The secrets kso made for it go with it - see `GeneratedSecrets`.
+     */
+    public function delete($related = null) {
+        parent::delete($related);
+
+        if ($related === null) {
+            GeneratedSecrets::DeleteAllOf(GeneratedSecrets::Deployment, (int) $this->id);
+        }
     }
 
     /**

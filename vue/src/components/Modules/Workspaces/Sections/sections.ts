@@ -122,6 +122,14 @@ export const workspaceSections: WorkspaceSection[] = [
         isShown: canUpdate,
         component: section(() => import('./WorkspaceLabelsSection.vue')),
     },
+    {
+        key: 'secrets',
+        title: 'Secrets',
+        icon: 'fa fa-user-secret',
+        group: 'Settings',
+        isShown: isDeveloper,
+        component: section(() => import('./WorkspaceSecretsSection.vue')),
+    },
 
     {
         key: 'pause',

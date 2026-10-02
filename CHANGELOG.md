@@ -6,6 +6,7 @@
 * Each card on Workspaces says how many workspaces it lists - Synced and Out of sync, as the list shows them when it opens
 * A specification has Sidecars: containers that keep running beside the app, such as Centrifugo. They start before the init containers, which can use them; a Service port aimed at one reaches it, health counts it like the app, and a migration job that includes one still completes. Native sidecars, so Kubernetes 1.29 or later; not on a Knative Service, which cannot run them
 * The Updates badge also counts the updates approved on their own since you last opened Updates - they leave it when you do, while those waiting for approval stay. The number is on the browser tab's icon too
+* kso makes secrets itself: an environment variable's value can be a Generated secret - a name, shared by the deployment or by its workspace, and what it is made of (hex, letters and digits, digits, UUID and more) with its length. The same name is the same value in the app, its sidecars, init containers and jobs. Written by hand it is `${secret.token | randAlphaNum 32}`, as in a Helm chart. Always secret, stored encrypted, never in a manifest or a preview. Each deployment and workspace lists them under Secrets, where one can be shown - recorded - or rotated: the next deploy makes it anew, as it is written then
 
 ### Fixed bugs
 * The preview showed the defaults the cluster writes on every init container as a change, on every deploy

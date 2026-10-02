@@ -4,6 +4,7 @@ use App\Core\ResourceController;
 use App\Entities\InitContainer;
 use App\Entities\InitContainerEnvironmentVariable;
 use App\Interfaces\EnvironmentVariableList;
+use App\Libraries\Kubernetes\GeneratedSecrets;
 
 class InitContainers extends ResourceController {
 
@@ -26,6 +27,11 @@ class InitContainers extends ResourceController {
 
         /** @var EnvironmentVariableList $body */
         $body = $this->request->getJSON();
+        $invalid = GeneratedSecrets::ReasonVariablesAreInvalid($body->values);
+        if ($invalid !== null) {
+            $this->fail($invalid);
+            return;
+        }
         $values = new InitContainerEnvironmentVariable();
         $values->all = array_map(
             fn(array $variable) => InitContainerEnvironmentVariable::Create(...$variable),

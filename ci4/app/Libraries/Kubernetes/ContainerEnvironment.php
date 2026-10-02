@@ -17,7 +17,8 @@ use RenokiCo\PhpK8s\Instances\Instance;
  * Later variables replace earlier ones with the same name. **Secret stays secret:** a
  * variable marked secret on any layer is secret, even when a later layer replaces its value
  * without the mark - an override cannot make a secret public. So is one whose value, as
- * written, takes a password from kso - see SecretPlaceholders.
+ * written, takes a password from kso - see SecretPlaceholders - or a secret kso made, see
+ * `GeneratedSecrets`. Those are filled in on every layer.
  */
 class ContainerEnvironment {
 
@@ -34,7 +35,9 @@ class ContainerEnvironment {
 
     /**
      * The specification's variables, with `${…}` filled in, and then the deployment's own,
-     * which replace them. The deployment's are used as they are written.
+     * which replace them. The deployment's are used as they are written, but for the generated
+     * secrets: a workspace template writes its variables there, and `${secret.…}` is the whole
+     * point of writing one.
      */
     public static function ofDeployment(Deployment $deployment): self {
         $environment = new self();
@@ -52,7 +55,8 @@ class ContainerEnvironment {
             ->where('deployment_id', $deployment->id)
             ->find();
         foreach ($own as $variable) {
-            $environment->set($variable->name, (string) $variable->value, (bool) $variable->is_secret || self::takesAPassword((string) $variable->value));
+            $written = (string) $variable->value;
+            $environment->set($variable->name, GeneratedSecrets::Fill($written, $deployment), (bool) $variable->is_secret || self::takesAPassword($written));
         }
 
         return $environment;
@@ -140,12 +144,15 @@ class ContainerEnvironment {
     private function setWritten(string $name, string $written, bool $marked, Deployment $deployment): void {
         $this->set(
             $name,
-            EnvironmentVariable::ApplyVariablesToString($written, $deployment),
+            EnvironmentVariable::ApplyVariablesToString(GeneratedSecrets::Fill($written, $deployment), $deployment),
             $marked || self::takesAPassword($written)
         );
     }
 
     private static function takesAPassword(string $written): bool {
+        if (GeneratedSecrets::Uses($written)) {
+            return true;
+        }
         foreach (self::SecretPlaceholders as $placeholder) {
             if (str_contains($written, $placeholder)) {
                 return true;

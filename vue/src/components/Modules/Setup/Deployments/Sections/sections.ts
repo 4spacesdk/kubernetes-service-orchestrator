@@ -132,6 +132,14 @@ export const deploymentSections: DeploymentSection[] = [
         component: section(() => import('./DeploymentEnvironmentVariablesSection.vue')),
     },
     {
+        key: 'secrets',
+        title: 'Secrets',
+        icon: 'fa fa-user-secret',
+        group: 'Configuration',
+        isShown: deployment => !isCustomResource(deployment),
+        component: section(() => import('./DeploymentSecretsSection.vue')),
+    },
+    {
         key: 'volumes',
         title: 'Volumes',
         icon: 'fa fa-hard-drive',

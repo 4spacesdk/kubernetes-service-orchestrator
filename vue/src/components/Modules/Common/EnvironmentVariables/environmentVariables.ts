@@ -33,8 +33,14 @@ export function toRow(variable: { name?: string; value?: string; is_secret?: boo
     };
 }
 
+/**
+ * A secret kso makes and keeps - `${secret.<name>}` for the deployment, `${workspace.secret.<name>}`
+ * for its workspace. Secret either way, as a password is - see `GeneratedSecrets`.
+ */
+const GeneratedSecretPrefixes = ['${secret.', '${workspace.secret.'];
+
 export function takesAPassword(value: string | undefined): boolean {
-    return PasswordPlaceholders.some(placeholder => (value ?? '').includes(placeholder));
+    return [...PasswordPlaceholders, ...GeneratedSecretPrefixes].some(placeholder => (value ?? '').includes(placeholder));
 }
 
 export function looksSecret(name: string | undefined): boolean {
@@ -70,4 +76,67 @@ export function fromBulk(text: string, previous: EnvironmentVariableRow[]): Envi
     });
 
     return [...rows, ...secrets.values()];
+}
+
+/**
+ * A secret kso makes, as the dialog sets it up: a name, whose it is, and what it is made of. It is
+ * stored as the placeholder the server reads - `${secret.name | randAlphaNum 32}` - so nobody has to
+ * write one, and one written by hand still works. See `GeneratedSecrets` and `SecretRecipe`.
+ */
+export interface GeneratedSecretSettings {
+    owner: 'deployment' | 'workspace';
+    name: string;
+    kind: string;
+    length: number;
+}
+
+export const SecretKinds: { value: string; title: string; hasLength: boolean }[] = [
+    {value: 'randHex', title: 'Hex (0-9, a-f)', hasLength: true},
+    {value: 'randAlphaNum', title: 'Letters and digits', hasLength: true},
+    {value: 'randAlpha', title: 'Letters', hasLength: true},
+    {value: 'randNumeric', title: 'Digits', hasLength: true},
+    {value: 'randAscii', title: 'Letters, digits and punctuation', hasLength: true},
+    {value: 'randBytes', title: 'Random bytes, base64-encoded', hasLength: true},
+    {value: 'uuidv4', title: 'UUID', hasLength: false},
+];
+
+/** What kso makes without a recipe: 32 random bytes as hex. */
+export const DefaultSecret = {kind: 'randHex', length: 64};
+
+const WholePlaceholder = /^\$\{(workspace\.)?secret\.([a-z0-9_]+)\s*(?:\|\s*(\w+)(?:\s+(\d+))?\s*)?\}$/;
+
+/**
+ * The settings of a value that is one generated secret and nothing else, or null - a value with
+ * other text around it is edited as text.
+ */
+export function parseGeneratedSecret(value: string | undefined): GeneratedSecretSettings | null {
+    const match = (value ?? '').trim().match(WholePlaceholder);
+    if (!match || (match[3] && !SecretKinds.some(kind => kind.value === match[3]))) {
+        return null;
+    }
+    return {
+        owner: match[1] ? 'workspace' : 'deployment',
+        name: match[2],
+        kind: match[3] ?? DefaultSecret.kind,
+        length: match[4] ? parseInt(match[4]) : DefaultSecret.length,
+    };
+}
+
+export function writeGeneratedSecret(settings: GeneratedSecretSettings): string {
+    const prefix = settings.owner === 'workspace' ? '${workspace.secret.' : '${secret.';
+    const kind = SecretKinds.find(kind => kind.value === settings.kind) ?? SecretKinds[0];
+    const isDefault = kind.value === DefaultSecret.kind && settings.length === DefaultSecret.length;
+    const recipe = isDefault ? '' : (kind.hasLength ? ` | ${kind.value} ${settings.length}` : ` | ${kind.value}`);
+    return `${prefix}${settings.name}${recipe}}`;
+}
+
+/** A secret's name from a variable's: `WEBHOOK_HASH` is `webhook_hash`. */
+export function secretNameFor(variableName: string | undefined): string {
+    return (variableName ?? '').toLowerCase().replace(/[^a-z0-9_]+/g, '_').replace(/^_+|_+$/g, '');
+}
+
+/** "Letters and digits, 32" - for a list, in place of the placeholder. */
+export function describeGeneratedSecret(settings: GeneratedSecretSettings): string {
+    const kind = SecretKinds.find(kind => kind.value === settings.kind);
+    return kind?.hasLength ? `${kind.title}, ${settings.length}` : (kind?.title ?? settings.kind);
 }

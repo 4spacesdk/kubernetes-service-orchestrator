@@ -15,6 +15,7 @@ use App\Models\WorkspaceModel;
 use DebugTool\Data;
 use Google\ApiCore\ApiException;
 use App\Core\Entity;
+use App\Libraries\Kubernetes\GeneratedSecrets;
 
 /**
  * Class Workspace
@@ -656,6 +657,8 @@ class Workspace extends Entity {
         parent::delete($related);
 
         if ($related === null) {
+            GeneratedSecrets::DeleteAllOf(GeneratedSecrets::Workspace, (int) $this->id);
+
             Publisher::getInstance()->send(
                 Events::Workspace_Deleted(),
                 (new ChangeEvent(null, $this->toArray()))->toArray()

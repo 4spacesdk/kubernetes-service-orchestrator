@@ -24,6 +24,7 @@ class AuditGuardTest extends DatabaseTestCase {
         'app/Libraries/LoginThrottle.php' => [1, 'sign-in attempts, their own record'],
         'app/Commands/CleanupSignInAttempts.php' => [1, 'sign-in attempts kept to 90 days'],
         'app/Libraries/ImageScanning/ImageScanner.php' => [2, 'scan results, their own record'],
+        'app/Libraries/Kubernetes/GeneratedSecrets.php' => [4, 'secrets kso made: made on first use and anew after a rotation, removed with their owner, and rotated - which the controller records'],
         'app/Libraries/Reencryption.php' => [1, 'the same values under a new key'],
         'app/Commands/RerunLastMigration.php' => [1, 'a development command'],
         'app/Entities/User.php' => [1, 'sessions ended with a changed password, which is recorded'],

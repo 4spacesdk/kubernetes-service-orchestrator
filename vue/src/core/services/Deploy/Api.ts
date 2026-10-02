@@ -320,6 +320,23 @@ export interface GatewayAnnotationList {
     values?: GatewayAnnotation[];
 }
 
+export interface GeneratedSecret {
+    name?: string;
+    recipe?: string;
+    created?: string;
+    rotated?: string;
+    pending?: boolean;
+}
+
+export interface GeneratedSecretRevealResponse {
+    name?: string;
+    value?: string;
+}
+
+export interface GeneratedSecretsGetResponse {
+    secrets?: GeneratedSecret[];
+}
+
 export interface GithubIntegrationSetupResponse {
     url?: string;
     manifest?: string;
@@ -3836,6 +3853,79 @@ export class DeploymentsDeleteById extends BaseApi<Deployment> {
     }
 }
 
+export class DeploymentsGetSecretsGetById extends BaseApi<GeneratedSecretsGetResponse> {
+
+    public topic = 'Resources.GeneratedSecretsGetResponses';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/deployments/${id}/secrets`;
+    }
+
+    protected convertToResource(data: any): GeneratedSecretsGetResponse {
+        return data;
+    }
+
+    public find(next?: (value: GeneratedSecretsGetResponse[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class DeploymentsRotateSecretPutById extends BaseApi<GeneratedSecretsGetResponse> {
+
+    public topic = 'Resources.GeneratedSecretsGetResponses';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/deployments/${id}/secrets/rotate`;
+    }
+
+    protected convertToResource(data: any): GeneratedSecretsGetResponse {
+        return data;
+    }
+
+    public name(value: string): DeploymentsRotateSecretPutById {
+        this.addQueryParameter('name', value);
+        return this;
+    }
+
+    public save(data: any, next?: (value: GeneratedSecretsGetResponse) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class DeploymentsRevealSecretPutById extends BaseApi<GeneratedSecretRevealResponse> {
+
+    public topic = 'Resources.GeneratedSecretRevealResponses';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/deployments/${id}/secrets/reveal`;
+    }
+
+    protected convertToResource(data: any): GeneratedSecretRevealResponse {
+        return data;
+    }
+
+    public name(value: string): DeploymentsRevealSecretPutById {
+        this.addQueryParameter('name', value);
+        return this;
+    }
+
+    public save(data: any, next?: (value: GeneratedSecretRevealResponse) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
 export class DeploymentsCreatePost extends BaseApi<Deployment> {
 
     public topic = 'Resources.Deployments';
@@ -4496,6 +4586,18 @@ class Deployments {
 
     public deleteById(id: number): DeploymentsDeleteById {
         return new DeploymentsDeleteById(id);
+    }
+
+    public getSecretsGetById(id: number): DeploymentsGetSecretsGetById {
+        return new DeploymentsGetSecretsGetById(id);
+    }
+
+    public rotateSecretPutById(id: number): DeploymentsRotateSecretPutById {
+        return new DeploymentsRotateSecretPutById(id);
+    }
+
+    public revealSecretPutById(id: number): DeploymentsRevealSecretPutById {
+        return new DeploymentsRevealSecretPutById(id);
     }
 
     public createPost(): DeploymentsCreatePost {
@@ -10223,6 +10325,79 @@ export class WorkspacesDeleteById extends BaseApi<Workspace> {
     }
 }
 
+export class WorkspacesGetSecretsGetById extends BaseApi<GeneratedSecretsGetResponse> {
+
+    public topic = 'Resources.GeneratedSecretsGetResponses';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/workspaces/${id}/secrets`;
+    }
+
+    protected convertToResource(data: any): GeneratedSecretsGetResponse {
+        return data;
+    }
+
+    public find(next?: (value: GeneratedSecretsGetResponse[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class WorkspacesRotateSecretPutById extends BaseApi<GeneratedSecretsGetResponse> {
+
+    public topic = 'Resources.GeneratedSecretsGetResponses';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/workspaces/${id}/secrets/rotate`;
+    }
+
+    protected convertToResource(data: any): GeneratedSecretsGetResponse {
+        return data;
+    }
+
+    public name(value: string): WorkspacesRotateSecretPutById {
+        this.addQueryParameter('name', value);
+        return this;
+    }
+
+    public save(data: any, next?: (value: GeneratedSecretsGetResponse) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class WorkspacesRevealSecretPutById extends BaseApi<GeneratedSecretRevealResponse> {
+
+    public topic = 'Resources.GeneratedSecretRevealResponses';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/workspaces/${id}/secrets/reveal`;
+    }
+
+    protected convertToResource(data: any): GeneratedSecretRevealResponse {
+        return data;
+    }
+
+    public name(value: string): WorkspacesRevealSecretPutById {
+        this.addQueryParameter('name', value);
+        return this;
+    }
+
+    public save(data: any, next?: (value: GeneratedSecretRevealResponse) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
 export class WorkspacesCreatePost extends BaseApi<Workspace> {
 
     public topic = 'Resources.Workspaces';
@@ -10627,6 +10802,18 @@ class Workspaces {
 
     public deleteById(id: number): WorkspacesDeleteById {
         return new WorkspacesDeleteById(id);
+    }
+
+    public getSecretsGetById(id: number): WorkspacesGetSecretsGetById {
+        return new WorkspacesGetSecretsGetById(id);
+    }
+
+    public rotateSecretPutById(id: number): WorkspacesRotateSecretPutById {
+        return new WorkspacesRotateSecretPutById(id);
+    }
+
+    public revealSecretPutById(id: number): WorkspacesRevealSecretPutById {
+        return new WorkspacesRevealSecretPutById(id);
     }
 
     public createPost(): WorkspacesCreatePost {

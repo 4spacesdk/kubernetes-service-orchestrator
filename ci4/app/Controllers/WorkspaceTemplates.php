@@ -15,6 +15,7 @@ use App\Interfaces\LabelList;
 use App\Models\DeploymentModel;
 use App\Models\WorkspaceTemplateEnvironmentVariableModel;
 use App\Models\WorkspaceModel;
+use App\Libraries\Kubernetes\GeneratedSecrets;
 
 class WorkspaceTemplates extends ResourceController {
 
@@ -88,6 +89,11 @@ class WorkspaceTemplates extends ResourceController {
 
         /** @var EnvironmentVariableList $body */
         $body = $this->request->getJSON();
+        $invalid = GeneratedSecrets::ReasonVariablesAreInvalid($body->values);
+        if ($invalid !== null) {
+            $this->fail($invalid);
+            return;
+        }
         $values = new WorkspaceTemplateEnvironmentVariable();
         $values->all = array_map(
             fn(array $variable) => WorkspaceTemplateEnvironmentVariable::Create(...$variable),

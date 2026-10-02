@@ -35,6 +35,7 @@ use App\Interfaces\ServicePortList;
 use App\Libraries\RequestField;
 use App\Models\InitContainerModel;
 use DebugTool\Data;
+use App\Libraries\Kubernetes\GeneratedSecrets;
 
 class DeploymentSpecifications extends ResourceController {
 
@@ -178,6 +179,11 @@ class DeploymentSpecifications extends ResourceController {
 
         /** @var EnvironmentVariableList $body */
         $body = $this->request->getJSON();
+        $invalid = GeneratedSecrets::ReasonVariablesAreInvalid($body->values);
+        if ($invalid !== null) {
+            $this->fail($invalid);
+            return;
+        }
         $values = new DeploymentSpecificationEnvironmentVariable();
         $values->all = array_map(
             fn(array $variable) => DeploymentSpecificationEnvironmentVariable::Create(...$variable),

@@ -17,8 +17,93 @@ use App\Models\DeploymentModel;
 use App\Models\WorkspaceTemplateDeploymentSpecificationModel;
 use App\Models\MigrationJobModel;
 use Google\ApiCore\ApiException;
+use App\Libraries\Kubernetes\GeneratedSecrets;
+use DebugTool\Data;
 
 class Workspaces extends ResourceController {
+
+    /**
+     * The secrets kso made for this workspace - `${workspace.secret.<name>}` - by name, when
+     * each was made and last rotated. Never the values.
+     *
+     * @route /workspaces/{id}/secrets
+     * @method get
+     * @custom true
+     * @param int $id
+     * @responseSchema GeneratedSecretsGetResponse
+     */
+    public function getSecrets(int $id): void {
+        $item = new Workspace();
+        $item->find($id);
+        if (!$item->exists()) {
+            $this->fail('unknown workspace');
+            return;
+        }
+        Data::set('resource', ['secrets' => GeneratedSecrets::Of(GeneratedSecrets::Workspace, (int) $item->id)]);
+        $this->success();
+    }
+
+    /**
+     * Rotate one of the secrets: the next deploy makes a new value, as the placeholders are
+     * written then, and what was signed or opened with the old one stops working.
+     *
+     * @route /workspaces/{id}/secrets/rotate
+     * @method put
+     * @custom true
+     * @param int $id
+     * @parameter string $name parameterType=query
+     * @responseSchema GeneratedSecretsGetResponse
+     * @audit workspace.secret_rotate
+     */
+    public function rotateSecret(int $id): void {
+        $item = new Workspace();
+        $item->find($id);
+        $name = (string) $this->request->getGet('name');
+        if (!$item->exists()) {
+            $this->fail('unknown workspace');
+            return;
+        }
+        if (!GeneratedSecrets::Rotate(GeneratedSecrets::Workspace, (int) $item->id, $name)) {
+            $this->fail('unknown secret');
+            return;
+        }
+        Audit::Record('workspace.secret_rotate', $item, ['name' => $name]);
+        Data::set('resource', ['secrets' => GeneratedSecrets::Of(GeneratedSecrets::Workspace, (int) $item->id)]);
+        $this->success();
+    }
+
+    /**
+     * One secret's value, for a person who asked for it - recorded, as it leaves kso.
+     *
+     * @route /workspaces/{id}/secrets/reveal
+     * @method put
+     * @custom true
+     * @param int $id
+     * @parameter string $name parameterType=query
+     * @responseSchema GeneratedSecretRevealResponse
+     * @audit workspace.secret_reveal
+     */
+    public function revealSecret(int $id): void {
+        $item = new Workspace();
+        $item->find($id);
+        $name = (string) $this->request->getGet('name');
+        if (!$item->exists()) {
+            $this->fail('unknown workspace');
+            return;
+        }
+        $value = GeneratedSecrets::Reveal(GeneratedSecrets::Workspace, (int) $item->id, $name);
+        if ($value === null) {
+            $this->fail('unknown secret');
+            return;
+        }
+        if ($value === '') {
+            $this->fail('rotated - the new value is made at the next deploy');
+            return;
+        }
+        Audit::Record('workspace.secret_reveal', $item, ['name' => $name]);
+        Data::set('resource', ['name' => $name, 'value' => $value]);
+        $this->success();
+    }
 
     /**
      * @route /workspaces/create
