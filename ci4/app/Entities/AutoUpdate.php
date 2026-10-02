@@ -20,6 +20,7 @@ use DeploymentStatusTypes;
  * @property string $previous_tag
  * @property string $next_tag
  * @property bool $is_approved
+ * @property bool $is_auto_approved Approved on its own, as the deployment does not require approval
  * @property string $approved_date
  * @property string $log
  */
@@ -60,14 +61,19 @@ class AutoUpdate extends Entity {
                 $autoUpdate->save();
 
                 if (!$deployment->auto_update_require_approval) {
-                    $autoUpdate->approve();
+                    $autoUpdate->approve(automatically: true);
                 }
             }
         }
     }
 
-    public function approve(): void {
+    /**
+     * @param bool $automatically approved on its own rather than by somebody - which is news for
+     *                            the menu's badge until they open Updates
+     */
+    public function approve(bool $automatically = false): void {
         $this->is_approved = true;
+        $this->is_auto_approved = $automatically;
         $this->approved_date = date('Y-m-d H:i:s');
         $this->save();
 

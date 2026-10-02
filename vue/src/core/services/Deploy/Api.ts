@@ -586,6 +586,11 @@ export interface StringInterface {
     value?: string;
 }
 
+export interface UsersAutoUpdatesBadgeResponse {
+    waiting?: number;
+    approved_on_their_own?: number;
+}
+
 export interface UsersMFASetupPrepareResponse {
     hasMFA?: boolean;
     qrCodeDataUri?: string;
@@ -9123,6 +9128,48 @@ export class UsersMeGet extends BaseApi<User> {
     }
 }
 
+export class UsersAutoUpdatesBadgeGet extends BaseApi<UsersAutoUpdatesBadgeResponse> {
+
+    public topic = 'Resources.UsersAutoUpdatesBadgeResponses';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/users/me/auto-updates-badge`;
+    }
+
+    protected convertToResource(data: any): UsersAutoUpdatesBadgeResponse {
+        return data;
+    }
+
+    public find(next?: (value: UsersAutoUpdatesBadgeResponse[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class UsersAutoUpdatesSeenPut extends BaseApi<UsersAutoUpdatesBadgeResponse> {
+
+    public topic = 'Resources.UsersAutoUpdatesBadgeResponses';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/users/me/auto-updates-seen`;
+    }
+
+    protected convertToResource(data: any): UsersAutoUpdatesBadgeResponse {
+        return data;
+    }
+
+    public save(data: any, next?: (value: UsersAutoUpdatesBadgeResponse) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
 export class UsersMfaSetupPrepareGet extends BaseApi<UsersMFASetupPrepareResponse> {
 
     public topic = 'Resources.UsersMFASetupPrepareResponses';
@@ -9240,6 +9287,14 @@ class Users {
 
     public meGet(): UsersMeGet {
         return new UsersMeGet();
+    }
+
+    public autoUpdatesBadgeGet(): UsersAutoUpdatesBadgeGet {
+        return new UsersAutoUpdatesBadgeGet();
+    }
+
+    public autoUpdatesSeenPut(): UsersAutoUpdatesSeenPut {
+        return new UsersAutoUpdatesSeenPut();
     }
 
     public mfaSetupPrepareGet(): UsersMfaSetupPrepareGet {

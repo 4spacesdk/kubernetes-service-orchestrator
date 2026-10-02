@@ -1,9 +1,11 @@
-import { onMounted, onUnmounted, reactive } from "vue";
+import { onMounted, onUnmounted, reactive, watch } from "vue";
 import { HealthStatusTypes } from "@/constants";
 import { Api } from "@/core/services/Deploy/Api";
+import type { UsersAutoUpdatesBadgeResponse } from "@/core/services/Deploy/Api";
 import PushService from "@/services/Push/PushService";
 import { Events } from "@/services/Push/Events";
 import type { PushSubscription } from "@/services/Push/PushSubscription";
+import { showFaviconCount } from "@/components/Shell/Menu/faviconBadge";
 
 export interface MenuBadge {
     count: number;
@@ -23,10 +25,19 @@ const counts = reactive({
     degradedDeployments: 0,
     /** Auto updates waiting for approval. */
     pendingAutoUpdates: 0,
+    /**
+     * Auto updates approved on their own since the user last opened Updates - news until they
+     * do, unlike the waiting ones, which stay until somebody approves them.
+     */
+    unseenAutoUpdates: 0,
 });
+
+/** The Updates number, in the menu and on the browser tab's icon. */
+const autoUpdatesCount = () => counts.pendingAutoUpdates + counts.unseenAutoUpdates;
 
 let users = 0;
 let subscriptions: PushSubscription[] = [];
+let stopFavicon: (() => void) | null = null;
 
 /** A category's own number, by its identifier. */
 export function categoryBadge(identifier: string): MenuBadge | null {
@@ -34,7 +45,7 @@ export function categoryBadge(identifier: string): MenuBadge | null {
         case "sites":
             return badge(counts.degradedWorkspaces, "error");
         case "auto-updates":
-            return badge(counts.pendingAutoUpdates, "secondary");
+            return badge(autoUpdatesCount(), "secondary");
     }
     return null;
 }
@@ -71,6 +82,7 @@ export function useMenuBadges() {
         ];
         countAutoUpdates();
         countDegraded();
+        stopFavicon = watch(autoUpdatesCount, showFaviconCount, { immediate: true });
     });
 
     onUnmounted(() => {
@@ -79,6 +91,8 @@ export function useMenuBadges() {
         }
         subscriptions.forEach((subscription) => subscription.unsubscribe());
         subscriptions = [];
+        stopFavicon?.();
+        showFaviconCount(0);
     });
 }
 
@@ -107,9 +121,34 @@ function countDegraded() {
         .count((value) => (counts.degradedDeployments = value));
 }
 
+/** Counted by the server, where the time the user last looked and the approvals are in the same terms. */
 function countAutoUpdates() {
-    Api.autoUpdates()
-        .get()
-        .where("is_approved", false)
-        .count((value) => (counts.pendingAutoUpdates = value));
+    Api.users().autoUpdatesBadgeGet().find((badges) => setAutoUpdates(badges[0]));
+}
+
+function setAutoUpdates(badge?: UsersAutoUpdatesBadgeResponse) {
+    counts.pendingAutoUpdates = badge?.waiting ?? 0;
+    counts.unseenAutoUpdates = badge?.approved_on_their_own ?? 0;
+}
+
+/**
+ * For the Updates page: what was approved on its own is seen once the page is open - and so is
+ * what arrives while it is. What waits for approval stays in the badge.
+ */
+export function useAutoUpdatesSeen() {
+    let subscriptions: PushSubscription[] = [];
+    const markSeen = () => Api.users().autoUpdatesSeenPut().save(null, (badge) => setAutoUpdates(badge));
+
+    onMounted(() => {
+        markSeen();
+        subscriptions = [
+            PushService.subscribe(Events.AutoUpdate_Created(), () => markSeen()),
+            PushService.subscribe(Events.AutoUpdate_Approved(), () => markSeen()),
+        ];
+    });
+
+    onUnmounted(() => {
+        subscriptions.forEach((subscription) => subscription.unsubscribe());
+        subscriptions = [];
+    });
 }

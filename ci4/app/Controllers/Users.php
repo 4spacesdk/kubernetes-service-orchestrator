@@ -67,6 +67,39 @@ class Users extends ResourceController {
     }
 
     /**
+     * The number on the menu's Updates, for the signed-in user: the updates waiting for approval,
+     * and those approved on their own since they last opened Updates. Counted here, where the
+     * times are all in the database's own terms.
+     *
+     * @route /users/me/auto-updates-badge
+     * @method get
+     * @custom true
+     * @responseSchema UsersAutoUpdatesBadgeResponse
+     */
+    public function autoUpdatesBadge(): void {
+        Data::set('resource', $this->signedInUser()->autoUpdatesBadge());
+        $this->success();
+    }
+
+    /**
+     * The signed-in user has opened Updates: the updates approved on their own until now are no
+     * longer news, and leave the badge. Those waiting for approval stay. Answers with the badge.
+     *
+     * @route /users/me/auto-updates-seen
+     * @method put
+     * @custom true
+     * @responseSchema UsersAutoUpdatesBadgeResponse
+     * @audit none marks what the signed-in user has seen; nothing is changed for anyone else
+     */
+    public function autoUpdatesSeen(): void {
+        $me = $this->signedInUser();
+        $me->auto_updates_seen_at = date('Y-m-d H:i:s');
+        $me->save();
+        Data::set('resource', $me->autoUpdatesBadge());
+        $this->success();
+    }
+
+    /**
      * @route /users/mfa/setup/prepare
      * @method get
      * @custom true

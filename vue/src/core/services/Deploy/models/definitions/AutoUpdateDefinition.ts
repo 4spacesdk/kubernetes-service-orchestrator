@@ -13,6 +13,7 @@ export class AutoUpdateDefinition extends BaseModel {
     previous_tag?: string;
     next_tag?: string;
     is_approved?: boolean;
+    is_auto_approved?: boolean;
     approved_date?: string;
     log?: string;
     id?: number;
@@ -38,6 +39,7 @@ export class AutoUpdateDefinition extends BaseModel {
             delete this.previous_tag;
             delete this.next_tag;
             delete this.is_approved;
+            delete this.is_auto_approved;
             delete this.approved_date;
             delete this.log;
             delete this.id;
@@ -69,6 +71,9 @@ export class AutoUpdateDefinition extends BaseModel {
         }
         if (data.is_approved != null) {
             this.is_approved = data.is_approved;
+        }
+        if (data.is_auto_approved != null) {
+            this.is_auto_approved = data.is_auto_approved;
         }
         if (data.approved_date != null) {
             this.approved_date = data.approved_date;

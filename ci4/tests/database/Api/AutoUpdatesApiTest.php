@@ -38,6 +38,7 @@ class AutoUpdatesApiTest extends ControllerTestCase {
         $this->assertSame('OK', $body['status']);
         $this->assertTrue((bool) $stored->is_approved);
         $this->assertNotSame('', (string) $stored->approved_date);
+        $this->assertFalse((bool) $stored->is_auto_approved, 'approved by somebody, so not news for the badge');
     }
 
     /**

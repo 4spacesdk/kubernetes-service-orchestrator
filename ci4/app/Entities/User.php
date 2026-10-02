@@ -21,6 +21,7 @@ use Config\Database;
  * @property string $mfa_secret_hash
  * @property string $password_reset_token_hash
  * @property string $password_reset_expires
+ * @property string $auto_updates_seen_at When the user last opened Updates - the badge counts what was approved on its own since
  *
  *  Many
  * @property RbacRole $rbac_roles
@@ -199,6 +200,29 @@ class User extends \RestExtension\Entities\User {
     }
 
     public const array EncryptedFields = ['mfa_secret_hash'];
+
+    /**
+     * The number on the menu's Updates: what waits for approval - for everybody - and what was
+     * approved on its own since this user last opened Updates. A user who never has counts from
+     * when they were created.
+     *
+     * @return array{waiting: int, approved_on_their_own: int}
+     */
+    public function autoUpdatesBadge(): array {
+        $db = db_connect();
+        $since = $this->auto_updates_seen_at ?: $this->created;
+
+        return [
+            'waiting' => $db->table('auto_updates')->where('is_approved', 0)->countAllResults(),
+            'approved_on_their_own' => $db->table('auto_updates')
+                ->where('is_auto_approved', 1)
+                ->where('approved_date >', $since)
+                ->countAllResults(),
+        ];
+    }
+
+    /** Moved on every visit to Updates - see `Users::autoUpdatesSeen()`. */
+    public const array AuditIgnoredFields = ['auto_updates_seen_at'];
 
     use EncryptsFields;
 

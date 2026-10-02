@@ -36,6 +36,7 @@ class AutoUpdateCheckForUpdatesTest extends DatabaseTestCase {
         AutoUpdate::CheckForUpdates(self::Image, 'latest-minor');
 
         $this->assertTrue((bool)$this->updateFor($deployment)->is_approved);
+        $this->assertTrue((bool)$this->updateFor($deployment)->is_auto_approved, 'approved on its own, which the menu badge counts');
     }
 
     public function testUpdateWaitsWhenApprovalIsRequired(): void {
