@@ -27,6 +27,26 @@ class ContainerEnvironmentTest extends DatabaseTestCase {
     }
 
     /**
+     * The CA the database service's TLS is checked against, as PEM - and not secret: a CA
+     * certificate is public.
+     */
+    public function testTheDatabaseCaIsItsPem(): void {
+        $pem = "-----BEGIN CERTIFICATE-----\nMIIBtest\n-----END CERTIFICATE-----";
+        $database = Fixtures::databaseService(['host' => 'db.test', 'tls' => true, 'tls_ca' => $pem]);
+        $deployment = Fixtures::deployment([
+            'deployment_specification_id' => Fixtures::deploymentSpecification()->id,
+            'database_service_id' => $database->id,
+            'version' => '1.0.0',
+        ]);
+        Fixtures::specificationEnvironmentVariable(['deployment_specification_id' => $deployment->deployment_specification_id, 'name' => 'DB_SSL_CA', 'value' => '${database.ca}']);
+
+        $environment = ContainerEnvironment::ofDeployment($deployment);
+
+        $this->assertSame($pem, $environment->toArray()['DB_SSL_CA']);
+        $this->assertFalse($environment->isSecret('DB_SSL_CA'));
+    }
+
+    /**
      * The deployment's own replace the specification's, with their placeholders filled in too -
      * a workspace template writes its variables there.
      */

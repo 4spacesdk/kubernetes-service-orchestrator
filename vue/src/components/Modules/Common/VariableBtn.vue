@@ -43,6 +43,10 @@ const variables = ref<Variable[]>([
         code: "${database.pass}"
     },
     {
+        name: "Database CA",
+        code: "${database.ca}"
+    },
+    {
         name: "Email Service Host",
         code: "${emailService.host}"
     },

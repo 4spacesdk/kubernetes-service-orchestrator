@@ -56,6 +56,8 @@ class EnvironmentVariable extends Entity {
             fn(string $value) => str_replace('${database.name}', (string) $deployment->database_name, $value),
             fn(string $value) => str_replace('${database.user}', (string) $deployment->database_service->getDatabaseUser($deployment->database_user), $value),
             fn(string $value) => str_replace('${database.pass}', (string) $deployment->database_pass, $value),
+            // The CA certificate the database service's TLS is checked against, as PEM - public, so not secret.
+            fn(string $value) => str_replace('${database.ca}', (string) $deployment->database_service->tls_ca, $value),
 
             fn(string $value) => str_replace('${emailService.host}', (string) $deployment->workspace->email_service->host, $value),
             fn(string $value) => str_replace('${emailService.port}', (string) $deployment->workspace->email_service->port, $value),

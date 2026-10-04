@@ -1,15 +1,19 @@
 # Changelog
 
-## v1.9.6 (unreleased)
+## v1.9.6 (2026-10-04)
 
 ### Enhancements
 * An imported container image gets its default tag and pull policy from its newest tag: a version, such as 1.9.5, leaves the default empty and pulls if not present; a tag that moves, such as latest-minor or tst, is the default and always pulled
+* `${database.ca}` in an environment variable is the database service's CA certificate, as PEM - empty when it has none
 
 ### Fixed bugs
 * A long message at the bottom of the screen ran off its edge instead of wrapping, and one starting with a quoted name had the name's first letter made a capital
+* Helm: upgrading kso at the same version with changed values failed on the migration job ("field is immutable"). From chart 1.9.8 the job is named after its spec as well as the version, so the same values leave it be and changed values make a new one
 
 ### Upgrade guide
 1. Deploy new image
+
+
 
 ## v1.9.5 (2026-10-04)
 
