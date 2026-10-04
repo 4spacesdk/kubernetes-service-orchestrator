@@ -1,6 +1,6 @@
 # Changelog
 
-## v1.9.5 (unreleased)
+## v1.9.5 (2026-10-04)
 
 ### Enhancements
 * Each card on Workspaces says how many workspaces it lists - Synced and Out of sync, as the list shows them when it opens
