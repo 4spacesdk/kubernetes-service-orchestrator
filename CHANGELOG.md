@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.9.6 (unreleased)
+
+### Enhancements
+* An imported container image gets its default tag and pull policy from its newest tag: a version, such as 1.9.5, leaves the default empty and pulls if not present; a tag that moves, such as latest-minor or tst, is the default and always pulled
+
+### Fixed bugs
+* A long message at the bottom of the screen ran off its edge instead of wrapping, and one starting with a quoted name had the name's first letter made a capital
+
+### Upgrade guide
+1. Deploy new image
+
 ## v1.9.5 (2026-10-04)
 
 ### Enhancements

@@ -157,6 +157,52 @@ class ContainerRegistriesApiTest extends ControllerTestCase {
     }
 
     /**
+     * The newest tag says how the image is released. A version is one of many that never change:
+     * no default tag, pulled when not present. A name such as `latest-minor` moves: it is the
+     * default, always pulled.
+     *
+     * @return array<string, array{0: array<string, string>, 1: string, 2: string}>
+     */
+    public static function newestTags(): array {
+        return [
+            'a version is the newest' => [['latest-minor' => '2026-09-01T10:00:00Z', '1.9.5' => '2026-10-04T10:00:00Z'], '', \ImagePullPolicies::IfNotPresent],
+            'a moving tag is the newest' => [['1.9.5' => '2026-09-01T10:00:00Z', 'latest-minor' => '2026-10-04T10:00:00Z'], 'latest-minor', \ImagePullPolicies::Always],
+            'a test tag is the newest' => [['v3.10.0' => '2026-09-01T10:00:00Z', 'tst' => '2026-10-04T10:00:00Z'], 'tst', \ImagePullPolicies::Always],
+        ];
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('newestTags')]
+    public function testImportingGuessesTheDefaultTagAndPullPolicyFromTheNewestTag(array $pushed, string $defaultTag, string $pullPolicy): void {
+        $fakes = FakeIntegrations::install();
+        $fakes->tags = array_keys($pushed);
+        $fakes->tagPushTimes = $pushed;
+        $fakes->repositories = ['team/api'];
+        $registry = Fixtures::containerRegistry();
+
+        $this->import($registry->id, ['team/api']);
+
+        $image = $this->db->table('container_images')->where('url', 'registry.example.org/team/api')->get()->getRow();
+        $this->assertSame($defaultTag, (string) $image->default_tag);
+        $this->assertSame($pullPolicy, $image->default_image_pull_policy);
+    }
+
+    /**
+     * Without tags there is nothing to go by, and nothing is guessed.
+     */
+    public function testWithoutTagsNothingIsGuessed(): void {
+        $fakes = FakeIntegrations::install();
+        $fakes->tags = [];
+        $fakes->repositories = ['team/api'];
+        $registry = Fixtures::containerRegistry();
+
+        $this->import($registry->id, ['team/api']);
+
+        $image = $this->db->table('container_images')->where('url', 'registry.example.org/team/api')->get()->getRow();
+        $this->assertSame('', (string) $image->default_tag);
+        $this->assertSame('', (string) $image->default_image_pull_policy);
+    }
+
+    /**
      * Twice the same click is one image, not two.
      */
     public function testARepositoryWithAnImageIsNotImportedAgain(): void {

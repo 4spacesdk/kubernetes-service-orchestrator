@@ -153,6 +153,39 @@ class ContainerImage extends Entity {
     }
 
     /**
+     * The default tag and pull policy, guessed from the newest tag in the registry. A version - `1.9.5`,
+     * `v3.10.0` - is one of many, each never changing: no default, and pulled when not present. A
+     * name - `latest`, `latest-minor`, `tst` - is one tag that moves: it is the default, and always
+     * pulled, or a node keeps running what it pulled first. Nothing is guessed when the registry
+     * cannot be read or has no tags.
+     */
+    public function guessTagAndPullPolicy(): void {
+        try {
+            $tags = $this->getTagDetails();
+        } catch (\Throwable) {
+            return;
+        }
+        if ($tags === []) {
+            return;
+        }
+        usort($tags, fn(array $a, array $b) => strcmp((string) ($a['pushed_at'] ?? ''), (string) ($b['pushed_at'] ?? '')));
+        $newest = (string) end($tags)['name'];
+
+        [$this->default_tag, $this->default_image_pull_policy] = self::TagAndPullPolicyFor($newest);
+    }
+
+    /**
+     * @return array{0: string, 1: string} the default tag - empty for a version - and the pull policy
+     */
+    public static function TagAndPullPolicyFor(string $tag): array {
+        $isAVersion = (bool) preg_match('/^v?\d+(\.\d+)*([-+][0-9A-Za-z.\-]+)?$/', $tag);
+
+        return $isAVersion
+            ? ['', \ImagePullPolicies::IfNotPresent]
+            : [$tag, \ImagePullPolicies::Always];
+    }
+
+    /**
      * Read the `USER` a tag runs as from the registry, and stamp `run_as_non_root` from it - on
      * when it is a number other than 0, or when the image sets such a user itself; off otherwise.
      * This is how an image is made secure when it is made, and how it follows an image that

@@ -12,7 +12,15 @@ const props = defineProps<{input: ToastDialog_Input, events: DialogEventsInterfa
 
 const used = ref(false);
 const showDialog = ref(false);
-const text = ref('');
+
+/**
+ * The text with a capital first letter - when it starts with one. A message that starts with a
+ * quoted name, `'spant-pilot' already has its disk`, keeps the name as it is written.
+ */
+const text = computed(() => {
+    const value = props.input.text ?? '';
+    return /^[a-z]/.test(value) ? value.charAt(0).toUpperCase() + value.slice(1) : value;
+});
 
 // <editor-fold desc="Functions">
 
@@ -50,10 +58,11 @@ function onCloseBtnClicked() {
         v-model="showDialog"
         @update:model-value="$event ? '' : close()">
 
-        <v-chip variant="text" :color="props.input.color" class="d-flex align-center">
-            <v-icon v-if="props.input.icon" class=" mr-1">{{props.input.icon}}</v-icon>
-            <span class="text-capitalize-first-letter">{{ props.input.text }}</span>
-        </v-chip>
+        <!-- Not a chip: a chip never wraps, and a long message ran off the edge. -->
+        <div class="d-flex align-start ga-2 toast-text" :class="props.input.color ? `text-${props.input.color}` : ''">
+            <v-icon v-if="props.input.icon" size="small" class="mt-1">{{ props.input.icon }}</v-icon>
+            <span>{{ text }}</span>
+        </div>
 
         <template v-slot:actions>
             <v-btn
@@ -68,5 +77,8 @@ function onCloseBtnClicked() {
 </template>
 
 <style scoped>
-
+.toast-text {
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
 </style>
