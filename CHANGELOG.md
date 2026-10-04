@@ -1,5 +1,16 @@
 # Changelog
 
+## v1.9.7 (2026-10-04)
+
+### Fixed bugs
+* A cron job had none of the deployment's volumes, so one running the app's own command did not find the files the app wrote. A cron job can now Mount volumes, as an init container can - on for the cron jobs that already include the deployment's environment variables
+
+### Upgrade guide
+1. Deploy new image
+2. Run migrations [(Guide)](https://github.com/4spacesdk/kubernetes-service-orchestrator?tab=readme-ov-file#migrate-database-helm)
+
+
+
 ## v1.9.6 (2026-10-04)
 
 ### Enhancements

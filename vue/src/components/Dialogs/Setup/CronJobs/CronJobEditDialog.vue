@@ -309,6 +309,16 @@ function onArgVariableAdded(index: number, value: string) {
                     </v-col>
 
                     <v-col cols="12">
+                        <v-switch
+                            v-model="item.include_volumes"
+                            variant="outlined"
+                            label="Mount volumes"
+                            density="compact"
+                            color="secondary"
+                        />
+                    </v-col>
+
+                    <v-col cols="12">
                         <v-card
                             class="px-4 py-2"
                         >

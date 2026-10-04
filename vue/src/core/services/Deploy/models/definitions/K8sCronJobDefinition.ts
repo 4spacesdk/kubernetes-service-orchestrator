@@ -27,6 +27,7 @@ export class K8sCronJobDefinition extends BaseModel {
     container_image_tag_value?: string;
     container_image_pull_policy?: string;
     include_deployment_environment_variables?: boolean;
+    include_volumes?: boolean;
     deployment_specifications?: DeploymentSpecification[];
     deployments?: Deployment[];
     id?: number;
@@ -64,6 +65,7 @@ export class K8sCronJobDefinition extends BaseModel {
             delete this.container_image_tag_value;
             delete this.container_image_pull_policy;
             delete this.include_deployment_environment_variables;
+            delete this.include_volumes;
             delete this.deployment_specifications;
             delete this.deployments;
             delete this.id;
@@ -131,6 +133,9 @@ export class K8sCronJobDefinition extends BaseModel {
         }
         if (data.include_deployment_environment_variables != null) {
             this.include_deployment_environment_variables = data.include_deployment_environment_variables;
+        }
+        if (data.include_volumes != null) {
+            this.include_volumes = data.include_volumes;
         }
         if (data.deployment_specifications != null) {
             this.deployment_specifications = data.deployment_specifications.map((i: any) => new DeploymentSpecification(i));

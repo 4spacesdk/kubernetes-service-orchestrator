@@ -191,6 +191,61 @@ class CronjobStepTest extends ManifestTestCase {
     }
 
     /**
+     * Without its volumes, a job that runs one of the app's own commands does not find the
+     * files the app wrote - an uploaded certificate, say. Only when the definition asks.
+     */
+    public function testVolumesAreOnlyMountedWhenTheDefinitionAsksForThem(): void {
+        $without = $this->deploymentWithCronJob(['include_volumes' => false]);
+        Fixtures::deploymentVolume(['deployment_id' => $without->id]);
+
+        $this->assertArrayNotHasKey('volumeMounts', $this->container($without));
+        $this->assertArrayNotHasKey('volumes', $this->podSpec($without));
+
+        $with = $this->deploymentWithCronJob(['include_volumes' => true]);
+        Fixtures::deploymentVolume([
+            'deployment_id' => $with->id,
+            'mount_path' => '/var/www/html/api/writable/uploads',
+            'sub_path' => 'uploads',
+        ]);
+
+        $mount = $this->container($with)['volumeMounts'][0];
+        $this->assertSame('/var/www/html/api/writable/uploads', $mount['mountPath']);
+        $this->assertSame('uploads', $mount['subPath']);
+        $this->assertSame(
+            ['claimName' => $with->name],
+            $this->podSpec($with)['volumes'][0]['persistentVolumeClaim']
+        );
+    }
+
+    /**
+     * Mounts from the deployment and from its specification are of the same claim, and a pod
+     * may name a volume once.
+     */
+    public function testTheClaimIsInThePodOnceHoweverManyMountsItHas(): void {
+        $deployment = $this->deploymentWithCronJob(['include_volumes' => true]);
+        Fixtures::deploymentVolume(['deployment_id' => $deployment->id, 'mount_path' => '/data', 'sub_path' => 'data']);
+        Fixtures::specificationVolume([
+            'deployment_specification_id' => $deployment->deployment_specification_id,
+            'mount_path' => '/shared',
+            'sub_path' => '${deployment.name}',
+        ]);
+
+        $mounts = array_column($this->container($deployment)['volumeMounts'], 'subPath', 'mountPath');
+        $this->assertSame($deployment->name, $mounts['/shared'], 'the placeholder should be filled in');
+        $this->assertSame('data', $mounts['/data']);
+        $this->assertCount(1, $this->podSpec($deployment)['volumes']);
+    }
+
+    /**
+     * Asked for, but the deployment has none: no claim to point at.
+     */
+    public function testNoVolumeIsAddedWhenTheDeploymentHasNone(): void {
+        $deployment = $this->deploymentWithCronJob(['include_volumes' => true]);
+
+        $this->assertArrayNotHasKey('volumes', $this->podSpec($deployment));
+    }
+
+    /**
      * Same precedence as on the Deployment: what is set on this one deployment wins over
      * what the specification hands down.
      */

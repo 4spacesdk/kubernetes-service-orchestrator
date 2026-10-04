@@ -1,6 +1,8 @@
 <?php namespace App\Libraries\DeploymentSteps;
 
 use App\Entities\Deployment;
+use App\Entities\DeploymentSpecificationVolume;
+use App\Entities\DeploymentVolume;
 use App\Libraries\Kubernetes\SecurityContext;
 use App\Libraries\Kubernetes\ContainerEnvironment;
 use App\Libraries\Kubernetes\SecretPreview;
@@ -16,11 +18,14 @@ use App\Libraries\Kubernetes\KubeAuth;
 use App\Models\ContainerImageModel;
 use App\Models\DeploymentCronJobModel;
 use App\Models\DeploymentSpecificationCronJobModel;
+use App\Models\DeploymentSpecificationVolumeModel;
+use App\Models\DeploymentVolumeModel;
 use App\Models\K8sCronJobModel;
 use Cron\CronExpression;
 use DebugTool\Data;
 use RenokiCo\PhpK8s\Exceptions\KubernetesAPIException;
 use RenokiCo\PhpK8s\Instances\Container;
+use RenokiCo\PhpK8s\Instances\Volume;
 use RenokiCo\PhpK8s\Kinds\K8sCronJob;
 use RenokiCo\PhpK8s\Kinds\K8sEvent;
 use RenokiCo\PhpK8s\Kinds\K8sJob;
@@ -339,6 +344,40 @@ class CronjobStep extends BaseDeploymentStep {
                 ContainerEnvironment::ofDeployment($deployment)->applyTo($container, $secret);
             }
 
+            // The deployment's volumes, where the app has them, so a job reads the files the app
+            // wrote. Every mount is of the one claim, so the pod has it once.
+            $volumes = [];
+            if ($cronJob->include_volumes) {
+                $volume = new Volume();
+                $volume
+                    ->setAttribute('name', $deployment->name)
+                    ->setAttribute('persistentVolumeClaim', [
+                        'claimName' => $deployment->name,
+                    ]);
+
+                /** @var DeploymentVolume $deploymentVolumes */
+                $deploymentVolumes = (new DeploymentVolumeModel())
+                    ->where('deployment_id', $deployment->id)
+                    ->find();
+                foreach ($deploymentVolumes as $deploymentVolume) {
+                    $container->addMountedVolume($volume->mountTo($deploymentVolume->mount_path, $deploymentVolume->sub_path));
+                }
+                /** @var DeploymentSpecificationVolume $deploymentSpecificationVolumes */
+                $deploymentSpecificationVolumes = (new DeploymentSpecificationVolumeModel())
+                    ->where('deployment_specification_id', $spec->id)
+                    ->find();
+                foreach ($deploymentSpecificationVolumes as $deploymentSpecificationVolume) {
+                    $container->addMountedVolume($volume->mountTo(
+                        $deploymentSpecificationVolume->mount_path,
+                        $deploymentSpecificationVolume->getCompiledSubPath($deployment)
+                    ));
+                }
+
+                if ($deploymentVolumes->exists() || $deploymentSpecificationVolumes->exists()) {
+                    $volumes[] = $volume;
+                }
+            }
+
             if ($cronJob->cpu_request) {
                 $container->minCpu($cronJob->cpu_request.'m');
             }
@@ -369,9 +408,9 @@ class CronjobStep extends BaseDeploymentStep {
                 $template->setSpec('securityContext.fsGroup', $fsGroup);
             }
 
-            $writable = WritablePaths::Volumes([$container], $spec);
-            if (count($writable) > 0) {
-                $template->setVolumes([...($template->getSpec('volumes') ?? []), ...$writable]);
+            $volumes = [...$volumes, ...WritablePaths::Volumes([$container], $spec)];
+            if (count($volumes) > 0) {
+                $template->setVolumes($volumes);
             }
 
             $resource = new K8sCronJob();

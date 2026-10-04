@@ -574,6 +574,7 @@ class Fixtures {
             'command' => '',
             'args' => '',
             'include_deployment_environment_variables' => false,
+            'include_volumes' => false,
         ], $overrides);
     }
 

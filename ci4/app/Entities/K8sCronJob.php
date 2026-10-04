@@ -32,6 +32,9 @@ use App\Core\Entity;
  *  # Environment variables
  * @property bool $include_deployment_environment_variables
  *
+ *  # Volumes
+ * @property bool $include_volumes The deployment's volumes, mounted where the app has them
+ *
  * Many
  * @property DeploymentSpecification $deployment_specifications
  * @property Deployment $deployments
