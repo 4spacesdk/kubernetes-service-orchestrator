@@ -75,6 +75,10 @@ const variables = ref<Variable[]>([
         code: "${deployment.name}"
     },
     {
+        name: "Deployment Version",
+        code: "${deployment.version}"
+    },
+    {
         name: "Workspace Id",
         code: "${workspace.id}"
     },

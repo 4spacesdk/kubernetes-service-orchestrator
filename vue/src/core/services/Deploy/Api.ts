@@ -209,6 +209,11 @@ export interface DeploymentSpecGetResponse {
     deploymentSteps?: DeploymentStep[];
 }
 
+export interface DeploymentSpecificationCustomResourceImageRequest {
+    containerImageId?: number;
+    image?: string;
+}
+
 export interface DeploymentSpecificationInitContainersRequest {
     values?: DeploymentSpecificationInitContainersRequestItem[];
 }
@@ -3227,6 +3232,27 @@ export class DeploymentSpecificationsUpdateDeploymentAnnotationsPutById extends 
     }
 }
 
+export class DeploymentSpecificationsLinkCustomResourceImagePutById extends BaseApi<DeploymentSpecification> {
+
+    public topic = 'Resources.DeploymentSpecifications';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/deployment-specifications/${id}/custom-resource-image`;
+    }
+
+    protected convertToResource(data: any): DeploymentSpecification {
+        return new DeploymentSpecification(data);
+    }
+
+    public save(data: DeploymentSpecificationCustomResourceImageRequest, next?: (value: DeploymentSpecification) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
 export class DeploymentSpecificationsUpdateInitContainersPutById extends BaseApi<DeploymentSpecification> {
 
     public topic = 'Resources.DeploymentSpecifications';
@@ -3442,6 +3468,10 @@ class DeploymentSpecifications {
 
     public updateDeploymentAnnotationsPutById(id: number): DeploymentSpecificationsUpdateDeploymentAnnotationsPutById {
         return new DeploymentSpecificationsUpdateDeploymentAnnotationsPutById(id);
+    }
+
+    public linkCustomResourceImagePutById(id: number): DeploymentSpecificationsLinkCustomResourceImagePutById {
+        return new DeploymentSpecificationsLinkCustomResourceImagePutById(id);
     }
 
     public updateInitContainersPutById(id: number): DeploymentSpecificationsUpdateInitContainersPutById {

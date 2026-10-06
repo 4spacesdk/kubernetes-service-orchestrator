@@ -14,6 +14,7 @@ use DebugTool\Data;
 use RenokiCo\PhpK8s\Exceptions\KubernetesAPIException;
 use RenokiCo\PhpK8s\Kinds\K8sEvent;
 use RenokiCo\PhpK8s\Kinds\K8sResource;
+use App\Libraries\Kubernetes\CustomResourceImages;
 
 class CustomResourceStep extends BaseDeploymentStep {
 
@@ -32,6 +33,9 @@ class CustomResourceStep extends BaseDeploymentStep {
     public function getTriggers(): array {
         return [
             DeploymentStepTriggers::Deployment_CustomResource_Updated,
+            // A manifest that names its image with ${deployment.version} follows the version - an
+            // auto update rolls it out. One that does not is sent unchanged, which changes nothing.
+            DeploymentStepTriggers::Deployment_Version_Updated,
         ];
     }
 
@@ -113,6 +117,10 @@ class CustomResourceStep extends BaseDeploymentStep {
     public function validateDeployCommand(Deployment $deployment): ?string {
         if (strlen($deployment->namespace) == 0) {
             return 'Missing namespace';
+        }
+        $manifest = (string) $deployment->findDeploymentSpecification()->custom_resource;
+        if (str_contains($manifest, CustomResourceImages::VersionPlaceholder) && strlen((string) $deployment->version) == 0) {
+            return 'Missing version';
         }
 
         try {

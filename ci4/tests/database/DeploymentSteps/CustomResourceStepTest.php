@@ -164,9 +164,9 @@ class CustomResourceStepTest extends ManifestTestCase {
         $this->assertSame(DeploymentStepLevels::Deployment, $step->getLevel());
         $this->assertSame('Custom Resource', $step->getName());
         $this->assertSame(
-            [DeploymentStepTriggers::Deployment_CustomResource_Updated],
+            [DeploymentStepTriggers::Deployment_CustomResource_Updated, DeploymentStepTriggers::Deployment_Version_Updated],
             $step->getTriggers(),
-            'editing the manifest is what redeploys it'
+            'editing the manifest redeploys it, and so does a new version - an auto update of the image it names'
         );
 
         $this->assertTrue($step->hasPreviewCommand());
@@ -205,6 +205,24 @@ class CustomResourceStepTest extends ManifestTestCase {
         $deployment = $this->deploymentWithCustomResource("apiVersion: v1\nkind: ConfigMap\n");
 
         $this->assertNull((new CustomResourceStep())->validateDeployCommand($deployment));
+    }
+
+    /**
+     * A manifest that names its image with the deployment's version runs the version the
+     * deployment has - which is what an auto update changes.
+     */
+    public function testTheImageRunsTheDeploymentsVersion(): void {
+        $deployment = $this->deploymentWithCustomResource("apiVersion: rabbitmq.com/v1beta1\nkind: RabbitmqCluster\nmetadata:\n  name: rabbitmq-server\nspec:\n  image: registry.example.org/taksinto/rabbitmq-server:\${deployment.version}\n");
+        $deployment->version = 'develop';
+
+        $this->assertSame('registry.example.org/taksinto/rabbitmq-server:develop', $this->build($deployment)['spec']['image']);
+    }
+
+    public function testADeploymentWithoutTheVersionItsManifestNeedsIsRefused(): void {
+        $deployment = $this->deploymentWithCustomResource("kind: Thing\nspec:\n  image: registry.example.org/app:\${deployment.version}\n");
+        $deployment->version = '';
+
+        $this->assertSame('Missing version', (new CustomResourceStep())->validateDeployCommand($deployment));
     }
 
     private function deploymentWithCustomResource(string $yaml): Deployment {

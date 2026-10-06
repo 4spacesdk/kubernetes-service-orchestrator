@@ -241,6 +241,72 @@ class DeploymentSpecificationsApiTest extends ControllerTestCase {
     }
 
     /**
+     * A custom resource's image, tracked as the specification's container image: its tag becomes
+     * the deployment's version in the manifest, and each deployment gets the image and - when it
+     * has none - the tag, so what is sent to the cluster is the same as before.
+     */
+    public function testACustomResourcesImageIsTrackedAsTheSpecificationsContainerImage(): void {
+        $image = Fixtures::containerImage(['name' => 'rabbitmq-server', 'url' => 'registry.example.org/taksinto/rabbitmq-server']);
+        $specification = Fixtures::deploymentSpecification([
+            'workload_type' => \WorkloadTypes::CustomResource,
+            'custom_resource' => "kind: RabbitmqCluster\nspec:\n  image: registry.example.org/taksinto/rabbitmq-server:develop\n",
+        ]);
+        $withoutVersion = Fixtures::deployment(['deployment_specification_id' => $specification->id, 'name' => 'one', 'version' => '']);
+        $withVersion = Fixtures::deployment(['deployment_specification_id' => $specification->id, 'name' => 'two', 'version' => 'tst']);
+
+        $body = $this->decode($this->withBodyFormat('json')->signedIn()->put(
+            "deployment-specifications/{$specification->id}/custom-resource-image",
+            ['containerImageId' => $image->id, 'image' => 'registry.example.org/taksinto/rabbitmq-server:develop']
+        ));
+
+        $this->assertSame('OK', $body['status'], json_encode($body));
+        $spec = $this->row('deployment_specifications', $specification->id);
+        $this->assertSame((int) $image->id, (int) $spec['container_image_id']);
+        $this->assertStringContainsString('image: registry.example.org/taksinto/rabbitmq-server:${deployment.version}', $spec['custom_resource']);
+        $this->assertSame(['registry.example.org/taksinto/rabbitmq-server', 'develop'], [$this->row('deployments', $withoutVersion->id)['image'], $this->row('deployments', $withoutVersion->id)['version']]);
+        $this->assertSame('tst', $this->row('deployments', $withVersion->id)['version'], 'a version it has is kept');
+    }
+
+    /**
+     * Tracked, a running custom resource is one of the image's running deployments - what the
+     * scans, the list of container images and its Running deployments go by.
+     */
+    public function testATrackedCustomResourceRunsItsImage(): void {
+        $image = Fixtures::containerImage(['url' => 'registry.example.org/taksinto/rabbitmq-server']);
+        $specification = Fixtures::deploymentSpecification([
+            'workload_type' => \WorkloadTypes::CustomResource,
+            'custom_resource' => "spec:\n  image: registry.example.org/taksinto/rabbitmq-server:develop\n",
+        ]);
+        $deployment = Fixtures::deployment(['deployment_specification_id' => $specification->id, 'version' => '', 'status' => \DeploymentStatusTypes::Synced]);
+
+        $this->withBodyFormat('json')->signedIn()->put(
+            "deployment-specifications/{$specification->id}/custom-resource-image",
+            ['containerImageId' => $image->id, 'image' => 'registry.example.org/taksinto/rabbitmq-server:develop']
+        );
+
+        $this->assertSame(
+            [['deployment_id' => (int) $deployment->id, 'version' => 'develop', 'container_image_id' => (int) $image->id]],
+            \App\Libraries\ImageScanning\ImageScanner::runningDeployments((int) $image->id)
+        );
+    }
+
+    public function testACustomResourceImageThatIsNotTheContainerImageIsRefused(): void {
+        $image = Fixtures::containerImage(['name' => 'other', 'url' => 'registry.example.org/other']);
+        $specification = Fixtures::deploymentSpecification([
+            'workload_type' => \WorkloadTypes::CustomResource,
+            'custom_resource' => "spec:\n  image: registry.example.org/taksinto/rabbitmq-server:develop\n",
+        ]);
+
+        $body = $this->decode($this->withBodyFormat('json')->signedIn()->put(
+            "deployment-specifications/{$specification->id}/custom-resource-image",
+            ['containerImageId' => $image->id, 'image' => 'registry.example.org/taksinto/rabbitmq-server:develop']
+        ));
+
+        $this->assertStringContainsString('is not the container image other', $body['error'] ?? '');
+        $this->assertSame(0, (int) $this->row('deployment_specifications', $specification->id)['container_image_id']);
+    }
+
+    /**
      * Sidecars and init containers are two lists with an endpoint each, and saving one leaves the
      * other as it is - the two sections save on their own.
      */
@@ -635,6 +701,13 @@ class DeploymentSpecificationsApiTest extends ControllerTestCase {
      */
     private function row(string $table, int|string $id): array {
         return $this->db->table($table)->where('id', $id)->get()->getRowArray();
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function decode(\CodeIgniter\Test\TestResponse $response): array {
+        return json_decode((string) $response->response()->getBody(), true);
     }
 
     // <editor-fold desc="Helpers">

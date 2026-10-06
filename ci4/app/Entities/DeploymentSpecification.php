@@ -38,6 +38,8 @@ use App\Models\DeploymentVolumeModel;
 use App\Models\InitContainerModel;
 use App\Models\K8sCronJobModel;
 use App\Core\Entity;
+use App\Libraries\Kubernetes\CustomResourceImages;
+use App\Libraries\ContainerRegistries\ImageConfig;
 
 /**
  * Class DeploymentSpecification
@@ -497,6 +499,49 @@ class DeploymentSpecification extends Entity {
         $this->deployment_specification_deployment_annotations->find()->deleteAll();
         $this->save($values);
         $this->deployment_specification_deployment_annotations = $values;
+    }
+
+    /**
+     * Make one of the images a custom resource names the specification's container image - so it
+     * is tracked under Container images, scanned and auto updated like any other workload.
+     *
+     * The manifest names the image with `${deployment.version}` instead of its tag, so the
+     * version is the deployment's to change, and an auto update rolls it out. Each deployment gets
+     * the image, and the tag the manifest had as its version, unless it has one - what is sent to
+     * the cluster is the same as before.
+     *
+     * @param string $reference the image as the manifest names it, tag included
+     * @return string|null why it cannot be done, or null
+     */
+    public function linkCustomResourceImage(ContainerImage $image, string $reference): ?string {
+        if ($this->workload_type !== \WorkloadTypes::CustomResource) {
+            return 'Only a custom resource names its image in its manifest';
+        }
+        $manifest = (string) $this->custom_resource;
+        $named = array_column(CustomResourceImages::Found($manifest), null, 'reference');
+        if (!isset($named[$reference])) {
+            return "The custom resource does not name {$reference}";
+        }
+        [$repository, $tag] = CustomResourceImages::Split($reference);
+        if (ImageConfig::Split($repository) !== ImageConfig::Split((string) $image->url)) {
+            return "{$reference} is not the container image {$image->name} ({$image->url})";
+        }
+
+        $this->container_image_id = $image->id;
+        $this->custom_resource = CustomResourceImages::WithVersionPlaceholder($manifest, $reference);
+        $this->save();
+
+        /** @var Deployment $deployments */
+        $deployments = (new DeploymentModel())->where('deployment_specification_id', $this->id)->find();
+        foreach ($deployments as $deployment) {
+            $deployment->image = $image->url;
+            if (strlen((string) $deployment->version) === 0 && $tag !== CustomResourceImages::VersionPlaceholder) {
+                $deployment->version = $tag;
+            }
+            $deployment->save();
+        }
+
+        return null;
     }
 
     /**

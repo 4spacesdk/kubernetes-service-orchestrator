@@ -52,6 +52,7 @@ use App\Libraries\Kubernetes\WritablePaths;
  *
  * # Computed on REST reads
  * @property int[] $running_deployment_ids
+ * @property string $specification_uses JSON: the specifications that use it - [{id, name, roles}], roles of workload, migration job, init container, sidecar and cron job
  * @property string $security_advice JSON: a list of {level, text} - see `SecurityAdvice`
  */
 class ContainerImage extends Entity {
@@ -254,6 +255,9 @@ class ContainerImage extends Entity {
         }
         if (isset($this->security_advice)) {
             $item['security_advice'] = $this->security_advice;
+        }
+        if (isset($this->specification_uses)) {
+            $item['specification_uses'] = $this->specification_uses;
         }
 
         return $item;

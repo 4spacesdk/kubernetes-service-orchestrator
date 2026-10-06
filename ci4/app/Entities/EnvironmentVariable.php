@@ -68,6 +68,8 @@ class EnvironmentVariable extends Entity {
             fn(string $value) => str_replace('${domain.host}', (string) $deployment->workspace->domain->name, $value),
 
             fn(string $value) => str_replace('${deployment.name}', (string) $deployment->name, $value),
+            // The tag it runs - for a custom resource that names its image, see CustomResourceImages.
+            fn(string $value) => str_replace('${deployment.version}', (string) $deployment->version, $value),
 
             fn(string $value) => str_replace('${workspace.id}', (string) $deployment->workspace->id, $value),
             fn(string $value) => str_replace('${workspace.name}', (string) $deployment->workspace->namespace, $value),

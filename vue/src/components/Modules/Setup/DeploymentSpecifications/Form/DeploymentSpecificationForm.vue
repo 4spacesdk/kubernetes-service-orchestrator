@@ -6,6 +6,7 @@ import bus from "@/plugins/bus";
 import {ContainerImageTagPolicies, MigrationVerificationTypes, NetworkTypes, WorkloadTypes} from "@/constants";
 import CodeEditor from 'simple-code-editor';
 import VariableBtn from "@/components/Modules/Common/VariableBtn.vue";
+import CustomResourceImagePanel from "@/components/Modules/Setup/DeploymentSpecifications/Form/CustomResourceImagePanel.vue";
 
 /**
  * A deployment specification's own fields. Used by the create dialog and by General on the
@@ -428,6 +429,10 @@ defineExpose({validate, prepareForSave});
                         />
                     </div>
                 </div>
+                <!-- Only once it is saved: tracking an image is the specification's own call. -->
+                <CustomResourceImagePanel
+                    v-if="item.workload_type == WorkloadTypes.CustomResource && item.id"
+                    :item="item"/>
             </v-col>
         </v-row>
 

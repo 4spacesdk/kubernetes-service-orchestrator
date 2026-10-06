@@ -1,5 +1,19 @@
 # Changelog
 
+## v1.9.8 (unreleased)
+
+### Enhancements
+* A cron job can be duplicated, from the Cron Jobs of a specification or a deployment: the copy opens as a new cron job, named with -copy, and is added beside the one it came from
+* Clicking a cron job's name in the Cron Jobs of a specification or a deployment opens it, as in the other lists
+* A custom resource's image can be tracked as its specification's container image - picked from the images the manifest names, under its editor. Its tag becomes `${deployment.version}`, each deployment runs the tag it had as its version, and from then on it is listed under Container images, scanned for vulnerabilities and auto updated like any other workload. Its deployments show Version and Update Management
+* Each container image's row has its specification at hand: a button that makes one from the image when no specification uses it, opens it when one does, and lists them - with what each uses it as - when more do
+
+### Upgrade guide
+1. Deploy new image
+2. Run migrations [(Guide)](https://github.com/4spacesdk/kubernetes-service-orchestrator?tab=readme-ov-file#migrate-database-helm)
+
+
+
 ## v1.9.7 (2026-10-04)
 
 ### Fixed bugs

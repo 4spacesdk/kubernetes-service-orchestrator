@@ -9,6 +9,8 @@ const section = (loader: () => Promise<any>) => defineAsyncComponent(loader);
 
 /** What a deployment has follows from its specification, which the page reads with it. */
 const isCustomResource = (deployment: Deployment) => deployment.deployment_specification?.workload_type == WorkloadTypes.CustomResource;
+/** A custom resource whose specification tracks one of its images has a version, and can be auto updated. */
+const hasTrackedImage = (deployment: Deployment) => !isCustomResource(deployment) || !!deployment.deployment_specification?.container_image_id;
 
 /**
  * Everything a deployment has, in the order the side menu shows it. The settings menu in the
@@ -69,7 +71,7 @@ export const deploymentSections: DeploymentSection[] = [
         title: 'Version',
         icon: 'fa fa-code-branch',
         group: 'Settings',
-        isShown: deployment => !isCustomResource(deployment),
+        isShown: hasTrackedImage,
         component: section(() => import('./DeploymentVersionSection.vue')),
     },
     {
@@ -127,7 +129,7 @@ export const deploymentSections: DeploymentSection[] = [
         title: 'Update Management',
         icon: 'fa fa-arrows-rotate',
         group: 'Settings',
-        isShown: deployment => !isCustomResource(deployment),
+        isShown: hasTrackedImage,
         component: section(() => import('./DeploymentUpdateManagementSection.vue')),
     },
 

@@ -2,16 +2,19 @@
 import { useListState } from "@/composables/useListState";
 import NameLink from "@/components/Modules/Common/NameLink.vue";
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
+import {useRouter} from "vue-router";
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
-import {ContainerImage, ContainerImageScan} from "@/core/services/Deploy/models";
+import {ContainerImage, ContainerImageScan, DeploymentSpecification} from "@/core/services/Deploy/models";
 import ScanCounts from "@/components/Modules/Setup/ContainerImages/ScanCounts/ScanCounts.vue";
 import debounce from "lodash.debounce";
-import { VersionControlProviders } from "@/constants";
+import { VersionControlProviders, WorkloadTypes } from "@/constants";
 import { CopyNameStrategy, duplicateEntity } from "@/helpers/DuplicateEntity";
 import PushService from "@/services/Push/PushService";
 import { Events } from "@/services/Push/Events";
 import type { PushSubscription } from "@/services/Push/PushSubscription";
+
+const router = useRouter();
 
 const emit = defineEmits<{
     (e: 'onItemEditClicked', item: ContainerImage): void
@@ -188,6 +191,39 @@ function onScansItemBtnClicked(item: ContainerImage) {
     });
 }
 
+interface SpecificationUse {
+    id: number;
+    name: string;
+    roles: string[];
+}
+
+/** The specifications that use the image - as their workload, migration job, init container, sidecar or cron job. */
+function specificationsOf(item: ContainerImage): SpecificationUse[] {
+    try {
+        return JSON.parse(item.specification_uses ?? '[]');
+    } catch {
+        return [];
+    }
+}
+
+function onSpecificationClicked(use: SpecificationUse) {
+    router.push(`/setup/deployment-specifications/${use.id}`);
+}
+
+/**
+ * A specification for an image no specification uses yet: a Deployment of it, named after it,
+ * opened once it is made.
+ */
+function onCreateSpecificationClicked(item: ContainerImage) {
+    const specification = DeploymentSpecification.Create(WorkloadTypes.Deployment);
+    specification.container_image_id = item.id;
+    specification.name = (item.url ?? item.name ?? '').split('/').pop()?.toLowerCase().replace(/[^a-z0-9-]+/g, '-').replace(/^-+|-+$/g, '');
+    bus.emit('deploymentSpecificationCreate', {
+        deploymentSpecification: specification,
+        onCreated: (created: DeploymentSpecification) => router.push(`/setup/deployment-specifications/${created.id}`),
+    });
+}
+
 function onRunningDeploymentsClicked(item: ContainerImage) {
     bus.emit('containerImageDeployments', {
         containerImage: item,
@@ -324,6 +360,51 @@ function deleteItem(item: ContainerImage) {
                         <v-icon>fa fa-pen</v-icon>
                         <v-tooltip activator="parent" location="bottom">Edit</v-tooltip>
                     </v-btn>
+
+                    <!-- Its specification: made from it when there is none, opened when there is one, picked when there are more. -->
+                    <v-btn
+                        v-if="!specificationsOf(item).length"
+                        variant="plain" color="primary"
+                        @click="onCreateSpecificationClicked(item)"
+                        size="small"
+                        density="comfortable"
+                        icon
+                    >
+                        <v-icon>fa fa-file-circle-plus</v-icon>
+                        <v-tooltip activator="parent" location="bottom">Create a specification from it</v-tooltip>
+                    </v-btn>
+                    <v-btn
+                        v-else-if="specificationsOf(item).length === 1"
+                        variant="plain" color="primary"
+                        @click="onSpecificationClicked(specificationsOf(item)[0])"
+                        size="small"
+                        density="comfortable"
+                        icon
+                    >
+                        <v-icon>fa fa-file-lines</v-icon>
+                        <v-tooltip activator="parent" location="bottom">
+                            {{ specificationsOf(item)[0].name }} - its {{ specificationsOf(item)[0].roles.join(', ') }}
+                        </v-tooltip>
+                    </v-btn>
+                    <v-menu v-else location="bottom end">
+                        <template v-slot:activator="{ props: menuProps }">
+                            <v-btn v-bind="menuProps" variant="plain" color="primary" size="small" density="comfortable" icon>
+                                <v-badge :content="specificationsOf(item).length" color="secondary" floating>
+                                    <v-icon>fa fa-file-lines</v-icon>
+                                </v-badge>
+                                <v-tooltip activator="parent" location="bottom">The specifications that use it</v-tooltip>
+                            </v-btn>
+                        </template>
+                        <v-list density="compact">
+                            <v-list-item
+                                v-for="use in specificationsOf(item)"
+                                :key="use.id"
+                                prepend-icon="fa fa-file-lines"
+                                :title="use.name"
+                                :subtitle="use.roles.join(', ')"
+                                @click="onSpecificationClicked(use)"/>
+                        </v-list>
+                    </v-menu>
 
                     <v-btn
                         variant="plain" color="primary"

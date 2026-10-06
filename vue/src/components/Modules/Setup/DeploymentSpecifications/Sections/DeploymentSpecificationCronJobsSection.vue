@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import NameLink from "@/components/Modules/Common/NameLink.vue";
+import {CopyNameStrategy, duplicateEntity} from "@/helpers/DuplicateEntity";
 import {onMounted, ref} from 'vue'
 import {DeploymentSpecification, K8sCronJob} from "@/core/services/Deploy/models";
 import {Api} from "@/core/services/Deploy/Api";
@@ -88,6 +90,26 @@ function onEditRowClicked(row: Row) {
     });
 }
 
+/**
+ * A copy of the cron job, opened as a new one: saved, it is a cron job of its own, added here
+ * beside the one it came from. Read again first, so fields the list does not show come along.
+ * Its name is the container's in the cluster, so the copy's stays a valid one.
+ */
+function onDuplicateRowClicked(row: Row) {
+    Api.k8sCronJobs().getById(row.item.id!).find(items => {
+        bus.emit('cronJobEdit', {
+            cronJob: duplicateEntity(items[0], K8sCronJob, CopyNameStrategy.Identifier),
+            onSaveCallback: (item: K8sCronJob) => {
+                Api.k8sCronJobs().getById(item.id!)
+                    .find(value => rows.value.push({
+                        position: rows.value.length,
+                        item: value[0],
+                    }));
+            },
+        });
+    });
+}
+
 function onDeleteRowClicked(row: Row) {
     rows.value.splice(rows.value.indexOf(row), 1);
 }
@@ -164,6 +186,9 @@ function onSortChanged(event: CustomEvent) {
             v-sortableDataTable
             @sorted="onSortChanged"
             density="compact">
+            <template v-slot:item.item.name="{ item }">
+                <name-link @click="onEditRowClicked(item)">{{ item.item.name }}</name-link>
+            </template>
             <template v-slot:item.handle="{ item }">
                 <v-icon class="grabbable">fa fa-grip-vertical</v-icon>
             </template>
@@ -174,6 +199,12 @@ function onSortChanged(event: CustomEvent) {
                         @click="onEditRowClicked(item)">
                         <v-icon>fa fa-pen</v-icon>
                         <v-tooltip activator="parent" location="bottom">Edit</v-tooltip>
+                    </v-btn>
+                    <v-btn
+                        variant="plain" color="primary" size="small" icon
+                        @click="onDuplicateRowClicked(item)">
+                        <v-icon>fa fa-clone</v-icon>
+                        <v-tooltip activator="parent" location="bottom">Duplicate</v-tooltip>
                     </v-btn>
                     <v-btn
                         variant="plain"

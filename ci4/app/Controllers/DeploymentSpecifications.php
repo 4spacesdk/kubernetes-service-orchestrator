@@ -36,6 +36,8 @@ use App\Libraries\RequestField;
 use App\Models\InitContainerModel;
 use DebugTool\Data;
 use App\Libraries\Kubernetes\GeneratedSecrets;
+use App\Entities\ContainerImage;
+use App\Interfaces\DeploymentSpecificationCustomResourceImageRequest;
 
 class DeploymentSpecifications extends ResourceController {
 
@@ -389,6 +391,43 @@ class DeploymentSpecifications extends ResourceController {
             $body->values
         );
         $item->updateDeploymentAnnotations($values);
+        $this->_setResource($item);
+        $this->success();
+    }
+
+    /**
+     * One of the images the custom resource names as the specification's container image - its
+     * tag becomes `${deployment.version}`, and its deployments get the image and that version.
+     *
+     * @route /deployment-specifications/{id}/custom-resource-image
+     * @method put
+     * @custom true
+     * @param int $id
+     * @requestSchema DeploymentSpecificationCustomResourceImageRequest
+     * @responseSchema DeploymentSpecification
+     * @audit entity
+     */
+    public function linkCustomResourceImage(int $id): void {
+        $item = new DeploymentSpecification();
+        $item->find($id);
+        if (!$item->exists()) {
+            $this->fail('unknown deployment specification');
+            return;
+        }
+        /** @var DeploymentSpecificationCustomResourceImageRequest $body */
+        $body = $this->request->getJSON();
+        $image = new ContainerImage();
+        $image->find((int) ($body->containerImageId ?? 0));
+        if (!$image->exists()) {
+            $this->fail('unknown container image');
+            return;
+        }
+
+        $reason = $item->linkCustomResourceImage($image, (string) ($body->image ?? ''));
+        if ($reason !== null) {
+            $this->fail($reason);
+            return;
+        }
         $this->_setResource($item);
         $this->success();
     }
