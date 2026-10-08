@@ -112,7 +112,7 @@ class KubeAuth {
             $this->as = $class;
             return $this->authenticate();
         } finally {
-            $this->as = KubernetesCluster::class;
+            $this->as = Cluster::class;
             self::$override = $previous;
         }
     }
@@ -123,7 +123,7 @@ class KubeAuth {
      *
      * @var class-string<KubernetesCluster>
      */
-    private string $as = KubernetesCluster::class;
+    private string $as = Cluster::class;
 
     private function authenticateWithInClusterConfiguration(): KubernetesCluster {
         return ($this->as)::inClusterConfiguration(getenv('REMOTE_CLUSTER_URL'));

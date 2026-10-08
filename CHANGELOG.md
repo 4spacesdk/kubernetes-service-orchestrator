@@ -10,6 +10,11 @@
 
 ### Fixed bugs
 * Two installations on the same MySQL server no longer wait for each other's health check
+* An auto-update whose deploy failed no longer performs its post-update actions
+* An auto-update's log holds only its own rollout, not those rolled out before it by the same worker, and once - and it is saved when the rollout is skipped or fails too
+* Post-update actions look the commit up once per rollout - a job in the cluster - instead of once for each condition and action
+* Reaching the Kubernetes api server gives up after 10 seconds instead of 300, so a DNS lookup that hangs fails the deploy rather than holding it for five minutes
+* A cluster that cannot be reached no longer turns a deployment into a Draft. The status is left as it was, and the deploy fails - so an auto-update no longer performs its post-update actions
 
 ### Upgrade guide
 1. Deploy new image

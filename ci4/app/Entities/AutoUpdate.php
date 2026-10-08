@@ -1,5 +1,6 @@
 <?php namespace App\Entities;
 
+use App\Libraries\Kubernetes\KubeHelper;
 use App\Libraries\PostUpdateActions\PostUpdateActionHelper;
 use App\Libraries\Push\ChangeEvent;
 use App\Libraries\Push\Events;
@@ -84,6 +85,34 @@ class AutoUpdate extends Entity {
     }
 
     public function rollout(): void {
+        // The queue worker runs one rollout after another in the same process, and the debug log
+        // is kept for all of it. This one's log starts here - and is saved however it ends: rolled
+        // out, skipped or thrown.
+        $logFrom = count(Data::getDebugger());
+        try {
+            $this->rolloutLogged();
+        } catch (\Throwable $e) {
+            Data::debug('Rollout failed:', KubeHelper::PrintException($e));
+            throw $e;
+        } finally {
+            // Saving it must not hide why the rollout failed.
+            try {
+                $this->appendLog(implode("\n", array_map(
+                    fn($line) => is_string($line) ? $line : json_encode($line),
+                    array_slice(Data::getDebugger(), $logFrom)
+                )));
+            } catch (\Throwable $e) {
+                log_message('error', 'The log of auto update {id} could not be saved: {message}', ['id' => $this->id, 'message' => $e->getMessage()]);
+            }
+        }
+
+        Publisher::getInstance()->send(
+            Events::AutoUpdate_RolledOut(),
+            (new ChangeEvent(null, $this->toArray()))->toArray()
+        );
+    }
+
+    private function rolloutLogged(): void {
         Data::debug('rollout', $this->image, $this->next_tag);
 
         $deployment = new Deployment();
@@ -108,32 +137,19 @@ class AutoUpdate extends Entity {
 
         $error = $deployment->updateVersion($this->next_tag);
         if ($error) {
+            // The actions say the new version is out - a comment on the task, a phase moved on.
             Data::debug("Deploy failed: {$error}");
+            Data::debug('Skip post update actions because the deploy failed');
+            return;
         }
 
         $postUpdateActionHelper = new PostUpdateActionHelper($deployment);
         $postUpdateActionHelper->performAll();
-
-        $log = Data::getDebugger();
-        if (is_array($log)) {
-            try {
-                $lines = implode("\n", $log);
-                $this->appendLog($lines);
-            } catch (\Exception $e) {
-                $this->appendLog(json_encode($log, JSON_PRETTY_PRINT));
-            }
-        }
-
-        Publisher::getInstance()->send(
-            Events::AutoUpdate_RolledOut(),
-            (new ChangeEvent(null, $this->toArray()))->toArray()
-        );
     }
 
     public function appendLog(string $log): void {
         $this->log .= $log . "\n";
         $this->save();
-        Data::debug(get_class($this), $log);
     }
 
     public function delete($related = null) {

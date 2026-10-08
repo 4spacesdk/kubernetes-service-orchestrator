@@ -145,6 +145,43 @@ class PostUpdateActionHelperTest extends DatabaseTestCase {
         $this->assertNotSame('Released to ', $fakes->podio()->comments[0]['comment']);
     }
 
+    /**
+     * Finding the commit runs a job in the cluster - up to a minute - and every condition and
+     * every action asks for it. It is the same answer each time, so it is asked for once.
+     */
+    public function testTheCommitIsLookedUpOnceForAllConditionsAndActions(): void {
+        $fakes = $this->fakesWithCommit();
+        $deployment = $this->deploymentWithActions(['first', 'second']);
+        $conditional = $this->commentAction('third');
+        $this->attach($deployment->deployment_specification_id, $conditional->id, 3);
+        $reference = Fixtures::podioFieldReference(['podio_integration_id' => Fixtures::podioIntegration()->id, 'field_id' => '99']);
+        foreach (['ready', 'checked'] as $value) {
+            Fixtures::postUpdateActionCondition(['post_update_action_id' => $conditional->id, 'podio_field_reference_id' => $reference->id, 'value' => $value]);
+        }
+        $fakes->podio()->fieldValues['99'] = 'ready';
+
+        (new PostUpdateActionHelper($deployment))->performAll();
+
+        $this->assertSame(['first', 'second'], array_column($fakes->podio()->comments, 'comment'));
+        $this->assertSame(1, $fakes->shortShaLookups);
+    }
+
+    /**
+     * The next rollout finds the deployment anew, at its new version - and asks again.
+     */
+    public function testTheNextRolloutLooksTheCommitUpAgain(): void {
+        $fakes = $this->fakesWithCommit();
+        $deployment = $this->deploymentWithActions(['first']);
+
+        foreach ([1, 2] as $rollout) {
+            $fresh = new Deployment();
+            $fresh->find($deployment->id);
+            (new PostUpdateActionHelper($fresh))->performAll();
+        }
+
+        $this->assertSame(2, $fakes->shortShaLookups);
+    }
+
     // <editor-fold desc="Fixtures">
 
     private function fakesWithCommit(): FakeIntegrations {

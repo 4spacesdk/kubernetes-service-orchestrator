@@ -29,6 +29,9 @@ class FakePodio extends BasePodio {
     /** @var array<array{fieldId: string, itemId: string, value: string|int}> */
     public array $fieldUpdates = [];
 
+    /** Thrown by addComment(), for a Podio that refuses. */
+    public ?\Exception $failCommentsWith = null;
+
     public function fields(PodioIntegration $integration): array {
         return $this->fields;
     }
@@ -47,6 +50,9 @@ class FakePodio extends BasePodio {
     }
 
     public function addComment(PodioIntegration $integration, string $itemId, string $comment): void {
+        if ($this->failCommentsWith !== null) {
+            throw $this->failCommentsWith;
+        }
         $this->comments[] = ['itemId' => $itemId, 'comment' => $comment];
     }
 

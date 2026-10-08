@@ -1,6 +1,7 @@
 <?php namespace App\Libraries\DeploymentSteps;
 
 use App\Entities\Deployment;
+use App\Libraries\Kubernetes\ClusterDidNotAnswer;
 use App\Libraries\Kubernetes\KubeHelper;
 use DebugTool\Data;
 use DeploymentStatusTypes;
@@ -78,7 +79,11 @@ abstract class BaseDeploymentStep {
             return null;
         }
 
-        $error = $this->validateDeployCommand($deployment);
+        try {
+            $error = $this->validateDeployCommand($deployment);
+        } catch (ClusterDidNotAnswer $e) {
+            return $e->getMessage();
+        }
         if ($error) {
             return $error;
         }

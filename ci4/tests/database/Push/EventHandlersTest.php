@@ -3,16 +3,23 @@
 use App\DatabaseTestCase;
 use App\Entities\AutoUpdate;
 use App\Entities\Deployment;
+use App\Entities\DeploymentSpecificationPostUpdateAction;
 use App\Entities\Webhook;
 use App\Fixtures;
 use App\Jobs\HandleEvent;
 use App\Libraries\Audit\AuditContext;
+use App\Libraries\Kubernetes\Cluster;
+use App\Libraries\Kubernetes\ClusterIndex;
+use App\Libraries\Kubernetes\IndexedCluster;
+use App\Libraries\Kubernetes\KubeAuth;
 use App\Libraries\Push\ChangeEvent;
 use App\Libraries\Push\EventHandlers;
 use App\Libraries\Push\Events;
 use App\Libraries\Push\Publisher;
+use App\Tests\Fakes\FakeIntegrations;
 use DebugTool\Data;
 use PHPUnit\Framework\Attributes\DataProvider;
+use RenokiCo\PhpK8s\Kinds\K8sNamespace;
 
 /**
  * The events kso acts on itself, from the moment one is raised to the moment it is handled.
@@ -385,6 +392,117 @@ class EventHandlersTest extends DatabaseTestCase {
         $this->handle(Events::AutoUpdate_Approved(), []);
 
         $this->assertStringContainsString('No auto update with id', $this->debugLog());
+    }
+
+    /**
+     * The actions say the new version is out - a comment on the task, a phase moved on. A deploy
+     * that failed has put nothing out.
+     */
+    public function testADeployThatFailedPerformsNoPostUpdateActions(): void {
+        $deployment = Fixtures::deployableDeployment(['auto_update_enabled' => true, 'version' => 'old', 'image' => 'registry.example.org/test/app']);
+        $autoUpdate = new AutoUpdate();
+        $autoUpdate->deployment_id = $deployment->id;
+        $autoUpdate->image = 'image';
+        $autoUpdate->next_tag = '2.0.0';
+        $autoUpdate->is_approved = true;
+        $autoUpdate->save();
+
+        // The namespace is there, read from an index; nothing listens where the deploy is sent.
+        $index = ClusterIndex::Of([K8sNamespace::class => ['/test' => ['metadata' => ['name' => 'test']]]], ClusterIndex::Kinds);
+        KubeAuth::Using((new IndexedCluster('http://127.0.0.1:9'))->useIndex($index), fn () => $autoUpdate->rollout());
+
+        $this->assertStringContainsString('Deploy failed', $this->debugLog());
+        $this->assertStringContainsString('Skip post update actions because the deploy failed', $this->debugLog());
+        $this->assertStringNotContainsString('post update actions', str_replace('Skip post update actions', '', $this->debugLog()));
+    }
+
+    /**
+     * A cluster that cannot be reached during validation is a failed deploy too. It used to read
+     * as a reason the deployment could not be deployed, which made it a Draft - and a Draft is
+     * not a failure, so the actions ran.
+     */
+    public function testADeployTheClusterDidNotAnswerPerformsNoPostUpdateActions(): void {
+        $deployment = Fixtures::deployableDeployment(['auto_update_enabled' => true, 'status' => \DeploymentStatusTypes::Synced, 'version' => 'old', 'image' => 'registry.example.org/test/app']);
+        $autoUpdate = new AutoUpdate();
+        $autoUpdate->deployment_id = $deployment->id;
+        $autoUpdate->image = 'image';
+        $autoUpdate->next_tag = '2.0.0';
+        $autoUpdate->is_approved = true;
+        $autoUpdate->save();
+
+        KubeAuth::Using(new Cluster('http://127.0.0.1:9'), fn () => $autoUpdate->rollout());
+
+        $this->assertStringContainsString('Deploy failed: cURL error 7', $this->debugLog());
+        $this->assertStringContainsString('Skip post update actions because the deploy failed', $this->debugLog());
+        $this->assertSame(\DeploymentStatusTypes::Synced, (new Deployment())->find($deployment->id)->status);
+    }
+
+    /**
+     * Skipped, its log says why - on the update, where it is read.
+     */
+    public function testASkippedRolloutKeepsItsLog(): void {
+        $autoUpdate = $this->anApprovedAutoUpdate('image', '2.0.0', ['workspace_paused' => true]);
+
+        $autoUpdate->rollout();
+
+        $this->assertStringContainsString('Skip rollout because the workspace is paused or inactive', (new AutoUpdate())->find($autoUpdate->id)->log);
+    }
+
+    /**
+     * Thrown, its log says what with - and the worker still sees it fail.
+     */
+    public function testARolloutThatThrowsKeepsItsLogAndStillFails(): void {
+        $fakes = FakeIntegrations::install();
+        $fakes->shortSha = 'abc1234';
+        $fakes->commitMessage = 'Fixes https://podio.com/acme/app/1/items/4217';
+        $fakes->podio()->failCommentsWith = new \RuntimeException('Podio said no');
+        $deployment = Fixtures::deployableDeployment(['auto_update_enabled' => true, 'version' => 'old']);
+        $action = Fixtures::postUpdateAction([
+            'type' => \PostUpdateActionTypes::Podio_AddComment,
+            'podio_add_comment_integration_id' => Fixtures::podioIntegration()->id,
+            'podio_add_comment_value' => 'Deployed',
+        ]);
+        $attached = new DeploymentSpecificationPostUpdateAction();
+        $attached->deployment_specification_id = $deployment->deployment_specification_id;
+        $attached->post_update_action_id = $action->id;
+        $attached->position = 1;
+        $attached->save();
+        $autoUpdate = new AutoUpdate();
+        $autoUpdate->deployment_id = $deployment->id;
+        $autoUpdate->image = 'image';
+        $autoUpdate->next_tag = '2.0.0';
+        $autoUpdate->is_approved = true;
+        $autoUpdate->save();
+
+        try {
+            $autoUpdate->rollout();
+            $this->fail('the rollout did not fail');
+        } catch (\RuntimeException $e) {
+            $this->assertSame('Podio said no', $e->getMessage());
+        } finally {
+            FakeIntegrations::uninstall();
+        }
+
+        $log = (new AutoUpdate())->find($autoUpdate->id)->log;
+        $this->assertStringContainsString('rollout image 2.0.0', $log);
+        $this->assertStringContainsString('Rollout failed', $log);
+        $this->assertStringContainsString('Podio said no', $log);
+    }
+
+    /**
+     * The worker rolls one update out after another in the same process. Each keeps its own log.
+     */
+    public function testEachRolloutKeepsOnlyItsOwnLog(): void {
+        $first = $this->anApprovedAutoUpdate('first/image', '2.0.0');
+        $second = $this->anApprovedAutoUpdate('second/image', '3.0.0');
+
+        $first->rollout();
+        $second->rollout();
+
+        $log = (new AutoUpdate())->find($second->id)->log;
+        $this->assertStringContainsString('rollout second/image 3.0.0', $log);
+        $this->assertStringNotContainsString('first/image', $log);
+        $this->assertSame(1, substr_count($log, 'rollout second/image'), 'written once');
     }
 
     // </editor-fold>

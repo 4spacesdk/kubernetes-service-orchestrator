@@ -1,7 +1,6 @@
 <?php namespace App\Libraries\Kubernetes;
 
 use RenokiCo\PhpK8s\Exceptions\KubernetesAPIException;
-use RenokiCo\PhpK8s\KubernetesCluster;
 
 /**
  * A cluster that answers "is this resource there?" from a `ClusterIndex` instead of asking the
@@ -14,7 +13,7 @@ use RenokiCo\PhpK8s\KubernetesCluster;
  *
  * Built by `KubeAuth::indexed()` so it is connected exactly as the ordinary cluster is.
  */
-class IndexedCluster extends KubernetesCluster {
+class IndexedCluster extends Cluster {
 
     private ?ClusterIndex $index = null;
 

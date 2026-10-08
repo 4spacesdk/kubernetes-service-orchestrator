@@ -1,7 +1,5 @@
 <?php namespace App\Libraries\Kubernetes;
 
-use RenokiCo\PhpK8s\KubernetesCluster;
-
 /**
  * A cluster that hands out a pod's log stream as a plain socket, instead of reading it to the end
  * itself.
@@ -12,7 +10,7 @@ use RenokiCo\PhpK8s\KubernetesCluster;
  * connection is still php-k8s': the url it would have called, with the certificates and the token
  * it would have used.
  */
-class StreamingCluster extends KubernetesCluster {
+class StreamingCluster extends Cluster {
 
     /**
      * @return resource|false the stream, or false when it could not be opened

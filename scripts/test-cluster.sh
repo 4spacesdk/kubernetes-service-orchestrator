@@ -36,7 +36,7 @@ cluster_up() {
     if cluster_is_running; then
         return 1
     fi
-    docker rm -f "$CLUSTER" >/dev/null 2>&1 || true
+    docker rm -f -v "$CLUSTER" >/dev/null 2>&1 || true
 
     # On the app's network, and with the container name in the certificate, so the app can
     # reach the api server under the name the kubeconfig will carry.
@@ -79,7 +79,8 @@ cluster_install_crds() {
 }
 
 cluster_down() {
-    docker rm -f "$CLUSTER" >/dev/null 2>&1 || true
+    # With its volumes: the k3s image declares several, and without -v every run left them behind.
+    docker rm -f -v "$CLUSTER" >/dev/null 2>&1 || true
 }
 
 # The kubeconfig k3s writes points at 127.0.0.1, which from inside the app container is the

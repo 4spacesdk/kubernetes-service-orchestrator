@@ -232,12 +232,31 @@ class ContainerImage extends Entity {
      * The short sha of the commit this deployment's image was built from, or null when the
      * image has no commit identification set up - which is what every image starts as - or
      * when nothing came back.
+     *
+     * Asked once for a deployment as it is in hand, at the version it has: finding out runs a job
+     * in the cluster, and the post-update actions after a rollout ask for each of their conditions
+     * and each action - five jobs of up to a minute each, for the same answer.
      */
     public function getCommitShortSha(Deployment $deployment): ?string {
-        $shortSha = $this->getCommitIdentification()?->getCommitShortSha($deployment);
+        self::$commitShortShas ??= new \WeakMap();
+        $key = "{$this->id}:{$deployment->version}";
+        $known = self::$commitShortShas[$deployment] ?? [];
+        if (!array_key_exists($key, $known)) {
+            $shortSha = $this->getCommitIdentification()?->getCommitShortSha($deployment);
+            $known[$key] = strlen((string) $shortSha) ? $shortSha : null;
+            self::$commitShortShas[$deployment] = $known;
+        }
 
-        return strlen((string) $shortSha) ? $shortSha : null;
+        return $known[$key];
     }
+
+    /**
+     * Gone with the deployment it was asked for, so the next rollout - which finds the deployment
+     * anew - asks again.
+     *
+     * @var \WeakMap<Deployment, array<string, ?string>>|null
+     */
+    private static ?\WeakMap $commitShortShas = null;
 
     public function getVersionControlSystem(): ?BaseVersionControlSystem {
         return service('integrations')->versionControlSystem($this);

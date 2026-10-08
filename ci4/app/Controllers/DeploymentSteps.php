@@ -4,6 +4,7 @@ use App\Entities\Deployment;
 use App\Libraries\Audit\Audit;
 use App\Libraries\DeploymentSteps\BaseDeploymentStep;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
+use App\Libraries\Kubernetes\ClusterDidNotAnswer;
 use App\Libraries\Kubernetes\KubeHelper;
 use DebugTool\Data;
 
@@ -31,6 +32,14 @@ class DeploymentSteps extends \App\Core\BaseController {
         }
 
         return [$step, $deployment];
+    }
+
+    private function validationError(BaseDeploymentStep $step, Deployment $deployment): ?string {
+        try {
+            return $step->validateDeployCommand($deployment);
+        } catch (ClusterDidNotAnswer $e) {
+            return $e->getMessage();
+        }
     }
 
     /**
@@ -153,7 +162,7 @@ class DeploymentSteps extends \App\Core\BaseController {
          */
         [$step, $deployment] = $valid;
 
-        $error = $step->validateDeployCommand($deployment);
+        $error = $this->validationError($step, $deployment);
         if ($error) {
             $this->fail($error);
             return;
@@ -192,7 +201,7 @@ class DeploymentSteps extends \App\Core\BaseController {
          */
         [$step, $deployment] = $valid;
 
-        $error = $step->validateDeployCommand($deployment);
+        $error = $this->validationError($step, $deployment);
         if ($error) {
             $this->fail($error);
             return;
@@ -229,7 +238,7 @@ class DeploymentSteps extends \App\Core\BaseController {
          */
         [$step, $deployment] = $valid;
 
-        $error = $step->validateDeployCommand($deployment);
+        $error = $this->validationError($step, $deployment);
         if ($error) {
             $this->fail($error);
             return;

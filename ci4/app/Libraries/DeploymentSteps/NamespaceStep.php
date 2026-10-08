@@ -4,6 +4,7 @@ use App\Entities\Deployment;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepLevels;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
+use App\Libraries\Kubernetes\ClusterDidNotAnswer;
 use App\Libraries\Kubernetes\KubeAuth;
 use App\Libraries\Kubernetes\KubeHelper;
 use DebugTool\Data;
@@ -125,6 +126,8 @@ class NamespaceStep extends BaseDeploymentStep {
      * The deployment's own configuration is asked about first, because `getResource()`
      * throws for a deployment with no workspace exactly as it does for a cluster that will
      * not answer, and `getStatus()` cannot tell those two apart afterwards.
+     *
+     * @throws ClusterDidNotAnswer when the cluster could not be reached - that is no reason.
      */
     public function reasonItCannotBeUsed(Deployment $deployment): ?string {
         $invalid = $this->validateDeployCommand($deployment);
@@ -139,6 +142,9 @@ class NamespaceStep extends BaseDeploymentStep {
         try {
             $exists = $this->getResource($deployment, true)->exists();
         } catch (\Throwable $e) {
+            if (ClusterDidNotAnswer::Is($e)) {
+                throw new ClusterDidNotAnswer($e);
+            }
             return KubeHelper::PrintException($e);
         }
 

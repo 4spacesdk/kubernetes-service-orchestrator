@@ -1,6 +1,7 @@
 <?php namespace App\Tests\Unit\Kubernetes;
 
 use App\ClusterEnvironment;
+use App\Libraries\Kubernetes\Cluster;
 use App\Libraries\Kubernetes\KubeAuth;
 use CodeIgniter\Test\CIUnitTestCase;
 use RenokiCo\PhpK8s\KubernetesCluster;
@@ -75,6 +76,21 @@ class KubeAuthConfigurationTest extends CIUnitTestCase {
     public function testInClusterAuthenticationBuildsAClusterFromTheServiceAccount(): void {
         $this->withAuthMethod('in-cluster', function (): void {
             $this->assertInstanceOf(KubernetesCluster::class, (new KubeAuth())->authenticate());
+        });
+    }
+
+    /**
+     * Reaching the api server - the name looked up and the connection made - may take ten
+     * seconds. Without a limit curl waits 300, and a DNS lookup that hung held an auto-update for
+     * five minutes. A request that is connected, a watch say, is not limited.
+     */
+    public function testReachingTheApiServerHasALimitAndARequestHasNone(): void {
+        $this->withAuthMethod('in-cluster', function (): void {
+            $cluster = (new KubeAuth())->authenticate();
+
+            $this->assertInstanceOf(Cluster::class, $cluster);
+            $this->assertSame(Cluster::ConnectTimeoutSeconds, $cluster->getClient()->getConfig('connect_timeout'));
+            $this->assertNull($cluster->getClient()->getConfig('timeout'));
         });
     }
 

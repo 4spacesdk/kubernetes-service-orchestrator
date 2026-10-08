@@ -176,7 +176,10 @@ class DeploymentStepHelper {
     public const string DraftRefusal = 'Deployment still in draft mode';
 
     public static function EmitTrigger(string $trigger, Deployment $deployment, ?string $reason = null): ?string {
-        $deployment->checkStatus(false);
+        $noAnswer = $deployment->checkStatus(false);
+        if ($noAnswer !== null) {
+            return $noAnswer;
+        }
         if ($deployment->status == \DeploymentStatusTypes::Draft) {
             return self::DraftRefusal;
         }

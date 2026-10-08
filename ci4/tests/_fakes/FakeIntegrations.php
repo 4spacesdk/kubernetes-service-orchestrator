@@ -69,6 +69,9 @@ class FakeIntegrations extends IntegrationFactory {
     /** Null means no commit identification is configured. */
     public ?string $shortSha = null;
 
+    /** How many times the commit was looked up - a run job in the cluster, for real. */
+    public int $shortShaLookups = 0;
+
     /** @var string[] The name of every registry connection the code asked about, for tests that count calls. */
     public array $registryLookups = [];
 
@@ -226,11 +229,13 @@ class FakeIntegrations extends IntegrationFactory {
             return null;
         }
 
-        return new class ($this->shortSha) extends BaseCommitIdentificationMethod {
-            public function __construct(private string $sha) {}
+        return new class ($this) extends BaseCommitIdentificationMethod {
+            public function __construct(private FakeIntegrations $fakes) {}
 
             public function getCommitShortSha(Deployment $deployment): string {
-                return $this->sha;
+                $this->fakes->shortShaLookups++;
+
+                return (string) $this->fakes->shortSha;
             }
         };
     }

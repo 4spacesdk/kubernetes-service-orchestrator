@@ -5,6 +5,7 @@ use App\Entities\Concerns\EncryptsFields;
 use App\Entities\Concerns\WriteOnlySecrets;
 use App\Exceptions\ValidationException;
 use App\Libraries\DeploymentSteps\PersistentVolumeClaimStep;
+use App\Libraries\Kubernetes\ClusterDidNotAnswer;
 use App\Libraries\Kubernetes\VolumeFingerprint;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
@@ -413,27 +414,36 @@ class Deployment extends Entity {
         return $this->findDeploymentSpecification()->getUrl($this->workspace->subdomain, $domain, $includeTls, $includeSuffix);
     }
 
-    public function checkStatus(bool $cascadeWorkspaceCheck): void {
+    /**
+     * @return string|null why the cluster could not be reached. The status is left as it was then:
+     *     a timeout is not an answer.
+     */
+    public function checkStatus(bool $cascadeWorkspaceCheck): ?string {
         // If set inactive, must explicitly be activated again
         if ($this->status === \DeploymentStatusTypes::Inactive) {
-            return;
+            return null;
         }
 
         $spec = $this->findDeploymentSpecification();
         $steps = $spec->getDeploymentSteps($this);
 
         $hasInvalidStep = false;
-        foreach ($steps as $step) {
-            if ($validationError = $step->validateDeployCommand($this)) {
-                Data::debug('failed at', get_class($step), $validationError);
-                $hasInvalidStep = true;
-                break;
+        try {
+            foreach ($steps as $step) {
+                if ($validationError = $step->validateDeployCommand($this)) {
+                    Data::debug('failed at', get_class($step), $validationError);
+                    $hasInvalidStep = true;
+                    break;
+                }
             }
+        } catch (ClusterDidNotAnswer $e) {
+            Data::debug('status left as', $this->status, 'because the cluster did not answer:', $e->getMessage());
+            return $e->getMessage();
         }
 
         if ($hasInvalidStep) {
             $this->updateStatus(\DeploymentStatusTypes::Draft, $cascadeWorkspaceCheck);
-            return;
+            return null;
         }
 
         $hasFailedStep = false;
@@ -450,10 +460,11 @@ class Deployment extends Entity {
 
         if ($hasFailedStep) {
             $this->updateStatus(\DeploymentStatusTypes::OutOfSync, $cascadeWorkspaceCheck);
-            return;
+            return null;
         }
 
         $this->updateStatus(\DeploymentStatusTypes::Synced, $cascadeWorkspaceCheck);
+        return null;
     }
 
     public function deployAllSteps(): ?string {
