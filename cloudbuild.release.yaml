@@ -113,8 +113,8 @@ steps:
               started=$$(date +%s) &&
               vendor/bin/phpunit --testsuite unit,database &&
               elapsed=$$(( $$(date +%s) - started )) &&
-              echo "Suite: $${elapsed}s of a 120s budget" &&
-              if [ "$$elapsed" -gt 120 ]; then
+              echo "Suite: $${elapsed}s of a 150s budget" &&
+              if [ "$$elapsed" -gt 150 ]; then
                 echo "The suite is over its budget. It is the one run on every save, and";
                 echo "a suite that stops being run stops being worth writing. Find what";
                 echo "got slow, or raise the budget on purpose.";

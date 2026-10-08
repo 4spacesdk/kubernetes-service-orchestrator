@@ -60,7 +60,8 @@ class HealthCheck {
      */
     public static ?\Closure $indexedClusters = null;
 
-    private const string LockName = 'kso-health';
+    /** Followed by the database's name: a lock is the MySQL server's, not the database's. */
+    private const string LockName = 'kso-health-';
 
     /**
      * @return array{checked: int, changed: int, notified: int}
@@ -344,11 +345,12 @@ class HealthCheck {
      */
     private static function Locked(\Closure $work): mixed {
         $db = Database::connect();
-        $db->query('SELECT GET_LOCK(?, 30)', [self::LockName]);
+        $lock = self::LockName . $db->getDatabase();
+        $db->query('SELECT GET_LOCK(?, 30)', [$lock]);
         try {
             return $work();
         } finally {
-            $db->query('SELECT RELEASE_LOCK(?)', [self::LockName]);
+            $db->query('SELECT RELEASE_LOCK(?)', [$lock]);
         }
     }
 

@@ -38,6 +38,14 @@ class MigrationJobStep extends BaseDeploymentStep {
      */
     public static ?\Closure $startWatching = null;
 
+    /**
+     * How long to wait between looks at an old job being deleted. The database tests, without a
+     * cluster, put a no-op here.
+     *
+     * @var null|\Closure(int): void
+     */
+    public static ?\Closure $sleep = null;
+
     public function getIdentifier(): string {
         return DeploymentSteps::Migration;
     }
@@ -240,11 +248,16 @@ class MigrationJobStep extends BaseDeploymentStep {
                 $existing->delete(['pretty' => 1], 0);
 
                 // Wait for completion
+                $sleep = self::$sleep ?? sleep(...);
                 $stop = 10;
-                do {
+                while (true) {
                     $existing = $resource->get();
                     Data::debug('resource still exists?', $existing->exists());
-                } while($existing->exists() && $stop-- > 0 && sleep(2) === 0);
+                    if (!$existing->exists() || $stop-- <= 0) {
+                        break;
+                    }
+                    $sleep(2);
+                }
             } catch (\Exception $e) {
                 // Keep going.
             }

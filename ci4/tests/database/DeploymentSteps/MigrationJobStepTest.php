@@ -561,8 +561,16 @@ class MigrationJobStepTest extends ManifestTestCase {
     public function testReplacingAMigrationWaitsForTheOldJobToActuallyGo(): void {
         $deployment = $this->migratableDeployment();
         $resource = $this->jobThatTakesTwoReadsToDisappear($deployment);
+        $slept = [];
+        MigrationJobStep::$sleep = function (int $seconds) use (&$slept): void {
+            $slept[] = $seconds;
+        };
 
-        $this->stepWhoseResourceIs($resource)->startDeployCommand($deployment);
+        try {
+            $this->stepWhoseResourceIs($resource)->startDeployCommand($deployment);
+        } finally {
+            MigrationJobStep::$sleep = null;
+        }
 
         $this->assertSame(1, $resource->deleted, 'the old job is deleted first');
         $this->assertSame(
@@ -571,6 +579,7 @@ class MigrationJobStepTest extends ManifestTestCase {
             'the step created the new job while the old one was still there'
         );
         $this->assertSame(1, $resource->created);
+        $this->assertSame([2], $slept, 'a pause between the looks');
     }
 
     // <editor-fold desc="Fixtures and reading">

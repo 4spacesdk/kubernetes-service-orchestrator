@@ -283,7 +283,12 @@ class LoginApiTest extends ControllerTestCase {
      * A name nobody has is refused the same way, or the refusal would tell accounts apart.
      */
     public function testAnUnknownUsernameIsRefusedTheSameWay(): void {
-        $this->failToSignIn('nobody', LoginThrottle::MaxFailures);
+        // One through the form shows it is counted; the rest go straight in, as each costs the
+        // full bcrypt check an unknown name pays.
+        $this->failToSignIn('nobody', 1);
+        for ($attempt = 1; $attempt < LoginThrottle::MaxFailures; $attempt++) {
+            LoginThrottle::RecordFailure(LoginThrottle::Password, 'nobody', null);
+        }
 
         $response = $this->post('login', ['username' => 'nobody', 'password' => 'anything']);
 
