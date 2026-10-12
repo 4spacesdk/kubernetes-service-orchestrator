@@ -5,15 +5,15 @@ found by `composer audit`, `npm audit` and [Trivy](https://trivy.dev). A release
 this file as it was when it was tagged. Written every week by
 [a scheduled workflow](.github/workflows/security-status.yml) - do not edit by hand.
 
-Updated: 2026-10-05 12:01 UTC
+Updated: 2026-10-12 12:42 UTC
 
-Main at: `a4ffb52`
+Main at: `adb8a3b`
 
 | Source | Critical | High | Medium | Low | Unknown |
 |--------|---------:|-----:|-------:|----:|--------:|
 | PHP · ci4/composer.lock | 0 | 0 | 0 | 0 | 0 |
-| JavaScript · vue/package-lock.json | 0 | 0 | 0 | 1 | 0 |
-| Image · 4spaces/kubernetes-service-orchestrator:dev | 1 | 41 | 201 | 33 | 10 |
+| JavaScript · vue/package-lock.json | 1 | 1 | 0 | 1 | 0 |
+| Image · 4spaces/kubernetes-service-orchestrator:dev | 1 | 50 | 214 | 34 | 7 |
 
 ## PHP · ci4/composer.lock
 
@@ -23,6 +23,10 @@ Nothing known.
 
 ## JavaScript · vue/package-lock.json
 
+| Severity | Id | Package | Installed | Fix | Title |
+|----------|----|---------|-----------|-----|-------|
+| critical | [GHSA-pqg4-j6r4-53mv](https://github.com/advisories/GHSA-pqg4-j6r4-53mv) | shell-quote | 1.10.0 | not >=1.8.4 <1.11.0 | shell-quote: `quote()` command injection via a line terminator in a token after a `{ comment }` token |
+| high | [GHSA-68fv-2mgg-jv7q](https://github.com/advisories/GHSA-68fv-2mgg-jv7q) | source-map-js | 1.2.1 | not >=1.0.0 <1.2.2 | source-map-js allows event-loop denial of service through indexed source-map section offsets |
 
 <details><summary>1 low or unknown</summary>
 
@@ -34,19 +38,21 @@ Nothing known.
 
 ## Image · 4spaces/kubernetes-service-orchestrator:dev
 
-*built from a4ffb52, the commit above · alpine 3.24.2 · 4spaces/kubernetes-service-orchestrator@sha256:ac4b6ca72aa689673a467542c194808939d7ac595bdd4f62157c554c78c921e4*
+*built from adb8a3b, the commit above · alpine 3.24.2 · 4spaces/kubernetes-service-orchestrator@sha256:d369cbcb9ac612609e470e576609043ec32005cba936af8276682864b046301a*
 
 | Severity | Id | Package | Installed | Fix | Title |
 |----------|----|---------|-----------|-----|-------|
 | critical | [CVE-2026-13221](https://avd.aquasec.com/nvd/cve-2026-13221) | perl | 5.42.2-r0 | 5.42.2-r1 | perl: Perl: Incorrect regular expression processing via large regular expressions |
 | high | [CVE-2026-46729](https://avd.aquasec.com/nvd/cve-2026-46729) | apache2 | 2.4.68-r0 | 2.4.69-r0 | httpd: httpd: mod_heartmonitor: Denial of Service via NULL pointer dereference |
 | high | [CVE-2026-56153](https://avd.aquasec.com/nvd/cve-2026-56153) | apache2 | 2.4.68-r0 | 2.4.69-r0 | httpd: httpd: Denial of Service via heap-based buffer overflow in mod_charset_lite |
+| high | [CVE-2026-56154](https://avd.aquasec.com/nvd/cve-2026-56154) | apache2 | 2.4.68-r0 | 2.4.69-r0 | httpd: httpd: Denial of Service via mod_rewrite lookahead |
 | high | [CVE-2026-59685](https://avd.aquasec.com/nvd/cve-2026-59685) | apache2 | 2.4.68-r0 | 2.4.69-r0 | httpd: httpd: Denial of Service via out-of-bounds write during Windows path expansion |
 | high | [CVE-2026-63292](https://avd.aquasec.com/nvd/cve-2026-63292) | apache2 | 2.4.68-r0 | 2.4.69-r0 | httpd: httpd: Arbitrary code execution via oversized Host header in mod_vhost_alias |
 | high | [CVE-2026-63686](https://avd.aquasec.com/nvd/cve-2026-63686) | apache2 | 2.4.68-r0 | 2.4.69-r0 | httpd: httpd: Denial of Service via charset conversion failure in mod_xml2enc |
 | high | [CVE-2026-63718](https://avd.aquasec.com/nvd/cve-2026-63718) | apache2 | 2.4.68-r0 | 2.4.69-r0 | httpd: httpd: HTTP response smuggling via crafted Transfer-Encoding response in mod_proxy_uwsgi |
 | high | [CVE-2026-73636](https://avd.aquasec.com/nvd/cve-2026-73636) | apache2 | 2.4.68-r0 | 2.4.69-r0 | httpd: httpd: Authentication bypass via credential replay in mod_auth_digest |
-| high | [CVE-2026-84304](https://avd.aquasec.com/nvd/cve-2026-84304) | google.golang.org/grpc | v1.82.1 | 1.83.1 | gRPC-Go is the Go language implementation of gRPC. Prior to 1.83.1, in ... |
+| high | [CVE-2026-78669](https://avd.aquasec.com/nvd/cve-2026-78669) | golang.org/x/net | v0.58.0 | 0.60.0 | net/http: net/http/internal/http2: golang: golang.org/x/net/http2: net/http: Denial of Service via excessive HTTP/2 SET… |
+| high | [CVE-2026-84304](https://avd.aquasec.com/nvd/cve-2026-84304) | google.golang.org/grpc | v1.82.1 | 1.83.1 | google.golang.org/grpc: gRPC-Go: Denial of Service via HTTP/2 DATA Frame Fragmentation |
 | high | [CVE-2026-84445](https://avd.aquasec.com/nvd/cve-2026-84445) | google.golang.org/grpc | v1.82.1 | 1.82.2, 1.83.2, 1.84.0-dev.0.20260825144003-d5a41119e0e3, 1.85.0-dev.0.20260825072537-93e31b48545e | google.golang.org/grpc: gRPC-Go: Denial of Service via malformed RPC requests |
 | high | [CVE-2026-93990](https://avd.aquasec.com/nvd/cve-2026-93990) | libexpat | 2.8.4-r0 | 2.8.5-r0 | expat: Expat: XML Injection via Malformed UTF-16 Input |
 | high | [CVE-2026-103111](https://avd.aquasec.com/nvd/cve-2026-103111) | pcre2 | 10.48-r0 | 10.49-r0 | pcre2: pcre2: Out-of-bounds write via crafted regular expression |
@@ -72,16 +78,25 @@ Nothing known.
 | high | [CVE-2026-91765](https://avd.aquasec.com/nvd/cve-2026-91765) | php85-xml | 8.5.10-r0 | 8.5.11-r0 | php: php: Denial of Service via unbounded recursion in SOAP parser |
 | high | [CVE-2026-91765](https://avd.aquasec.com/nvd/cve-2026-91765) | php85-xmlwriter | 8.5.10-r0 | 8.5.11-r0 | php: php: Denial of Service via unbounded recursion in SOAP parser |
 | high | [CVE-2026-91765](https://avd.aquasec.com/nvd/cve-2026-91765) | php85-zip | 8.5.10-r0 | 8.5.11-r0 | php: php: Denial of Service via unbounded recursion in SOAP parser |
+| high | [CVE-2026-19445](https://avd.aquasec.com/nvd/cve-2026-19445) | pyc | 3.14.7-r1 | 3.14.8-r0 | python: Use-after-free of a server-side SSLContext when sni_callback switches contexts |
 | high | [CVE-2026-19553](https://avd.aquasec.com/nvd/cve-2026-19553) | pyc | 3.14.7-r1 | 3.14.8-r0 | python: python: Certificate verification bypass via missing server_hostname validation in SSLContext.wrap_bio() |
 | high | [CVE-2026-82049](https://avd.aquasec.com/nvd/cve-2026-82049) | pyc | 3.14.7-r1 | 3.14.8-r0 | python: Python tarfile module: File modification and content disclosure via crafted archives |
+| high | [CVE-2026-19445](https://avd.aquasec.com/nvd/cve-2026-19445) | python3 | 3.14.7-r1 | 3.14.8-r0 | python: Use-after-free of a server-side SSLContext when sni_callback switches contexts |
 | high | [CVE-2026-19553](https://avd.aquasec.com/nvd/cve-2026-19553) | python3 | 3.14.7-r1 | 3.14.8-r0 | python: python: Certificate verification bypass via missing server_hostname validation in SSLContext.wrap_bio() |
 | high | [CVE-2026-82049](https://avd.aquasec.com/nvd/cve-2026-82049) | python3 | 3.14.7-r1 | 3.14.8-r0 | python: Python tarfile module: File modification and content disclosure via crafted archives |
+| high | [CVE-2026-19445](https://avd.aquasec.com/nvd/cve-2026-19445) | python3-pyc | 3.14.7-r1 | 3.14.8-r0 | python: Use-after-free of a server-side SSLContext when sni_callback switches contexts |
 | high | [CVE-2026-19553](https://avd.aquasec.com/nvd/cve-2026-19553) | python3-pyc | 3.14.7-r1 | 3.14.8-r0 | python: python: Certificate verification bypass via missing server_hostname validation in SSLContext.wrap_bio() |
 | high | [CVE-2026-82049](https://avd.aquasec.com/nvd/cve-2026-82049) | python3-pyc | 3.14.7-r1 | 3.14.8-r0 | python: Python tarfile module: File modification and content disclosure via crafted archives |
+| high | [CVE-2026-19445](https://avd.aquasec.com/nvd/cve-2026-19445) | python3-pycache-pyc0 | 3.14.7-r1 | 3.14.8-r0 | python: Use-after-free of a server-side SSLContext when sni_callback switches contexts |
 | high | [CVE-2026-19553](https://avd.aquasec.com/nvd/cve-2026-19553) | python3-pycache-pyc0 | 3.14.7-r1 | 3.14.8-r0 | python: python: Certificate verification bypass via missing server_hostname validation in SSLContext.wrap_bio() |
 | high | [CVE-2026-82049](https://avd.aquasec.com/nvd/cve-2026-82049) | python3-pycache-pyc0 | 3.14.7-r1 | 3.14.8-r0 | python: Python tarfile module: File modification and content disclosure via crafted archives |
+| high | [CVE-2026-78667](https://avd.aquasec.com/nvd/cve-2026-78667) | stdlib | v1.26.6 | 1.26.9, 1.27.2 | net/http: golang: golang: Denial of Service via crafted HTTP Range headers |
+| high | [CVE-2026-78669](https://avd.aquasec.com/nvd/cve-2026-78669) | stdlib | v1.26.6 | 1.26.9, 1.27.2 | net/http: net/http/internal/http2: golang: golang.org/x/net/http2: net/http: Denial of Service via excessive HTTP/2 SET… |
+| high | [CVE-2026-97031](https://avd.aquasec.com/nvd/cve-2026-97031) | stdlib | v1.26.6 | 1.26.9, 1.27.2 | crypto/tls: golang: crypto/tls: Denial of Service via multiple ECH outer extension references |
 | medium | [CVE-2026-42528](https://avd.aquasec.com/nvd/cve-2026-42528) | apache2 | 2.4.68-r0 | 2.4.69-r0 | httpd: httpd: Denial of Service via mod_dav shared lock memory calculation error |
+| medium | [CVE-2026-57941](https://avd.aquasec.com/nvd/cve-2026-57941) | apache2 | 2.4.68-r0 | 2.4.69-r0 | httpd: Apache HTTP Server: mod_http2 use-after-free / wild write via shared session->bbtmp re-entrancy |
 | medium | [CVE-2026-58415](https://avd.aquasec.com/nvd/cve-2026-58415) | apache2 | 2.4.68-r0 | 2.4.69-r0 | httpd: httpd: Information disclosure via direct request to the WebDAV state directory |
+| medium | [CVE-2026-59797](https://avd.aquasec.com/nvd/cve-2026-59797) | apache2 | 2.4.68-r0 | 2.4.69-r0 | httpd: Apache HTTP Server: mod_ssl SSLRequire allows .htaccess ap_expr file-function |
 | medium | [CVE-2026-63045](https://avd.aquasec.com/nvd/cve-2026-63045) | apache2 | 2.4.68-r0 | 2.4.69-r0 | httpd: httpd: unauthorized connection to arbitrary hosts via crafted FTP PASV response |
 | medium | [CVE-2026-73637](https://avd.aquasec.com/nvd/cve-2026-73637) | apache2 | 2.4.68-r0 | 2.4.69-r0 | httpd: httpd: Authentication state corruption via concurrent Digest authentication requests |
 | medium | [CVE-2026-79768](https://avd.aquasec.com/nvd/cve-2026-79768) | apache2 | 2.4.68-r0 | 2.4.69-r0 | httpd: httpd: Information disclosure in mod_userdir via single-dot path equivalence |
@@ -90,7 +105,11 @@ Nothing known.
 | medium | [CVE-2026-53495](https://avd.aquasec.com/nvd/cve-2026-53495) | github.com/containerd/containerd/v2 | v2.3.3 | 2.0.12, 2.2.8, 2.3.5 | github.com/containerd/containerd: containerd: Denial of Service via CRI ExecSync goroutine leak |
 | medium | [CVE-2026-56855](https://avd.aquasec.com/nvd/cve-2026-56855) | golang.org/x/crypto | v0.55.0 | 0.56.0 | golang.org/x/crypto/ssh: golang.org/x/crypto/ssh: Denial of Service via crafted messages |
 | medium | [CVE-2026-78662](https://avd.aquasec.com/nvd/cve-2026-78662) | golang.org/x/crypto | v0.55.0 | 0.56.0 | golang.org/x/crypto/ssh: golang.org/x/crypto/ssh: Denial of Service via channel request flooding |
+| medium | [CVE-2026-78663](https://avd.aquasec.com/nvd/cve-2026-78663) | golang.org/x/net | v0.58.0 | 0.60.0 | net/http: net/http/internal/http2: golang: golang.org/x/net/http2: golang: flow control limit bypass via double refund … |
+| medium | [CVE-2026-97032](https://avd.aquasec.com/nvd/cve-2026-97032) | golang.org/x/net | v0.58.0 | 0.60.0 | net/http: net/http/internal/http2: golang: golang.org/x/net/http2: net/http: Denial of Service via concurrent HPACK enc… |
 | medium | [CVE-2026-84303](https://avd.aquasec.com/nvd/cve-2026-84303) | google.golang.org/grpc | v1.82.1 | 1.83.1 | gRPC-Go is the Go language implementation of gRPC. Prior to 1.83.1, th ... |
+| medium | [CVE-2026-46675](https://avd.aquasec.com/nvd/cve-2026-46675) | libpng | 1.6.58-r1 | 1.6.59-r0 | [Use-after-free of zlib input in `png_read_end` after incomplete zTXt, iTXt or iCCP decompression] |
+| medium | [CVE-2026-46675](https://avd.aquasec.com/nvd/cve-2026-46675) | libpng-dev | 1.6.58-r1 | 1.6.59-r0 | [Use-after-free of zlib input in `png_read_end` after incomplete zTXt, iTXt or iCCP decompression] |
 | medium | [CVE-2026-58055](https://avd.aquasec.com/nvd/cve-2026-58055) | nghttp2-dev | 1.69.0-r0 | 1.70.0-r0 | nghttp2: nghttp2: HTTP Request/Response Smuggling and Response-Queue Poisoning via ambiguous HTTP/1.1 Upgrade requests |
 | medium | [CVE-2026-58055](https://avd.aquasec.com/nvd/cve-2026-58055) | nghttp2-libs | 1.69.0-r0 | 1.70.0-r0 | nghttp2: nghttp2: HTTP Request/Response Smuggling and Response-Queue Poisoning via ambiguous HTTP/1.1 Upgrade requests |
 | medium | [CVE-2025-14181](https://avd.aquasec.com/nvd/cve-2025-14181) | php85-apache2 | 8.5.10-r0 | 8.5.11-r0 | php: PHP: Denial of Service via heap buffer overflow in SOAP client |
@@ -281,8 +300,15 @@ Nothing known.
 | medium | [CVE-2026-15806](https://avd.aquasec.com/nvd/cve-2026-15806) | python3-pycache-pyc0 | 3.14.7-r1 | 3.14.8-r0 | python: Python: Information disclosure due to incorrect URL scheme matching |
 | medium | [CVE-2026-17084](https://avd.aquasec.com/nvd/cve-2026-17084) | python3-pycache-pyc0 | 3.14.7-r1 | 3.14.8-r0 | python: Python stringprep module: Incorrect domain name processing breaks IDNA interoperability |
 | medium | [CVE-2026-19672](https://avd.aquasec.com/nvd/cve-2026-19672) | python3-pycache-pyc0 | 3.14.7-r1 | 3.14.8-r0 | python: Python tarfile module: Directory traversal allows creation of empty directories outside extraction destination |
+| medium | [CVE-2026-56866](https://avd.aquasec.com/nvd/cve-2026-56866) | stdlib | v1.26.6 | 1.26.9, 1.27.2 | net/http: golang: golang: Cross-user response poisoning via desynchronized HTTP CONNECT connections |
+| medium | [CVE-2026-78663](https://avd.aquasec.com/nvd/cve-2026-78663) | stdlib | v1.26.6 | 1.26.9, 1.27.2 | net/http: net/http/internal/http2: golang: golang.org/x/net/http2: golang: flow control limit bypass via double refund … |
+| medium | [CVE-2026-94439](https://avd.aquasec.com/nvd/cve-2026-94439) | stdlib | v1.26.6 | 1.26.9, 1.27.2 | net/http: golang: net/http: HTTP request smuggling via improper handling of HTTP/1 CONNECT responses |
+| medium | [CVE-2026-94448](https://avd.aquasec.com/nvd/cve-2026-94448) | stdlib | v1.26.6 | 1.26.9, 1.27.2 | html/template: golang: golang: cross-site scripting via consecutive expressions in JavaScript template literals |
+| medium | [CVE-2026-97032](https://avd.aquasec.com/nvd/cve-2026-97032) | stdlib | v1.26.6 | 1.26.9, 1.27.2 | net/http: net/http/internal/http2: golang: golang.org/x/net/http2: net/http: Denial of Service via concurrent HPACK enc… |
+| medium | [CVE-2026-85091](https://avd.aquasec.com/nvd/cve-2026-85091) | zlib | 1.3.2-r0 | 1.3.2-r1 | zlib versions 1.3.1.2 through 1.3.2 contain a heap buffer overflow vul ... |
+| medium | [CVE-2026-85091](https://avd.aquasec.com/nvd/cve-2026-85091) | zlib-dev | 1.3.2-r0 | 1.3.2-r1 | zlib versions 1.3.1.2 through 1.3.2 contain a heap buffer overflow vul ... |
 
-<details><summary>43 low or unknown</summary>
+<details><summary>41 low or unknown</summary>
 
 | Severity | Id | Package | Installed | Fix | Title |
 |----------|----|---------|-----------|-----|-------|
@@ -319,15 +345,13 @@ Nothing known.
 | low | [CVE-2026-15310](https://avd.aquasec.com/nvd/cve-2026-15310) | python3 | 3.14.7-r1 | 3.14.8-r0 | When decompressing crafted zip files using the bzip/LZMA/Zstandard   c ... |
 | low | [CVE-2026-15310](https://avd.aquasec.com/nvd/cve-2026-15310) | python3-pyc | 3.14.7-r1 | 3.14.8-r0 | When decompressing crafted zip files using the bzip/LZMA/Zstandard   c ... |
 | low | [CVE-2026-15310](https://avd.aquasec.com/nvd/cve-2026-15310) | python3-pycache-pyc0 | 3.14.7-r1 | 3.14.8-r0 | When decompressing crafted zip files using the bzip/LZMA/Zstandard   c ... |
-| unknown | [CVE-2026-56154](https://avd.aquasec.com/nvd/cve-2026-56154) | apache2 | 2.4.68-r0 | 2.4.69-r0 | Use After Free vulnerability in Apache HTTP Server's mod_rewrite when  ... |
-| unknown | [CVE-2026-57941](https://avd.aquasec.com/nvd/cve-2026-57941) | apache2 | 2.4.68-r0 | 2.4.69-r0 | Use After Free vulnerability in Apache HTTP Server's mod_http2via shar ... |
-| unknown | [CVE-2026-59797](https://avd.aquasec.com/nvd/cve-2026-59797) | apache2 | 2.4.68-r0 | 2.4.69-r0 | Improper Privilege Management vulnerability in Apache HTTP Server's mo ... |
+| low | [CVE-2026-56857](https://avd.aquasec.com/nvd/cve-2026-56857) | stdlib | v1.26.6 | 1.26.9, 1.27.2 | os: golang: golang: Directory traversal via Windows junction handling |
 | unknown | GO-2026-5932 | golang.org/x/crypto | v0.55.0 |  | The golang.org/x/crypto/openpgp package is unmaintained, unsafe by design, and has known security issues |
-| unknown | [CVE-2026-46675](https://avd.aquasec.com/nvd/cve-2026-46675) | libpng | 1.6.58-r1 | 1.6.59-r0 | [Use-after-free of zlib input in `png_read_end` after incomplete zTXt, iTXt or iCCP decompression] |
-| unknown | [CVE-2026-46675](https://avd.aquasec.com/nvd/cve-2026-46675) | libpng-dev | 1.6.58-r1 | 1.6.59-r0 | [Use-after-free of zlib input in `png_read_end` after incomplete zTXt, iTXt or iCCP decompression] |
-| unknown | [CVE-2026-19445](https://avd.aquasec.com/nvd/cve-2026-19445) | pyc | 3.14.7-r1 | 3.14.8-r0 | A remote, unauthenticated TLS client can make a server crash or call t ... |
-| unknown | [CVE-2026-19445](https://avd.aquasec.com/nvd/cve-2026-19445) | python3 | 3.14.7-r1 | 3.14.8-r0 | A remote, unauthenticated TLS client can make a server crash or call t ... |
-| unknown | [CVE-2026-19445](https://avd.aquasec.com/nvd/cve-2026-19445) | python3-pyc | 3.14.7-r1 | 3.14.8-r0 | A remote, unauthenticated TLS client can make a server crash or call t ... |
-| unknown | [CVE-2026-19445](https://avd.aquasec.com/nvd/cve-2026-19445) | python3-pycache-pyc0 | 3.14.7-r1 | 3.14.8-r0 | A remote, unauthenticated TLS client can make a server crash or call t ... |
+| unknown | [CVE-2026-78659](https://avd.aquasec.com/nvd/cve-2026-78659) | golang.org/x/net | v0.58.0 | 0.60.0 | When "Trailer" headers are sent by a client, the HTTP server internall ... |
+| unknown | [CVE-2026-78660](https://avd.aquasec.com/nvd/cve-2026-78660) | golang.org/x/net | v0.58.0 | 0.60.0 | Historically, we have been rather lax about malformed framing-related  ... |
+| unknown | [CVE-2026-78659](https://avd.aquasec.com/nvd/cve-2026-78659) | stdlib | v1.26.6 | 1.26.9, 1.27.2 | When "Trailer" headers are sent by a client, the HTTP server internall ... |
+| unknown | [CVE-2026-78660](https://avd.aquasec.com/nvd/cve-2026-78660) | stdlib | v1.26.6 | 1.26.9, 1.27.2 | Historically, we have been rather lax about malformed framing-related  ... |
+| unknown | [CVE-2026-94440](https://avd.aquasec.com/nvd/cve-2026-94440) | stdlib | v1.26.6 | 1.26.9, 1.27.2 | Parsing a multipart form can bypass memory limits and read an arbitrar ... |
+| unknown | [CVE-2026-97030](https://avd.aquasec.com/nvd/cve-2026-97030) | stdlib | v1.26.6 | 1.26.9, 1.27.2 | A trusted template author may have previously written a valid template ... |
 
 </details>
