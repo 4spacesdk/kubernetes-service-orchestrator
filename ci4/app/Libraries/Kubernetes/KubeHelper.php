@@ -106,6 +106,25 @@ class KubeHelper {
      *
      * @throws KubernetesAPIException
      */
+    /**
+     * The resource as the cluster has it, or null when it is not there. One call rather than
+     * `exists()` and then `get()`: something that is being deleted can be gone between the two,
+     * and the second answers 404.
+     *
+     * @return array<string, mixed>|null
+     * @throws KubernetesAPIException For anything but 404.
+     */
+    public static function LiveOrNull(K8sResource $resource): ?array {
+        try {
+            return $resource->get()->toArray();
+        } catch (KubernetesAPIException $e) {
+            if ($e->getCode() === self::NotFoundCode) {
+                return null;
+            }
+            throw $e;
+        }
+    }
+
     public static function Apply(K8sResource $resource, int $attempts = 4): void {
         for ($attempt = 1; ; $attempt++) {
             try {

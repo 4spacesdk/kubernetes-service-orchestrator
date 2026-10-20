@@ -8,6 +8,7 @@ use App\Libraries\DeploymentSteps\Helpers\DeploymentStepLevels;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepTriggers;
 use App\Libraries\Kubernetes\KubeAuth;
+use App\Libraries\Kubernetes\KubeHelper;
 use App\Models\DeploymentSpecificationVolumeModel;
 use App\Models\DeploymentVolumeModel;
 use DebugTool\Data;
@@ -99,8 +100,9 @@ class PersistentVolumeClaimStep extends BaseDeploymentStep {
     public function getStatus(Deployment $deployment): string {
         $statuses = [];
         foreach ($this->getResources($deployment, true) as $resource) {
-            $statuses[] = $resource->exists()
-                ? self::StatusOf($resource->get()->toArray())
+            $live = KubeHelper::LiveOrNull($resource);
+            $statuses[] = $live !== null
+                ? self::StatusOf($live)
                 : DeploymentStepHelper::PersistentVolumeClaim_NotFound;
         }
 
@@ -284,7 +286,8 @@ class PersistentVolumeClaimStep extends BaseDeploymentStep {
 
         $claims = [];
         foreach ($this->getResources($deployment, true) as $resource) {
-            if (!$resource->exists()) {
+            $live = KubeHelper::LiveOrNull($resource);
+            if ($live === null) {
                 $claims[] = [
                     'claim' => "{$deployment->namespace}/{$resource->getName()}",
                     'status' => DeploymentStepHelper::PersistentVolumeClaim_NotFound,
@@ -292,7 +295,7 @@ class PersistentVolumeClaimStep extends BaseDeploymentStep {
                 continue;
             }
             $pods ??= array_map(fn ($pod) => $pod->toArray(), iterator_to_array($cluster->getAllPods((string) $deployment->namespace)));
-            $claims[] = self::Describe($resource->get()->toArray(), $pods, PersistentVolumeStep::VolumeName($deployment));
+            $claims[] = self::Describe($live, $pods, PersistentVolumeStep::VolumeName($deployment));
         }
 
         return count($claims) === 1 ? $claims[0] : $claims;

@@ -8,6 +8,7 @@ use App\Libraries\DeploymentSteps\Helpers\DeploymentStepLevels;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepTriggers;
 use App\Libraries\Kubernetes\KubeAuth;
+use App\Libraries\Kubernetes\KubeHelper;
 use App\Models\DeploymentSpecificationVolumeModel;
 use App\Models\DeploymentVolumeModel;
 use RenokiCo\PhpK8s\Exceptions\KubernetesAPIException;
@@ -100,8 +101,9 @@ class PersistentVolumeStep extends BaseDeploymentStep {
     public function getStatus(Deployment $deployment): string {
         $statuses = [];
         foreach ($this->getResources($deployment, true) as $resource) {
-            $statuses[] = $resource->exists()
-                ? self::StatusOf($resource->get()->toArray(), $resource->toArray())
+            $live = KubeHelper::LiveOrNull($resource);
+            $statuses[] = $live !== null
+                ? self::StatusOf($live, $resource->toArray())
                 : DeploymentStepHelper::PersistentVolume_NotFound;
         }
 
@@ -309,8 +311,9 @@ class PersistentVolumeStep extends BaseDeploymentStep {
     public function getKubernetesStatus(Deployment $deployment): array {
         $volumes = [];
         foreach ($this->getResources($deployment, true) as $resource) {
-            $volumes[] = $resource->exists()
-                ? self::Describe($resource->get()->toArray(), $resource->toArray())
+            $live = KubeHelper::LiveOrNull($resource);
+            $volumes[] = $live !== null
+                ? self::Describe($live, $resource->toArray())
                 : ['volume' => $resource->getName(), 'status' => DeploymentStepHelper::PersistentVolume_NotFound];
         }
 
