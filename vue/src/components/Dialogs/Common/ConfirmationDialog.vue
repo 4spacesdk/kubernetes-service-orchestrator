@@ -5,6 +5,8 @@ import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInter
 export interface ConfirmationDialog_Input {
     title?: string;
     body: string;
+    /** Points below the body, one a line - what follows from saying yes, when there is more than one thing. */
+    details?: string[];
     confirmColor?: string;
     confirmIcon?: string;
     cancelIcon?: string;
@@ -81,7 +83,12 @@ function onNoBtnClicked() {
             <v-card-title >{{ titleText }}</v-card-title>
             <v-divider/>
             <!-- Text, never HTML: bodies carry names that operators typed. -->
-            <v-card-text class="dialog-body">{{ bodyText }}</v-card-text>
+            <v-card-text>
+                <div class="dialog-body">{{ bodyText }}</div>
+                <ul v-if="props.input.details?.length" class="details">
+                    <li v-for="(detail, index) in props.input.details" :key="index">{{ detail }}</li>
+                </ul>
+            </v-card-text>
             <v-divider/>
             <v-card-actions>
                 <v-spacer/>
@@ -106,5 +113,12 @@ function onNoBtnClicked() {
 </template>
 
 <style scoped>
+.details {
+    margin-top: 12px;
+    padding-left: 20px;
+}
 
+.details li + li {
+    margin-top: 6px;
+}
 </style>

@@ -18,6 +18,7 @@ use App\Models\WorkspaceTemplateDeploymentSpecificationModel;
 use App\Models\MigrationJobModel;
 use Google\ApiCore\ApiException;
 use App\Libraries\Kubernetes\GeneratedSecrets;
+use App\Libraries\RequestField;
 use DebugTool\Data;
 
 class Workspaces extends ResourceController {
@@ -45,7 +46,8 @@ class Workspaces extends ResourceController {
 
     /**
      * Rotate one of the secrets: the next deploy makes a new value, as the placeholders are
-     * written then, and what was signed or opened with the old one stops working.
+     * written then, and what was signed or opened with the old one stops working. The old one is
+     * kept as a version, and is `.previous` from now on.
      *
      * @route /workspaces/{id}/secrets/rotate
      * @method put
@@ -80,6 +82,7 @@ class Workspaces extends ResourceController {
      * @custom true
      * @param int $id
      * @parameter string $name parameterType=query
+     * @parameter int $version parameterType=query - an earlier value's; the current one without
      * @responseSchema GeneratedSecretRevealResponse
      * @audit workspace.secret_reveal
      */
@@ -91,7 +94,9 @@ class Workspaces extends ResourceController {
             $this->fail('unknown workspace');
             return;
         }
-        $value = GeneratedSecrets::Reveal(GeneratedSecrets::Workspace, (int) $item->id, $name);
+        $version = $this->request->getGet('version');
+        $version = $version === null || $version === '' ? null : (int) $version;
+        $value = GeneratedSecrets::Reveal(GeneratedSecrets::Workspace, (int) $item->id, $name, $version);
         if ($value === null) {
             $this->fail('unknown secret');
             return;
@@ -100,8 +105,78 @@ class Workspaces extends ResourceController {
             $this->fail('rotated - the new value is made at the next deploy');
             return;
         }
-        Audit::Record('workspace.secret_reveal', $item, ['name' => $name]);
+        Audit::Record('workspace.secret_reveal', $item, ['name' => $name] + ($version === null ? [] : ['version' => $version]));
         Data::set('resource', ['name' => $name, 'value' => $value]);
+        $this->success();
+    }
+
+    /**
+     * Make an earlier value of a secret the current one again - as a new version, so the one it
+     * replaces is kept too. The next deploy puts it to use.
+     *
+     * @route /workspaces/{id}/secrets/restore
+     * @method put
+     * @custom true
+     * @param int $id
+     * @parameter string $name parameterType=query
+     * @parameter int $version parameterType=query
+     * @responseSchema GeneratedSecretsGetResponse
+     * @audit workspace.secret_restore
+     */
+    public function restoreSecret(int $id): void {
+        $item = new Workspace();
+        $item->find($id);
+        $name = (string) $this->request->getGet('name');
+        $version = (int) $this->request->getGet('version');
+        if (!$item->exists()) {
+            $this->fail('unknown workspace');
+            return;
+        }
+        try {
+            Audit::Atomically(function () use ($item, $name, $version) {
+                GeneratedSecrets::Restore(GeneratedSecrets::Workspace, (int) $item->id, $name, $version);
+                Audit::Record('workspace.secret_restore', $item, ['name' => $name, 'version' => $version]);
+            });
+        } catch (\InvalidArgumentException $e) {
+            $this->fail($e->getMessage());
+            return;
+        }
+        Data::set('resource', ['secrets' => GeneratedSecrets::Of(GeneratedSecrets::Workspace, (int) $item->id)]);
+        $this->success();
+    }
+
+    /**
+     * Give a secret a value by hand - one kept elsewhere, put back - as a new version, so the one
+     * it replaces is kept too. The next deploy puts it to use. The value is not recorded.
+     *
+     * @route /workspaces/{id}/secrets/set
+     * @method put
+     * @custom true
+     * @param int $id
+     * @parameter string $name parameterType=query
+     * @requestSchema GeneratedSecretValue
+     * @responseSchema GeneratedSecretsGetResponse
+     * @audit workspace.secret_set
+     */
+    public function setSecret(int $id): void {
+        $item = new Workspace();
+        $item->find($id);
+        $name = (string) $this->request->getGet('name');
+        if (!$item->exists()) {
+            $this->fail('unknown workspace');
+            return;
+        }
+        $value = (string) RequestField::read($this->request->getJSON() ?? new \stdClass(), 'value', '');
+        try {
+            Audit::Atomically(function () use ($item, $name, $value) {
+                GeneratedSecrets::Set(GeneratedSecrets::Workspace, (int) $item->id, $name, $value);
+                Audit::Record('workspace.secret_set', $item, ['name' => $name]);
+            });
+        } catch (\InvalidArgumentException $e) {
+            $this->fail($e->getMessage());
+            return;
+        }
+        Data::set('resource', ['secrets' => GeneratedSecrets::Of(GeneratedSecrets::Workspace, (int) $item->id)]);
         $this->success();
     }
 

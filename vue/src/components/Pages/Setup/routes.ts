@@ -8,6 +8,7 @@ import ContainerImages from '@/components/Pages/Setup/ContainerImages/routes';
 import DeploymentSpecifications from '@/components/Pages/Setup/DeploymentSpecifications/routes';
 import WorkspaceTemplates from '@/components/Pages/Setup/WorkspaceTemplates/routes';
 import GatewayRoutes from '@/components/Pages/Setup/Gateways/routes';
+import DeletedSecretRoutes from '@/components/Pages/Setup/DeletedSecrets/routes';
 
 export default ([
     ...SystemRoutes,
@@ -20,5 +21,6 @@ export default ([
     ...DeploymentSpecifications,
     ...WorkspaceTemplates,
     ...GatewayRoutes,
+    ...DeletedSecretRoutes,
 ]);
 

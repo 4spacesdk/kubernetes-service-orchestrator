@@ -3,6 +3,7 @@
 use App\DatabaseTestCase;
 use App\Fixtures;
 use App\Libraries\Crypt;
+use App\Libraries\Kubernetes\GeneratedSecrets;
 use App\Libraries\Reencryption;
 use CodeIgniter\Config\Factories;
 use Config\Encryption;
@@ -56,6 +57,25 @@ class ReencryptionTest extends DatabaseTestCase {
     }
 
     /**
+     * The generated secrets have no entity to name their column, and were left under the old key:
+     * a key the customer's data is encrypted with, unreadable once the old one was taken out.
+     */
+    public function testTheGeneratedSecretsAndTheirVersionsAreWrittenAgainToo(): void {
+        $this->useKeys(self::OldKey);
+        $deployment = Fixtures::deployment();
+        $first = GeneratedSecrets::Value(GeneratedSecrets::Deployment, (int) $deployment->id, 'ci4_key');
+        GeneratedSecrets::Rotate(GeneratedSecrets::Deployment, (int) $deployment->id, 'ci4_key');
+        $second = GeneratedSecrets::Value(GeneratedSecrets::Deployment, (int) $deployment->id, 'ci4_key');
+
+        $this->useKeys(self::NewKey, self::OldKey);
+        (new Reencryption())->run();
+
+        $this->useKeys(self::NewKey);
+        $this->assertSame($second, GeneratedSecrets::Reveal(GeneratedSecrets::Deployment, (int) $deployment->id, 'ci4_key'));
+        $this->assertSame($first, GeneratedSecrets::PreviousValue(GeneratedSecrets::Deployment, (int) $deployment->id, 'ci4_key'));
+    }
+
+    /**
      * Written before its column was encrypted.
      */
     public function testAPlainValueIsEncrypted(): void {
@@ -86,7 +106,8 @@ class ReencryptionTest extends DatabaseTestCase {
     }
 
     /**
-     * From the entities, so one encrypted later is included - the environment variables are.
+     * From the entities, so one encrypted later is included - the environment variables are - and
+     * the tables no entity stands for.
      */
     public function testTheColumnsAreEveryEntitysEncryptedFields(): void {
         $columns = Reencryption::Columns();
@@ -97,7 +118,10 @@ class ReencryptionTest extends DatabaseTestCase {
         foreach (['environment_variables', 'deployment_specification_environment_variables', 'workspace_template_environment_variables', 'init_container_environment_variables'] as $table) {
             $this->assertSame(['value'], $columns[$table], $table);
         }
-        $this->assertCount(13, $columns);
+        foreach (['deployment_secrets', 'deployment_secret_versions', 'workspace_secrets', 'workspace_secret_versions'] as $table) {
+            $this->assertSame(['value'], $columns[$table], $table);
+        }
+        $this->assertCount(17, $columns);
     }
 
     // <editor-fold desc="Helpers">

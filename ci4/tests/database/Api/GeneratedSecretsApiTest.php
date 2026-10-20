@@ -74,6 +74,95 @@ class GeneratedSecretsApiTest extends ControllerTestCase {
         $this->assertSame(0, db_connect()->table('deployment_secrets')->where('deployment_id', $deployment->id)->countAllResults());
     }
 
+    public function testAnEarlierVersionCanBeShownAndIsRecordedWithItsNumber(): void {
+        $deployment = Fixtures::deployment();
+        $first = GeneratedSecrets::Value(GeneratedSecrets::Deployment, (int) $deployment->id, 'ci4_key');
+        GeneratedSecrets::Rotate(GeneratedSecrets::Deployment, (int) $deployment->id, 'ci4_key');
+
+        $body = $this->decode($this->signedIn()->put("deployments/{$deployment->id}/secrets/reveal?name=ci4_key&version=1"));
+
+        $this->assertSame($first, $body['resource']['value']);
+        $details = db_connect()->table('audit_events')->where('action', 'deployment.secret_reveal')->get()->getRowArray()['details'];
+        $this->assertSame(['name' => 'ci4_key', 'version' => 1], json_decode($details, true));
+    }
+
+    public function testRestoringAVersionMakesItCurrentAndIsRecorded(): void {
+        $workspace = Fixtures::workspace();
+        $first = GeneratedSecrets::Value(GeneratedSecrets::Workspace, (int) $workspace->id, 'signing');
+        GeneratedSecrets::Rotate(GeneratedSecrets::Workspace, (int) $workspace->id, 'signing');
+        GeneratedSecrets::Value(GeneratedSecrets::Workspace, (int) $workspace->id, 'signing');
+
+        $listed = $this->decode($this->signedIn()->put("workspaces/{$workspace->id}/secrets/restore?name=signing&version=1"))['resource']['secrets'][0];
+
+        $this->assertSame('restored from version 1', $listed['origin']);
+        $this->assertSame($first, GeneratedSecrets::Reveal(GeneratedSecrets::Workspace, (int) $workspace->id, 'signing'));
+        $this->assertSame(1, $this->audited('Workspace', (int) $workspace->id, 'workspace.secret_restore'));
+    }
+
+    public function testRestoringAVersionThatIsNotThereIsRefusedAndNotRecorded(): void {
+        $deployment = Fixtures::deployment();
+        GeneratedSecrets::Value(GeneratedSecrets::Deployment, (int) $deployment->id, 'key');
+
+        $body = $this->decode($this->signedIn()->put("deployments/{$deployment->id}/secrets/restore?name=key&version=4"));
+
+        $this->assertSame('key has no version 4 to restore', $body['error'] ?? null);
+        $this->assertSame(0, $this->audited('Deployment', (int) $deployment->id, 'deployment.secret_restore'));
+    }
+
+    /**
+     * Put back by hand: recorded, and the value is not in the record.
+     */
+    public function testAValueSetByHandIsCurrentAndRecordedWithoutTheValue(): void {
+        $deployment = Fixtures::deployment();
+        GeneratedSecrets::Value(GeneratedSecrets::Deployment, (int) $deployment->id, 'key');
+
+        $listed = $this->decode($this->withBodyFormat('json')->signedIn()->put("deployments/{$deployment->id}/secrets/set?name=key", ['value' => 'from-the-backup']))['resource']['secrets'][0];
+
+        $this->assertSame('set by hand', $listed['origin']);
+        $this->assertSame('from-the-backup', GeneratedSecrets::Reveal(GeneratedSecrets::Deployment, (int) $deployment->id, 'key'));
+        $this->assertSame(1, $this->audited('Deployment', (int) $deployment->id, 'deployment.secret_set'));
+        $this->assertSame(0, db_connect()->table('audit_events')->like('details', 'from-the-backup')->countAllResults());
+    }
+
+    /**
+     * A deleted deployment's secrets are listed by who it was, shown on request and recorded,
+     * and purged on request and recorded - and the list has no value.
+     */
+    public function testADeletedDeploymentsSecretsAreListedShownAndPurged(): void {
+        $deployment = Fixtures::deployment(['name' => 'kunde-api']);
+        $value = GeneratedSecrets::Value(GeneratedSecrets::Deployment, (int) $deployment->id, 'ci4_key');
+        $deployment->delete();
+        $query = "owner=deployment&ownerId={$deployment->id}";
+
+        $response = (string) $this->signedIn()->get('deleted-secrets')->response()->getBody();
+        $shown = $this->decode($this->signedIn()->put("deleted-secrets/reveal?{$query}&name=ci4_key"));
+        $purged = $this->decode($this->signedIn()->put("deleted-secrets/purge?{$query}"));
+
+        $owners = json_decode($response, true)['resource']['owners'];
+        $this->assertSame(['kunde-api', ['ci4_key']], [$owners[0]['owner_name'], array_column($owners[0]['secrets'], 'name')]);
+        $this->assertStringNotContainsString($value, $response);
+        $this->assertSame($value, $shown['resource']['value']);
+        $this->assertSame([], $purged['resource']['owners']);
+        $this->assertSame(1, $this->audited('Deployment', (int) $deployment->id, 'deleted_secret.reveal'));
+        $this->assertSame(1, $this->audited('Deployment', (int) $deployment->id, 'deleted_secret.purge'));
+    }
+
+    /**
+     * Only a deleted owner's: a live deployment's secrets are not shown or purged this way.
+     */
+    public function testALiveDeploymentsSecretsAreNotReachedAsDeletedOnes(): void {
+        $deployment = Fixtures::deployment();
+        GeneratedSecrets::Value(GeneratedSecrets::Deployment, (int) $deployment->id, 'key');
+        $query = "owner=deployment&ownerId={$deployment->id}";
+
+        $shown = $this->decode($this->signedIn()->put("deleted-secrets/reveal?{$query}&name=key"));
+        $purged = $this->decode($this->signedIn()->put("deleted-secrets/purge?{$query}"));
+
+        $this->assertSame('unknown deleted owner', $shown['error'] ?? null);
+        $this->assertSame('unknown deleted owner', $purged['error'] ?? null);
+        $this->assertCount(1, GeneratedSecrets::Of(GeneratedSecrets::Deployment, (int) $deployment->id));
+    }
+
     /**
      * Every list of variables checks the names, so a deploy never meets one it cannot make.
      */

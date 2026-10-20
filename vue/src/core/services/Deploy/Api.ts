@@ -131,6 +131,19 @@ export interface ContainerRegistryTestResponse {
     message?: string;
 }
 
+export interface DeletedSecretOwner {
+    owner?: string;
+    owner_id?: number;
+    owner_name?: string;
+    owner_namespace?: string;
+    deleted?: string;
+    secrets?: GeneratedSecret[];
+}
+
+export interface DeletedSecretsGetResponse {
+    owners?: DeletedSecretOwner[];
+}
+
 export interface DeploymentAnnotation {
     level?: string;
     name?: string;
@@ -341,11 +354,27 @@ export interface GeneratedSecret {
     created?: string;
     rotated?: string;
     pending?: boolean;
+    version?: number;
+    origin?: string;
+    made?: string;
+    versions?: GeneratedSecretVersion[];
 }
 
 export interface GeneratedSecretRevealResponse {
     name?: string;
     value?: string;
+}
+
+export interface GeneratedSecretValue {
+    value?: string;
+}
+
+export interface GeneratedSecretVersion {
+    version?: number;
+    recipe?: string;
+    origin?: string;
+    made?: string;
+    retired?: string;
 }
 
 export interface GeneratedSecretsGetResponse {
@@ -2785,6 +2814,116 @@ class DatabaseServices {
 }
 
 
+export class DeletedSecretsGetDeletedGet extends BaseApi<DeletedSecretsGetResponse> {
+
+    public topic = 'Resources.DeletedSecretsGetResponses';
+    protected method = 'get';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/deleted-secrets`;
+    }
+
+    protected convertToResource(data: any): DeletedSecretsGetResponse {
+        return data;
+    }
+
+    public find(next?: (value: DeletedSecretsGetResponse[]) => void) {
+        return super.executeFind(next);
+    }
+}
+
+export class DeletedSecretsRevealPut extends BaseApi<GeneratedSecretRevealResponse> {
+
+    public topic = 'Resources.GeneratedSecretRevealResponses';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/deleted-secrets/reveal`;
+    }
+
+    protected convertToResource(data: any): GeneratedSecretRevealResponse {
+        return data;
+    }
+
+    public owner(value: string): DeletedSecretsRevealPut {
+        this.addQueryParameter('owner', value);
+        return this;
+    }
+
+    public ownerId(value: number): DeletedSecretsRevealPut {
+        this.addQueryParameter('ownerId', value);
+        return this;
+    }
+
+    public name(value: string): DeletedSecretsRevealPut {
+        this.addQueryParameter('name', value);
+        return this;
+    }
+
+    public version(value: number): DeletedSecretsRevealPut {
+        this.addQueryParameter('version', value);
+        return this;
+    }
+
+    public save(data: any, next?: (value: GeneratedSecretRevealResponse) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class DeletedSecretsPurgePut extends BaseApi<DeletedSecretsGetResponse> {
+
+    public topic = 'Resources.DeletedSecretsGetResponses';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor() {
+        super();
+        this.uri = `/deleted-secrets/purge`;
+    }
+
+    protected convertToResource(data: any): DeletedSecretsGetResponse {
+        return data;
+    }
+
+    public owner(value: string): DeletedSecretsPurgePut {
+        this.addQueryParameter('owner', value);
+        return this;
+    }
+
+    public ownerId(value: number): DeletedSecretsPurgePut {
+        this.addQueryParameter('ownerId', value);
+        return this;
+    }
+
+    public save(data: any, next?: (value: DeletedSecretsGetResponse) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+class DeletedSecrets {
+
+    public getDeletedGet(): DeletedSecretsGetDeletedGet {
+        return new DeletedSecretsGetDeletedGet();
+    }
+
+    public revealPut(): DeletedSecretsRevealPut {
+        return new DeletedSecretsRevealPut();
+    }
+
+    public purgePut(): DeletedSecretsPurgePut {
+        return new DeletedSecretsPurgePut();
+    }
+
+}
+
+
 export class DeploymentSpecificationsGet extends BaseApi<DeploymentSpecification> {
 
     public topic = 'Resources.DeploymentSpecifications';
@@ -3982,7 +4121,69 @@ export class DeploymentsRevealSecretPutById extends BaseApi<GeneratedSecretRevea
         return this;
     }
 
+    public version(value: number): DeploymentsRevealSecretPutById {
+        this.addQueryParameter('version', value);
+        return this;
+    }
+
     public save(data: any, next?: (value: GeneratedSecretRevealResponse) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class DeploymentsRestoreSecretPutById extends BaseApi<GeneratedSecretsGetResponse> {
+
+    public topic = 'Resources.GeneratedSecretsGetResponses';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/deployments/${id}/secrets/restore`;
+    }
+
+    protected convertToResource(data: any): GeneratedSecretsGetResponse {
+        return data;
+    }
+
+    public name(value: string): DeploymentsRestoreSecretPutById {
+        this.addQueryParameter('name', value);
+        return this;
+    }
+
+    public version(value: number): DeploymentsRestoreSecretPutById {
+        this.addQueryParameter('version', value);
+        return this;
+    }
+
+    public save(data: any, next?: (value: GeneratedSecretsGetResponse) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class DeploymentsSetSecretPutById extends BaseApi<GeneratedSecretsGetResponse> {
+
+    public topic = 'Resources.GeneratedSecretsGetResponses';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/deployments/${id}/secrets/set`;
+    }
+
+    protected convertToResource(data: any): GeneratedSecretsGetResponse {
+        return data;
+    }
+
+    public name(value: string): DeploymentsSetSecretPutById {
+        this.addQueryParameter('name', value);
+        return this;
+    }
+
+    public save(data: GeneratedSecretValue, next?: (value: GeneratedSecretsGetResponse) => void) {
         return super.executeSave(data, next);
     }
 }
@@ -4663,6 +4864,14 @@ class Deployments {
 
     public revealSecretPutById(id: number): DeploymentsRevealSecretPutById {
         return new DeploymentsRevealSecretPutById(id);
+    }
+
+    public restoreSecretPutById(id: number): DeploymentsRestoreSecretPutById {
+        return new DeploymentsRestoreSecretPutById(id);
+    }
+
+    public setSecretPutById(id: number): DeploymentsSetSecretPutById {
+        return new DeploymentsSetSecretPutById(id);
     }
 
     public createPost(): DeploymentsCreatePost {
@@ -10463,7 +10672,69 @@ export class WorkspacesRevealSecretPutById extends BaseApi<GeneratedSecretReveal
         return this;
     }
 
+    public version(value: number): WorkspacesRevealSecretPutById {
+        this.addQueryParameter('version', value);
+        return this;
+    }
+
     public save(data: any, next?: (value: GeneratedSecretRevealResponse) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class WorkspacesRestoreSecretPutById extends BaseApi<GeneratedSecretsGetResponse> {
+
+    public topic = 'Resources.GeneratedSecretsGetResponses';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/workspaces/${id}/secrets/restore`;
+    }
+
+    protected convertToResource(data: any): GeneratedSecretsGetResponse {
+        return data;
+    }
+
+    public name(value: string): WorkspacesRestoreSecretPutById {
+        this.addQueryParameter('name', value);
+        return this;
+    }
+
+    public version(value: number): WorkspacesRestoreSecretPutById {
+        this.addQueryParameter('version', value);
+        return this;
+    }
+
+    public save(data: any, next?: (value: GeneratedSecretsGetResponse) => void) {
+        return super.executeSave(data, next);
+    }
+}
+
+export class WorkspacesSetSecretPutById extends BaseApi<GeneratedSecretsGetResponse> {
+
+    public topic = 'Resources.GeneratedSecretsGetResponses';
+    protected method = 'put';
+    protected scope = '';
+    protected summary = '';
+
+    public constructor(id: number) {
+        super();
+        this.uri = `/workspaces/${id}/secrets/set`;
+    }
+
+    protected convertToResource(data: any): GeneratedSecretsGetResponse {
+        return data;
+    }
+
+    public name(value: string): WorkspacesSetSecretPutById {
+        this.addQueryParameter('name', value);
+        return this;
+    }
+
+    public save(data: GeneratedSecretValue, next?: (value: GeneratedSecretsGetResponse) => void) {
         return super.executeSave(data, next);
     }
 }
@@ -10886,6 +11157,14 @@ class Workspaces {
         return new WorkspacesRevealSecretPutById(id);
     }
 
+    public restoreSecretPutById(id: number): WorkspacesRestoreSecretPutById {
+        return new WorkspacesRestoreSecretPutById(id);
+    }
+
+    public setSecretPutById(id: number): WorkspacesSetSecretPutById {
+        return new WorkspacesSetSecretPutById(id);
+    }
+
     public createPost(): WorkspacesCreatePost {
         return new WorkspacesCreatePost();
     }
@@ -10972,6 +11251,10 @@ export class Api {
 
     public static databaseServices(): DatabaseServices {
         return new DatabaseServices();
+    }
+
+    public static deletedSecrets(): DeletedSecrets {
+        return new DeletedSecrets();
     }
 
     public static deploymentSpecifications(): DeploymentSpecifications {

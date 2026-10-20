@@ -5,10 +5,18 @@
 ### Enhancements
 * Clicking a volume's type in the Volumes of a specification or a deployment opens it, as in the other lists
 * A deployment with cron jobs has Cron Job Logs: the logs of its cron jobs' pods - those on schedule and those run now - while the cluster keeps their jobs. Running a cron job now says where its log is
+* A generated secret keeps every value it had. Rotating one keeps the old value as a version, and `${secret.<name>.previous}` - `${workspace.secret.<name>.previous}` for a workspace's - is the value before the current one, empty when there is none: an app can read what the old key encrypted while it encrypts again with the new one, as CI4's `encryption.previousKeys` does. Under Secrets each secret folds out its earlier values, which can be shown and made the current one again, and a value kept elsewhere can be set by hand. Each is a new version, so nothing is written over, and each is recorded
+* A deleted deployment or workspace leaves its generated secrets under Setup → Deleted Secrets, with who it was and every version, where they can be shown, until somebody purges them by typing the name
+
+### Fixed bugs
+* `app:reencrypt` left the generated secrets under the old key: they are in tables no entity stands for, and the columns were found through the entities. With the old key taken out of `ENCRYPTION_PREVIOUS_KEYS`, they could no longer be read. They are written again now, with their versions
+* A rotated generated secret was forgotten at once, and a deleted deployment or workspace took its generated secrets with it - a key a customer's data was encrypted with was gone for good
 
 ### Upgrade guide
 1. Deploy new image
-2. A cron job last deployed before v1.9.7 makes pods without the labels Cron Job Logs finds them by. Deploy its Cron Job step, and the runs from then on are shown
+2. Run migrations [(Guide)](https://github.com/4spacesdk/kubernetes-service-orchestrator?tab=readme-ov-file#migrate-database-helm)
+3. A cron job last deployed before v1.9.7 makes pods without the labels Cron Job Logs finds them by. Deploy its Cron Job step, and the runs from then on are shown
+4. If `ENCRYPTION_KEY` was rotated and `app:reencrypt` run since v1.9.5, with the old key taken out afterwards, the generated secrets were left under the old key: put it back in `ENCRYPTION_PREVIOUS_KEYS` and run `app:reencrypt` again
 
 
 

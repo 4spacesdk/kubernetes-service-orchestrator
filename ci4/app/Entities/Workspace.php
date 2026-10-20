@@ -653,11 +653,15 @@ class Workspace extends Entity {
         }
     }
 
+    /**
+     * The secrets kso made for it are kept, marked deleted - see `GeneratedSecrets`.
+     */
     public function delete($related = null) {
+        [$name, $namespace] = [(string) ($this->name_readable ?: $this->name_system), $this->namespace];
         parent::delete($related);
 
         if ($related === null) {
-            GeneratedSecrets::DeleteAllOf(GeneratedSecrets::Workspace, (int) $this->id);
+            GeneratedSecrets::KeepAfterDeleting(GeneratedSecrets::Workspace, (int) $this->id, $name, $namespace);
 
             Publisher::getInstance()->send(
                 Events::Workspace_Deleted(),

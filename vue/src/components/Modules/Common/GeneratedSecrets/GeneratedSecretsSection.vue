@@ -1,14 +1,15 @@
 <script setup lang="ts">
 import {onMounted, ref} from 'vue';
-import moment from "moment";
-import {Api, type GeneratedSecret} from "@/core/services/Deploy/Api";
+import {Api, type GeneratedSecret, type GeneratedSecretVersion} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import PageSection from "@/components/Modules/Common/DetailPage/PageSection.vue";
+import GeneratedSecretsTable from "@/components/Modules/Common/GeneratedSecrets/GeneratedSecretsTable.vue";
 
 /**
  * The secrets kso made for a deployment or a workspace - `${secret.<name>}` and
  * `${workspace.secret.<name>}` in an environment variable. Made the first time a deploy asks,
- * and listed by name: the value is shown only when somebody asks, and that is recorded.
+ * and listed by name: the value is shown only when somebody asks, and that is recorded. Every
+ * value one no longer has is kept, and can be shown and made current again.
  */
 const props = defineProps<{
     owner: 'deployment' | 'workspace',
@@ -17,49 +18,53 @@ const props = defineProps<{
 
 const isLoading = ref(false);
 const rows = ref<GeneratedSecret[]>([]);
-/** The values asked for, by name, until they are hidden again. */
-const revealed = ref<Record<string, string>>({});
-const headers = [
-    {title: 'Name', key: 'name', sortable: false},
-    {title: 'Made as', key: 'recipe', sortable: false},
-    {title: 'Made', key: 'created', sortable: false},
-    {title: 'Rotated', key: 'rotated', sortable: false},
-    {title: '', key: 'actions', sortable: false, align: 'end' as const},
-];
+const table = ref<InstanceType<typeof GeneratedSecretsTable>>();
+
+/** The secret a value is being set for by hand, while the dialog is open. */
+const settingFor = ref<GeneratedSecret | null>(null);
+const settingValue = ref('');
+const isSetting = ref(false);
 
 const api = () => props.owner === 'deployment' ? Api.deployments() : Api.workspaces();
+const previousPlaceholder = (name: string) => props.owner === 'deployment' ? `\${secret.${name}.previous}` : `\${workspace.secret.${name}.previous}`;
 
 onMounted(load);
 
 function load() {
     isLoading.value = true;
     api().getSecretsGetById(props.ownerId).find(responses => {
-        rows.value = responses[0]?.secrets ?? [];
+        show(responses[0]?.secrets ?? []);
         isLoading.value = false;
     });
 }
 
-function when(time?: string) {
-    return time ? moment(time).format('D/M-YY HH:mm') : '';
+function show(secrets: GeneratedSecret[]) {
+    table.value?.forget();
+    rows.value = secrets;
 }
 
-function onRevealClicked(row: GeneratedSecret) {
-    if (revealed.value[row.name!] !== undefined) {
-        delete revealed.value[row.name!];
-        return;
-    }
-    api().revealSecretPutById(props.ownerId).name(row.name!).save(null, response => {
-        revealed.value[row.name!] = response.value ?? '';
+function reveal(name: string, version?: number): Promise<string> {
+    return new Promise(resolve => {
+        const request = api().revealSecretPutById(props.ownerId).name(name);
+        if (version !== undefined) {
+            request.version(version);
+        }
+        request.save(null, response => resolve(response.value ?? ''));
     });
 }
 
-function onCopyClicked(name: string) {
-    navigator.clipboard.writeText(revealed.value[name] ?? '').then(() => bus.emit('toast', {text: 'Copied to clipboard'}));
-}
-
-function onRotateClicked(row: GeneratedSecret) {
+function onRotate(row: GeneratedSecret) {
+    const details = ['What was signed or opened with the current value stops working - signed links and open realtime connections, for instance.'];
+    if (!row.pending) {
+        details.push(
+            `The current value is kept as version ${row.version}, and can be shown and made current again.`,
+            `${previousPlaceholder(row.name!)} gives it from then on - for an app that reads what the old value encrypted while it encrypts again with the new one.`,
+        );
+    }
     bus.emit('confirm', {
-        body: `Rotate ${row.name}? The next deploy makes a new value, as it is written then - a changed recipe included - and what was signed or opened with the old value stops working: signed links and open realtime connections, for instance.`,
+        title: `Rotate ${row.name}?`,
+        body: 'The next deploy makes a new value, as the placeholders are written then.',
+        details,
         confirmIcon: 'fa fa-rotate',
         confirmColor: 'warning',
         responseCallback: (confirmed: boolean) => {
@@ -67,11 +72,52 @@ function onRotateClicked(row: GeneratedSecret) {
                 return;
             }
             api().rotateSecretPutById(props.ownerId).name(row.name!).save(null, response => {
-                delete revealed.value[row.name!];
-                rows.value = response.secrets ?? rows.value;
-                bus.emit('toast', {text: `${row.name} rotated - deploy to put it to use`});
+                show(response.secrets ?? rows.value);
+                bus.emit('toast', {text: `'${row.name}' rotated - deploy to put it to use`});
             });
         },
+    });
+}
+
+function onRestore(row: GeneratedSecret, version: GeneratedSecretVersion) {
+    bus.emit('confirm', {
+        title: `Make version ${version.version} of ${row.name} current again?`,
+        body: 'The next deploy puts it to use.',
+        details: row.pending ? [] : [`The current value is kept as version ${row.version}.`],
+        confirmIcon: 'fa fa-clock-rotate-left',
+        confirmColor: 'warning',
+        responseCallback: (confirmed: boolean) => {
+            if (!confirmed) {
+                return;
+            }
+            api().restoreSecretPutById(props.ownerId).name(row.name!).version(version.version!).save(null, response => {
+                show(response.secrets ?? rows.value);
+                bus.emit('toast', {text: `'${row.name}' is version ${version.version} again - deploy to put it to use`});
+            });
+        },
+    });
+}
+
+function onSet(row: GeneratedSecret) {
+    settingFor.value = row;
+    settingValue.value = '';
+}
+
+function onSetSaveClicked() {
+    const row = settingFor.value!;
+    isSetting.value = true;
+    const request = api().setSecretPutById(props.ownerId).name(row.name!);
+    request.setErrorHandler(response => {
+        bus.emit('toast', {text: response.error ?? 'failed to set the value'});
+        isSetting.value = false;
+        return false;
+    });
+    request.save({value: settingValue.value}, response => {
+        show(response.secrets ?? rows.value);
+        isSetting.value = false;
+        settingFor.value = null;
+        settingValue.value = '';
+        bus.emit('toast', {text: `'${row.name}' set - deploy to put it to use`});
     });
 }
 </script>
@@ -85,53 +131,44 @@ function onRotateClicked(row: GeneratedSecret) {
         <p class="text-medium-emphasis pa-4 mb-0">
             Set an environment variable's value to <strong>Generated secret</strong>, give it a name and say what it is made of,
             and kso makes a random value the first time it deploys - the same in every container that uses the name. Rotating one
-            makes it anew at the next deploy.
+            makes it anew at the next deploy. Every value a secret had is kept and can be made current again, and
+            <code>.previous</code> after the name - <code>{{ previousPlaceholder('name') }}</code> - is the value before the current one.
         </p>
 
-        <v-data-table-server
-            :headers="headers"
-            :items-length="rows.length"
-            :items="rows"
-            :items-per-page="-1"
-            class="table"
-            density="compact">
-            <template v-slot:item.name="{ item }">
-                <div>{{ item.name }}</div>
-                <div v-if="revealed[item.name!] !== undefined" class="d-flex align-center ga-1">
-                    <code class="text-body-small">{{ revealed[item.name!] }}</code>
-                    <v-btn variant="plain" size="x-small" icon @click="onCopyClicked(item.name!)">
-                        <v-icon>fa fa-copy</v-icon>
-                        <v-tooltip activator="parent" location="bottom">Copy</v-tooltip>
-                    </v-btn>
-                </div>
-            </template>
-            <template v-slot:item.recipe="{ item }">
-                <span v-if="item.pending" class="text-medium-emphasis">made anew at the next deploy</span>
-                <code v-else class="text-body-small">{{ item.recipe }}</code>
-            </template>
-            <template v-slot:item.created="{ item }">{{ when(item.created) }}</template>
-            <template v-slot:item.rotated="{ item }">{{ when(item.rotated) }}</template>
-            <template v-slot:item.actions="{ item }">
-                <div class="d-flex justify-end ga-1">
-                    <v-btn variant="plain" color="primary" size="small" :disabled="item.pending" @click="onRevealClicked(item)">
-                        <v-icon>{{ revealed[item.name!] !== undefined ? 'fa fa-eye-slash' : 'fa fa-eye' }}</v-icon>
-                        <v-tooltip activator="parent" location="bottom">{{ revealed[item.name!] !== undefined ? 'Hide' : 'Show - it is recorded' }}</v-tooltip>
-                    </v-btn>
-                    <v-btn variant="plain" color="warning" size="small" @click="onRotateClicked(item)">
-                        <v-icon>fa fa-rotate</v-icon>
-                        <v-tooltip activator="parent" location="bottom">Rotate</v-tooltip>
-                    </v-btn>
-                </div>
-            </template>
-            <template v-slot:no-data>
-                None yet - they are made when a deploy first asks for one.
-            </template>
-        </v-data-table-server>
+        <GeneratedSecretsTable
+            ref="table"
+            :rows="rows"
+            :reveal="reveal"
+            editable
+            no-data-text="None yet - they are made when a deploy first asks for one."
+            @rotate="onRotate"
+            @restore="onRestore"
+            @set="onSet"/>
+
+        <v-dialog :model-value="settingFor !== null" max-width="560" @update:model-value="settingFor = null">
+            <v-card v-if="settingFor">
+                <v-card-title>Set {{ settingFor.name }} by hand</v-card-title>
+                <v-card-text>
+                    <p class="text-medium-emphasis mb-4">
+                        For a value kept elsewhere - a backup, a password manager - put back. It becomes a new version, the one it
+                        replaces is kept, and the next deploy puts it to use. It keeps the recipe
+                        <code>{{ settingFor.recipe || settingFor.versions?.[0]?.recipe }}</code>.
+                    </p>
+                    <v-text-field
+                        v-model="settingValue"
+                        label="Value"
+                        type="password"
+                        autocomplete="off"
+                        variant="outlined"
+                        density="compact"
+                        autofocus/>
+                </v-card-text>
+                <v-card-actions>
+                    <v-spacer/>
+                    <v-btn variant="text" @click="settingFor = null">Cancel</v-btn>
+                    <v-btn color="primary" variant="flat" :disabled="!settingValue" :loading="isSetting" @click="onSetSaveClicked">Set</v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
     </page-section>
 </template>
-
-<style scoped>
-:deep(.v-data-table-footer) {
-    display: none;
-}
-</style>

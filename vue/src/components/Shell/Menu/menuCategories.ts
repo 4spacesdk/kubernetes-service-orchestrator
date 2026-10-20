@@ -144,6 +144,13 @@ export function createMenuCategories(): MenuCategory[] {
                     description: "The specifications a new workspace starts with",
                     permissions: [RbacPermissions.Developer],
                 },
+                {
+                    title: "Deleted Secrets",
+                    url: "/setup/deleted-secrets",
+                    icon: "fa fa-key",
+                    description: "The generated secrets of deleted deployments and workspaces, kept until purged",
+                    permissions: [RbacPermissions.Developer],
+                },
             ],
         },
         {

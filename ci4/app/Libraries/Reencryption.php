@@ -20,6 +20,17 @@ use Config\Database;
 class Reencryption {
 
     /**
+     * Encrypted columns of tables no entity stands for - kept with the query builder, and named
+     * here as no `EncryptedFields` can. See `GeneratedSecrets`.
+     */
+    private const array WithoutEntities = [
+        'deployment_secrets' => ['value'],
+        'deployment_secret_versions' => ['value'],
+        'workspace_secrets' => ['value'],
+        'workspace_secret_versions' => ['value'],
+    ];
+
+    /**
      * @return array<string, list<string>> table => its encrypted columns
      */
     public static function Columns(): array {
@@ -33,6 +44,7 @@ class Reencryption {
             }
             $columns[(new $model())->getTableName()] = array_values(constant("{$entity}::EncryptedFields"));
         }
+        $columns += self::WithoutEntities;
         ksort($columns);
 
         return $columns;

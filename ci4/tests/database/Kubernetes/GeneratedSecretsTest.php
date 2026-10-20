@@ -127,16 +127,173 @@ class GeneratedSecretsTest extends ManifestTestCase {
         GeneratedSecrets::Fill('${workspace.secret.signing}', $deployment);
     }
 
-    public function testTheSecretsGoWithTheirDeploymentAndWorkspace(): void {
-        $workspace = Fixtures::workspace();
-        $deployment = $this->aDeployment(['workspace_id' => $workspace->id]);
-        GeneratedSecrets::Fill('${secret.a} ${workspace.secret.b}', $deployment);
+    /**
+     * A deleted owner's secrets are kept, marked with who it was - its row is gone - and its
+     * values can still be shown.
+     */
+    public function testTheSecretsAreKeptAfterTheirDeploymentAndWorkspaceAreDeleted(): void {
+        $workspace = Fixtures::workspace(['name_readable' => 'Kunde A', 'namespace' => 'kunde-a']);
+        $deployment = $this->aDeployment(['workspace_id' => $workspace->id, 'name' => 'api', 'namespace' => 'kunde-a']);
+        $value = GeneratedSecrets::Fill('${secret.a}', $deployment);
+        GeneratedSecrets::Fill('${workspace.secret.b}', $deployment);
 
         $deployment->delete();
         $workspace->delete();
 
-        $this->assertSame(0, db_connect()->table('deployment_secrets')->where('deployment_id', $deployment->id)->countAllResults());
-        $this->assertSame(0, db_connect()->table('workspace_secrets')->where('workspace_id', $workspace->id)->countAllResults());
+        $this->assertSame([], GeneratedSecrets::Of(GeneratedSecrets::Deployment, (int) $deployment->id));
+        $deleted = array_column(GeneratedSecrets::Deleted(), null, 'owner');
+        $this->assertSame(['api', 'kunde-a', ['a']], [$deleted['deployment']['owner_name'], $deleted['deployment']['owner_namespace'], array_column($deleted['deployment']['secrets'], 'name')]);
+        $this->assertSame(['Kunde A', ['b']], [$deleted['workspace']['owner_name'], array_column($deleted['workspace']['secrets'], 'name')]);
+        $this->assertSame($value, GeneratedSecrets::Reveal(GeneratedSecrets::Deployment, (int) $deployment->id, 'a'));
+    }
+
+    public function testPurgingTakesADeletedOwnersSecretsAndVersionsAndNotALiveOnes(): void {
+        $live = $this->aDeployment();
+        $gone = $this->aDeployment();
+        foreach ([$live, $gone] as $deployment) {
+            GeneratedSecrets::Value(GeneratedSecrets::Deployment, (int) $deployment->id, 'key');
+            GeneratedSecrets::Rotate(GeneratedSecrets::Deployment, (int) $deployment->id, 'key');
+        }
+        $gone->delete();
+
+        $this->assertFalse(GeneratedSecrets::Purge(GeneratedSecrets::Deployment, (int) $live->id));
+        $this->assertTrue(GeneratedSecrets::Purge(GeneratedSecrets::Deployment, (int) $gone->id));
+
+        $this->assertSame([], GeneratedSecrets::Deleted());
+        $this->assertSame(0, db_connect()->table('deployment_secret_versions')->where('deployment_id', $gone->id)->countAllResults());
+        $this->assertSame(1, db_connect()->table('deployment_secret_versions')->where('deployment_id', $live->id)->countAllResults());
+        $this->assertCount(1, GeneratedSecrets::Of(GeneratedSecrets::Deployment, (int) $live->id));
+    }
+
+    /**
+     * The point of the versions: a key data was encrypted with is never gone. Rotated, the old
+     * value is kept, can be shown, and is `.previous` - what an app reads with while it encrypts
+     * again with the new one.
+     */
+    public function testARotatedValueIsKeptAsAVersionAndIsThePrevious(): void {
+        $deployment = $this->aDeployment();
+        $id = (int) $deployment->id;
+        $this->assertSame('', GeneratedSecrets::Fill('${secret.ci4_key.previous}', $deployment), 'nothing before the first');
+
+        $first = GeneratedSecrets::Fill('${secret.ci4_key}', $deployment);
+        GeneratedSecrets::Rotate(GeneratedSecrets::Deployment, $id, 'ci4_key');
+        $this->assertSame($first, GeneratedSecrets::Fill('${secret.ci4_key.previous}', $deployment), 'rotated, before the next deploy');
+        $second = GeneratedSecrets::Fill('${secret.ci4_key}', $deployment);
+        GeneratedSecrets::Rotate(GeneratedSecrets::Deployment, $id, 'ci4_key');
+        $third = GeneratedSecrets::Fill('${secret.ci4_key}', $deployment);
+
+        $this->assertSame($second, GeneratedSecrets::Fill('${secret.ci4_key.previous}', $deployment));
+        $this->assertSame([$first, $second, $third], [
+            GeneratedSecrets::Reveal(GeneratedSecrets::Deployment, $id, 'ci4_key', 1),
+            GeneratedSecrets::Reveal(GeneratedSecrets::Deployment, $id, 'ci4_key', 2),
+            GeneratedSecrets::Reveal(GeneratedSecrets::Deployment, $id, 'ci4_key', 3),
+        ]);
+        $listed = GeneratedSecrets::Of(GeneratedSecrets::Deployment, $id)[0];
+        $this->assertSame(3, $listed['version']);
+        $this->assertSame([2, 1], array_column($listed['versions'], 'version'));
+        $this->assertStringNotContainsString($first, json_encode($listed));
+    }
+
+    /**
+     * Rotated twice before a deploy, there was no value the second time - nothing to keep, and no
+     * version counted for it.
+     */
+    public function testRotatingTwiceBeforeADeployKeepsOneVersion(): void {
+        $deployment = $this->aDeployment();
+        $id = (int) $deployment->id;
+        GeneratedSecrets::Value(GeneratedSecrets::Deployment, $id, 'key');
+
+        GeneratedSecrets::Rotate(GeneratedSecrets::Deployment, $id, 'key');
+        GeneratedSecrets::Rotate(GeneratedSecrets::Deployment, $id, 'key');
+        GeneratedSecrets::Value(GeneratedSecrets::Deployment, $id, 'key');
+
+        $listed = GeneratedSecrets::Of(GeneratedSecrets::Deployment, $id)[0];
+        $this->assertSame([2, [1]], [$listed['version'], array_column($listed['versions'], 'version')]);
+    }
+
+    /**
+     * Restored, an earlier value is current again - as a new version, so the one it replaced is
+     * kept too, and nothing is written over.
+     */
+    public function testRestoringMakesAnEarlierValueCurrentAsANewVersion(): void {
+        $deployment = $this->aDeployment();
+        $id = (int) $deployment->id;
+        $first = GeneratedSecrets::Value(GeneratedSecrets::Deployment, $id, 'key');
+        GeneratedSecrets::Rotate(GeneratedSecrets::Deployment, $id, 'key');
+        $second = GeneratedSecrets::Value(GeneratedSecrets::Deployment, $id, 'key');
+
+        GeneratedSecrets::Restore(GeneratedSecrets::Deployment, $id, 'key', 1);
+
+        $this->assertSame($first, GeneratedSecrets::Value(GeneratedSecrets::Deployment, $id, 'key'));
+        $this->assertSame($second, GeneratedSecrets::PreviousValue(GeneratedSecrets::Deployment, $id, 'key'));
+        $listed = GeneratedSecrets::Of(GeneratedSecrets::Deployment, $id)[0];
+        $this->assertSame([3, 'restored from version 1', false], [$listed['version'], $listed['origin'], $listed['pending']]);
+        $this->assertSame([2, 1], array_column($listed['versions'], 'version'));
+    }
+
+    /**
+     * Restored while it waits to be made anew: there is no value to keep, and the restored one
+     * takes the version counted for the new one.
+     */
+    public function testRestoringARotatedSecretGivesItTheValueBeforeTheDeployMakesOne(): void {
+        $deployment = $this->aDeployment();
+        $id = (int) $deployment->id;
+        $first = GeneratedSecrets::Value(GeneratedSecrets::Deployment, $id, 'key');
+        GeneratedSecrets::Rotate(GeneratedSecrets::Deployment, $id, 'key');
+
+        GeneratedSecrets::Restore(GeneratedSecrets::Deployment, $id, 'key', 1);
+
+        $this->assertSame($first, GeneratedSecrets::Value(GeneratedSecrets::Deployment, $id, 'key'));
+        $this->assertSame([2, [1]], [GeneratedSecrets::Of(GeneratedSecrets::Deployment, $id)[0]['version'], array_column(GeneratedSecrets::Of(GeneratedSecrets::Deployment, $id)[0]['versions'], 'version')]);
+    }
+
+    public function testRestoringAVersionThatIsNotThereSaysSo(): void {
+        $deployment = $this->aDeployment();
+        GeneratedSecrets::Value(GeneratedSecrets::Deployment, (int) $deployment->id, 'key');
+
+        $this->expectExceptionMessage('key has no version 7 to restore');
+
+        GeneratedSecrets::Restore(GeneratedSecrets::Deployment, (int) $deployment->id, 'key', 7);
+    }
+
+    /**
+     * A value kept elsewhere put back by hand: current, encrypted, with the recipe it was made
+     * with - also when it was rotated and had none - and the one it replaced is kept.
+     */
+    public function testAValueSetByHandIsCurrentAndKeepsTheRecipe(): void {
+        $workspace = Fixtures::workspace();
+        $id = (int) $workspace->id;
+        $deployment = $this->aDeployment(['workspace_id' => $id]);
+        $made = GeneratedSecrets::Fill('${workspace.secret.key | randAlphaNum 32}', $deployment);
+        GeneratedSecrets::Rotate(GeneratedSecrets::Workspace, $id, 'key');
+
+        GeneratedSecrets::Set(GeneratedSecrets::Workspace, $id, 'key', 'from-the-backup');
+
+        $this->assertSame('from-the-backup', GeneratedSecrets::Fill('${workspace.secret.key | randAlphaNum 32}', $deployment));
+        $this->assertSame($made, GeneratedSecrets::Fill('${workspace.secret.key.previous}', $deployment));
+        $listed = GeneratedSecrets::Of(GeneratedSecrets::Workspace, $id)[0];
+        $this->assertSame(['randAlphaNum 32', 'set by hand'], [$listed['recipe'], $listed['origin']]);
+        $stored = db_connect()->table('workspace_secrets')->where('workspace_id', $id)->get()->getRowArray()['value'];
+        $this->assertTrue(Crypt::IsEncrypted($stored));
+    }
+
+    public function testNoValueIsNotAValue(): void {
+        $deployment = $this->aDeployment();
+        GeneratedSecrets::Value(GeneratedSecrets::Deployment, (int) $deployment->id, 'key');
+
+        $this->expectExceptionMessage('a value is needed');
+
+        GeneratedSecrets::Set(GeneratedSecrets::Deployment, (int) $deployment->id, 'key', '');
+    }
+
+    /**
+     * Asking for the previous value makes nothing: not the secret, not a version.
+     */
+    public function testThePreviousOfASecretThatIsNotThereIsEmptyAndMakesNothing(): void {
+        $deployment = $this->aDeployment();
+
+        $this->assertSame('', GeneratedSecrets::Fill('${secret.nope.previous}', $deployment));
+        $this->assertSame([], GeneratedSecrets::Of(GeneratedSecrets::Deployment, (int) $deployment->id));
     }
 
     /**
@@ -195,6 +352,10 @@ class GeneratedSecretsTest extends ManifestTestCase {
             'a recipe without spaces' => ['${secret.token|uuidv4}', true],
             'an unknown recipe' => ['${secret.token | randomString 32}', false],
             'a recipe of nothing' => ['${secret.token | randHex 0}', false],
+            'the previous' => ['${secret.ci4_key.previous}', true],
+            'a workspace previous' => ['${workspace.secret.signing.previous}', true],
+            'the previous with a recipe' => ['${secret.ci4_key.previous | randHex 64}', false],
+            'another suffix' => ['${secret.ci4_key.next}', false],
         ];
     }
 

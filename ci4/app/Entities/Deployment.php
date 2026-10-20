@@ -551,13 +551,15 @@ class Deployment extends Entity {
     }
 
     /**
-     * The secrets kso made for it go with it - see `GeneratedSecrets`.
+     * The secrets kso made for it are kept, marked deleted - a key its data was encrypted with
+     * may be needed again. See `GeneratedSecrets`.
      */
     public function delete($related = null) {
+        [$name, $namespace] = [(string) $this->name, $this->namespace];
         parent::delete($related);
 
         if ($related === null) {
-            GeneratedSecrets::DeleteAllOf(GeneratedSecrets::Deployment, (int) $this->id);
+            GeneratedSecrets::KeepAfterDeleting(GeneratedSecrets::Deployment, (int) $this->id, $name, $namespace);
         }
     }
 
