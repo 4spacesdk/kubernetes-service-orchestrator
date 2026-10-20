@@ -1,6 +1,7 @@
 <?php namespace App\Entities;
 
 use App\Core\Entity;
+use App\Libraries\Kubernetes\VolumeSource;
 
 /**
  * Class DeploymentVolume
@@ -18,13 +19,16 @@ use App\Core\Entity;
  * @property string $type
  * @property string $csi_driver
  * @property string $csi_volume_handle
+ * @property string $csi_volume_attributes one key=value a line, placeholders allowed
+ * @property string $mount_options separated by commas, placeholders allowed
  */
 class DeploymentVolume extends Entity {
 
     public static function Create(string $type, string $mountPath, string $subPath, int $capacity,
                                   string $volumeMode, string $reclaimPolicy,
                                   string $nfsServer, string $nfcPath, string $storageClass,
-                                  string $csiDriver, string $csiVolumeHandle): DeploymentVolume {
+                                  string $csiDriver, string $csiVolumeHandle,
+                                  string $csiVolumeAttributes = '', string $mountOptions = ''): DeploymentVolume {
         $item = new DeploymentVolume();
         $item->type = $type;
         $item->mount_path = $mountPath;
@@ -37,6 +41,8 @@ class DeploymentVolume extends Entity {
         $item->storage_class = $storageClass;
         $item->csi_driver = $csiDriver;
         $item->csi_volume_handle = $csiVolumeHandle;
+        $item->csi_volume_attributes = $csiVolumeAttributes;
+        $item->mount_options = $mountOptions;
         $item->save();
         return $item;
     }
@@ -73,6 +79,9 @@ class DeploymentVolume extends Entity {
                 if (empty($this->csi_volume_handle)) {
                     return 'Missing csi_volume_handle';
                 }
+                if ($problem = VolumeSource::AttributesProblem((string) $this->csi_volume_attributes)) {
+                    return $problem;
+                }
                 break;
         }
 
@@ -81,6 +90,20 @@ class DeploymentVolume extends Entity {
 
     public function getCompiledCsiVolumeHandle(Deployment $deployment): string {
         return EnvironmentVariable::ApplyVariablesToString($this->csi_volume_handle, $deployment);
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function getCompiledCsiVolumeAttributes(Deployment $deployment): array {
+        return VolumeSource::Attributes((string) $this->csi_volume_attributes, $deployment);
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getCompiledMountOptions(Deployment $deployment): array {
+        return VolumeSource::MountOptions((string) $this->mount_options, $deployment);
     }
 
     /**

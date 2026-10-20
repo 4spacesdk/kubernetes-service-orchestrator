@@ -1,5 +1,24 @@
 # Changelog
 
+## v1.9.8 (unreleased)
+
+### Enhancements
+* A CSI volume has CSI Volume Attributes - a key and a value a row, added and removed as a cron job's args are, placeholders allowed - and every volume has Mount Options, as chips like an image's writable paths. Both go on the PersistentVolume kso makes. For csi-driver-nfs: `server=nfs-server.storage.svc.cluster.local` and `share=/${namespace}`, and `vers=4,noatime`
+* The claim and the volume say what they are doing. A claim is `pending` while it waits for a volume and `terminating` once it is deleted, rather than `found` for being there; its Kubernetes Status shows the phase, the volume it is bound to - kso's own or one its storage class made - since when it is being deleted, its finalizers, and the pods that name it, which is what holds a deleted claim back. A volume is `released` once its claim is gone, and `source-differs` when it mounts something other than kso has; its Kubernetes Status shows what it mounts beside what kso has. The claim's events are shown
+* The diagnosis names a pod that waits for its volume: one kubelet cannot mount, in the driver's own words, and one that cannot be scheduled because its claim is being deleted
+
+### Fixed bugs
+* A new claim could bind to kso's own CSI volume and never mount: the volume had only a driver and a handle, and csi-driver-nfs answers "server is a required parameter" without its attributes. Since v1.9.0 the volume carries its claim's storage class and is reserved for it, so it was taken over a volume the storage class would have made - after a Terminate, or for a workspace deployed again. Fill in the attributes the driver needs
+* A volume whose source is no longer the one in kso is made again on deploy when no claim is bound to it - a volume's source cannot be changed once it is made. Removing the object leaves the data where it is. One that is bound stops the deploy and says so, rather than the api server's 422
+* A volume's source - its type, NFS server and path, CSI driver, handle and attributes, and mount options - can be changed as long as no claim is bound to kso's volume. Only what goes into the claim - capacity, volume mode, storage class - is still fixed as soon as the claim is there
+
+### Upgrade guide
+1. Deploy new image
+2. Run migrations [(Guide)](https://github.com/4spacesdk/kubernetes-service-orchestrator?tab=readme-ov-file#migrate-database-helm)
+3. Give every CSI volume the attributes its driver needs, and deploy. A volume that was made without them is made again where no claim uses it; one a claim is bound to has to be removed with its claim first
+
+
+
 ## v1.9.7 (2026-10-20)
 
 ### Enhancements

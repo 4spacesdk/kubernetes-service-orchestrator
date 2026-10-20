@@ -63,10 +63,15 @@ function reload() {
                 case 'not-found':
                 case 'not-performed':
                 case 'running':
+                case 'pending':
+                case 'released':
                     hasWarning = true;
                     break;
 
                 case 'failed':
+                case 'terminating':
+                case 'lost':
+                case 'source-differs':
                     hasFailed = true;
                     break;
                 case 'found-not-expected':

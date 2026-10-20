@@ -132,11 +132,22 @@ class DeploymentStepHelper {
 
     const string
         PersistentVolume_NotFound = 'not-found',
-        PersistentVolume_Found = 'found';
+        PersistentVolume_Found = 'found',
+        // Its claim is gone and the volume is left, as its reclaim policy says - no new claim binds to it
+        PersistentVolume_Released = 'released',
+        PersistentVolume_Failed = 'failed',
+        // What it mounts is not what kso has - made again on deploy when no claim is bound to it
+        PersistentVolume_SourceDiffers = 'source-differs';
 
     const string
         PersistentVolumeClaim_NotFound = 'not-found',
-        PersistentVolumeClaim_Found = 'found';
+        PersistentVolumeClaim_Found = 'found',
+        // Waiting for a volume to bind to
+        PersistentVolumeClaim_Pending = 'pending',
+        // Deleted, and held back by the pods that still name it (`kubernetes.io/pvc-protection`)
+        PersistentVolumeClaim_Terminating = 'terminating',
+        // Its volume is gone
+        PersistentVolumeClaim_Lost = 'lost';
 
 
 

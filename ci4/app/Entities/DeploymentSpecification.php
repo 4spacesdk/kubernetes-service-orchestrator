@@ -697,12 +697,18 @@ class DeploymentSpecification extends Entity {
             return null;
         }
 
+        // Only the disk's source changed: that is fixed while a claim uses kso's disk, and the
+        // next deploy makes the disk again when it does not (VolumeFingerprint).
+        $claimChanged = VolumeFingerprint::claim($stored) !== VolumeFingerprint::claim($incoming);
         $step = new PersistentVolumeClaimStep();
         /** @var Deployment $deployments */
         $deployments = (new DeploymentModel())->where('deployment_specification_id', $this->id)->find();
         foreach ($deployments as $deployment) {
             try {
-                if ($step->claimExists($deployment)) {
+                if (!$claimChanged && $step->claimIsOnKsosVolume($deployment)) {
+                    return "'{$deployment->name}' in '{$deployment->namespace}' is using its disk, and the source of a disk cannot be changed while its claim is bound to it.";
+                }
+                if ($claimChanged && $step->claimExists($deployment)) {
                     return "'{$deployment->name}' already has its disk, and a disk cannot be changed after it is made."
                         . ' Remove the volume and add it again to start over - the old disk is kept or deleted by its reclaim policy.';
                 }

@@ -11,6 +11,8 @@
  * @property string $type
  * @property string $csi_driver
  * @property string $csi_volume_handle
+ * @property string $csi_volume_attributes
+ * @property string $mount_options
  */
 interface DeploymentVolume {
 

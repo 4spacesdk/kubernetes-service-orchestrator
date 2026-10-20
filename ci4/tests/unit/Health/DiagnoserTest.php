@@ -332,6 +332,50 @@ class DiagnoserTest extends CIUnitTestCase {
 
     // <editor-fold desc="Run as non-root">
 
+    /**
+     * The pod is `ContainerCreating`, and only kubelet's event says the driver will not mount the
+     * volume - here a CSI volume made without the attributes csi-driver-nfs needs.
+     */
+    public function testAVolumeThatCannotBeMountedIsCertainWithTheDriversWords(): void {
+        $finding = $this->only(new Evidence('1.1', [$this->pending($this->pod(waiting: 'ContainerCreating'))], events: [
+            $this->event('app-a', 'FailedMount', 'MountVolume.SetUp failed for volume "ns-app" : rpc error: code = InvalidArgument desc = server is a required parameter', 7),
+        ]));
+
+        $this->assertSame('volume_mount', $finding->rule);
+        $this->assertSame(\DiagnosisVerdicts::Certain, $finding->verdict);
+        $this->assertStringContainsString('server is a required parameter', $finding->cause);
+        $this->assertSame('volumes', $finding->action['section']);
+    }
+
+    /**
+     * A claim that is being deleted stays until no pod names it - and a pod waiting for it is one
+     * that names it. The scheduler's condition is the only place that says so.
+     */
+    public function testAPodWaitingForAClaimThatIsBeingDeletedIsCertain(): void {
+        $pod = $this->pending($this->pod(waiting: 'ContainerCreating'));
+        $pod['status']['conditions'][] = [
+            'type' => 'PodScheduled',
+            'status' => 'False',
+            'reason' => 'Unschedulable',
+            'message' => '0/2 nodes are available: persistentvolumeclaim "backend-api" is being deleted. not found',
+        ];
+
+        $finding = $this->only(new Evidence('1.1', [$pod]));
+
+        $this->assertSame('volume_claim', $finding->rule);
+        $this->assertStringContainsString('being deleted', $finding->cause);
+        $this->assertSame('resources', $finding->action['section']);
+    }
+
+    /**
+     * Once the pod runs, an old FailedMount is history: kubelet tried before the volume was ready.
+     */
+    public function testAMountThatFailedBeforeThePodRanIsNotACause(): void {
+        $this->assertSame([], $this->diagnose(new Evidence('1.1', [$this->pod()], events: [
+            $this->event('app-a', 'FailedMount', 'MountVolume.SetUp failed for volume "ns-app" : timed out'),
+        ])));
+    }
+
     public function testAnImageThatRunsAsRootUnderRunAsNonRootIsCertain(): void {
         $finding = $this->only(new Evidence('1.1', [$this->pod(
             waiting: 'CreateContainerConfigError',
@@ -480,6 +524,16 @@ class DiagnoserTest extends CIUnitTestCase {
                 'containerStatuses' => [$status],
             ],
         ];
+    }
+
+    /**
+     * @param array<string, mixed> $pod
+     * @return array<string, mixed>
+     */
+    private function pending(array $pod): array {
+        $pod['status']['phase'] = 'Pending';
+
+        return $pod;
     }
 
     private function event(string $pod, string $reason, string $message, int $count = 1): array {

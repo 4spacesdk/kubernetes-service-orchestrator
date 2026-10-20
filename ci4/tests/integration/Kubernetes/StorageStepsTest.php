@@ -38,7 +38,8 @@ class StorageStepsTest extends ClusterTestCase {
 
         $step->startDeployCommand($deployment);
 
-        $this->assertSame(DeploymentStepHelper::PersistentVolumeClaim_Found, $step->getStatus($deployment));
+        // There, and not bound yet: local-path makes the volume when a pod first uses the claim.
+        $this->assertSame(DeploymentStepHelper::PersistentVolumeClaim_Pending, $step->getStatus($deployment));
         $claim = $this->cluster()->getPersistentVolumeClaimByName($deployment->name, $this->testNamespace);
         $this->assertSame('5Gi', $claim->getAttribute('spec.resources.requests')['storage']);
         $this->assertSame('local-path', $claim->getAttribute('spec.storageClassName'));
@@ -240,6 +241,92 @@ class StorageStepsTest extends ClusterTestCase {
      */
     public static function storageClasses(): array {
         return ['no class' => [''], 'a class' => ['kso-static']];
+    }
+
+    /**
+     * A disk's source cannot be changed once it is made. One no claim is bound to is made again
+     * with the source the volume has now - the case of a disk kso made before it could give a CSI
+     * volume its attributes, unused, and then taken by a new claim and never mounted.
+     */
+    public function testAnUnusedVolumeWithAnotherSourceIsMadeAgain(): void {
+        $deployment = $this->deploymentInANamespace();
+        $volume = Fixtures::deploymentVolume(['deployment_id' => $deployment->id, 'storage_class' => 'kso-static', 'nfs_path' => '/exports/a']);
+        (new PersistentVolumeStep())->startDeployCommand($deployment);
+        $volumeName = "{$this->testNamespace}-{$deployment->name}";
+        $first = $this->cluster()->getPersistentVolumeByName($volumeName)->getAttribute('metadata.uid');
+
+        $volume->nfs_path = '/exports/b';
+        $volume->mount_options = 'vers=4';
+        $volume->save();
+        (new PersistentVolumeStep())->startDeployCommand($deployment);
+
+        $live = $this->cluster()->getPersistentVolumeByName($volumeName);
+        $this->assertNotSame($first, $live->getAttribute('metadata.uid'), 'the volume was made again');
+        $this->assertSame('/exports/b', $live->getAttribute('spec.nfs')['path']);
+        $this->assertSame(['vers=4'], $live->getAttribute('spec.mountOptions'));
+        $this->assertSame($deployment->name, $live->getAttribute('spec.claimRef')['name'], 'and reserved for its claim as a new one is');
+    }
+
+    /**
+     * One that is bound stops the deploy and says why, rather than the api server's 422 - and it
+     * is left as it was.
+     */
+    public function testABoundVolumeWithAnotherSourceStopsTheDeploy(): void {
+        $deployment = $this->deploymentInANamespace();
+        $volume = Fixtures::deploymentVolume(['deployment_id' => $deployment->id, 'storage_class' => 'kso-static', 'nfs_path' => '/exports/a']);
+        (new PersistentVolumeStep())->startDeployCommand($deployment);
+        (new PersistentVolumeClaimStep())->startDeployCommand($deployment);
+        $volumeName = "{$this->testNamespace}-{$deployment->name}";
+        $this->eventually(fn () => $this->cluster()->getPersistentVolumeByName($volumeName)->getAttribute('status.phase') === 'Bound');
+
+        $volume->nfs_path = '/exports/b';
+        $volume->save();
+        try {
+            (new PersistentVolumeStep())->startDeployCommand($deployment);
+            $this->fail('the deploy should have stopped');
+        } catch (\Exception $e) {
+            $this->assertStringContainsString("is bound to the claim '{$this->testNamespace}/{$deployment->name}'", $e->getMessage());
+        }
+
+        $this->assertSame('/exports/a', $this->cluster()->getPersistentVolumeByName($volumeName)->getAttribute('spec.nfs')['path']);
+    }
+
+    /**
+     * A claim with no volume to bind to is there, and not usable: `pending`, not `found` - and its
+     * status says which claim, and that it is on no volume yet.
+     */
+    public function testAClaimWaitingForAVolumeIsPendingAndSaysWhy(): void {
+        $deployment = $this->deploymentInANamespace();
+        Fixtures::deploymentVolume(['deployment_id' => $deployment->id, 'storage_class' => 'no-such-class']);
+        $step = new PersistentVolumeClaimStep();
+        $step->startDeployCommand($deployment);
+
+        $this->assertSame(DeploymentStepHelper::PersistentVolumeClaim_Pending, $step->getStatus($deployment));
+        $status = $step->getKubernetesStatus($deployment);
+        $this->assertSame("{$this->testNamespace}/{$deployment->name}", $status['claim']);
+        $this->assertSame('Pending', $status['phase']);
+        $this->assertNull($status['volume']);
+        $this->assertSame([], $status['usedBy']);
+    }
+
+    /**
+     * A volume no claim is bound to, made before the source in kso changed, says so until the next
+     * deploy makes it again.
+     */
+    public function testAVolumeWhoseSourceChangedSaysSo(): void {
+        $deployment = $this->deploymentInANamespace();
+        $volume = Fixtures::deploymentVolume(['deployment_id' => $deployment->id, 'storage_class' => 'kso-static', 'nfs_path' => '/exports/a']);
+        $step = new PersistentVolumeStep();
+        $step->startDeployCommand($deployment);
+        $this->assertSame(DeploymentStepHelper::PersistentVolume_Found, $step->getStatus($deployment));
+
+        $volume->nfs_path = '/exports/b';
+        $volume->save();
+
+        $this->assertSame(DeploymentStepHelper::PersistentVolume_SourceDiffers, $step->getStatus($deployment));
+        $status = $step->getKubernetesStatus($deployment);
+        $this->assertSame('/exports/a', $status['mounts']['nfs']['path']);
+        $this->assertSame('/exports/b', $status['inKso']['nfs']['path']);
     }
 
     public function testTerminatingRemovesTheVolume(): void {

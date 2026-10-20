@@ -38,18 +38,15 @@ class PersistentVolumeClaimStepTest extends ManifestTestCase {
     }
 
     /**
-     * A claim's own status says whether it is Bound, which is the thing an operator wants
-     * to know - but kso does not read it, and the flags say so.
+     * A claim's own status says whether it is Bound, which is the thing an operator wants to
+     * know - and whether it is being deleted, and which pods hold it back. Read in the
+     * integration suite, as both need the cluster.
      */
-    public function testTheStepReportsNoEventsOrStatusOfItsOwn(): void {
+    public function testTheStepReportsItsStatusAndEvents(): void {
         $step = new PersistentVolumeClaimStep();
-        $deployment = $this->deploymentWithVolume();
 
-        $this->assertFalse($step->hasKubernetesEvents());
-        $this->assertSame([], $step->getKubernetesEvents($deployment));
-
-        $this->assertFalse($step->hasKubernetesStatus());
-        $this->assertSame([], $step->getKubernetesStatus($deployment));
+        $this->assertTrue($step->hasKubernetesEvents());
+        $this->assertTrue($step->hasKubernetesStatus());
     }
 
     /**

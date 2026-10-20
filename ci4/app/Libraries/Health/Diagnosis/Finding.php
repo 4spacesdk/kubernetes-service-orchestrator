@@ -7,7 +7,8 @@ readonly class Finding {
 
     /**
      * @param string $rule Which rule - `image_pull`, `oom_killed`, `crash_after_version_change`,
-     *   `not_ready`, `rejected_by_api_server`, `migration_failed`, `health_check_path`, `run_as_non_root`, `read_only_file_system`
+     *   `not_ready`, `rejected_by_api_server`, `migration_failed`, `health_check_path`, `run_as_non_root`, `read_only_file_system`,
+     *   `volume_mount`, `volume_claim`
      * @param string $verdict A `DiagnosisVerdicts`
      * @param list<string> $evidence What the cause was read off, in the cluster's own words
      * @param array{type: string, label: string, version?: string, section?: string, migration_job_id?: int}|null $action

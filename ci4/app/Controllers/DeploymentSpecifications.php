@@ -686,7 +686,9 @@ class DeploymentSpecifications extends ResourceController {
                 RequestField::read($data, 'nfs_path'),
                 RequestField::read($data, 'storage_class'),
                 RequestField::read($data, 'csi_driver'),
-                RequestField::read($data, 'csi_volume_handle')
+                RequestField::read($data, 'csi_volume_handle'),
+                (string) RequestField::read($data, 'csi_volume_attributes', ''),
+                (string) RequestField::read($data, 'mount_options', '')
             ),
             $body->values
         );

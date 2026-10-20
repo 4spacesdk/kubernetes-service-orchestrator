@@ -124,6 +124,91 @@ class PersistentVolumeStepTest extends ManifestTestCase {
         $this->assertArrayNotHasKey('csi', $this->spec($deployment));
     }
 
+    /**
+     * What csi-driver-nfs needs to mount a disk of kso's own: without `server` the pod never
+     * starts ("server is a required parameter"). The values take the placeholders the handle
+     * does, so one specification gives every workspace its own share.
+     */
+    public function testCsiVolumeGetsItsAttributesWithVariablesApplied(): void {
+        $deployment = $this->deploymentWithVolume([
+            'type' => 'csi',
+            'csi_driver' => 'nfs.csi.k8s.io',
+            'csi_volume_handle' => '${namespace}',
+            'csi_volume_attributes' => "server=nfs-server.storage.svc.cluster.local\n# one share a workspace\nshare=/\${namespace}",
+        ]);
+
+        $this->assertSame(
+            ['server' => 'nfs-server.storage.svc.cluster.local', 'share' => "/{$deployment->namespace}"],
+            $this->spec($deployment)['csi']['volumeAttributes']
+        );
+    }
+
+    public function testACsiVolumeWithoutAttributesHasNone(): void {
+        $deployment = $this->deploymentWithVolume([
+            'type' => 'csi',
+            'csi_driver' => 'nfs.csi.k8s.io',
+            'csi_volume_handle' => 'handle',
+        ]);
+
+        $this->assertArrayNotHasKey('volumeAttributes', $this->spec($deployment)['csi']);
+    }
+
+    /**
+     * A storage class's mount options only reach the disks it makes, so kso's own disk carries
+     * them itself.
+     */
+    public function testMountOptionsAreCarriedOver(): void {
+        $deployment = $this->deploymentWithVolume(['mount_options' => 'vers=4, noatime,']);
+
+        $this->assertSame(['vers=4', 'noatime'], $this->spec($deployment)['mountOptions']);
+    }
+
+    public function testNoMountOptionsLeavesThemOut(): void {
+        $this->assertArrayNotHasKey('mountOptions', $this->spec($this->deploymentWithVolume()));
+    }
+
+    public function testAnAttributeThatCannotBeReadIsRefused(): void {
+        $deployment = $this->deploymentWithVolume([
+            'type' => 'csi',
+            'csi_driver' => 'nfs.csi.k8s.io',
+            'csi_volume_handle' => 'handle',
+            'csi_volume_attributes' => 'server',
+        ]);
+
+        $this->assertSame(
+            "Invalid csi volume attribute 'server': one key=value a line",
+            (new PersistentVolumeStep())->validateDeployCommand($deployment)
+        );
+    }
+
+    /**
+     * What a disk mounts, as two are compared before one is sent over the other: the order the
+     * api server keeps the attributes in does not count, a value does.
+     */
+    public function testTheSourceIsWhatTheDiskMounts(): void {
+        $volume = fn (array $attributes, array $mountOptions = []) => ['spec' => [
+            'csi' => ['driver' => 'nfs.csi.k8s.io', 'volumeHandle' => 'h', 'volumeAttributes' => $attributes],
+            'mountOptions' => $mountOptions,
+        ]];
+
+        $this->assertSame(
+            PersistentVolumeStep::Source($volume(['server' => 's', 'share' => '/a'])),
+            PersistentVolumeStep::Source($volume(['share' => '/a', 'server' => 's']))
+        );
+        $this->assertNotSame(
+            PersistentVolumeStep::Source($volume(['server' => 's', 'share' => '/a'])),
+            PersistentVolumeStep::Source($volume(['server' => 's', 'share' => '/b']))
+        );
+        $this->assertNotSame(
+            PersistentVolumeStep::Source($volume(['server' => 's'])),
+            PersistentVolumeStep::Source($volume(['server' => 's'], ['vers=4']))
+        );
+        $this->assertNotSame(
+            PersistentVolumeStep::Source(['spec' => ['csi' => ['driver' => 'nfs.csi.k8s.io', 'volumeHandle' => 'h']]]),
+            PersistentVolumeStep::Source($volume(['server' => 's']))
+        );
+    }
+
     public function testNoVolumesGeneratesNothing(): void {
         $deployment = Fixtures::deployableDeployment();
 
@@ -267,19 +352,24 @@ class PersistentVolumeStepTest extends ManifestTestCase {
             'hasStatusCommand' => true,
             'hasDeployCommand' => true,
             'hasKubernetesEvents' => false,
-            'hasKubernetesStatus' => false,
+            'hasKubernetesStatus' => true,
             'hasTerminateCommand' => true,
         ], (new PersistentVolumeStep())->toArray());
 
         $this->assertSame(['deployment-volume-updated'], (new PersistentVolumeStep())->getTriggers());
     }
 
-    public function testTheStepReportsNoEventsOrStatusFromKubernetes(): void {
+    /**
+     * The volume's status is what it mounts and which claim it is bound to (`Describe()`, read
+     * in the integration suite). A volume is cluster-scoped and has no events of note.
+     */
+    public function testTheStepReportsItsStatusButNoEvents(): void {
         $deployment = $this->deploymentWithVolume();
         $step = new PersistentVolumeStep();
 
+        $this->assertTrue($step->hasKubernetesStatus());
+        $this->assertFalse($step->hasKubernetesEvents());
         $this->assertSame([], $step->getKubernetesEvents($deployment));
-        $this->assertSame([], $step->getKubernetesStatus($deployment));
     }
 
     /**

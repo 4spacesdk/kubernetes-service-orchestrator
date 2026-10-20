@@ -39,6 +39,7 @@ class Diagnoser {
             ...self::RejectedByApiServer($evidence),
             ...self::MigrationFailed($evidence),
             ...self::ImagePull($evidence),
+            ...self::VolumeNotMounted($evidence),
             ...self::NotAllowedToRunAsRoot($evidence),
             ...self::OomKilled($evidence, $now),
             ...self::ReadOnlyFileSystem($evidence),
@@ -194,6 +195,54 @@ class Diagnoser {
      *
      * @return list<Finding>
      */
+    /**
+     * A pod that waits for its volume. Kubelet cannot mount it - the driver says why, such as
+     * csi-driver-nfs' "server is a required parameter" for a CSI volume without its attributes -
+     * or it cannot be scheduled because its claim is being deleted and it is one of what holds the
+     * claim back. Neither is in the pod's own state: it is `ContainerCreating` or `Pending`, and
+     * only the events and the scheduling condition say what it waits for.
+     *
+     * @return list<Finding>
+     */
+    private static function VolumeNotMounted(Evidence $evidence): array {
+        $findings = [];
+        foreach ($evidence->pods as $pod) {
+            if (($pod['status']['phase'] ?? null) !== 'Pending') {
+                continue;
+            }
+            $podName = $pod['metadata']['name'] ?? '';
+
+            $mount = self::EventMessages($evidence, $podName, ['FailedMount', 'FailedAttachVolume']);
+            if ($mount) {
+                $findings[] = new Finding(
+                    'volume_mount',
+                    \DiagnosisVerdicts::Certain,
+                    'A volume cannot be mounted: ' . $mount[0],
+                    array_map(fn (string $message) => "{$podName}: {$message}", $mount),
+                    ['type' => 'section', 'label' => 'Open the volumes', 'section' => 'volumes'],
+                );
+                continue;
+            }
+
+            foreach ($pod['status']['conditions'] ?? [] as $condition) {
+                $message = (string) ($condition['message'] ?? '');
+                if (($condition['type'] ?? null) === 'PodScheduled' && ($condition['status'] ?? null) === 'False'
+                    && str_contains($message, 'persistentvolumeclaim')) {
+                    $findings[] = new Finding(
+                        'volume_claim',
+                        \DiagnosisVerdicts::Certain,
+                        str_contains($message, 'being deleted')
+                            ? 'The pod waits for its claim, which is being deleted - and held back by the pods that still name it'
+                            : 'The pod waits for its claim',
+                        ["{$podName}: {$message}"],
+                        ['type' => 'section', 'label' => 'Open the resources', 'section' => 'resources'],
+                    );
+                }
+            }
+        }
+        return $findings;
+    }
+
     private static function NotAllowedToRunAsRoot(Evidence $evidence): array {
         $findings = [];
         foreach (self::Containers($evidence->pods) as [$pod, $container]) {

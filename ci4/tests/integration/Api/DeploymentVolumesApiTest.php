@@ -5,6 +5,7 @@ use App\Entities\Deployment;
 use App\Fixtures;
 use App\Libraries\DeploymentSteps\NamespaceStep;
 use App\Libraries\DeploymentSteps\PersistentVolumeClaimStep;
+use App\Libraries\DeploymentSteps\PersistentVolumeStep;
 
 /**
  * Editing a volume that already has its disk.
@@ -54,6 +55,39 @@ class DeploymentVolumesApiTest extends ClusterControllerTestCase {
         $this->assertSame('OK', $body['status']);
     }
 
+    /**
+     * The disk's source - here a CSI volume's attributes - is not the claim's. A claim bound to a
+     * disk its storage class made, or to none, leaves kso's disk unused, so the edit is stored and
+     * the next deploy makes the disk again.
+     */
+    public function testTheDisksSourceCanBeChangedWhileTheClaimIsNotOnKsosDisk(): void {
+        $deployment = $this->deploymentWithAClaim();
+
+        $body = $this->putVolumes($deployment, [$this->volume(['nfs_path' => '/exports/other', 'mount_options' => 'vers=4'])]);
+
+        $this->assertSame('OK', $body['status']);
+    }
+
+    /**
+     * While the claim is bound to kso's own disk, the disk's source is fixed as the claim is.
+     */
+    public function testTheSourceOfADiskInUseCannotBeChanged(): void {
+        $deployment = $this->deploymentInANamespace();
+        Fixtures::deploymentVolume(array_merge(['deployment_id' => $deployment->id], $this->volume(['storage_class' => 'kso-static'])));
+        (new PersistentVolumeStep())->startDeployCommand($deployment);
+        (new PersistentVolumeClaimStep())->startDeployCommand($deployment);
+        // A claim made before its volume is in the controller's cache waits for the next resync,
+        // every 15 seconds - longer than `eventually()` waits.
+        for ($second = 0; $second < 20 && !(new PersistentVolumeClaimStep())->claimIsOnKsosVolume($deployment); $second++) {
+            sleep(1);
+        }
+        $this->assertTrue((new PersistentVolumeClaimStep())->claimIsOnKsosVolume($deployment), 'the claim did not bind to its volume');
+
+        $body = $this->putVolumes($deployment, [$this->volume(['storage_class' => 'kso-static', 'nfs_path' => '/exports/other'])]);
+
+        $this->assertStringContainsString('is using its disk', $body['error'] ?? '');
+    }
+
     // <editor-fold desc="Fixtures">
 
     private function deploymentWithAClaim(): Deployment {
@@ -88,6 +122,8 @@ class DeploymentVolumesApiTest extends ClusterControllerTestCase {
             'storage_class' => '',
             'csi_driver' => '',
             'csi_volume_handle' => '',
+            'csi_volume_attributes' => '',
+            'mount_options' => '',
         ], $overrides);
     }
 

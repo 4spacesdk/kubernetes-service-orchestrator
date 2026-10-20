@@ -20,6 +20,8 @@ export class DeploymentSpecificationVolumeDefinition extends BaseModel {
     type?: string;
     csi_driver?: string;
     csi_volume_handle?: string;
+    csi_volume_attributes?: string;
+    mount_options?: string;
     id?: number;
     created?: string;
     updated?: string;
@@ -50,6 +52,8 @@ export class DeploymentSpecificationVolumeDefinition extends BaseModel {
             delete this.type;
             delete this.csi_driver;
             delete this.csi_volume_handle;
+            delete this.csi_volume_attributes;
+            delete this.mount_options;
             delete this.id;
             delete this.created;
             delete this.updated;
@@ -100,6 +104,12 @@ export class DeploymentSpecificationVolumeDefinition extends BaseModel {
         }
         if (data.csi_volume_handle != null) {
             this.csi_volume_handle = data.csi_volume_handle;
+        }
+        if (data.csi_volume_attributes != null) {
+            this.csi_volume_attributes = data.csi_volume_attributes;
+        }
+        if (data.mount_options != null) {
+            this.mount_options = data.mount_options;
         }
         if (data.id != null) {
             this.id = data.id;

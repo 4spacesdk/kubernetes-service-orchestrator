@@ -451,6 +451,8 @@ class Fixtures {
             'storage_class' => 'nfs',
             'csi_driver' => '',
             'csi_volume_handle' => '',
+            'csi_volume_attributes' => '',
+            'mount_options' => '',
         ];
     }
 

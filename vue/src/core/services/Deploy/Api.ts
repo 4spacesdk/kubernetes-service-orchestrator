@@ -241,6 +241,8 @@ export interface DeploymentSpecificationVolume {
     type?: string;
     csi_driver?: string;
     csi_volume_handle?: string;
+    csi_volume_attributes?: string;
+    mount_options?: string;
 }
 
 export interface DeploymentSpecificationVolumeList {
@@ -276,6 +278,8 @@ export interface DeploymentVolume {
     type?: string;
     csi_driver?: string;
     csi_volume_handle?: string;
+    csi_volume_attributes?: string;
+    mount_options?: string;
 }
 
 export interface DeploymentVolumeList {

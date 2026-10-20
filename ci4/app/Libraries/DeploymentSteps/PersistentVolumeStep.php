@@ -15,6 +15,9 @@ use RenokiCo\PhpK8s\Kinds\K8sPersistentVolume;
 
 class PersistentVolumeStep extends BaseDeploymentStep {
 
+    /** Microseconds between two looks for a removed volume. An unbound one goes at once. */
+    public const int GoneInterval = 200000;
+
     public function getIdentifier(): string {
         return DeploymentSteps::PersistentVolume;
     }
@@ -54,7 +57,7 @@ class PersistentVolumeStep extends BaseDeploymentStep {
     }
 
     public function hasKubernetesStatus(): bool {
-        return false;
+        return true;
     }
 
     public function getSuccessStatus(Deployment $deployment): string {
@@ -95,17 +98,87 @@ class PersistentVolumeStep extends BaseDeploymentStep {
      * @throws \Exception
      */
     public function getStatus(Deployment $deployment): string {
-        $resources = $this->getResources($deployment, true);
+        $statuses = [];
+        foreach ($this->getResources($deployment, true) as $resource) {
+            $statuses[] = $resource->exists()
+                ? self::StatusOf($resource->get()->toArray(), $resource->toArray())
+                : DeploymentStepHelper::PersistentVolume_NotFound;
+        }
 
-        $found = true;
-        foreach ($resources as $resource) {
-            if (!$resource->exists()) {
-                $found = false;
-                break;
+        foreach ([
+            DeploymentStepHelper::PersistentVolume_SourceDiffers,
+            DeploymentStepHelper::PersistentVolume_Failed,
+            DeploymentStepHelper::PersistentVolume_NotFound,
+            DeploymentStepHelper::PersistentVolume_Released,
+        ] as $status) {
+            if (in_array($status, $statuses, true)) {
+                return $status;
             }
         }
 
-        return $found ? DeploymentStepHelper::PersistentVolume_Found : DeploymentStepHelper::PersistentVolume_NotFound;
+        return DeploymentStepHelper::PersistentVolume_Found;
+    }
+
+    /**
+     * A volume that mounts something other than kso has says so first: a claim bound to it does
+     * not get what kso was told, and the next deploy makes it again or - when it is bound - stops.
+     *
+     * @param array<string, mixed> $live As the cluster has it
+     * @param array<string, mixed> $manifest As kso would make it
+     */
+    public static function StatusOf(array $live, array $manifest): string {
+        if (self::Source($live) !== self::Source($manifest)) {
+            return DeploymentStepHelper::PersistentVolume_SourceDiffers;
+        }
+
+        return match ($live['status']['phase'] ?? null) {
+            'Released' => DeploymentStepHelper::PersistentVolume_Released,
+            'Failed' => DeploymentStepHelper::PersistentVolume_Failed,
+            default => DeploymentStepHelper::PersistentVolume_Found,
+        };
+    }
+
+    /**
+     * What the volume is doing: bound or not, to which claim, and what it mounts - beside what kso
+     * has, when the two are not the same.
+     *
+     * @param array<string, mixed> $live As the cluster has it
+     * @param array<string, mixed> $manifest As kso would make it
+     * @return array<string, mixed>
+     */
+    public static function Describe(array $live, array $manifest): array {
+        $claim = $live['spec']['claimRef'] ?? null;
+        $matches = self::Source($live) === self::Source($manifest);
+
+        return array_filter([
+            'volume' => $live['metadata']['name'] ?? null,
+            'status' => self::StatusOf($live, $manifest),
+            'phase' => $live['status']['phase'] ?? null,
+            'claim' => $claim ? ($claim['namespace'] ?? '') . '/' . ($claim['name'] ?? '') : null,
+            'reclaimPolicy' => $live['spec']['persistentVolumeReclaimPolicy'] ?? null,
+            'storageClass' => $live['spec']['storageClassName'] ?? null,
+            'mounts' => self::Readable($live),
+            'sourceMatchesKso' => $matches,
+            'inKso' => $matches ? null : self::Readable($manifest),
+        ], fn ($value) => $value !== null);
+    }
+
+    /**
+     * @param array<string, mixed> $volume
+     * @return array<string, mixed>
+     */
+    private static function Readable(array $volume): array {
+        $spec = $volume['spec'] ?? [];
+
+        return array_filter([
+            'nfs' => $spec['nfs'] ?? null,
+            'csi' => isset($spec['csi']) ? array_filter([
+                'driver' => $spec['csi']['driver'] ?? null,
+                'volumeHandle' => $spec['csi']['volumeHandle'] ?? null,
+                'volumeAttributes' => $spec['csi']['volumeAttributes'] ?? null,
+            ], fn ($value) => $value !== null) : null,
+            'mountOptions' => $spec['mountOptions'] ?? null,
+        ], fn ($value) => $value !== null);
     }
 
     public function validateDeployCommand(Deployment $deployment): ?string {
@@ -148,11 +221,21 @@ class PersistentVolumeStep extends BaseDeploymentStep {
      * annotations - sent without them, a bound volume went `Available` on every deploy of
      * this step and its claim was lost. So both are copied from the live volume first. A
      * `claimRef` without the claim's uid is no better: that unbinds it too.
+     *
+     * A volume's source cannot be changed once it is made. One whose source is no longer the
+     * volume's is made again when no claim is bound to it - removing the object leaves the data
+     * where it is, as the reclaim policy is only acted on for a disk a provisioner made. One that
+     * is bound stops the deploy and says why, rather than the api server's 422.
      */
     public function startDeployCommand(Deployment $deployment, ?string $reason = null): void {
         $resources = $this->getResources($deployment, true);
         foreach ($resources as $resource) {
-            if ($resource->exists()) {
+            if ($resource->exists() && $this->replacesAnUnusedVolume($resource)) {
+                $resource->setSpec('claimRef', [
+                    'namespace' => $deployment->namespace,
+                    'name' => $deployment->name,
+                ]);
+            } elseif ($resource->exists()) {
                 $live = $resource->get();
                 if ($claimRef = $live->getAttribute('spec.claimRef')) {
                     $resource->setSpec('claimRef', $claimRef);
@@ -175,6 +258,39 @@ class PersistentVolumeStep extends BaseDeploymentStep {
         }
     }
 
+    /**
+     * Removes the live volume when its source is not the one the manifest has and no claim is
+     * bound to it. True when it did, so the manifest is applied as a new volume.
+     *
+     * @throws \Exception When the volume is bound - its source cannot be changed - or does not
+     *     go away.
+     */
+    private function replacesAnUnusedVolume(K8sPersistentVolume $resource): bool {
+        $live = $resource->get();
+        if (self::Source($live->toArray()) === self::Source($resource->toArray())) {
+            return false;
+        }
+
+        if ($live->getAttribute('status.phase') === 'Bound') {
+            $claim = $live->getAttribute('spec.claimRef', []);
+            throw new \Exception(
+                "The volume '{$resource->getName()}' is bound to the claim '" . ($claim['namespace'] ?? '') . '/' . ($claim['name'] ?? '') . "'"
+                . ', and the source of a volume cannot be changed once it is made.'
+                . ' Remove the claim and the volume to have it made again - its data is left where it is.'
+            );
+        }
+
+        $live->delete();
+        for ($attempt = 0; $attempt < 30 && $resource->exists(); $attempt++) {
+            usleep(self::GoneInterval);
+        }
+        if ($resource->exists()) {
+            throw new \Exception("The volume '{$resource->getName()}' was removed to be made again, but is still there");
+        }
+
+        return true;
+    }
+
     public function startTerminateCommand(Deployment $deployment): void {
         $resources = $this->getResources($deployment, true);
         foreach ($resources as $resource) {
@@ -187,8 +303,46 @@ class PersistentVolumeStep extends BaseDeploymentStep {
         return [];
     }
 
+    /**
+     * See `Describe()`. One volume is shown as itself, more as a list.
+     */
     public function getKubernetesStatus(Deployment $deployment): array {
-        return [];
+        $volumes = [];
+        foreach ($this->getResources($deployment, true) as $resource) {
+            $volumes[] = $resource->exists()
+                ? self::Describe($resource->get()->toArray(), $resource->toArray())
+                : ['volume' => $resource->getName(), 'status' => DeploymentStepHelper::PersistentVolume_NotFound];
+        }
+
+        return count($volumes) === 1 ? $volumes[0] : $volumes;
+    }
+
+    /**
+     * The disk's name: one per deployment, so its claim and nothing else can be reserved for it.
+     */
+    public static function VolumeName(Deployment $deployment): string {
+        return "{$deployment->namespace}-{$deployment->name}";
+    }
+
+    /**
+     * What a disk mounts: its source and the options it is mounted with. Neither can be changed on
+     * a disk that is there, so two are compared by this before one is sent over the other. Read
+     * from the manifest and from the cluster alike; the attributes are sorted, as the api server
+     * keeps them in an order of its own.
+     *
+     * @param array<string, mixed> $volume
+     * @return array<string, mixed>
+     */
+    public static function Source(array $volume): array {
+        $spec = $volume['spec'] ?? [];
+        $attributes = (array) ($spec['csi']['volumeAttributes'] ?? []);
+        ksort($attributes);
+
+        return [
+            'nfs' => isset($spec['nfs']) ? [(string) ($spec['nfs']['server'] ?? ''), (string) ($spec['nfs']['path'] ?? '')] : null,
+            'csi' => isset($spec['csi']) ? [(string) ($spec['csi']['driver'] ?? ''), (string) ($spec['csi']['volumeHandle'] ?? ''), $attributes] : null,
+            'mountOptions' => array_values((array) ($spec['mountOptions'] ?? [])),
+        ];
     }
 
     /**
@@ -200,72 +354,14 @@ class PersistentVolumeStep extends BaseDeploymentStep {
         $deploymentVolumes = (new DeploymentVolumeModel())
             ->where('deployment_id', $deployment->id)
             ->find();
-
-        $resources = [];
-
-        foreach ($deploymentVolumes as $deploymentVolume) {
-            $resource = new K8sPersistentVolume();
-            $resource
-                ->setName("{$deployment->namespace}-{$deployment->name}")
-                ->setCapacity($deploymentVolume->capacity)
-                ->setSpec('volumeMode', $deploymentVolume->volume_mode)
-                ->setAccessModes(['ReadWriteMany'])
-                ->setSpec('persistentVolumeReclaimPolicy', $deploymentVolume->reclaim_policy)
-                // The claim asks for this class, and only binds to a volume of the same one.
-                ->setSpec('storageClassName', (string) $deploymentVolume->storage_class);
-
-            switch($deploymentVolume->type) {
-                case 'nfs':
-                    $resource->setSpec('nfs', [
-                        'server' => $deploymentVolume->nfs_server,
-                        'path' => $deploymentVolume->nfs_path,
-                    ]);
-                    break;
-                case 'csi':
-                    if (strlen($deploymentVolume->csi_driver)) {
-                        $resource->setSpec('csi.driver', $deploymentVolume->csi_driver);
-                    }
-                    if (strlen($deploymentVolume->csi_volume_handle)) {
-                        $resource->setSpec('csi.volumeHandle', $deploymentVolume->getCompiledCsiVolumeHandle($deployment));
-                    }
-                    break;
-            }
-
-            $resources[] = $resource;
-        }
-
         /** @var DeploymentSpecificationVolume $deploymentSpecificationVolumes */
         $deploymentSpecificationVolumes = (new DeploymentSpecificationVolumeModel())
             ->where('deployment_specification_id', $deployment->findDeploymentSpecification()->id)
             ->find();
-        foreach ($deploymentSpecificationVolumes as $deploymentSpecificationVolume) {
-            $resource = new K8sPersistentVolume();
-            $resource
-                ->setName("{$deployment->namespace}-{$deployment->name}")
-                ->setCapacity($deploymentSpecificationVolume->capacity)
-                ->setSpec('volumeMode', $deploymentSpecificationVolume->volume_mode)
-                ->setAccessModes(['ReadWriteMany'])
-                ->setSpec('persistentVolumeReclaimPolicy', $deploymentSpecificationVolume->reclaim_policy)
-                ->setSpec('storageClassName', (string) $deploymentSpecificationVolume->storage_class);
 
-            switch($deploymentSpecificationVolume->type) {
-                case 'nfs':
-                    $resource->setSpec('nfs', [
-                        'server' => $deploymentSpecificationVolume->nfs_server,
-                        'path' => $deploymentSpecificationVolume->nfs_path,
-                    ]);
-                    break;
-                case 'csi':
-                    if (strlen($deploymentSpecificationVolume->csi_driver)) {
-                        $resource->setSpec('csi.driver', $deploymentSpecificationVolume->csi_driver);
-                    }
-                    if (strlen($deploymentSpecificationVolume->csi_volume_handle)) {
-                        $resource->setSpec('csi.volumeHandle', $deploymentSpecificationVolume->getCompiledCsiVolumeHandle($deployment));
-                    }
-                    break;
-            }
-
-            $resources[] = $resource;
+        $resources = [];
+        foreach ([...$deploymentVolumes, ...$deploymentSpecificationVolumes] as $volume) {
+            $resources[] = $this->build($volume, $deployment);
         }
 
         if ($auth) {
@@ -277,5 +373,49 @@ class PersistentVolumeStep extends BaseDeploymentStep {
         }
 
         return $resources;
+    }
+
+    private function build(DeploymentVolume|DeploymentSpecificationVolume $volume, Deployment $deployment): K8sPersistentVolume {
+        $resource = new K8sPersistentVolume();
+        $resource
+            ->setName(self::VolumeName($deployment))
+            ->setCapacity($volume->capacity)
+            ->setSpec('volumeMode', $volume->volume_mode)
+            ->setAccessModes(['ReadWriteMany'])
+            ->setSpec('persistentVolumeReclaimPolicy', $volume->reclaim_policy)
+            // The claim asks for this class, and only binds to a volume of the same one.
+            ->setSpec('storageClassName', (string) $volume->storage_class);
+
+        switch ($volume->type) {
+            case 'nfs':
+                $resource->setSpec('nfs', [
+                    'server' => $volume->nfs_server,
+                    'path' => $volume->nfs_path,
+                ]);
+                break;
+            case 'csi':
+                if (strlen($volume->csi_driver)) {
+                    $resource->setSpec('csi.driver', $volume->csi_driver);
+                }
+                if (strlen($volume->csi_volume_handle)) {
+                    $resource->setSpec('csi.volumeHandle', $volume->getCompiledCsiVolumeHandle($deployment));
+                }
+                // What the driver needs to mount it - csi-driver-nfs its server and share. A
+                // volume with only a handle was taken by its claim and never mounted.
+                $attributes = $volume->getCompiledCsiVolumeAttributes($deployment);
+                if ($attributes) {
+                    $resource->setSpec('csi.volumeAttributes', $attributes);
+                }
+                break;
+        }
+
+        // A storage class's mount options are only for the disks it makes, so a disk of kso's
+        // own carries them itself.
+        $mountOptions = $volume->getCompiledMountOptions($deployment);
+        if ($mountOptions) {
+            $resource->setSpec('mountOptions', $mountOptions);
+        }
+
+        return $resource;
     }
 }
