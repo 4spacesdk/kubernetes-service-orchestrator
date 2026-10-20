@@ -1,10 +1,12 @@
 <?php namespace App\Libraries\DeploymentSteps;
 
 use App\Entities\Deployment;
+use App\Entities\Workspace;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepLevels;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
 use App\Libraries\Kubernetes\ClusterDidNotAnswer;
+use App\Libraries\Kubernetes\DnsLabel;
 use App\Libraries\Kubernetes\KubeAuth;
 use App\Libraries\Kubernetes\KubeHelper;
 use DebugTool\Data;
@@ -74,7 +76,16 @@ class NamespaceStep extends BaseDeploymentStep {
             unset($remote['metadata']['uid']);
             unset($remote['metadata']['resourceVersion']);
             unset($remote['metadata']['creationTimestamp']);
+            // Only the labels kso sets itself; Kubernetes adds one with the name, and others are
+            // somebody else's.
+            $labels = array_intersect_key($remote['metadata']['labels'] ?? [], [
+                KubeHelper::ManagedByLabel => true,
+                KubeHelper::WorkspaceTemplateLabel => true,
+            ]);
             unset($remote['metadata']['labels']);
+            if ($labels) {
+                $remote['metadata']['labels'] = $labels;
+            }
             // Only the annotation kso sets itself; anything else was put there by somebody else.
             $mark = array_intersect_key($remote['metadata']['annotations'] ?? [], [KubeHelper::InstallationAnnotation => true]);
             unset($remote['metadata']['annotations']);
@@ -193,6 +204,29 @@ class NamespaceStep extends BaseDeploymentStep {
     /**
      * @throws \Exception
      */
+    /**
+     * What a NetworkPolicy picks the namespace by: that it is a workspace's, and which template's.
+     * A policy for every workspace made from a template - the namespaces come and go with them -
+     * can then name the template instead of each namespace. The template's start of a name is
+     * what kso already keeps in a form Kubernetes accepts; a workspace with no template gets the
+     * first label only.
+     *
+     * @return array<string, string>
+     */
+    public static function Labels(Workspace $workspace): array {
+        $labels = [KubeHelper::ManagedByLabel => 'kso'];
+
+        if ($workspace->workspace_template_id && !$workspace->workspace_template->exists()) {
+            $workspace->workspace_template->find();
+        }
+        $template = (string) ($workspace->workspace_template->namespace ?? '');
+        if ($workspace->workspace_template->exists() && DnsLabel::isValid($template)) {
+            $labels[KubeHelper::WorkspaceTemplateLabel] = $template;
+        }
+
+        return $labels;
+    }
+
     protected function getResource(Deployment $deployment, bool $auth = false): K8sNamespace {
         if ($deployment->workspace_id && !$deployment->workspace->exists()) {
             $deployment->workspace->find();
@@ -205,6 +239,7 @@ class NamespaceStep extends BaseDeploymentStep {
         $resource = new K8sNamespace();
         $resource
             ->setName($workspace->namespace)
+            ->setLabels(self::Labels($workspace))
             // Which kso's it is. Everything a workspace has lives in its namespace, so the mark
             // here speaks for all of it.
             ->setAnnotations(KubeHelper::Marked());

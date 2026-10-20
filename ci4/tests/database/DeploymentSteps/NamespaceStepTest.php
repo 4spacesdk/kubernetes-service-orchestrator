@@ -7,6 +7,7 @@ use App\Libraries\DeploymentSteps\Helpers\DeploymentStepLevels;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
 use App\Libraries\DeploymentSteps\NamespaceStep;
 use App\ManifestTestCase;
+use App\Libraries\Kubernetes\KubeHelper;
 
 /**
  * The namespace every other resource is created in.
@@ -109,6 +110,30 @@ class NamespaceStepTest extends ManifestTestCase {
         $this->assertSame(
             DeploymentStepHelper::Namespace_Error,
             (new NamespaceStep())->getStatus($deployment)
+        );
+    }
+
+    /**
+     * What a NetworkPolicy picks the namespace by: a policy can match a namespace by its labels
+     * only, not by the start of its name, and the template's namespace is that start.
+     */
+    public function testNamespaceIsLabelledAsAWorkspaceOfItsTemplate(): void {
+        $template = Fixtures::workspaceTemplate(['namespace' => 'prd-taksinto']);
+        $workspace = Fixtures::workspace(['namespace' => 'prd-taksinto-demo', 'workspace_template_id' => $template->id]);
+        $deployment = Fixtures::deployment(['workspace_id' => $workspace->id, 'namespace' => 'prd-taksinto-demo']);
+
+        $this->assertSame(
+            [KubeHelper::ManagedByLabel => 'kso', KubeHelper::WorkspaceTemplateLabel => 'prd-taksinto'],
+            $this->manifest(NamespaceStep::class, $deployment)['metadata']['labels']
+        );
+    }
+
+    public function testAWorkspaceWithoutATemplateIsLabelledAsKsosOnly(): void {
+        $deployment = $this->deploymentInWorkspaceNamespace('customer-a');
+
+        $this->assertSame(
+            [KubeHelper::ManagedByLabel => 'kso'],
+            $this->manifest(NamespaceStep::class, $deployment)['metadata']['labels']
         );
     }
 

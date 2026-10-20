@@ -7,6 +7,7 @@ use App\Libraries\DeploymentSteps\Helpers\DeploymentStepHelper;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepLevels;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
 use App\ManifestTestCase;
+use App\Libraries\Kubernetes\KubeHelper;
 
 /**
  * The CronJobs a deployment runs on a schedule.
@@ -77,6 +78,20 @@ class CronjobStepTest extends ManifestTestCase {
         $deployment = $this->deploymentWithCronJob(['name' => '']);
 
         $this->assertSame($deployment->name, $this->build($deployment)[0]['metadata']['name']);
+    }
+
+    /**
+     * A cron job's pod is picked as the deployment's by `kso.4spaces.dk/deployment`, for a
+     * NetworkPolicy, and as a cron job by `role`. Not by `app`: a Service picks by that alone and
+     * would send the job requests.
+     */
+    public function testPodIsLabelledAsTheDeploymentsCronJob(): void {
+        $deployment = $this->deploymentWithCronJob(['name' => 'cleanup']);
+
+        $this->assertSame(
+            ['role' => 'cron', KubeHelper::DeploymentLabel => $deployment->name],
+            $this->build($deployment)[0]['spec']['jobTemplate']['spec']['template']['metadata']['labels']
+        );
     }
 
     public function testScheduleIsCarriedOver(): void {

@@ -36,8 +36,9 @@ class WorkloadStepReadbacksTest extends ClusterTestCase {
     /**
      * A namespace carries almost nothing of ours and a great deal of Kubernetes': labels
      * and annotations it applies itself, a `spec.finalizers` nobody wrote, a phase. All of
-     * it is stripped, and what is left is what kso sets: the name, and the mark that says
-     * which kso it is - on both sides, so the preview shows no change where there is none.
+     * it is stripped, and what is left is what kso sets: the name, its labels - Kubernetes'
+     * own `kubernetes.io/metadata.name` not among them - and the mark that says which kso it
+     * is - on both sides, so the preview shows no change where there is none.
      */
     public function testANamespacePreviewIsStrippedDownToTheNameKsoSets(): void {
         $deployment = $this->deploymentInTheTestNamespace();
@@ -46,11 +47,14 @@ class WorkloadStepReadbacksTest extends ClusterTestCase {
 
         $preview = $this->preview($step, $deployment);
         $remote = json_decode($preview['remote'], true);
+        $local = json_decode($preview['local'], true);
 
         $this->assertSame($this->testNamespace, $remote['metadata']['name']);
-        $this->assertSame(['name', 'annotations'], array_keys($remote['metadata']));
+        $this->assertSame(['name', 'labels', 'annotations'], array_keys($remote['metadata']));
+        $this->assertSame([KubeHelper::ManagedByLabel => 'kso'], $remote['metadata']['labels']);
+        $this->assertSame($local['metadata']['labels'], $remote['metadata']['labels']);
         $this->assertSame([KubeHelper::InstallationAnnotation], array_keys($remote['metadata']['annotations']));
-        $this->assertSame(json_decode($preview['local'], true)['metadata']['annotations'], $remote['metadata']['annotations']);
+        $this->assertSame($local['metadata']['annotations'], $remote['metadata']['annotations']);
         $this->assertArrayNotHasKey('spec', $remote);
         $this->assertArrayNotHasKey('status', $remote);
     }

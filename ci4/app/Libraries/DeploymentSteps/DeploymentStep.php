@@ -426,6 +426,7 @@ class DeploymentStep extends BaseDeploymentStep {
                 'labels' => [
                     'app' => $deployment->name,
                     'role' => 'app',
+                    KubeHelper::DeploymentLabel => $deployment->name,
                 ],
                 'annotations' => $podAnnotations,
             ])

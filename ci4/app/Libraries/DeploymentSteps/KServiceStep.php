@@ -18,6 +18,7 @@ use App\Libraries\Kubernetes\WorkloadSecret;
 use App\Libraries\Kubernetes\CustomResourceDefinitions\K8sKNativeService;
 use App\Libraries\Kubernetes\ImagePullSecrets;
 use App\Libraries\Kubernetes\KubeAuth;
+use App\Libraries\Kubernetes\KubeHelper;
 use App\Models\DeploymentSpecificationDeploymentAnnotationModel;
 use App\Models\DeploymentSpecificationVolumeModel;
 use App\Models\DeploymentVolumeModel;
@@ -371,6 +372,7 @@ class KServiceStep extends BaseDeploymentStep {
                 'labels' => [
                     'app' => $deployment->name,
                     'role' => 'app',
+                    KubeHelper::DeploymentLabel => $deployment->name,
                 ],
                 'annotations' => $podAnnotations,
             ])

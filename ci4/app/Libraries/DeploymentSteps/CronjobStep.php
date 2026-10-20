@@ -106,7 +106,12 @@ class CronjobStep extends BaseDeploymentStep {
                 unset($remote['metadata']['managedFields']);
                 unset($remote['spec']['suspend']);
                 unset($remote['spec']['jobTemplate']['metadata']);
+                // The pod's labels are kso's own; the rest of its metadata is the api server's.
+                $podLabels = $remote['spec']['jobTemplate']['spec']['template']['metadata']['labels'] ?? null;
                 unset($remote['spec']['jobTemplate']['spec']['template']['metadata']);
+                if ($podLabels) {
+                    $remote['spec']['jobTemplate']['spec']['template']['metadata']['labels'] = $podLabels;
+                }
                 unset($remote['spec']['jobTemplate']['spec']['template']['spec']['containers'][0]['resources']);
                 unset($remote['spec']['jobTemplate']['spec']['template']['spec']['containers'][0]['terminationMessagePath']);
                 unset($remote['spec']['jobTemplate']['spec']['template']['spec']['containers'][0]['terminationMessagePolicy']);
@@ -395,7 +400,14 @@ class CronjobStep extends BaseDeploymentStep {
             // containers, so none of its sidecars either. A job that needs one - a database proxy
             // - would want it on the cron job itself; Kubernetes would stop it when the job is
             // done, as it does in the migration job.
+            // No `app`: a Service picks by it alone, and would send requests to the job.
             $template = (new K8sPod())
+                ->setAttribute('metadata', [
+                    'labels' => [
+                        'role' => 'cron',
+                        KubeHelper::DeploymentLabel => $deployment->name,
+                    ],
+                ])
                 ->setContainers([$container])
                 ->setSpec('restartPolicy', $cronJob->restart_policy);
             $imagePullSecrets = ImagePullSecrets::of($cronJob->container_image);

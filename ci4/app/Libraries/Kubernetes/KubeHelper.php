@@ -45,6 +45,22 @@ class KubeHelper {
     public const string InstallationAnnotation = '4spaces.kso/installation';
 
     /**
+     * The labels kso puts on a workspace's namespace and pods, for a NetworkPolicy to pick them by. A
+     * policy can only pick a namespace by its labels, and annotations - kso's mark among them - are not
+     * labels. A workspace's namespace is named from its template, but a policy cannot match a name by
+     * its start, so the template's own start of a name is a label as well.
+     */
+    public const string ManagedByLabel = 'app.kubernetes.io/managed-by';
+    public const string WorkspaceTemplateLabel = 'kso.4spaces.dk/workspace-template';
+
+    /**
+     * On every pod of a deployment: the app's, its migration job's and its cron jobs'. `app` is the
+     * app's pods alone - a Service picks by it, and a cron job's pod behind the Service would be
+     * sent requests - so the jobs could not be picked with the app until this one.
+     */
+    public const string DeploymentLabel = 'kso.4spaces.dk/deployment';
+
+    /**
      * @param array<string, string> $annotations
      * @return array<string, string> the same, with this installation's mark
      */

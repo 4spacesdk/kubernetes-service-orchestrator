@@ -1,14 +1,17 @@
 # Changelog
 
-## v1.9.8 (unreleased)
+## v1.9.7 (2026-10-20)
 
 ### Enhancements
 * A cron job can be duplicated, from the Cron Jobs of a specification or a deployment: the copy opens as a new cron job, named with -copy, and is added beside the one it came from
 * Clicking a cron job's name in the Cron Jobs of a specification or a deployment opens it, as in the other lists
 * A custom resource's image can be tracked as its specification's container image - picked from the images the manifest names, under its editor. Its tag becomes `${deployment.version}`, each deployment runs the tag it had as its version, and from then on it is listed under Container images, scanned for vulnerabilities and auto updated like any other workload. Its deployments show Version and Update Management
 * Each container image's row has its specification at hand: a button that makes one from the image when no specification uses it, opens it when one does, and lists them - with what each uses it as - when more do
+* A workspace's namespace is labelled `app.kubernetes.io/managed-by: kso` and `kso.4spaces.dk/workspace-template` with its template's namespace, so a NetworkPolicy can pick the namespaces of a template - it can match a namespace by its labels, not by the start of its name. An existing namespace gets them the next time its Namespace step is deployed
+* Every pod of a deployment - the app's, its migration job's and its cron jobs' - is labelled `kso.4spaces.dk/deployment` with the deployment's name, and a cron job's pod `role: cron`, so a NetworkPolicy can pick a deployment's jobs together with its app. Not `app`: a Service picks by that alone. The app's pods are replaced once, at their next deploy
 
 ### Fixed bugs
+* A cron job had none of the deployment's volumes, so one running the app's own command did not find the files the app wrote. A cron job can now Mount volumes, as an init container can - on for the cron jobs that already include the deployment's environment variables
 * Two installations on the same MySQL server no longer wait for each other's health check
 * An auto-update whose deploy failed no longer performs its post-update actions
 * An auto-update's log holds only its own rollout, not those rolled out before it by the same worker, and once - and it is saved when the rollout is skipped or fails too
@@ -19,17 +22,7 @@
 ### Upgrade guide
 1. Deploy new image
 2. Run migrations [(Guide)](https://github.com/4spacesdk/kubernetes-service-orchestrator?tab=readme-ov-file#migrate-database-helm)
-
-
-
-## v1.9.7 (2026-10-04)
-
-### Fixed bugs
-* A cron job had none of the deployment's volumes, so one running the app's own command did not find the files the app wrote. A cron job can now Mount volumes, as an init container can - on for the cron jobs that already include the deployment's environment variables
-
-### Upgrade guide
-1. Deploy new image
-2. Run migrations [(Guide)](https://github.com/4spacesdk/kubernetes-service-orchestrator?tab=readme-ov-file#migrate-database-helm)
+3. To label an existing workspace's namespace now rather than at its next deploy, deploy its Namespace step
 
 
 

@@ -436,6 +436,7 @@ class MigrationJobStep extends BaseDeploymentStep {
                 'labels' => [
                     'app' => $deployment->name,
                     'role' => 'migration',
+                    KubeHelper::DeploymentLabel => $deployment->name,
                 ],
             ])
             ->setContainers([

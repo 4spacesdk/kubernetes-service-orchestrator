@@ -10,6 +10,7 @@ use App\Libraries\DeploymentSteps\Helpers\DeploymentStepTriggers;
 use App\Libraries\DeploymentSteps\KServiceStep;
 use App\ManifestTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
+use App\Libraries\Kubernetes\KubeHelper;
 
 /**
  * The KNative Service, the alternative to a plain Deployment plus Service.
@@ -116,7 +117,7 @@ class KServiceStepTest extends ManifestTestCase {
         $deployment = $this->knativeDeployment();
 
         $this->assertSame(
-            ['app' => $deployment->name, 'role' => 'app'],
+            ['app' => $deployment->name, 'role' => 'app', KubeHelper::DeploymentLabel => $deployment->name],
             $this->template($deployment)['metadata']['labels']
         );
     }

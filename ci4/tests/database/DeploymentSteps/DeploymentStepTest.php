@@ -9,6 +9,7 @@ use App\Libraries\DeploymentSteps\Helpers\DeploymentStepLevels;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentSteps;
 use App\Libraries\DeploymentSteps\Helpers\DeploymentStepTriggers;
 use App\ManifestTestCase;
+use App\Libraries\Kubernetes\KubeHelper;
 
 /**
  * The Kubernetes Deployment every workspace runs on.
@@ -209,7 +210,9 @@ class DeploymentStepTest extends ManifestTestCase {
     }
 
     /**
-     * The selector has to match the pod labels, or the Deployment adopts no pods at all.
+     * The selector has to match the pod labels, or the Deployment adopts no pods at all. The pods
+     * carry one more, `kso.4spaces.dk/deployment`, which is not in the selector: a Deployment's
+     * selector cannot be changed, so one deployed before it would no longer apply.
      */
     public function testSelectorMatchesThePodLabels(): void {
         $deployment = Fixtures::deployableDeployment();
@@ -217,7 +220,7 @@ class DeploymentStepTest extends ManifestTestCase {
         $manifest = $this->build($deployment);
 
         $this->assertSame(
-            $manifest['spec']['selector']['matchLabels'],
+            [...$manifest['spec']['selector']['matchLabels'], KubeHelper::DeploymentLabel => $deployment->name],
             $manifest['spec']['template']['metadata']['labels']
         );
         $this->assertSame(

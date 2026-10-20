@@ -41,7 +41,7 @@ class MigrationJobStepTest extends ManifestTestCase {
         $deployment = $this->migratableDeployment();
 
         $this->assertSame(
-            ['app' => $deployment->name, 'role' => 'migration'],
+            ['app' => $deployment->name, 'role' => 'migration', KubeHelper::DeploymentLabel => $deployment->name],
             $this->build($deployment)['spec']['template']['metadata']['labels']
         );
     }
