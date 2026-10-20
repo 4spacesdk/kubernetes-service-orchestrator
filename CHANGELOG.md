@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.9.9 (2026-10-20)
+
+### Enhancements
+* Clicking a volume's type in the Volumes of a specification or a deployment opens it, as in the other lists
+
+### Upgrade guide
+1. Deploy new image
+
+
+
 ## v1.9.8 (2026-10-20)
 
 ### Enhancements

@@ -5,6 +5,7 @@ import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import {useUnsavedChanges} from "@/composables/useUnsavedChanges";
 import PageSection from "@/components/Modules/Common/DetailPage/PageSection.vue";
+import NameLink from "@/components/Modules/Common/NameLink.vue";
 
 const props = defineProps<{
     deployment: Deployment
@@ -153,6 +154,9 @@ function onSave() {
             :items-per-page="-1"
             class="table"
             density="compact">
+            <template v-slot:item.type="{ item }">
+                <name-link @click="onEditRowClicked(item)">{{ item.type }}</name-link>
+            </template>
             <template v-slot:item.actions="{ item }">
                 <div class="d-flex justify-end gap-1">
                     <v-btn
