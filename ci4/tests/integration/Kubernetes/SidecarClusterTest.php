@@ -70,9 +70,13 @@ class SidecarClusterTest extends ClusterTestCase {
         $deployment = $this->deployedWithASidecar('exit 1');
         $step = new DeploymentStep();
 
-        $this->eventuallyWithin(90, fn () => $this->health($deployment)->health === \HealthStatusTypes::Degraded, 'never degraded: ' . $this->health($deployment)->reason);
+        // Degraded comes first for the rollout that does not finish ("0 available"); the crash loop
+        // is only named once kubelet has backed off - later on a slow machine.
+        $this->eventuallyWithin(90, function () use ($deployment) {
+            $health = $this->health($deployment);
+            return $health->health === \HealthStatusTypes::Degraded && str_contains($health->reason, 'CrashLoopBackOff');
+        }, 'never degraded for the crash loop: ' . $this->health($deployment)->reason);
 
-        $this->assertStringContainsString('CrashLoopBackOff', $this->health($deployment)->reason);
         $this->assertTrue($step->hasNonReadyContainer($deployment));
     }
 
