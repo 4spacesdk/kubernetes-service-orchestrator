@@ -1,6 +1,6 @@
 # Changelog
 
-## v1.9.8 (unreleased)
+## v1.9.8 (2026-10-20)
 
 ### Enhancements
 * A CSI volume has CSI Volume Attributes - a key and a value a row, added and removed as a cron job's args are, placeholders allowed - and every volume has Mount Options, as chips like an image's writable paths. Both go on the PersistentVolume kso makes. For csi-driver-nfs: `server=nfs-server.storage.svc.cluster.local` and `share=/${namespace}`, and `vers=4,noatime`
