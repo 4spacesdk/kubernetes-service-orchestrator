@@ -23,24 +23,33 @@ class Kubernetes extends \App\Core\BaseController {
      * @custom true
      * @param string $namespace
      * @parameter string $app parameterType=query
+     * @parameter string $deployment parameterType=query
      * @parameter string $role parameterType=query
      * @responseSchema KubernetesPod
      */
     public function getPods(string $namespace): void {
         try {
-            $app = $this->request->getGet('app');
-            $role = $this->request->getGet('role');
+            $app = (string) $this->request->getGet('app');
+            $deployment = (string) $this->request->getGet('deployment');
+            $role = (string) $this->request->getGet('role');
+
+            // A role with the app or the deployment it belongs to. By the deployment for a cron
+            // job's pods, which carry no `app` - a Service picks by it alone.
+            $labels = array_filter([
+                'app' => $app,
+                KubeHelper::DeploymentLabel => $deployment,
+            ], 'strlen');
+            $selector = [];
+            if (count($labels) && strlen($role)) {
+                foreach ($labels + ['role' => $role] as $key => $value) {
+                    $selector[] = "{$key}={$value}";
+                }
+            }
 
             $cluster = (new KubeAuth())->authenticate();
             $pods = $cluster->getAllPods(
                 $namespace,
-                (strlen((string) $app) && strlen((string) $role)) ? [
-                    'labelSelector' => urldecode(http_build_query(
-                        [
-                            "app" => "$app,role=$role"
-                        ]
-                    ))
-                ] : [],
+                count($selector) ? ['labelSelector' => implode(',', $selector)] : [],
             );
 
             $items = [];

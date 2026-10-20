@@ -58,6 +58,14 @@ export const deploymentSections: DeploymentSection[] = [
         component: section(() => import('./DeploymentMigrationLogsSection.vue')),
     },
     {
+        key: 'cron-job-logs',
+        title: 'Cron Job Logs',
+        icon: 'fa fa-file-lines',
+        group: '',
+        isShown: deployment => deployment.deployment_specification?.enable_cronjob ?? false,
+        component: section(() => import('./DeploymentCronJobLogsSection.vue')),
+    },
+    {
         key: 'history',
         title: 'History',
         icon: 'fa fa-clock-rotate-left',

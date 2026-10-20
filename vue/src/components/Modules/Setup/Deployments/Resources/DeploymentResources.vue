@@ -220,7 +220,7 @@ function onRunCronJobClicked(name: string) {
     });
     api.save(null, value => {
         bus.emit('toast', {
-            text: `Started ${value.job}`,
+            text: `Started ${value.job} - its log is under Cron Job Logs`,
         });
         runningCronJob.value = null;
     });

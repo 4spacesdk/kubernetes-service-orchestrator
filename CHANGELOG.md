@@ -4,9 +4,11 @@
 
 ### Enhancements
 * Clicking a volume's type in the Volumes of a specification or a deployment opens it, as in the other lists
+* A deployment with cron jobs has Cron Job Logs: the logs of its cron jobs' pods - those on schedule and those run now - while the cluster keeps their jobs. Running a cron job now says where its log is
 
 ### Upgrade guide
 1. Deploy new image
+2. A cron job last deployed before v1.9.7 makes pods without the labels Cron Job Logs finds them by. Deploy its Cron Job step, and the runs from then on are shown
 
 
 

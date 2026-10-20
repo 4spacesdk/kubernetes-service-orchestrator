@@ -7172,6 +7172,11 @@ export class KubernetesGetPodsGetByNamespace extends BaseApi<KubernetesPod> {
         return this;
     }
 
+    public deployment(value: string): KubernetesGetPodsGetByNamespace {
+        this.addQueryParameter('deployment', value);
+        return this;
+    }
+
     public role(value: string): KubernetesGetPodsGetByNamespace {
         this.addQueryParameter('role', value);
         return this;

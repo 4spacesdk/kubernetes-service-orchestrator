@@ -15,6 +15,8 @@ import bus from "@/plugins/bus";
 const props = defineProps<{
     namespace?: string;
     app?: string;
+    /** The deployment's name, for pods labelled with it rather than with `app` - a cron job's. */
+    deploymentName?: string;
     role?: string;
     preselectedPodName?: string;
     preselectedContainerName?: string;
@@ -87,8 +89,9 @@ const AtBottomSlack = 24;
  * off the second. The whole name is in the title attribute.
  */
 function shortPodName(pod: string): string {
-    const prefix = `${props.app ?? ''}-`;
-    return props.app && pod.startsWith(prefix) ? pod.slice(prefix.length) : pod;
+    const name = props.app || props.deploymentName;
+    const prefix = `${name ?? ''}-`;
+    return name && pod.startsWith(prefix) ? pod.slice(prefix.length) : pod;
 }
 
 const search = ref('');
@@ -142,6 +145,7 @@ function reload() {
         ? Api.deployments().getPodsGetById(props.deploymentId)
         : Api.kubernetes().getPodsGetByNamespace(props.namespace!)
             .app(props.app ?? '')
+            .deployment(props.deploymentName ?? '')
             .role(props.role ?? '');
     podsApi
         .find(response => {
