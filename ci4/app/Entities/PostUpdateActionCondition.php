@@ -1,5 +1,6 @@
 <?php namespace App\Entities;
 
+use App\Libraries\Podio\PodioItemUrl;
 use DebugTool\Data;
 use App\Core\Entity;
 
@@ -47,13 +48,11 @@ class PostUpdateActionCondition extends Entity {
                     return false;
                 }
 
-                // Grab url from commit
-                preg_match_all('#\bhttps?://[^,\s()<>]+(?:\([\w\d]+\)|([^,[:punct:]\s]|/))#', $commitMessage, $match);
-                if (count($match[0]) !== 1) {
-                    Data::debug('ERROR Could not find task/issue url in commit message', $commitMessage);
+                $podioItemUrl = PodioItemUrl::firstIn($commitMessage);
+                if ($podioItemUrl === null) {
+                    Data::debug('ERROR Could not find a Podio url in commit message', $commitMessage);
                     return false;
                 }
-                $podioItemUrl = $match[0][0];
 
                 if (!$this->podio_field_reference->exists()) {
                     $this->podio_field_reference->find();

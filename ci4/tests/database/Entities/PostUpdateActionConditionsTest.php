@@ -190,23 +190,30 @@ class PostUpdateActionConditionsTest extends DatabaseTestCase {
     }
 
     /**
-     * And two urls is as bad as none: it refuses rather than guessing which task the
-     * commit belongs to.
+     * A commit often links its pull request or an issue too: the task is the first Podio link,
+     * wherever it is. Two urls of any kind used to be refused outright.
      */
-    public function testACommitMessageWithTwoUrlsSaysNo(): void {
+    public function testTheFirstPodioLinkIsTheTaskWhateverElseTheMessageLinks(): void {
         $fakes = FakeIntegrations::install();
         $fakes->shortSha = 'abc1234';
-        $fakes->commitMessage = 'Fixes https://podio.com/x/items/42 and https://podio.com/x/items/43';
+        $fakes->commitMessage = "Merge https://github.com/acme/app/pull/12\n\nFixes https://podio.com/x/items/42 and https://podio.com/x/items/43";
+        $fakes->podio()->fieldValues['99'] = 'ready';
 
-        $this->assertFalse($this->checkPodioCondition());
+        $this->assertTrue($this->checkPodioCondition());
+        $this->assertSame(['42'], $fakes->podio()->fieldReads);
     }
 
     // </editor-fold>
 
     private function checkPodioCondition(): bool {
         $deployment = Fixtures::deployableDeployment();
+        $reference = Fixtures::podioFieldReference([
+            'podio_integration_id' => Fixtures::podioIntegration()->id,
+            'field_id' => '99',
+        ]);
         $condition = Fixtures::postUpdateActionCondition([
             'type' => \PostUpdateActionConditionTypes::PodioFieldEquals,
+            'podio_field_reference_id' => $reference->id,
             'value' => 'ready',
         ]);
 

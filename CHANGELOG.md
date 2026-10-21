@@ -1,6 +1,6 @@
 # Changelog
 
-## v1.9.9 (2026-10-20)
+## v1.9.9 (unreleased)
 
 ### Enhancements
 * Clicking a volume's type in the Volumes of a specification or a deployment opens it, as in the other lists
@@ -11,6 +11,7 @@
 ### Fixed bugs
 * `app:reencrypt` left the generated secrets under the old key: they are in tables no entity stands for, and the columns were found through the entities. With the old key taken out of `ENCRYPTION_PREVIOUS_KEYS`, they could no longer be read. They are written again now, with their versions
 * A rotated generated secret was forgotten at once, and a deleted deployment or workspace took its generated secrets with it - a key a customer's data was encrypted with was gone for good
+* A post-update action took the first url of any kind in the commit message as the Podio task, so a pull request or an issue linked ahead of it meant no comment and no field update, and the Podio field condition refused a message with more than one url at all. All three now take the first `https://podio.com` link, wherever it is
 
 ### Upgrade guide
 1. Deploy new image

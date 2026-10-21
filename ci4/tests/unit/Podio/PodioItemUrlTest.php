@@ -17,6 +17,32 @@ class PodioItemUrlTest extends CIUnitTestCase {
         $this->assertSame($expected, PodioItemUrl::itemId($url));
     }
 
+    #[DataProvider('messages')]
+    public function testTheFirstPodioLinkInACommitMessageIsTheOne(?string $message, ?string $expected): void {
+        $this->assertSame($expected, PodioItemUrl::firstIn($message));
+    }
+
+    /**
+     * @return array<string, array{0: ?string, 1: ?string}>
+     */
+    public static function messages(): array {
+        return [
+            'one link' => ['Fixes https://podio.com/acme/app/1/items/4217', 'https://podio.com/acme/app/1/items/4217'],
+            'after a GitHub link' => ["Merge https://github.com/acme/app/pull/12\n\nhttps://podio.com/acme/app/1/items/4217", 'https://podio.com/acme/app/1/items/4217'],
+            'two tasks: the first' => ['Fixes https://podio.com/x/items/42 and https://podio.com/x/items/43', 'https://podio.com/x/items/42'],
+            'at the end of a sentence' => ['See https://podio.com/x/items/42.', 'https://podio.com/x/items/42'],
+            'in brackets' => ['Done (https://podio.com/x/items/42)', 'https://podio.com/x/items/42'],
+            'a Markdown link' => ['[the task](https://podio.com/x/items/42)', 'https://podio.com/x/items/42'],
+            'followed by a comma' => ['https://podio.com/x/items/42, and more', 'https://podio.com/x/items/42'],
+            'with www' => ['https://www.podio.com/x/items/42', 'https://www.podio.com/x/items/42'],
+            'another host only' => ['See https://github.com/acme/app/issues/1', null],
+            'a host that only starts like it' => ['https://podio.com.evil.example/x/items/42', null],
+            'no link' => ['Tidy up the logging', null],
+            'empty' => ['', null],
+            'null' => [null, null],
+        ];
+    }
+
     /**
      * @return array<string, array{0: ?string, 1: ?string}>
      */

@@ -71,9 +71,7 @@ class PostUpdateAction extends Entity {
                 }
                 $commitUrl = $vcs->getCommitUrl($shortSha);
                 $commitMessage = $vcs->getCommitMessage($shortSha);
-                // Grab url from commit
-                preg_match_all('#\bhttps?://[^,\s()<>]+(?:\([\w\d]+\)|([^,[:punct:]\s]|/))#', $commitMessage, $match);
-                $podioItemUrl = count($match[0]) ? $match[0][0] : '';
+                $podioItemUrl = PodioItemUrl::firstIn($commitMessage);
 
                 $comment = $this->podio_add_comment_value;
 
@@ -113,9 +111,7 @@ class PostUpdateAction extends Entity {
                     return;
                 }
                 $commitMessage = $vcs->getCommitMessage($shortSha);
-                // Grab url from commit
-                preg_match_all('#\bhttps?://[^,\s()<>]+(?:\([\w\d]+\)|([^,[:punct:]\s]|/))#', $commitMessage, $match);
-                $podioItemUrl = count($match[0]) ? $match[0][0] : '';
+                $podioItemUrl = PodioItemUrl::firstIn($commitMessage);
 
                 $itemId = PodioItemUrl::itemId($podioItemUrl);
                 if ($itemId === null) {

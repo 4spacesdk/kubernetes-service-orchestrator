@@ -35,6 +35,19 @@ class PostUpdateActionPerformTest extends DatabaseTestCase {
     }
 
     /**
+     * The pull request is linked first more often than not: the comment goes to the first Podio
+     * link all the same. It used to take the first url of any kind, and add no comment at all.
+     */
+    public function testACommentGoesToTheFirstPodioLinkWhenAnotherUrlComesFirst(): void {
+        $fakes = $this->fakesWithCommit("Merge https://github.com/acme/app/pull/12\n\nFixes https://podio.com/acme/app/1/items/4217 and https://podio.com/acme/app/1/items/4218");
+        [$action, $deployment] = $this->commentAction('Deployed');
+
+        $action->perform($deployment);
+
+        $this->assertSame(['4217'], array_column($fakes->podio()->comments, 'itemId'));
+    }
+
+    /**
      * The comment text takes the same `${...}` placeholders the rest of the system uses,
      * though only two of them: the workspace and the commit url.
      */
@@ -129,6 +142,15 @@ class PostUpdateActionPerformTest extends DatabaseTestCase {
     // </editor-fold>
 
     // <editor-fold desc="Updating a field">
+
+    public function testAFieldIsUpdatedOnTheFirstPodioLinkWhenAnotherUrlComesFirst(): void {
+        $fakes = $this->fakesWithCommit("See https://sentry.io/issues/9 - fixes https://podio.com/acme/app/1/items/4217");
+        [$action, $deployment] = $this->fieldUpdateAction('done');
+
+        $action->perform($deployment);
+
+        $this->assertSame(['4217'], array_column($fakes->podio()->fieldUpdates, 'itemId'));
+    }
 
     public function testAFieldIsUpdatedOnTheItemTheCommitMentions(): void {
         $fakes = $this->fakesWithCommit('Fixes https://podio.com/acme/app/1/items/4217');

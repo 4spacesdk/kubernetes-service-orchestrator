@@ -29,6 +29,9 @@ class FakePodio extends BasePodio {
     /** @var array<array{fieldId: string, itemId: string, value: string|int}> */
     public array $fieldUpdates = [];
 
+    /** @var list<string> the items a field was read on, in order */
+    public array $fieldReads = [];
+
     /** Thrown by addComment(), for a Podio that refuses. */
     public ?\Exception $failCommentsWith = null;
 
@@ -46,6 +49,7 @@ class FakePodio extends BasePodio {
     }
 
     public function fieldValue(PodioIntegration $integration, string $fieldId, string $itemId): ?string {
+        $this->fieldReads[] = $itemId;
         return $this->fieldValues[$fieldId] ?? null;
     }
 
