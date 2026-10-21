@@ -29,7 +29,7 @@ RUN npm run build
 # `app` is what ships. `test`, at the bottom, is the same image with the dev dependencies added,
 # for the test suites; and the last stage is `app` again, so a build without --target is the
 # image that ships.
-FROM php:8.5.10-alpine3.24 AS app
+FROM php:8.5.12-alpine3.24 AS app
 
 # Install OS dependencies
 RUN apk add --update  \
@@ -163,7 +163,7 @@ COPY --from=aquasec/trivy:0.74.0 /usr/local/bin/trivy /usr/local/bin/trivy
 
 RUN rm -rf /tmp/* /var/cache/apk/*
 
-# `X-Powered-By: PHP/8.5.10` on every response, which is a version number and an invitation
+# `X-Powered-By: PHP/8.5.12` on every response, which is a version number and an invitation
 # to look up what is wrong with it. Written for both PHPs in the image: the Alpine one under
 # /etc/php85 is what Apache runs, and the one under /usr/local is the CLI.
 RUN { \
