@@ -120,16 +120,14 @@ function render() {
             }
             item.value = items[0];
             isLoading.value = false;
-            args.value = JSON.parse(items[0].args ?? '[]')?.map((value: string) => {
-                return {
-                    value: value
-                };
-            });
+            renderArgs();
             renderNamePrefix();
         });
     } else {
+        // A duplicated cron job arrives here with its args set, so they have to be read too
         item.value = props.input.cronJob;
         showDialog.value = true;
+        renderArgs();
         renderNamePrefix();
     }
 
@@ -144,6 +142,14 @@ function close() {
     showDialog.value = false;
     bus.emit('cronJobEditDialog_closed', item.value);
     props.events.onClose();
+}
+
+function renderArgs() {
+    args.value = JSON.parse(item.value.args ?? '[]')?.map((value: string) => {
+        return {
+            value: value
+        };
+    }) ?? [];
 }
 
 function renderNamePrefix() {
