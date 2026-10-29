@@ -8,6 +8,7 @@ use App\Libraries\Push\Publisher;
 use App\Models\AutoUpdateModel;
 use App\Models\DeploymentModel;
 use App\Models\WorkspaceModel;
+use Config\Database;
 use DebugTool\Data;
 use App\Core\Entity;
 use DeploymentStatusTypes;
@@ -29,6 +30,9 @@ class AutoUpdate extends Entity {
 
     /** Appended to as the update runs. */
     public const array AuditIgnoredFields = ['log'];
+
+    /** Seconds a rollout waits for the one ahead of it on the same deployment. The test suite shortens it. */
+    public static int $lockWait = 600;
 
     public static function CheckForUpdates(string $image, string $tag): void {
         /** @var Deployment $deployments */
@@ -89,7 +93,10 @@ class AutoUpdate extends Entity {
         // is kept for all of it. This one's log starts here - and is saved however it ends: rolled
         // out, skipped or thrown.
         $logFrom = count(Data::getDebugger());
+        $locked = false;
         try {
+            $this->takeLock();
+            $locked = true;
             $this->rolloutLogged();
         } catch (\Throwable $e) {
             Data::debug('Rollout failed:', KubeHelper::PrintException($e));
@@ -103,6 +110,11 @@ class AutoUpdate extends Entity {
                 )));
             } catch (\Throwable $e) {
                 log_message('error', 'The log of auto update {id} could not be saved: {message}', ['id' => $this->id, 'message' => $e->getMessage()]);
+            }
+            // Only once the log is saved: the next rollout of the deployment reads it to see
+            // whether this one got there first - see `isOvertaken()`.
+            if ($locked) {
+                $this->releaseLock();
             }
         }
 
@@ -135,6 +147,11 @@ class AutoUpdate extends Entity {
             return;
         }
 
+        if ($this->isOvertaken()) {
+            Data::debug('Skip rollout because a later update of the deployment has rolled out');
+            return;
+        }
+
         $error = $deployment->updateVersion($this->next_tag);
         if ($error) {
             // The actions say the new version is out - a comment on the task, a phase moved on.
@@ -145,6 +162,54 @@ class AutoUpdate extends Entity {
 
         $postUpdateActionHelper = new PostUpdateActionHelper($deployment);
         $postUpdateActionHelper->performAll();
+    }
+
+    /**
+     * Several workers take jobs off the queue at once, and two updates of one deployment would
+     * otherwise roll out side by side: two deploys of the same objects, and the migration job
+     * of one deleted under the other. Each waits for the one ahead of it instead; updates of
+     * other deployments go on meanwhile.
+     *
+     * Followed by the database's name: a lock is the MySQL server's, not the database's.
+     */
+    public static function LockName(int $deploymentId): string {
+        return 'kso-rollout-' . Database::connect()->getDatabase() . '-' . $deploymentId;
+    }
+
+    /**
+     * @throws \RuntimeException when the rollout ahead has not finished in `$lockWait` seconds.
+     */
+    private function takeLock(): void {
+        $row = Database::connect()
+            ->query('SELECT GET_LOCK(?, ?) AS taken', [self::LockName((int) $this->deployment_id), self::$lockWait])
+            ->getRow();
+        if ((int) ($row->taken ?? 0) !== 1) {
+            throw new \RuntimeException("Another rollout of deployment {$this->deployment_id} did not finish within " . self::$lockWait . ' seconds');
+        }
+    }
+
+    private function releaseLock(): void {
+        Database::connect()->query('SELECT RELEASE_LOCK(?)', [self::LockName((int) $this->deployment_id)]);
+    }
+
+    /**
+     * Two workers can take two updates of one deployment at the same moment, and the later
+     * one may get the lock first. The earlier one rolled out after it would put the older tag
+     * back. A rollout writes its log as it ends, under the lock, so a later update with a log
+     * has been.
+     *
+     * Later by when it was approved, not by id: Re-approve rolls an old update out again, and
+     * that is meant to win over the ones before it.
+     */
+    private function isOvertaken(): bool {
+        $db = Database::connect();
+        $approved = $db->escape((string) $this->approved_date);
+        return $db->table('auto_updates')
+            ->where('deployment_id', $this->deployment_id)
+            ->where('is_approved', true)
+            ->where("(approved_date > {$approved} OR (approved_date = {$approved} AND id > " . (int) $this->id . '))', null, false)
+            ->where("log != ''", null, false)
+            ->countAllResults() > 0;
     }
 
     public function appendLog(string $log): void {

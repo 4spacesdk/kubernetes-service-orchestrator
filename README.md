@@ -52,6 +52,12 @@ deployment:
   imageScanning:
     cacheSizeLimit: 4Gi
 
+  # How many of kso's own jobs - rolling out auto updates, sending webhooks, following a rollout's
+  # health - run at a time. More means an update approved while many others are queued waits
+  # less; each is a PHP process of its own. Two updates of one deployment always go one after
+  # the other.
+  queueWorkers: 3
+
   # The default url is "https://kubernetes.default.svc.cluster.local".
   # But it can be different depending on provider
   kubernetes:

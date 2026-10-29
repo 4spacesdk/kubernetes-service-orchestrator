@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+### Enhancements
+* kso's own jobs - rolling out auto updates, sending webhooks, following a rollout's health - run three at a time rather than one after another, so an update approved while many others are queued no longer waits for all of them. `deployment.queueWorkers` in the chart, or `QUEUE_WORKERS`, sets how many. Two updates of one deployment still roll out one after the other, and one that a later update of the same deployment got ahead of is skipped rather than putting the older tag back. Re-approve still rolls an old update out again
+
+### Upgrade guide
+1. Deploy new image
+2. Each worker is a PHP process of its own: if the pod has a tight memory limit, give it room for two more, or set `deployment.queueWorkers` lower
+
+
+
 ## v1.9.9 (2026-10-21)
 
 ### Enhancements

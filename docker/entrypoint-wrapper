@@ -8,16 +8,29 @@ else
   as_www_data=""
 fi
 
-# The job queue's worker - the events kso acts on itself, see
-# Libraries/Push/EventHandlers.php. It stops by itself after an hour or a thousand jobs, so a
-# leak cannot grow for ever, and the loop starts it again; the same after a crash. The jobs wait
+# The job queue's workers - the events kso acts on itself, see
+# Libraries/Push/EventHandlers.php. Each stops by itself after an hour or a thousand jobs, so a
+# leak cannot grow for ever, and its loop starts it again; the same after a crash. The jobs wait
 # in the database in the meantime.
-(
-  while true; do
-    $as_www_data php /var/www/html/ci4/spark queue:work events -sleep 2 -max-jobs 1000 -max-time 3600
-    sleep 5
-  done
-) &
+#
+# QUEUE_WORKERS of them, 3 unless set, at least 1. Each takes the next job that is due, so an
+# update approved during a burst waits for as many rollouts and health looks fewer. Two updates
+# of one deployment still roll out one after the other - see AutoUpdate::rollout().
+workers="${QUEUE_WORKERS:-3}"
+case "$workers" in
+  ''|*[!0-9]*) echo "QUEUE_WORKERS is not a number: '$workers' - starting 1 worker" >&2; workers=1 ;;
+esac
+[ "$workers" -lt 1 ] && workers=1
+i=0
+while [ "$i" -lt "$workers" ]; do
+  (
+    while true; do
+      $as_www_data php /var/www/html/ci4/spark queue:work events -sleep 2 -max-jobs 1000 -max-time 3600
+      sleep 5
+    done
+  ) &
+  i=$((i + 1))
+done
 
 # A container that is restarted keeps its filesystem, and with it the last Apache's pid file.
 rm -f /run/apache2/httpd.pid
