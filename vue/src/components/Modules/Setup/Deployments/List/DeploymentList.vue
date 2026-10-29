@@ -8,6 +8,8 @@ import {useDisplay} from "vuetify";
 import {computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch} from 'vue'
 import type {Ref} from 'vue'
 import {Api} from "@/core/services/Deploy/Api";
+import type {DeploymentsGet} from "@/core/services/Deploy/Api";
+import {useJustCreated, missingFrom} from "@/composables/useJustCreated";
 import bus from "@/plugins/bus";
 import { DeploymentStatusTypes, HealthStatusTypes } from "@/constants";
 import {Deployment, DeploymentSpecification} from "@/core/services/Deploy/models";
@@ -66,6 +68,10 @@ const isLoading = ref(true);
 const options = ref({});
 
 const showCreateMenu = ref(false);
+
+const {deploymentIds: justCreated} = useJustCreated();
+/** Just created and outside the filters: shown first all the same, and counted. */
+const justCreatedCount = ref(0);
 /** Ids of the rows ticked for a bulk update. */
 const selected = ref<number[]>([]);
 const deploymentSpecs = ref<DeploymentSpecification[]>([]);
@@ -191,13 +197,7 @@ function getItems(doItems = true, doCount = false) {
         }
     }
 
-    if (searchValue.value?.length) {
-        api
-            .search('name', searchValue.value)
-            .search('namespace', searchValue.value)
-            .search('status', searchValue.value)
-            .search('version', searchValue.value);
-    }
+    applySearch(api);
 
     if (doItems) {
         api.include('workspace');
@@ -206,8 +206,10 @@ function getItems(doItems = true, doCount = false) {
 
         api
             .find(items => {
-                rows.value = items;
-                isLoading.value = false;
+                withJustCreated(items, all => {
+                    rows.value = all;
+                    isLoading.value = false;
+                });
             });
     }
 
@@ -217,6 +219,43 @@ function getItems(doItems = true, doCount = false) {
             itemCount.value = count;
         });
     }
+}
+
+function applySearch(api: DeploymentsGet) {
+    if (searchValue.value?.length) {
+        api
+            .search('name', searchValue.value)
+            .search('namespace', searchValue.value)
+            .search('status', searchValue.value)
+            .search('version', searchValue.value);
+    }
+}
+
+/**
+ * `items` with the deployments just created that the filters leave out, first on the first page -
+ * see `useJustCreated`. One the filters let in is where the sorting puts it, perhaps on another
+ * page, and not twice. Only on the page: a scoped list has no status filter to hide them.
+ */
+function withJustCreated(items: Deployment[], next: (items: Deployment[]) => void) {
+    const missing = isScoped ? [] : missingFrom(justCreated.value, items);
+    if (!missing.length) {
+        justCreatedCount.value = 0;
+        next(items);
+        return;
+    }
+    const api = Api.deployments().get().whereIn('id', missing);
+    applySearch(api);
+    api.include('workspace')
+        .find(created => {
+            const leftOut = created.filter(deployment => !isLetInByTheFilters(deployment));
+            justCreatedCount.value = leftOut.length;
+            next(page.value == 1 ? [...leftOut, ...items] : items);
+        });
+}
+
+function isLetInByTheFilters(deployment: Deployment): boolean {
+    return (!selectedStatus.value.length || selectedStatus.value.includes(deployment.status ?? ''))
+        && (!selectedHealth.value.length || selectedHealth.value.includes(deployment.health ?? NoHealth));
 }
 
 // <editor-fold desc="View function">
@@ -429,7 +468,7 @@ function onBulkUpdateVersionBtnClicked() {
             :show-select="!isPhone"
             item-value="id"
             :headers="shownHeaders"
-            :items-length="itemCount"
+            :items-length="itemCount + justCreatedCount"
             :items="rows"
             :loading="isLoading"
             v-model:page="page"

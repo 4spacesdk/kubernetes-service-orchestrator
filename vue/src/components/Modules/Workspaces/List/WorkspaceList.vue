@@ -4,6 +4,7 @@ import NameLink from "@/components/Modules/Common/NameLink.vue";
 import ListFilters from "@/components/Modules/Common/List/ListFilters.vue";
 import { computed, defineComponent, onMounted, onUnmounted, reactive, ref, watch } from "vue";
 import { Api } from "@/core/services/Deploy/Api";
+import type { WorkspacesGet } from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import { WorkspaceTemplate, Workspace } from "@/core/services/Deploy/models";
 import WorkspaceEditButton from "@/components/Modules/Workspaces/EditButton/WorkspaceEditButton.vue";
@@ -12,6 +13,7 @@ import debounce from "lodash.debounce";
 import WorkspaceDeploymentDomains from "@/components/Modules/Workspaces/WorkspaceDeploymentDomains/WorkspaceDeploymentDomains.vue";
 import { WorkspaceStatusTypes, HealthStatusTypes } from "@/constants";
 import { useWorkspaceActions } from "@/composables/useWorkspaceActions";
+import { useJustCreated, missingFrom } from "@/composables/useJustCreated";
 import { ReferenceData } from "@/core/referenceData";
 import WorkspaceHealth from "@/components/Modules/Workspaces/WorkspaceHealth/WorkspaceHealth.vue";
 import { useRouter } from "vue-router";
@@ -65,6 +67,10 @@ const isLoading = ref(true);
 const options = ref({});
 
 const showCreateMenu = ref(false);
+
+const { workspaceIds: justCreated } = useJustCreated();
+/** Just created and outside the filters: shown first all the same, and counted. */
+const justCreatedCount = ref(0);
 const workspaceTemplates = ref<WorkspaceTemplate[]>([]);
 const showWorkspaceTemplatesWarning = ref(true);
 
@@ -165,19 +171,9 @@ function getItems(doItems = true, doCount = false) {
 
     // Prepare API call
     const api = Api.workspaces().get();
-
-    if (searchValue.value?.length) {
-        api.search("aliases", searchValue.value)
-            .search("name_readable", searchValue.value)
-            .search("name_system", searchValue.value)
-            .search("namespace", searchValue.value)
-            .search("subdomain", searchValue.value);
-    }
+    applySearchAndProject(api);
 
     api.whereIn("status", selectedStatus.value);
-    if (props.project !== undefined) {
-        api.whereIn("project", [String(props.project)]);
-    }
     if (selectedHealth.value.length) {
         api.whereIn("health", selectedHealth.value);
     }
@@ -185,11 +181,9 @@ function getItems(doItems = true, doCount = false) {
     if (doItems) {
         applyPaging(api);
         applyOrdering(api);
-        api.include("deployment")
-            .include("project")
-            .include("domain")
-            .find((items) => {
-                rows.value = items.map((item) => {
+        include(api).find((items) => {
+            withJustCreated(items, (all) => {
+                rows.value = all.map((item) => {
                     return {
                         workspace: item,
                         isLoadingRequestSupportLogin: false,
@@ -197,6 +191,7 @@ function getItems(doItems = true, doCount = false) {
                 });
                 isLoading.value = false;
             });
+        });
     }
 
     // Count total amount of items
@@ -207,11 +202,58 @@ function getItems(doItems = true, doCount = false) {
     }
 }
 
+/** What a just-created workspace is held to as well: the search, and the project's list it is on. */
+function applySearchAndProject(api: WorkspacesGet) {
+    if (searchValue.value?.length) {
+        api.search("aliases", searchValue.value)
+            .search("name_readable", searchValue.value)
+            .search("name_system", searchValue.value)
+            .search("namespace", searchValue.value)
+            .search("subdomain", searchValue.value);
+    }
+    if (props.project !== undefined) {
+        api.whereIn("project", [String(props.project)]);
+    }
+}
+
+function include(api: WorkspacesGet): WorkspacesGet {
+    return api.include("deployment")
+        .include("project")
+        .include("domain");
+}
+
+/**
+ * `items` with the workspaces just created that the filters leave out, first on the first page -
+ * see `useJustCreated`. One the filters let in is where the sorting puts it, and not twice.
+ */
+function withJustCreated(items: Workspace[], next: (items: Workspace[]) => void) {
+    const missing = missingFrom(justCreated.value, items);
+    if (!missing.length) {
+        justCreatedCount.value = 0;
+        next(items);
+        return;
+    }
+    const api = Api.workspaces().get().whereIn("id", missing);
+    applySearchAndProject(api);
+    include(api).find((created) => {
+        const leftOut = created.filter((workspace) => !isLetInByTheFilters(workspace));
+        justCreatedCount.value = leftOut.length;
+        next(page.value == 1 ? [...leftOut, ...items] : items);
+    });
+}
+
+/** A workspace with no health is in no health filter - `health IN (...)` never matches a NULL. */
+function isLetInByTheFilters(workspace: Workspace): boolean {
+    return (!selectedStatus.value.length || selectedStatus.value.includes(workspace.status ?? ""))
+        && (!selectedHealth.value.length || (!!workspace.health && selectedHealth.value.includes(workspace.health)));
+}
+
 // <editor-fold desc="View function">
 
 function onCreateItemBtnClicked(type: WorkspaceTemplate) {
     bus.emit("workspaceCreate", {
         workspaceTemplate: type,
+        project: props.project,
     });
 }
 
@@ -318,7 +360,7 @@ function onWorkspaceTemplatesShortcutClicked() {
 
         <v-data-table-server
             :headers="headers"
-            :items-length="itemCount"
+            :items-length="itemCount + justCreatedCount"
             :items="rows"
             :loading="isLoading"
             v-model:page="page"

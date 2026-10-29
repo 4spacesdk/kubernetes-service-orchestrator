@@ -181,6 +181,8 @@ class Workspaces extends ResourceController {
     }
 
     /**
+     * In `projectId`, or with 0 in no project. Left out, in its template's.
+     *
      * @route /workspaces/create
      * @method post
      * @custom true
@@ -189,6 +191,7 @@ class Workspaces extends ResourceController {
      * @parameter string $namespace parameterType=query
      * @parameter int $domainId parameterType=query
      * @parameter string $subdomain parameterType=query
+     * @parameter int $projectId parameterType=query
      * @return void
      * @audit entity
      */
@@ -202,7 +205,8 @@ class Workspaces extends ResourceController {
                 $this->request->getGet('name') ?? '',
                 $this->request->getGet('namespace') ?? '',
                 $this->request->getGet('domainId') ?? 0,
-                $this->request->getGet('subdomain') ?? ''
+                $this->request->getGet('subdomain') ?? '',
+                $this->request->getGet('projectId') === null ? null : (int) $this->request->getGet('projectId')
             );
             $this->_setResource($item);
         } catch (ValidationException $e) {

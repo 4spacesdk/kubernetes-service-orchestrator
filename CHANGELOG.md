@@ -5,6 +5,10 @@
 ### Enhancements
 * kso's own jobs - rolling out auto updates, sending webhooks, following a rollout's health - run three at a time rather than one after another, so an update approved while many others are queued no longer waits for all of them. `deployment.queueWorkers` in the chart, or `QUEUE_WORKERS`, sets how many. Two updates of one deployment still roll out one after the other, and one that a later update of the same deployment got ahead of is skipped rather than putting the older tag back. Re-approve still rolls an old update out again
 
+### Fixed bugs
+* A workspace created from a project's list landed in the project its template is for. It lands in the project it is created from now - and one created from No project in none. From the list of every workspace it still lands in its template's
+* A new workspace or deployment was gone from the list it was created on until the filters were cleared: it is a Draft, and the workspace had no status at all. It starts as a Draft now, and one just created is shown first whatever the status and health filters say, until the page is reloaded
+
 ### Upgrade guide
 1. Deploy new image
 2. Each worker is a PHP process of its own: if the pod has a tight memory limit, give it room for two more, or set `deployment.queueWorkers` lower

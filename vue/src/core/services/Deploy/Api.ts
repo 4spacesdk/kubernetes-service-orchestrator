@@ -10780,6 +10780,11 @@ export class WorkspacesCreatePost extends BaseApi<Workspace> {
         return this;
     }
 
+    public projectId(value: number): WorkspacesCreatePost {
+        this.addQueryParameter('projectId', value);
+        return this;
+    }
+
     public save(data: any, next?: (value: Workspace) => void) {
         return super.executeSave(data, next);
     }

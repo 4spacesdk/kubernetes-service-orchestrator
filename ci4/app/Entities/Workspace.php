@@ -55,11 +55,13 @@ class Workspace extends Entity {
     public const array AuditIgnoredFields = ['health', 'health_severity', 'health_reason', 'health_changed_at'];
 
     /**
+     * @param int|null $projectId the project it lands in - the one it is created from, 0 for
+     *                            none. Left out, its template's.
      * @throws ValidationException
      * @throws ApiException
      * @throws \Google\ApiCore\ValidationException
      */
-    public static function Create(WorkspaceTemplate $workspaceTemplate, string $name, string $namespace, int $domainId, string $subdomain): ?Workspace {
+    public static function Create(WorkspaceTemplate $workspaceTemplate, string $name, string $namespace, int $domainId, string $subdomain, ?int $projectId = null): ?Workspace {
         if (!$workspaceTemplate->exists()) {
             throw new ValidationException("Invalid workspace template");
         }
@@ -108,8 +110,21 @@ class Workspace extends Entity {
         $item->subdomain = $subdomain;
         $item->email_service_id = $workspaceTemplate->default_email_service_id;
         $item->database_service_id = $workspaceTemplate->default_database_service_id;
-        // A workspace lands in the project its template is for.
-        $item->project_id = $workspaceTemplate->project_id ?: null;
+        // Created from a project's list, it lands in that project - not in the one its template
+        // is for, which put it somewhere else than where it was made. Without one, the template's.
+        if ($projectId === null) {
+            $projectId = (int) $workspaceTemplate->project_id;
+        } else if ($projectId) {
+            $project = new Project();
+            $project->find($projectId);
+            if (!$project->exists()) {
+                throw new ValidationException("Project not found");
+            }
+        }
+        $item->project_id = $projectId ?: null;
+        // Its deployments are drafts, so it is too. With no status at all it was in no status
+        // filter, and gone from the list it was just created on.
+        $item->status = \WorkspaceStatusTypes::Draft;
 
         /** @var Workspace $workspaceNameInUse */
         $workspaceNameInUse = (new WorkspaceModel())

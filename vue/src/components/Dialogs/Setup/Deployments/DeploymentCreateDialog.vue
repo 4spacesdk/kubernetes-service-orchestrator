@@ -10,6 +10,7 @@ import {ImagePullPolicies, WorkloadTypes} from "@/constants";
 import {useDeploymentActions} from "@/composables/useDeploymentActions";
 import {deploymentSections, type DeploymentSection} from "@/components/Modules/Setup/Deployments/Sections/sections";
 import {isSectionEnabled} from "@/components/Modules/Common/DetailPage/detailSections";
+import {useJustCreated} from "@/composables/useJustCreated";
 
 export interface DeploymentCreateDialog_Input {
     spec: DeploymentSpecification;
@@ -32,6 +33,7 @@ const props = defineProps<{ input: DeploymentCreateDialog_Input, events: DialogE
 
 const {xs: isPhone} = useDisplay();
 const {deploy} = useDeploymentActions();
+const {deploymentIds: justCreated} = useJustCreated();
 
 const used = ref(false);
 const showDialog = ref(false);
@@ -184,6 +186,7 @@ function onCreateBtnClicked() {
         });
     api.save(item.value!, newItem => {
         if (newItem) {
+            justCreated.value.push(newItem.id!);
             bus.emit('deploymentSaved', newItem);
             if (props.input.onSavedCallback) {
                 props.input.onSavedCallback(newItem);

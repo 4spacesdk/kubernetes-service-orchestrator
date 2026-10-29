@@ -6,12 +6,20 @@ import {WorkspaceTemplate, Domain, System, Workspace} from "@/core/services/Depl
 import {Api} from "@/core/services/Deploy/Api";
 import bus from "@/plugins/bus";
 import type {DialogEventsInterface} from "@/components/Dialogs/DialogEventsInterface";
+import {useJustCreated} from "@/composables/useJustCreated";
 
 export interface WorkspaceCreateDialog_Input {
     workspaceTemplate: WorkspaceTemplate;
+    /**
+     * The project whose list it is created from - `none` for the list of those in no project. It
+     * lands there. Left out, as from the list of every workspace, in its template's project.
+     */
+    project?: number | "none";
 }
 
 const props = defineProps<{ input: WorkspaceCreateDialog_Input, events: DialogEventsInterface }>();
+
+const {workspaceIds: justCreated} = useJustCreated();
 
 const used = ref(false);
 const showDialog = ref(false);
@@ -22,7 +30,13 @@ const isLoadingDomains = ref(false);
 const domains = ref<Domain[]>([]);
 const isSaving = ref(false);
 const showAdvanced = ref(false);
-/** The project the workspace lands in: its template's. */
+/** The project the workspace lands in: the one it is created from, or else its template's. */
+const projectId = computed<number | null>(() => {
+    if (props.input.project === "none") {
+        return null;
+    }
+    return props.input.project ?? props.input.workspaceTemplate.project_id ?? null;
+});
 const projectName = ref<string | null>(null);
 
 // <editor-fold desc="Functions">
@@ -43,9 +57,9 @@ function render() {
 
     item.value = Workspace.CreateDefault(props.input.workspaceTemplate);
 
-    if (props.input.workspaceTemplate.project_id) {
+    if (projectId.value) {
         ReferenceData.projects().then(items => {
-            projectName.value = items.find(project => project.id == props.input.workspaceTemplate.project_id)?.name ?? null;
+            projectName.value = items.find(project => project.id == projectId.value)?.name ?? null;
         });
     }
 
@@ -85,6 +99,9 @@ function onSaveBtnClicked() {
         .namespace(item.value!.namespace!)
         .domainId(item.value!.domain_id!)
         .subdomain(item.value!.subdomain!);
+    if (props.input.project !== undefined) {
+        api.projectId(projectId.value ?? 0);
+    }
     api.setErrorHandler(response => {
         if (response.error) {
             bus.emit('toast', {
@@ -97,6 +114,7 @@ function onSaveBtnClicked() {
     api.save(item.value!, newItem => {
         if (newItem) {
             isSaving.value = false;
+            justCreated.value.push(newItem.id!);
             bus.emit('workspaceSaved', newItem);
             close();
         }
