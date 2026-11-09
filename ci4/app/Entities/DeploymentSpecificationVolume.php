@@ -60,10 +60,15 @@ class DeploymentSpecificationVolume extends Entity {
         if (empty($this->volume_mode)) {
             return 'Missing volume mode';
         }
-        if (empty($this->reclaim_policy)) {
+        if ($this->type !== VolumeSource::StorageClassType && empty($this->reclaim_policy)) {
             return 'Missing reclaim policy';
         }
         switch ($this->type) {
+            case VolumeSource::StorageClassType:
+                if (empty($this->storage_class)) {
+                    return 'Missing storage class';
+                }
+                break;
             case 'nfs':
                 if (empty($this->nfs_server)) {
                     return 'Missing nfs server';

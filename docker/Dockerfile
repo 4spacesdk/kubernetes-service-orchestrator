@@ -159,7 +159,7 @@ COPY --from=composer:2.10.3 /usr/bin/composer /usr/bin/composer
 # Trivy, which scans the customers' images for known vulnerabilities (app:scan-container-images).
 # Copied from the official image: it is built for both architectures, so this picks the one
 # being built. Pinned - bump it on purpose. About 42 MB to pull, 156 MB on disk.
-COPY --from=aquasec/trivy:0.74.0 /usr/local/bin/trivy /usr/local/bin/trivy
+COPY --from=aquasec/trivy:0.76.2 /usr/local/bin/trivy /usr/local/bin/trivy
 
 RUN rm -rf /tmp/* /var/cache/apk/*
 

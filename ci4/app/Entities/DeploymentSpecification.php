@@ -18,6 +18,7 @@ use App\Libraries\DeploymentSteps\MigrationJobStep;
 use App\Libraries\DeploymentSteps\NamespaceStep;
 use App\Libraries\DeploymentSteps\PersistentVolumeClaimStep;
 use App\Libraries\Kubernetes\VolumeFingerprint;
+use App\Libraries\Kubernetes\VolumeSource;
 use App\Libraries\DeploymentSteps\PersistentVolumeStep;
 use App\Libraries\DeploymentSteps\RegistryPullSecretStep;
 use App\Libraries\DeploymentSteps\RoleBindingStep;
@@ -225,22 +226,23 @@ class DeploymentSpecification extends Entity {
             $steps[] = new RegistryPullSecretStep();
         }
         if ($this->enable_volumes && $deployment) {
-            /** @var DeploymentVolume $deploymentVolumes */
-            $deploymentVolumes = (new DeploymentVolumeModel())
+            /** @var DeploymentVolume|DeploymentSpecificationVolume $volumes */
+            $volumes = (new DeploymentVolumeModel())
                 ->where('deployment_id', $deployment->id)
                 ->find();
-            if ($deploymentVolumes->exists()) {
-                $steps[] = new PersistentVolumeStep();
-                $steps[] = new PersistentVolumeClaimStep();
-            } else {
-                /** @var DeploymentSpecificationVolume $deploymentSpecificationVolumes */
-                $deploymentSpecificationVolumes = (new DeploymentSpecificationVolumeModel())
+            if (!$volumes->exists()) {
+                $volumes = (new DeploymentSpecificationVolumeModel())
                     ->where('deployment_specification_id', $this->id)
                     ->find();
-                if ($deploymentSpecificationVolumes->exists()) {
-                    $steps[] = new PersistentVolumeStep();
-                    $steps[] = new PersistentVolumeClaimStep();
+            }
+            if ($volumes->exists()) {
+                foreach ($volumes as $volume) {
+                    if ($volume->type !== VolumeSource::StorageClassType) {
+                        $steps[] = new PersistentVolumeStep();
+                        break;
+                    }
                 }
+                $steps[] = new PersistentVolumeClaimStep();
             }
         }
 

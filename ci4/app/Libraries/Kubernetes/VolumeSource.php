@@ -11,6 +11,12 @@ use App\Entities\EnvironmentVariable;
 class VolumeSource {
 
     /**
+     * A volume of this type is made by its storage class when the claim asks for one. kso makes
+     * the claim and no PersistentVolume: one of its own would be bound to the claim instead.
+     */
+    public const string StorageClassType = 'storage-class';
+
+    /**
      * `key=value`, one a line. Blank lines and lines starting with `#` are skipped, and the value
      * is everything after the first `=`, so it may hold one itself.
      *

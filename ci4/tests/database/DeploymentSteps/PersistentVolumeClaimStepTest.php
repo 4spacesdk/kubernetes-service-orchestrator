@@ -90,6 +90,52 @@ class PersistentVolumeClaimStepTest extends ManifestTestCase {
     }
 
     /**
+     * The storage class decides the reclaim policy and the source, so a row needs neither.
+     */
+    public function testAStorageClassVolumeOnlyNeedsItsClass(): void {
+        $deployment = $this->deploymentWithVolume([
+            'type' => 'storage-class',
+            'reclaim_policy' => '',
+            'nfs_server' => '',
+            'nfs_path' => '',
+        ]);
+
+        $this->assertNull((new PersistentVolumeClaimStep())->validateDeployCommand($deployment));
+    }
+
+    /**
+     * Without a class the claim says "no class", nothing makes the disk and it stays Pending.
+     */
+    public function testAStorageClassVolumeWithoutAClassIsReportedOnTheDeployment(): void {
+        $deployment = $this->deploymentWithVolume(['type' => 'storage-class', 'storage_class' => '']);
+
+        $this->assertSame('Missing storage class', (new PersistentVolumeClaimStep())->validateDeployCommand($deployment));
+    }
+
+    public function testAStorageClassVolumeWithoutAClassIsReportedOnTheSpecification(): void {
+        $deployment = Fixtures::deployableDeployment();
+        Fixtures::specificationVolume([
+            'deployment_specification_id' => $deployment->deployment_specification_id,
+            'type' => 'storage-class',
+            'storage_class' => '',
+        ]);
+
+        $this->assertSame('Missing storage class', (new PersistentVolumeClaimStep())->validateDeployCommand($deployment));
+    }
+
+    /**
+     * The claim asks the class for a disk, and names none of kso's own.
+     */
+    public function testAStorageClassVolumesClaimAsksForItsClass(): void {
+        $deployment = $this->deploymentWithVolume(['type' => 'storage-class', 'storage_class' => 'nfs-csi']);
+
+        $spec = $this->build($deployment)[0]['spec'];
+
+        $this->assertSame('nfs-csi', $spec['storageClassName']);
+        $this->assertArrayNotHasKey('volumeName', $spec);
+    }
+
+    /**
      * Unlike the volume, the claim is namespaced, so it keeps the plain deployment name.
      */
     public function testClaimIsNamedAndNamespacedAfterTheDeployment(): void {

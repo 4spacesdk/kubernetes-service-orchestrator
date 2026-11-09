@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a6691bbb78ac9bbccb936b2c258b52d1",
+    "content-hash": "77e70f5aa4cdc9f2a2ffd5b4a489fb4f",
     "packages": [
         {
             "name": "4spacesdk/ci4authextension",
@@ -94,16 +94,16 @@
         },
         {
             "name": "4spacesdk/ci4ormextension",
-            "version": "v1.1.5",
+            "version": "v1.1.10",
             "source": {
                 "type": "git",
                 "url": "https://github.com/4spacesdk/CI4OrmExtension.git",
-                "reference": "f3dff61aaf5ac364d6d661e802ec4afe08ccd257"
+                "reference": "4847a37d038aa8ff982bbfabd077ea04119fde29"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/4spacesdk/CI4OrmExtension/zipball/f3dff61aaf5ac364d6d661e802ec4afe08ccd257",
-                "reference": "f3dff61aaf5ac364d6d661e802ec4afe08ccd257",
+                "url": "https://api.github.com/repos/4spacesdk/CI4OrmExtension/zipball/4847a37d038aa8ff982bbfabd077ea04119fde29",
+                "reference": "4847a37d038aa8ff982bbfabd077ea04119fde29",
                 "shasum": ""
             },
             "require": {
@@ -129,29 +129,33 @@
             "description": "ORM Extension for CodeIgniter 4",
             "support": {
                 "issues": "https://github.com/4spacesdk/CI4OrmExtension/issues",
-                "source": "https://github.com/4spacesdk/CI4OrmExtension/tree/v1.1.5"
+                "source": "https://github.com/4spacesdk/CI4OrmExtension/tree/v1.1.10"
             },
-            "time": "2026-09-20T16:18:10+00:00"
+            "time": "2026-10-28T12:17:58+00:00"
         },
         {
             "name": "4spacesdk/ci4restextension",
-            "version": "v1.0.14",
+            "version": "v1.0.23",
             "source": {
                 "type": "git",
                 "url": "https://github.com/4spacesdk/CI4RESTExtension.git",
-                "reference": "4d611fa1bc12f7e1855a711d96e9ff02324ee570"
+                "reference": "ff9eaa27098b1064f883c2086adfea7a37eddd1a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/4spacesdk/CI4RESTExtension/zipball/4d611fa1bc12f7e1855a711d96e9ff02324ee570",
-                "reference": "4d611fa1bc12f7e1855a711d96e9ff02324ee570",
+                "url": "https://api.github.com/repos/4spacesdk/CI4RESTExtension/zipball/ff9eaa27098b1064f883c2086adfea7a37eddd1a",
+                "reference": "ff9eaa27098b1064f883c2086adfea7a37eddd1a",
                 "shasum": ""
             },
             "require": {
                 "4spacesdk/ci4debugtool": ">=1.0.0",
-                "4spacesdk/ci4ormextension": "^1.1",
+                "4spacesdk/ci4ormextension": "^1.1.10",
                 "codeigniter4/framework": "^4.0",
                 "php": ">=8.0"
+            },
+            "require-dev": {
+                "cebe/php-openapi": "^1.8",
+                "phpunit/phpunit": "^11.5"
             },
             "type": "library",
             "autoload": {
@@ -172,9 +176,9 @@
             "description": "REST Extension for CodeIgniter 4",
             "support": {
                 "issues": "https://github.com/4spacesdk/CI4RESTExtension/issues",
-                "source": "https://github.com/4spacesdk/CI4RESTExtension/tree/v1.0.14"
+                "source": "https://github.com/4spacesdk/CI4RESTExtension/tree/v1.0.23"
             },
-            "time": "2026-09-22T13:57:52+00:00"
+            "time": "2026-10-28T12:17:58+00:00"
         },
         {
             "name": "bacon/bacon-qr-code",
@@ -547,16 +551,16 @@
         },
         {
             "name": "codeigniter4/framework",
-            "version": "v4.7.4",
+            "version": "v4.7.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/codeigniter4/framework.git",
-                "reference": "67ead895b7491703e5e5bc17436778806192008f"
+                "reference": "d755dca632526b116e4611eea9e303505fa6889a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/codeigniter4/framework/zipball/67ead895b7491703e5e5bc17436778806192008f",
-                "reference": "67ead895b7491703e5e5bc17436778806192008f",
+                "url": "https://api.github.com/repos/codeigniter4/framework/zipball/d755dca632526b116e4611eea9e303505fa6889a",
+                "reference": "d755dca632526b116e4611eea9e303505fa6889a",
                 "shasum": ""
             },
             "require": {
@@ -620,7 +624,7 @@
                 "slack": "https://codeigniterchat.slack.com",
                 "source": "https://github.com/codeigniter4/CodeIgniter4"
             },
-            "time": "2026-07-07T09:23:35+00:00"
+            "time": "2026-11-01T18:17:59+00:00"
         },
         {
             "name": "codeigniter4/queue",

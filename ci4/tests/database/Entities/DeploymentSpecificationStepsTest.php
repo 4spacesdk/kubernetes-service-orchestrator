@@ -187,6 +187,32 @@ class DeploymentSpecificationStepsTest extends DatabaseTestCase {
     }
 
     /**
+     * The storage class makes this disk when the claim asks for one. A PersistentVolume of
+     * kso's own would be reserved for the claim, and the storage class would never be asked.
+     */
+    public function testAStorageClassVolumeGetsAClaimAndNoVolumeOfKsos(): void {
+        $specification = Fixtures::deploymentSpecification(['enable_volumes' => true]);
+        $deployment = Fixtures::deployment(['deployment_specification_id' => $specification->id]);
+        Fixtures::deploymentVolume(['deployment_id' => $deployment->id, 'type' => 'storage-class']);
+
+        $steps = $this->steps($specification, $deployment);
+
+        $this->assertNotContains('PersistentVolumeStep', $steps);
+        $this->assertContains('PersistentVolumeClaimStep', $steps);
+    }
+
+    public function testAStorageClassVolumeOnTheSpecificationGetsNoVolumeOfKsosEither(): void {
+        $specification = Fixtures::deploymentSpecification(['enable_volumes' => true]);
+        $deployment = Fixtures::deployment(['deployment_specification_id' => $specification->id]);
+        Fixtures::specificationVolume(['deployment_specification_id' => $specification->id, 'type' => 'storage-class']);
+
+        $steps = $this->steps($specification, $deployment);
+
+        $this->assertNotContains('PersistentVolumeStep', $steps);
+        $this->assertContains('PersistentVolumeClaimStep', $steps);
+    }
+
+    /**
      * A trap worth knowing about. The deployment argument is optional, and without it the
      * volume steps are skipped silently - so the same specification answers differently
      * depending on how it is asked. Anything that decides what to deploy has to pass the

@@ -17,7 +17,7 @@ const showDialog = ref(false);
 
 const type = ref('');
 const typeItems = ref([
-    'nfs', 'csi',
+    'nfs', 'csi', 'storage-class',
 ]);
 const mountPath = ref('');
 const subPath = ref('');
@@ -204,7 +204,9 @@ function onCloseBtnClicked() {
                             :items="volumeModeItems"
                         />
                     </v-col>
-                    <v-col cols="6">
+                    <v-col
+                        v-if="type != 'storage-class'"
+                        cols="6">
                         <v-select
                             v-model="reclaimPolicy"
                             variant="outlined"
@@ -235,6 +237,8 @@ function onCloseBtnClicked() {
                             v-model="storageClass"
                             variant="outlined"
                             label="Storage Class"
+                            :hint="type == 'storage-class' ? 'Makes the volume, with its own reclaim policy and mount options' : ''"
+                            persistent-hint
                         />
                     </v-col>
                     <v-col
@@ -322,7 +326,9 @@ function onCloseBtnClicked() {
                             </div>
                         </v-col>
                     </template>
-                    <v-col cols="12">
+                    <v-col
+                        v-if="type != 'storage-class'"
+                        cols="12">
                         <v-combobox
                             v-model="mountOptionChips"
                             multiple

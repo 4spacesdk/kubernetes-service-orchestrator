@@ -1,9 +1,15 @@
 # Changelog
 
-## Unreleased
+## v1.9.10 (2026-11-09)
+
+### Security
+* CodeIgniter 4.7.6, with its fixes for named query bindings, `replace()`, `sanitize_filename()` and the file cache's `deleteMatching()`. kso uses none of them
+* CI4RESTExtension 1.0.23 and CI4OrmExtension 1.1.10: an include with a comma after a sub query is refused instead of answered wrongly. `relationsFollowRules` and `writesFollowRules` are left off
+* Trivy 0.76.2 in the image, and the frontend's dependencies moved past their known critical and high advisories
 
 ### Enhancements
 * kso's own jobs - rolling out auto updates, sending webhooks, following a rollout's health - run three at a time rather than one after another, so an update approved while many others are queued no longer waits for all of them. `deployment.queueWorkers` in the chart, or `QUEUE_WORKERS`, sets how many. Two updates of one deployment still roll out one after the other, and one that a later update of the same deployment got ahead of is skipped rather than putting the older tag back. Re-approve still rolls an old update out again
+* A volume can be of the type `storage-class`: kso makes the claim and no PersistentVolume, so the storage class makes the disk. Since v1.9.0 a volume of kso's own took every claim, so a storage class was never asked, and csi-driver-nfs never made the folder of a new namespace. Only the storage class has to be filled in: the reclaim policy and the mount options are the class's own. A volume in use cannot be switched to it while its claim is bound to kso's disk
 
 ### Fixed bugs
 * A workspace created from a project's list landed in the project its template is for. It lands in the project it is created from now - and one created from No project in none. From the list of every workspace it still lands in its template's
@@ -11,7 +17,6 @@
 
 ### Upgrade guide
 1. Deploy new image
-2. Each worker is a PHP process of its own: if the pod has a tight memory limit, give it room for two more, or set `deployment.queueWorkers` lower
 
 
 
