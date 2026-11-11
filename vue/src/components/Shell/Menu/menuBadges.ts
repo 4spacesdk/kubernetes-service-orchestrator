@@ -6,6 +6,8 @@ import PushService from "@/services/Push/PushService";
 import { Events } from "@/services/Push/Events";
 import type { PushSubscription } from "@/services/Push/PushSubscription";
 import { showFaviconCount } from "@/components/Shell/Menu/faviconBadge";
+import { visibleMenuCategories } from "@/components/Shell/Menu/menuCategories";
+import AuthService from "@/services/AuthService";
 
 export interface MenuBadge {
     count: number;
@@ -75,14 +77,23 @@ export function useMenuBadges() {
             return;
         }
         subscriptions = [
-            PushService.subscribe(Events.AutoUpdate_Created(), () => countAutoUpdates()),
-            PushService.subscribe(Events.AutoUpdate_Approved(), () => countAutoUpdates()),
-            PushService.subscribe(Events.AutoUpdate_Deleted(), () => countAutoUpdates()),
             PushService.subscribe(Events.Deployments_Changed_Health(), () => countDegraded()),
         ];
-        countAutoUpdates();
         countDegraded();
-        stopFavicon = watch(autoUpdatesCount, showFaviconCount, { immediate: true });
+
+        // Updates is counted - and shown on the browser tab's icon - only for those who have it in
+        // their menu: a number on the tab with nowhere to go from it is noise.
+        if (seesAutoUpdates()) {
+            subscriptions.push(
+                PushService.subscribe(Events.AutoUpdate_Created(), () => countAutoUpdates()),
+                PushService.subscribe(Events.AutoUpdate_Approved(), () => countAutoUpdates()),
+                PushService.subscribe(Events.AutoUpdate_Deleted(), () => countAutoUpdates()),
+            );
+            countAutoUpdates();
+            stopFavicon = watch(autoUpdatesCount, showFaviconCount, { immediate: true });
+        } else {
+            setAutoUpdates();
+        }
     });
 
     onUnmounted(() => {
@@ -92,8 +103,15 @@ export function useMenuBadges() {
         subscriptions.forEach((subscription) => subscription.unsubscribe());
         subscriptions = [];
         stopFavicon?.();
+        stopFavicon = null;
         showFaviconCount(0);
     });
+}
+
+/** Whether the signed-in user has Updates in the menu - the same test the menu itself makes. */
+function seesAutoUpdates(): boolean {
+    return visibleMenuCategories(AuthService.currentAuthUser?.allPermissions ?? [])
+        .some((category) => category.identifier === "auto-updates");
 }
 
 function badge(count: number, color: string): MenuBadge | null {
