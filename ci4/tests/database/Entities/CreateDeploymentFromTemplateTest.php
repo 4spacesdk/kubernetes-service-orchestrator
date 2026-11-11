@@ -111,8 +111,50 @@ class CreateDeploymentFromTemplateTest extends DatabaseTestCase {
     }
 
     /**
-     * @param array<string, mixed> $templateSpecification
+     * A custom resource tracking one of its images has a version and auto updates like any other
+     * workload - so the template's say on them counts for it too.
      */
+    public function testACustomResourceTrackingAnImageGetsTheTemplatesVersionAndAutoUpdates(): void {
+        $fakes = FakeIntegrations::install();
+        $fakes->tags = ['9.9.9'];
+
+        $deployment = $this->deploymentFromTemplate([
+            'default_version' => '3.13.0',
+            'default_auto_update_enabled' => true,
+            'default_auto_update_tag_regex' => '^3\.13\.',
+            'default_auto_update_require_approval' => true,
+        ], null, ['workload_type' => \WorkloadTypes::CustomResource]);
+
+        $this->assertSame('3.13.0', $deployment->version);
+        $this->assertTrue((bool) $deployment->auto_update_enabled);
+        $this->assertSame('^3\.13\.', $deployment->auto_update_tag_regex);
+        $this->assertTrue((bool) $deployment->auto_update_require_approval);
+    }
+
+    public function testACustomResourceTrackingAnImageWithoutADefaultGetsTheLastTag(): void {
+        $fakes = FakeIntegrations::install();
+        $fakes->tags = ['3.12.0', '3.13.0'];
+
+        $deployment = $this->deploymentFromTemplate(['default_version' => ''], null, ['workload_type' => \WorkloadTypes::CustomResource]);
+
+        $this->assertSame('3.13.0', $deployment->version);
+    }
+
+    /** One tracking no image has nothing a version would go into. */
+    public function testACustomResourceTrackingNoImageGetsNoVersion(): void {
+        $fakes = FakeIntegrations::install();
+        $fakes->tags = ['9.9.9'];
+
+        $deployment = $this->deploymentFromTemplate(
+            ['default_version' => '1.2.3', 'default_auto_update_enabled' => true],
+            null,
+            ['workload_type' => \WorkloadTypes::CustomResource, 'container_image_id' => null],
+        );
+
+        $this->assertEmpty($deployment->version);
+        $this->assertFalse((bool) $deployment->auto_update_enabled);
+    }
+
     /**
      * The template's variables are copied onto the deployment, and a secret one stays secret.
      */
@@ -132,9 +174,13 @@ class CreateDeploymentFromTemplateTest extends DatabaseTestCase {
     /** @var list<array{0: string, 1: string, 2: bool}> the template's variables, as name, value, secret */
     private array $templateVariables = [];
 
-    private function deploymentFromTemplate(array $templateSpecification, ?string $version = null): \App\Entities\Deployment {
+    /**
+     * @param array<string, mixed> $templateSpecification
+     * @param array<string, mixed> $specificationOverrides
+     */
+    private function deploymentFromTemplate(array $templateSpecification, ?string $version = null, array $specificationOverrides = []): \App\Entities\Deployment {
         $image = Fixtures::containerImage(['container_registry_id' => Fixtures::containerRegistry()->id]);
-        $specification = Fixtures::deploymentSpecification(['name' => 'api', 'container_image_id' => $image->id]);
+        $specification = Fixtures::deploymentSpecification(array_merge(['name' => 'api', 'container_image_id' => $image->id], $specificationOverrides));
         $template = Fixtures::workspaceTemplate();
         foreach ($this->templateVariables as [$name, $value, $isSecret]) {
             $variable = \App\Entities\WorkspaceTemplateEnvironmentVariable::Create($name, $value, $isSecret);

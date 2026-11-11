@@ -141,10 +141,29 @@ function onCreateItemBtnClicked(createItem: CreateItem) {
             });
             break;
         case WorkloadTypes.CustomResource:
-            createItem.inUse = true;
-            rows.value.push(newItem);
+            if (hasSettings(createItem.deploymentSpecification)) {
+                bus.emit('workspaceTemplateUpdateDeploymentSpecification', {
+                    settings: newItem,
+                    onSaveCallback: () => {
+                        createItem.inUse = true;
+                        rows.value.push(newItem);
+                    }
+                });
+            } else {
+                createItem.inUse = true;
+                rows.value.push(newItem);
+            }
             break;
     }
+}
+
+/**
+ * A custom resource has no settings of its own - unless its specification tracks one of its
+ * images, which gives it a version and auto updates.
+ */
+function hasSettings(deploymentSpecification: DeploymentSpecification): boolean {
+    return deploymentSpecification.workload_type !== WorkloadTypes.CustomResource
+        || !!deploymentSpecification.container_image_id;
 }
 
 function onEditRowClicked(row: Row) {
@@ -273,7 +292,7 @@ function onCloseBtnClicked() {
                     <template v-slot:item.actions="{ item }">
                         <div class="d-flex justify-end gap-1">
                             <v-btn
-                                v-if="item.deploymentSpecification.workload_type !== WorkloadTypes.CustomResource"
+                                v-if="hasSettings(item.deploymentSpecification)"
                                 variant="plain" color="primary" size="small"
                                 @click="onEditRowClicked(item)">
                                 <v-icon>fa fa-pen</v-icon>

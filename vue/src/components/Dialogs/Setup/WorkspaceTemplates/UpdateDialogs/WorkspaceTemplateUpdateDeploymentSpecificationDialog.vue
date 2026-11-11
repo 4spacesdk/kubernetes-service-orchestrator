@@ -51,6 +51,12 @@ const defaultReplicas = ref<number>();
 const defaultKnativeConcurrencyLimitSoft = ref<number>();
 const defaultKnativeConcurrencyLimitHard = ref<number>();
 
+/**
+ * A custom resource tracking one of its images: only its version and auto updates are set here -
+ * the rest of it is in its manifest.
+ */
+const isCustomResource = computed(() => props.input.settings.deploymentSpecification.workload_type == WorkloadTypes.CustomResource);
+
 const isLoadingVersionTags = ref(false);
 const versionTagItems = ref<string[]>([]);
 
@@ -147,10 +153,15 @@ function loadVersionTags() {
 
 function onSaveBtnClicked() {
     props.input.settings.defaultVersion = specifyDefaultVersion.value ? defaultVersion.value : undefined;
-    props.input.settings.defaultImagePullPolicy = defaultImagePullPolicy.value;
     props.input.settings.defaultAutoUpdateEnabled = defaultAutoUpdateEnabled.value;
     props.input.settings.defaultAutoUpdateTagRegex = defaultAutoUpdateTagRegex.value;
     props.input.settings.defaultAutoUpdateRequireApproval = defaultAutoUpdateRequireApproval.value;
+    if (isCustomResource.value) {
+        props.input.onSaveCallback();
+        close();
+        return;
+    }
+    props.input.settings.defaultImagePullPolicy = defaultImagePullPolicy.value;
     props.input.settings.defaultEnvironment = defaultEnvironment.value;
     props.input.settings.defaultCpuRequest = defaultCpuRequest.value;
     props.input.settings.defaultCpuLimit = defaultCpuLimit.value;
@@ -210,7 +221,9 @@ function onCloseBtnClicked() {
                                                 :loading="isLoadingVersionTags"
                                             />
                                         </v-col>
-                                        <v-col cols="12">
+                                        <v-col
+                                            v-if="!isCustomResource" cols="12"
+                                        >
                                             <v-select
                                                 v-model="defaultImagePullPolicy"
                                                 :items="imagePullPolicies"
@@ -266,6 +279,7 @@ function onCloseBtnClicked() {
                             </v-card>
                         </v-col>
 
+                        <template v-if="!isCustomResource">
                         <v-col cols="12">
                             <v-select
                                 v-model="defaultEnvironment"
@@ -362,6 +376,7 @@ function onCloseBtnClicked() {
                                 :rules="required"
                             />
                         </v-col>
+                        </template>
                     </v-row>
                 </v-card-text>
                 <v-divider/>

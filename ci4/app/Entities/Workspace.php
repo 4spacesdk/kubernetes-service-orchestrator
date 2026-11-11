@@ -200,28 +200,7 @@ class Workspace extends Entity {
 
         switch ($deploymentSpecification->workload_type) {
             default:
-                if ($version) {
-                    $deployment->version = $version;
-                } else if (strlen($workspaceTemplateDeploymentSpecification->default_version)) {
-                    $deployment->version = $workspaceTemplateDeploymentSpecification->default_version;
-                } else  {
-                    // Find newest version
-                    if (!$deploymentSpecification->container_image->exists()) {
-                        $deploymentSpecification->container_image->find();
-                    }
-                    try {
-                        $tags = $deploymentSpecification->container_image->getTags();
-                    } catch (\Throwable $e) {
-                        // A registry that cannot be read gives no version, as it did before a failed lookup threw.
-                        Data::debug($e->getMessage());
-                        $tags = [];
-                    }
-                    $tags = array_filter($tags, fn($tag) => !str_contains($tag, 'latest'));
-                    $deployment->version = end($tags);
-                }
-                $deployment->auto_update_enabled = $workspaceTemplateDeploymentSpecification->default_auto_update_enabled;
-                $deployment->auto_update_tag_regex = $workspaceTemplateDeploymentSpecification->default_auto_update_tag_regex;
-                $deployment->auto_update_require_approval = $workspaceTemplateDeploymentSpecification->default_auto_update_require_approval;
+                $this->applyTemplateVersion($deployment, $workspaceTemplateDeploymentSpecification, $version);
                 $deployment->environment = $workspaceTemplateDeploymentSpecification->default_environment;
 
                 $deployment->cpu_request = $workspaceTemplateDeploymentSpecification->default_cpu_request;
@@ -234,6 +213,10 @@ class Workspace extends Entity {
                 $deployment->knative_scheduled_minscale_is_enabled = $workspaceTemplateDeploymentSpecification->default_knative_scheduled_minscale_is_enabled;
                 break;
             case \WorkloadTypes::CustomResource:
+                // Its manifest is all it has - but one tracking an image has a version, and auto updates.
+                if ($deploymentSpecification->container_image_id) {
+                    $this->applyTemplateVersion($deployment, $workspaceTemplateDeploymentSpecification, $version);
+                }
                 break;
         }
 
@@ -274,6 +257,36 @@ class Workspace extends Entity {
         }
 
         return $deployment;
+    }
+
+    /**
+     * The version asked for, else the template's default, else the image's newest tag - and the
+     * template's auto update settings.
+     */
+    private function applyTemplateVersion(Deployment $deployment, WorkspaceTemplateDeploymentSpecification $workspaceTemplateDeploymentSpecification, ?string $version): void {
+        $deploymentSpecification = $workspaceTemplateDeploymentSpecification->deployment_specification;
+        if ($version) {
+            $deployment->version = $version;
+        } else if (strlen((string) $workspaceTemplateDeploymentSpecification->default_version)) {
+            $deployment->version = $workspaceTemplateDeploymentSpecification->default_version;
+        } else  {
+            // Find newest version
+            if (!$deploymentSpecification->container_image->exists()) {
+                $deploymentSpecification->container_image->find();
+            }
+            try {
+                $tags = $deploymentSpecification->container_image->getTags();
+            } catch (\Throwable $e) {
+                // A registry that cannot be read gives no version, as it did before a failed lookup threw.
+                Data::debug($e->getMessage());
+                $tags = [];
+            }
+            $tags = array_filter($tags, fn($tag) => !str_contains($tag, 'latest'));
+            $deployment->version = end($tags);
+        }
+        $deployment->auto_update_enabled = $workspaceTemplateDeploymentSpecification->default_auto_update_enabled;
+        $deployment->auto_update_tag_regex = $workspaceTemplateDeploymentSpecification->default_auto_update_tag_regex;
+        $deployment->auto_update_require_approval = $workspaceTemplateDeploymentSpecification->default_auto_update_require_approval;
     }
 
     /**
